@@ -55,8 +55,8 @@
   --card-foreground: oklch(0.145 0 0);
   --popover: oklch(1 0 0);
   --popover-foreground: oklch(0.145 0 0);
-  --primary: oklch(0.205 0 0);
-  --primary-foreground: oklch(0.985 0 0);
+  --primary: oklch(0.63 0.2 37);   /* #E7590F brand orange */
+  --primary-foreground: oklch(1 0 0);
   --secondary: oklch(0.97 0 0);
   --secondary-foreground: oklch(0.205 0 0);
   --muted: oklch(0.97 0 0);
@@ -117,12 +117,39 @@
   --sidebar-ring: oklch(0.556 0 0);
 }
 
+/* Brand + safe area (added for Cadabams migration) */
+:root {
+  --brand: #E7590F;
+  --brand-foreground: #FFFFFF;
+  --brand-bg: #f6f4f2;
+  --safe-area-inset-top: 0px;
+  --safe-area-inset-bottom: 0px;
+  --safe-area-inset-left: 0px;
+  --safe-area-inset-right: 0px;
+  /* Home header gradient — centralized here so components stay color-free */
+  --home-gradient-from: #FF7EC7;
+  --home-gradient-via: #9735E7;
+  --home-gradient-to: #FF8C42;
+}
+
+.home-header-gradient {
+  background: linear-gradient(135deg, var(--home-gradient-from), var(--home-gradient-via), var(--home-gradient-to));
+}
+
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+
 @layer base {
   * {
     @apply border-border outline-ring/50;
   }
   body {
-    @apply bg-background text-foreground;
+    @apply bg-[#f6f4f2] text-foreground overflow-x-hidden;
   }
   html {
     @apply font-sans;
