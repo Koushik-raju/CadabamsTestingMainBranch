@@ -82,14 +82,14 @@ export default function AssessmentPage() {
         </Button>
         <div>
           <h1 className="text-xl font-bold text-foreground">Stress Check</h1>
-          <p className="text-sm text-muted-foreground">Record how you're feeling</p>
+          <p className="text-sm text-muted-foreground">Record how you&apos;re feeling</p>
         </div>
       </div>
 
       <div className="flex-1 px-4 pt-2 flex flex-col gap-6">
         {step === 'level' && (
           <>
-            <h2 className="text-lg font-semibold text-foreground">What's your stress level right now?</h2>
+            <h2 className="text-lg font-semibold text-foreground">What&apos;s your stress level right now?</h2>
 
             <div className="flex flex-col gap-3">
               {STRESS_LEVELS.map((lvl) => (
@@ -128,7 +128,7 @@ export default function AssessmentPage() {
               )}
             </div>
 
-            <h2 className="text-lg font-semibold text-foreground">What's causing your stress?</h2>
+            <h2 className="text-lg font-semibold text-foreground">What&apos;s causing your stress?</h2>
             <p className="text-sm text-muted-foreground -mt-4">Select all that apply</p>
 
             <div className="flex flex-wrap gap-2">

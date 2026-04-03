@@ -66,7 +66,7 @@ function calculateStreak(entries: JournalEntry[]): number {
     .sort((a, b) => (a < b ? 1 : -1));
 
   let streak = 0;
-  let current = new Date();
+  const current = new Date();
   current.setHours(0, 0, 0, 0);
   const todayStr = current.toISOString().split('T')[0];
 

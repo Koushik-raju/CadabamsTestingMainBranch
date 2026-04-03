@@ -27,7 +27,7 @@ function NotificationContent() {
       <BackButton />
       <div className="flex-1 flex flex-col gap-6 justify-center max-w-sm mx-auto w-full">
         <h1 className="text-2xl font-semibold">Stay in the loop</h1>
-        <p className="text-muted-foreground text-sm">Choose how you'd like to receive updates</p>
+        <p className="text-muted-foreground text-sm">Choose how you&apos;d like to receive updates</p>
         <div className="flex flex-col gap-5">
           {([
             { key: 'phone', label: 'Phone Notifications' },
