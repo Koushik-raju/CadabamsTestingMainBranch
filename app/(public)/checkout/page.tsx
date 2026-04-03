@@ -19,11 +19,6 @@ import { BackButton } from '@/components/common/back-button';
 import { paymentService } from '@/services/payment.service';
 import { useAuth } from '@/hooks/use-auth';
 
-declare global {
-  interface Window {
-    Razorpay: new (options: unknown) => { open(): void };
-  }
-}
 
 function displayName(name: string): string {
   const raw = name.trim();
@@ -104,7 +99,12 @@ function CheckoutContent() {
         },
       };
 
-      const rzp = new window.Razorpay(options);
+      const RazorpayCtor = window.Razorpay;
+      if (!RazorpayCtor) {
+        reject(new Error('Razorpay not loaded'));
+        return;
+      }
+      const rzp = new RazorpayCtor(options);
       rzp.open();
     });
   };
