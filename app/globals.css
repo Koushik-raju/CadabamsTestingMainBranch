@@ -144,6 +144,77 @@
   display: none;
 }
 
+/* Leaderboard rank badges */
+.leaderboard-rank-gold {
+  background: linear-gradient(135deg, oklch(0.85 0.18 85), oklch(0.72 0.18 75));
+  color: white;
+}
+.leaderboard-rank-silver {
+  background: linear-gradient(135deg, oklch(0.78 0.02 260), oklch(0.62 0.02 260));
+  color: white;
+}
+.leaderboard-rank-bronze {
+  background: linear-gradient(135deg, oklch(0.72 0.12 55), oklch(0.58 0.12 45));
+  color: white;
+}
+
+/* Leaderboard podium bars */
+.leaderboard-podium-gold {
+  background: linear-gradient(180deg, oklch(0.85 0.18 85), oklch(0.72 0.18 75));
+}
+.leaderboard-podium-silver {
+  background: linear-gradient(180deg, oklch(0.78 0.02 260), oklch(0.62 0.02 260));
+}
+.leaderboard-podium-bronze {
+  background: linear-gradient(180deg, oklch(0.72 0.12 55), oklch(0.58 0.12 45));
+}
+
+/* Chat typing indicator */
+.typing-dot {
+  animation: typing 1.4s infinite;
+}
+.typing-dot:nth-child(2) {
+  animation-delay: 0.2s;
+}
+.typing-dot:nth-child(3) {
+  animation-delay: 0.4s;
+}
+@keyframes typing {
+  0%, 60%, 100% {
+    opacity: 0.2;
+    transform: translateY(0);
+  }
+  30% {
+    opacity: 1;
+    transform: translateY(-4px);
+  }
+}
+
+/* Breathing exercise animations (Phase 6 — stress management) */
+@keyframes breathe-expand {
+  from { transform: scale(1); opacity: 0.8; }
+  to   { transform: scale(1.4); opacity: 1; }
+}
+@keyframes breathe-shrink {
+  from { transform: scale(1.4); opacity: 1; }
+  to   { transform: scale(1); opacity: 0.8; }
+}
+.breathing-circle-expand-outer    { width: 240px; height: 240px; animation: breathe-expand 4s ease-in-out forwards; }
+.breathing-circle-shrink-outer    { width: 240px; height: 240px; animation: breathe-shrink 4s ease-in-out forwards; }
+.breathing-circle-hold-big-outer  { width: 240px; height: 240px; transform: scale(1.4); opacity: 1; }
+.breathing-circle-hold-small-outer { width: 240px; height: 240px; transform: scale(1); opacity: 0.8; }
+.breathing-circle-idle-outer      { width: 240px; height: 240px; }
+.breathing-circle-expand-middle    { width: 192px; height: 192px; animation: breathe-expand 4s ease-in-out forwards; }
+.breathing-circle-shrink-middle    { width: 192px; height: 192px; animation: breathe-shrink 4s ease-in-out forwards; }
+.breathing-circle-hold-big-middle  { width: 192px; height: 192px; transform: scale(1.4); opacity: 1; }
+.breathing-circle-hold-small-middle { width: 192px; height: 192px; transform: scale(1); opacity: 0.8; }
+.breathing-circle-idle-middle      { width: 192px; height: 192px; }
+.breathing-circle-expand-inner    { width: 144px; height: 144px; animation: breathe-expand 4s ease-in-out forwards; }
+.breathing-circle-shrink-inner    { width: 144px; height: 144px; animation: breathe-shrink 4s ease-in-out forwards; }
+.breathing-circle-hold-big-inner  { width: 144px; height: 144px; transform: scale(1.4); }
+.breathing-circle-hold-small-inner { width: 144px; height: 144px; transform: scale(1); }
+.breathing-circle-idle-inner      { width: 144px; height: 144px; }
+
 @layer base {
   * {
     @apply border-border outline-ring/50;
@@ -155,3 +226,34 @@
     @apply font-sans;
   }
 }
+
+/* ── Breathing exercise animations (Phase 6) ───────────────── */
+@keyframes breathe-expand {
+  0%, 100% { transform: scale(1); opacity: 0.8; }
+  50% { transform: scale(1.4); opacity: 1; }
+}
+@keyframes breathe-shrink {
+  0%, 100% { transform: scale(1.4); opacity: 1; }
+  50% { transform: scale(1); opacity: 0.8; }
+}
+
+/* Outer ring */
+.breathing-circle-expand-outer    { width: 240px; height: 240px; animation: breathe-expand 4s ease-in-out forwards; }
+.breathing-circle-shrink-outer    { width: 240px; height: 240px; animation: breathe-shrink 4s ease-in-out forwards; }
+.breathing-circle-hold-big-outer  { width: 240px; height: 240px; transform: scale(1.4); opacity: 1; }
+.breathing-circle-hold-small-outer { width: 240px; height: 240px; transform: scale(1); opacity: 0.8; }
+.breathing-circle-idle-outer      { width: 240px; height: 240px; }
+
+/* Middle ring */
+.breathing-circle-expand-middle    { width: 192px; height: 192px; animation: breathe-expand 4s ease-in-out forwards; }
+.breathing-circle-shrink-middle    { width: 192px; height: 192px; animation: breathe-shrink 4s ease-in-out forwards; }
+.breathing-circle-hold-big-middle  { width: 192px; height: 192px; transform: scale(1.4); opacity: 1; }
+.breathing-circle-hold-small-middle { width: 192px; height: 192px; transform: scale(1); opacity: 0.8; }
+.breathing-circle-idle-middle      { width: 192px; height: 192px; }
+
+/* Inner circle */
+.breathing-circle-expand-inner    { width: 144px; height: 144px; animation: breathe-expand 4s ease-in-out forwards; }
+.breathing-circle-shrink-inner    { width: 144px; height: 144px; animation: breathe-shrink 4s ease-in-out forwards; }
+.breathing-circle-hold-big-inner  { width: 144px; height: 144px; transform: scale(1.4); }
+.breathing-circle-hold-small-inner { width: 144px; height: 144px; transform: scale(1); }
+.breathing-circle-idle-inner      { width: 144px; height: 144px; }
