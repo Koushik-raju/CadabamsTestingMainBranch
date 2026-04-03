@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MCP WebSocket Example</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        
+        .container {
+            background: white;
+            border-radius: 12px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        .status {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            margin-bottom: 20px;
+            padding: 10px;
+            border-radius: 8px;
+            font-weight: 500;
+        }
+        
+        .status.connected { background: #d1fae5; color: #065f46; }
+        .status.connecting { background: #fef3c7; color: #92400e; }
+        .status.error { background: #fee2e2; color: #991b1b; }
+        .status.disconnected { background: #f3f4f6; color: #374151; }
+        
+        .input-group {
+            margin-bottom: 20px;
+        }
+        
+        .input-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 500;
+            color: #374151;
+        }
+        
+        .input-group input, .input-group textarea {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border-color 0.2s;
+        }
+        
+        .input-group input:focus, .input-group textarea:focus {
+            outline: none;
+            border-color: #3b82f6;
+        }
+        
+        .button {
+            background: #3b82f6;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        
+        .button:hover {
+            background: #2563eb;
+        }
+        
+        .button:disabled {
+            background: #9ca3af;
+            cursor: not-allowed;
+        }
+        
+        .progress {
+            margin-top: 15px;
+            padding: 15px;
+            background: #f8fafc;
+            border-radius: 8px;
+            border: 1px solid #e2e8f0;
+        }
+        
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: #e2e8f0;
+            border-radius: 4px;
+            overflow: hidden;
+            margin-top: 10px;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            background: #3b82f6;
+            transition: width 0.3s ease;
+        }
+        
+        .result {
+            margin-top: 20px;
+            padding: 20px;
+            background: #f8fafc;
+            border-radius: 8px;
+            border: 1px solid #e2e8f0;
+            white-space: pre-wrap;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        
+        .error {
+            background: #fee2e2;
+            color: #991b1b;
+            border-color: #fecaca;
+        }
+        
+        .success {
+            background: #d1fae5;
+            color: #065f46;
+            border-color: #a7f3d0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🤖 MCP WebSocket Client Example</h1>
+            <p>Real-time AI queries with progress updates</p>
+        </div>
+        
+        <div id="status" class="status disconnected">
+            <span id="status-icon">🔴</span>
+            <span id="status-text">Disconnected</span>
+        </div>
+        
+        <div class="input-group">
+            <label for="query">Your Question:</label>
+            <textarea id="query" rows="3" placeholder="Ask me anything about your data, journeys, assessments...">Tell me about my journey progress</textarea>
+        </div>
+        
+        <div class="input-group">
+            <label for="context">Context (optional):</label>
+            <input type="text" id="context" placeholder="Additional context for the query">
+        </div>
+        
+        <button id="send-btn" class="button" onclick="sendQuery()">Send Query</button>
+        
+        <div id="progress" class="progress" style="display: none;">
+            <div id="progress-text">Processing...</div>
+            <div class="progress-bar">
+                <div id="progress-fill" class="progress-fill" style="width: 0%"></div>
+            </div>
+        </div>
+        
+        <div id="result" class="result" style="display: none;"></div>
+    </div>
+
+    <script src="mcp-websocket-client.js"></script>
+    <script>
+        let client = null;
+        let isConnected = false;
+
+        // Initialize WebSocket client
+        async function initializeClient() {
+            try {
+                client = new MCPWebSocketClient({
+                    url: 'ws://localhost:3009/ws',
+                    autoReconnect: true,
+                    maxReconnectAttempts: 5
+                });
+
+                // Set up event listeners
+                client.onStatus((statusData) => {
+                    console.log('Status update:', statusData);
+                    updateStatus(statusData.status, statusData.message);
+                    
+                    if (statusData.status === 'progress') {
+                        updateProgress(statusData.data);
+                    } else if (statusData.status === 'connected') {
+                        hideProgress();
+                    }
+                });
+
+                client.onError((error) => {
+                    console.error('WebSocket error:', error);
+                    updateStatus('error', error);
+                    showResult(`Error: ${error}`, 'error');
+                });
+
+                // Connect to WebSocket
+                await client.connect();
+                isConnected = true;
+                
+            } catch (error) {
+                console.error('Failed to initialize WebSocket:', error);
+                updateStatus('error', error.message);
+            }
+        }
+
+        // Update connection status display
+        function updateStatus(status, message = '') {
+            const statusEl = document.getElementById('status');
+            const statusIcon = document.getElementById('status-icon');
+            const statusText = document.getElementById('status-text');
+            const sendBtn = document.getElementById('send-btn');
+            
+            // Remove all status classes
+            statusEl.className = 'status';
+            
+            // Add appropriate class and update content
+            switch (status) {
+                case 'connected':
+                    statusEl.classList.add('connected');
+                    statusIcon.textContent = '🟢';
+                    statusText.textContent = 'Connected';
+                    sendBtn.disabled = false;
+                    break;
+                case 'connecting':
+                case 'reconnecting':
+                    statusEl.classList.add('connecting');
+                    statusIcon.textContent = '🟡';
+                    statusText.textContent = message || 'Connecting...';
+                    sendBtn.disabled = true;
+                    break;
+                case 'error':
+                    statusEl.classList.add('error');
+                    statusIcon.textContent = '🔴';
+                    statusText.textContent = message || 'Connection Error';
+                    sendBtn.disabled = true;
+                    break;
+                default:
+                    statusEl.classList.add('disconnected');
+                    statusIcon.textContent = '🔴';
+                    statusText.textContent = 'Disconnected';
+                    sendBtn.disabled = true;
+            }
+        }
+
+        // Update progress display
+        function updateProgress(progressData) {
+            const progressEl = document.getElementById('progress');
+            const progressText = document.getElementById('progress-text');
+            const progressFill = document.getElementById('progress-fill');
+            
+            const { stage, message, progress } = progressData;
+            
+            progressEl.style.display = 'block';
+            
+            if (progress !== undefined) {
+                progressText.textContent = `${stage}: ${message} (${Math.round(progress)}%)`;
+                progressFill.style.width = `${progress}%`;
+            } else {
+                progressText.textContent = `${stage}: ${message}`;
+            }
+        }
+
+        // Hide progress display
+        function hideProgress() {
+            const progressEl = document.getElementById('progress');
+            progressEl.style.display = 'none';
+        }
+
+        // Show result
+        function showResult(content, type = 'success') {
+            const resultEl = document.getElementById('result');
+            resultEl.style.display = 'block';
+            resultEl.textContent = content;
+            resultEl.className = `result ${type}`;
+        }
+
+        // Send query
+        async function sendQuery() {
+            if (!client || !isConnected) {
+                showResult('WebSocket not connected. Please wait for connection.', 'error');
+                return;
+            }
+
+            const query = document.getElementById('query').value.trim();
+            const context = document.getElementById('context').value.trim();
+            
+            if (!query) {
+                showResult('Please enter a query.', 'error');
+                return;
+            }
+
+            try {
+                // Prepare context object
+                const contextObj = context ? { additionalContext: context } : {};
+                
+                console.log('Sending query:', query, contextObj);
+                
+                // Send query via WebSocket
+                const result = await client.sendAIQuery(query, contextObj);
+                
+                console.log('Query result:', result);
+                
+                // Format and display result
+                let formattedResult = '';
+                if (result.ai_summary) {
+                    formattedResult = result.ai_summary;
+                } else if (result.formatted_message) {
+                    formattedResult = result.formatted_message;
+                } else {
+                    formattedResult = JSON.stringify(result, null, 2);
+                }
+                
+                showResult(formattedResult, 'success');
+                
+            } catch (error) {
+                console.error('Query error:', error);
+                showResult(`Error: ${error.message}`, 'error');
+            }
+        }
+
+        // Initialize when page loads
+        document.addEventListener('DOMContentLoaded', initializeClient);
+    </script>
+</body>
+</html> 

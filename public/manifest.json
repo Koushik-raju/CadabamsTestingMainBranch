@@ -1,0 +1,18 @@
+{
+  "theme_color": "#4f3422",
+  "background_color": "#ffffff",
+  "icons": [
+    {
+      "purpose": "maskable",
+      "sizes": "512x512",
+      "src": "icons/icon-512.webp",
+      "type": "image/webp"
+    }
+  ],
+  "orientation": "portrait",
+  "display": "browser",
+  "dir": "auto",
+  "lang": "en-GB",
+  "name": "MindTalk",
+  "short_name": "MT"
+}

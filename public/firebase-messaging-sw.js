@@ -1,11 +1,15 @@
 // Firebase Web Messaging Service Worker
-// This file must live at the site root (public/) to receive background FCM messages
+// This file must live at the site root (public/) to receive background messages
 
-importScripts('https://www.gstatic.com/firebasejs/10.13.2/firebase-app-compat.js');
-importScripts('https://www.gstatic.com/firebasejs/10.13.2/firebase-messaging-compat.js');
+importScripts(
+  'https://www.gstatic.com/firebasejs/10.13.2/firebase-app-compat.js'
+);
+importScripts(
+  'https://www.gstatic.com/firebasejs/10.13.2/firebase-messaging-compat.js'
+);
 
-// NOTE: Firebase config here is intentionally public — it is the same as
-// the production firebaseConfig in config/env.ts
+// IMPORTANT: This config is public. It mirrors production firebaseConfig
+// See constants/apiEndpoints for the same values
 firebase.initializeApp({
   apiKey: 'AIzaSyAMA1XVByemL722onXugcZZwCFKIXPwILQ',
   authDomain: 'cadabamshospitals-a7d3b.firebaseapp.com',
@@ -19,7 +23,19 @@ firebase.initializeApp({
 
 const messaging = firebase.messaging();
 
+console.log('🔥 [SW] Firebase Messaging Service Worker initialized');
+
+// Handle background messages
 messaging.onBackgroundMessage(function (payload) {
+  console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+  console.log('🔔 [SW] BACKGROUND MESSAGE RECEIVED!');
+  console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+  console.log('📦 [SW] Full payload:', payload);
+  console.log('📋 [SW] Notification:', payload.notification);
+  console.log('📊 [SW] Data:', payload.data);
+  console.log('⏰ [SW] Received at:', new Date().toLocaleString());
+
+  // Customize and show a notification
   const notificationTitle = payload.notification?.title || 'New Notification';
   const notificationOptions = {
     body: payload.notification?.body || '',
@@ -30,27 +46,71 @@ messaging.onBackgroundMessage(function (payload) {
     requireInteraction: false,
   };
 
-  self.registration.showNotification(notificationTitle, notificationOptions);
+  console.log('✅ [SW] Showing notification with title:', notificationTitle);
+  console.log('📝 [SW] Notification options:', notificationOptions);
+
+  self.registration
+    .showNotification(notificationTitle, notificationOptions)
+    .then(() => {
+      console.log('✅ [SW] Background notification displayed successfully!');
+    })
+    .catch((error) => {
+      console.error('❌ [SW] Error showing notification:', error);
+    });
 });
 
 self.addEventListener('notificationclick', function (event) {
+  console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+  console.log('👆 [SW] NOTIFICATION CLICKED!');
+  console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+  console.log('📋 [SW] Notification data:', event.notification);
+  console.log('📊 [SW] Data payload:', event.notification.data);
+
   const action = event.notification?.data?.action;
+  console.log('🔗 [SW] Action URL:', action);
 
   if (action) {
+    console.log('🌐 [SW] Opening URL:', action);
     event.waitUntil(self.clients.openWindow(action));
   } else {
+    console.log('📱 [SW] No action URL, focusing app window');
+    // Focus the app if no action URL
     event.waitUntil(
       self.clients
         .matchAll({ type: 'window', includeUncontrolled: true })
         .then((clientList) => {
-          if (clientList.length > 0) return clientList[0].focus();
+          if (clientList.length > 0) {
+            console.log(
+              '✅ [SW] Found',
+              clientList.length,
+              'open windows, focusing first'
+            );
+            return clientList[0].focus();
+          }
+          console.log('📂 [SW] No open windows found');
           return null;
         })
     );
   }
 
   event.notification.close();
+  console.log('✅ [SW] Notification closed');
 });
 
-self.addEventListener('install', () => self.skipWaiting());
-self.addEventListener('activate', () => self.clients.claim());
+// Log service worker activation
+self.addEventListener('activate', (event) => {
+  console.log('🚀 [SW] Service Worker activated!');
+});
+
+// Log service worker installation
+self.addEventListener('install', (event) => {
+  console.log('📥 [SW] Service Worker installing...');
+  self.skipWaiting();
+});
+
+// Log when SW takes control
+self.addEventListener('message', (event) => {
+  console.log('📨 [SW] Message received:', event.data);
+});
+
+console.log('✅ [SW] All event listeners registered');
