@@ -27,7 +27,7 @@ export default function HomePage() {
           case 'match': router.push('/find-therapist'); break;
           case 'assessment': router.push('/assessments'); break;
           case 'journey': router.push('/journey'); break;
-          case 'journal': router.push('/journal'); break;
+          case 'journal': router.push('/self-journaling'); break;
           case 'breathe': router.push('/wellness-resources'); break;
         }
         break;
