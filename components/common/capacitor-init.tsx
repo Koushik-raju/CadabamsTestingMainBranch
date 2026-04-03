@@ -1,63 +1,71 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useContext } from 'react';
+import { useRouter } from 'next/navigation';
+import { AuthContext } from '@/hooks/use-auth';
+import { applySafeAreaVars } from '@/lib/capacitor/safe-area';
+import { setStatusBarLight } from '@/lib/capacitor/status-bar';
+import { setupKeyboardListeners } from '@/lib/capacitor/keyboard';
+import { initPushNotifications } from '@/lib/capacitor/push-notifications';
+import { setupDeepLinks } from '@/lib/capacitor/deep-links';
+import { preventTextZoom } from '@/lib/capacitor/text-zoom';
+import { isNative } from '@/lib/capacitor/platform';
 
+/**
+ * CapacitorInit — rendered once in app/layout.tsx inside AppProviders.
+ * Orchestrates all Capacitor plugin initialisation on app start.
+ * Returns null (no UI).
+ */
 export function CapacitorInit() {
+  const router = useRouter();
+  const { user } = useContext(AuthContext);
+
+  // --- Core initialisation (runs once on mount) ---
   useEffect(() => {
+    let cleanupKeyboard: (() => void) | undefined;
+    let cleanupDeepLinks: (() => void) | undefined;
+
     (async () => {
-      try {
-        const { Capacitor } = await import('@capacitor/core');
-        if (!['ios', 'android'].includes(Capacitor.getPlatform())) return;
+      // 1. Apply safe area CSS vars
+      await applySafeAreaVars();
 
-        await new Promise((r) => setTimeout(r, 100));
+      // 2. Status bar — light style (dark text on light background)
+      await setStatusBarLight();
 
+      // 3. Prevent iOS accessibility text zoom from breaking layout
+      await preventTextZoom();
+
+      // 4. Keyboard listeners — show/hide bottom nav, adjust layout
+      cleanupKeyboard = await setupKeyboardListeners();
+
+      // 5. Deep links — handle universal links / app links
+      cleanupDeepLinks = await setupDeepLinks(router);
+
+      // 6. On iOS, also set accessory bar visible for keyboard
+      const native = await isNative();
+      if (native) {
         try {
           const { Keyboard } = await import('@capacitor/keyboard');
           await Keyboard.setAccessoryBarVisible({ isVisible: true });
-        } catch { /* ignore */ }
-
-        try {
-          const { TextZoom } = await import('@capacitor/text-zoom');
-          await TextZoom.set({ value: 1.0 });
-        } catch { /* ignore */ }
-
-        try {
-          const { SafeArea } = await import('capacitor-plugin-safe-area');
-          const { insets } = await SafeArea.getSafeAreaInsets();
-          const root = document.documentElement;
-          root.style.setProperty('--safe-area-inset-top', `${insets.top}px`);
-          root.style.setProperty('--safe-area-inset-bottom', `${insets.bottom}px`);
-          root.style.setProperty('--safe-area-inset-left', `${insets.left}px`);
-          root.style.setProperty('--safe-area-inset-right', `${insets.right}px`);
-        } catch { /* ignore */ }
-
-        try {
-          const { StatusBar, Style } = await import('@capacitor/status-bar');
-          if (Capacitor.getPlatform() === 'ios') {
-            await StatusBar.setOverlaysWebView({ overlay: true });
-            await StatusBar.setStyle({ style: Style.Default });
-          } else {
-            await StatusBar.setOverlaysWebView({ overlay: false });
-            await StatusBar.setBackgroundColor({ color: '#FFFFFF' });
-            await StatusBar.setStyle({ style: Style.Default });
-          }
-        } catch { /* ignore */ }
-
-        // Deep link handler
-        try {
-          const { App } = await import('@capacitor/app');
-          App.addListener('appUrlOpen', ({ url }) => {
-            try {
-              const u = new URL(url);
-              if (u.host === 'consult.cadabams.com') {
-                window.history.pushState({}, '', u.pathname + (u.search || ''));
-              }
-            } catch { /* ignore */ }
-          });
-        } catch { /* ignore */ }
-      } catch { /* ignore */ }
+        } catch { /* ignore — plugin may not support this on all versions */ }
+      }
     })();
+
+    return () => {
+      cleanupKeyboard?.();
+      cleanupDeepLinks?.();
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // --- Push notifications (runs when user logs in) ---
+  useEffect(() => {
+    if (!user) return;
+    const userId = String(user.lead_id);
+    initPushNotifications(userId).catch((e) => {
+      console.warn('[CapacitorInit] initPushNotifications failed:', e);
+    });
+  }, [user]);
 
   return null;
 }

@@ -3,6 +3,7 @@ import { Inter, Urbanist } from 'next/font/google';
 import Script from 'next/script';
 import { AppProviders } from '@/providers/app-providers';
 import { CapacitorInit } from '@/components/common/capacitor-init';
+import { AnalyticsInitializer } from '@/components/analytics-initializer';
 import { siteConfig } from '@/config/site';
 import './globals.css';
 
@@ -52,6 +53,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <main className="overflow-x-hidden">
           <AppProviders>
             <CapacitorInit />
+            <AnalyticsInitializer />
             {children}
           </AppProviders>
         </main>

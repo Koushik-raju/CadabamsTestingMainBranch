@@ -122,15 +122,27 @@
   --brand: #E7590F;
   --brand-foreground: #FFFFFF;
   --brand-bg: #f6f4f2;
-  --safe-area-inset-top: 0px;
-  --safe-area-inset-bottom: 0px;
-  --safe-area-inset-left: 0px;
-  --safe-area-inset-right: 0px;
+  /* Safe area insets — updated at runtime by lib/capacitor/safe-area.ts on native */
+  --safe-area-inset-top: env(safe-area-inset-top, 0px);
+  --safe-area-inset-bottom: env(safe-area-inset-bottom, 0px);
+  --safe-area-inset-left: env(safe-area-inset-left, 0px);
+  --safe-area-inset-right: env(safe-area-inset-right, 0px);
+  /* Keyboard height — updated at runtime by lib/capacitor/keyboard.ts */
+  --keyboard-height: 0px;
   /* Home header gradient — centralized here so components stay color-free */
   --home-gradient-from: #FF7EC7;
   --home-gradient-via: #9735E7;
   --home-gradient-to: #FF8C42;
 }
+
+/* Safe area utility classes */
+.pt-safe { padding-top: var(--safe-area-inset-top); }
+.pb-safe { padding-bottom: max(var(--safe-area-inset-bottom), 1rem); }
+.pl-safe { padding-left: var(--safe-area-inset-left); }
+.pr-safe { padding-right: var(--safe-area-inset-right); }
+
+/* Hide bottom navigation when the software keyboard is open */
+.keyboard-open .bottom-nav { display: none; }
 
 .home-header-gradient {
   background: linear-gradient(135deg, var(--home-gradient-from), var(--home-gradient-via), var(--home-gradient-to));
