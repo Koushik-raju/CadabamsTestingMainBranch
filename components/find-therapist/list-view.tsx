@@ -2,6 +2,7 @@
 
 import { useState, useMemo } from 'react';
 import { Search, SlidersHorizontal, ChevronDown, ArrowRight } from 'lucide-react';
+import { BackButton } from '@/components/common/back-button';
 import { Input } from '@/components/ui/input';
 import { DoctorCard } from '@/components/doctor/doctor-card';
 import { DOCTORS } from '@/data/doctors';
@@ -131,9 +132,12 @@ export function ListView() {
     <div className="min-h-screen bg-[#f6f4f2] flex flex-col">
       {/* Header */}
       <div className="px-5 pt-6 pb-3 flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-foreground leading-tight">
-          Find your therapist
-        </h1>
+        <div className="flex items-center gap-2">
+          <BackButton fallback="/home" />
+          <h1 className="text-2xl font-bold text-foreground leading-tight">
+            Find your therapist
+          </h1>
+        </div>
         <button
           onClick={() => setShowSearch((v) => !v)}
           className="p-2 rounded-full hover:bg-black/5 transition-colors"
