@@ -40,24 +40,17 @@ function getSpecialization(specialityId: [number | string, number | string]): st
 export function UpcomingSession({ appointments, onJoin }: Props) {
   const hasAppointments = appointments && appointments.length > 0;
 
+  if (!hasAppointments) return null;
+
   return (
     <div className="px-4 mb-4">
       <div className="flex items-center justify-between mb-3">
-        <h2 className="text-lg font-bold text-foreground">
-          Upcoming Appointments
-        </h2>
         <Link href="/appointments" className="text-sm font-medium text-primary hover:underline">
           View all →
         </Link>
       </div>
 
-      {!hasAppointments ? (
-        <div className="bg-white rounded-xl border border-border p-6 text-center">
-          <p className="text-sm text-muted-foreground">
-            You have no upcoming appointments
-          </p>
-        </div>
-      ) : (
+      {(
         <div className="flex flex-col gap-3">
           {appointments.map((apt) => {
             const doctorName = getDoctorName(apt.doctor);
