@@ -2,9 +2,9 @@
 
 import { Suspense, useState, useEffect } from 'react';
 import { useRouter, useParams } from 'next/navigation';
-import Image from 'next/image';
 import {
   ChevronLeft,
+  ChevronRight,
   MoreHorizontal,
   Calendar,
   Video,
@@ -45,14 +45,19 @@ function cleanDoctorName(raw: string): string {
   return /^Dr\.?\s/i.test(name) ? name : `Dr. ${name}`;
 }
 
-function formatDateTime(iso: string): string {
+function formatDate(iso: string): string {
   try {
     const d = new Date(iso);
     const isToday = new Date().toDateString() === d.toDateString();
-    const date = isToday ? 'Today' : d.toLocaleDateString('en-IN', { weekday: 'short', day: 'numeric', month: 'short' });
-    const time = d.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: true });
-    return `${date}, ${time}`;
-  } catch { return iso; }
+    if (isToday) return 'Today';
+    return d.toLocaleDateString('en-US', { weekday: 'short', day: 'numeric', month: 'short' });
+  } catch { return ''; }
+}
+
+function formatTime(iso: string): string {
+  try {
+    return new Date(iso).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
+  } catch { return ''; }
 }
 
 // ── PrepareItem ────────────────────────────────────────────────────────────────
@@ -69,16 +74,16 @@ function PrepareItem({
     <button
       type="button"
       onClick={onClick}
-      className="w-full flex items-center gap-3 py-3.5 border-b border-border last:border-0 text-left"
+      className="w-full flex items-center gap-4 py-4 border-b border-border/60 last:border-0 text-left"
     >
-      <div className="h-9 w-9 rounded-xl bg-orange-50 flex items-center justify-center shrink-0 text-primary">
+      <div className="h-11 w-11 rounded-full bg-orange-50 flex items-center justify-center shrink-0 text-primary">
         {icon}
       </div>
       <div className="flex-1 min-w-0">
-        <p className="text-sm font-medium text-foreground">{title}</p>
-        <p className="text-xs text-muted-foreground">{subtitle}</p>
+        <p className="text-[15px] font-semibold text-foreground leading-snug">{title}</p>
+        <p className="text-sm text-muted-foreground leading-snug mt-0.5">{subtitle}</p>
       </div>
-      <ChevronLeft className="h-4 w-4 text-muted-foreground rotate-180 shrink-0" />
+      <ChevronRight className="h-4 w-4 text-muted-foreground shrink-0" />
     </button>
   );
 }
@@ -89,9 +94,9 @@ function DetailContent() {
   const router = useRouter();
   const { appointment_id } = useParams<{ appointment_id: string }>();
 
-  const [apt,       setApt]       = useState<AppointmentDetail | null>(null);
-  const [loading,   setLoading]   = useState(true);
-  const [notFound,  setNotFound]  = useState(false);
+  const [apt,        setApt]        = useState<AppointmentDetail | null>(null);
+  const [loading,    setLoading]    = useState(true);
+  const [notFound,   setNotFound]   = useState(false);
   const [cancelling, setCancelling] = useState(false);
 
   useEffect(() => {
@@ -148,68 +153,74 @@ function DetailContent() {
   const initials    = doctorName.replace(/^Dr\.?\s*/i, '').split(' ').map(w => w[0]).slice(0, 2).join('').toUpperCase();
 
   return (
-    <div className="min-h-screen bg-background flex flex-col">
+    <div className="min-h-screen bg-white flex flex-col">
       {/* Header */}
-      <div className="flex items-center justify-between px-4 pt-6 pb-3">
+      <div className="flex items-center justify-between px-4 pt-6 pb-2">
         <button
           type="button"
           onClick={() => router.back()}
           className="h-9 w-9 flex items-center justify-center rounded-full hover:bg-muted transition-colors"
         >
-          <ChevronLeft className="h-5 w-5" />
+          <ChevronLeft className="h-6 w-6" />
         </button>
-        <h1 className="text-base font-semibold">Session Details</h1>
+        <h1 className="text-[17px] font-bold">Session Details</h1>
         <button
           type="button"
           className="h-9 w-9 flex items-center justify-center rounded-full hover:bg-muted transition-colors"
         >
-          <MoreHorizontal className="h-5 w-5" />
+          <MoreHorizontal className="h-6 w-6" />
         </button>
       </div>
 
-      <div className="flex-1 px-4 pb-32 space-y-5">
+      <div className="flex-1 px-5 pb-28 space-y-6 overflow-y-auto">
+
         {/* Doctor profile */}
-        <div className="flex flex-col items-center pt-2 pb-4 gap-2">
+        <div className="flex flex-col items-center pt-4 pb-2 gap-3">
           <div className="relative">
-            <Avatar className="h-20 w-20">
+            <Avatar className="h-24 w-24 border-2 border-border">
               <AvatarImage src={apt.doctor_image_url || ''} alt={doctorName} className="object-cover" />
-              <AvatarFallback className="bg-primary/10 text-primary text-xl font-semibold">
+              <AvatarFallback className="bg-primary/10 text-primary text-2xl font-bold">
                 {initials}
               </AvatarFallback>
             </Avatar>
-            <span className="absolute bottom-1 right-1 h-3.5 w-3.5 rounded-full bg-green-500 border-2 border-white" />
+            <span className="absolute bottom-1.5 right-1.5 h-4 w-4 rounded-full bg-green-500 border-2 border-white" />
           </div>
           <div className="text-center">
-            <p className="text-lg font-bold text-foreground">{doctorName}</p>
-            {speciality && <p className="text-sm text-muted-foreground">{speciality}</p>}
+            <p className="text-[22px] font-bold text-foreground leading-tight">{doctorName}</p>
+            {speciality && <p className="text-[15px] text-muted-foreground mt-0.5">{speciality}</p>}
           </div>
         </div>
 
-        {/* Date & Type */}
-        <div className="flex gap-3">
-          <div className="flex-1 bg-muted/50 rounded-2xl p-4">
-            <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide mb-1.5">Date &amp; Time</p>
-            <div className="flex items-center gap-1.5">
-              <Calendar className="h-4 w-4 text-primary shrink-0" />
-              <p className="text-sm font-semibold text-foreground">{formatDateTime(apt.start_datetime)}</p>
+        {/* Date & Type — single card, two columns */}
+        <div className="bg-[#f5f5f5] rounded-2xl flex overflow-hidden">
+          <div className="flex-1 p-4">
+            <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-widest mb-2">Date &amp; Time</p>
+            <div className="flex items-start gap-2">
+              <Calendar className="h-5 w-5 text-primary shrink-0 mt-0.5" />
+              <div>
+                <p className="text-[15px] font-bold text-foreground leading-snug">{formatDate(apt.start_datetime)},</p>
+                <p className="text-[15px] font-bold text-foreground leading-snug">{formatTime(apt.start_datetime)}</p>
+              </div>
             </div>
           </div>
-          <div className="flex-1 bg-muted/50 rounded-2xl p-4">
-            <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide mb-1.5">Type</p>
-            <div className="flex items-center gap-1.5">
+          <div className="w-px bg-border/50 my-3" />
+          <div className="flex-1 p-4">
+            <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-widest mb-2">Type</p>
+            <div className="flex items-center gap-2">
               {isVirtual
-                ? <Video className="h-4 w-4 text-primary shrink-0" />
-                : <Building2 className="h-4 w-4 text-primary shrink-0" />}
-              <p className="text-sm font-semibold text-foreground">{isVirtual ? 'Video Call' : 'In-person'}</p>
+                ? <Video className="h-5 w-5 text-primary shrink-0" />
+                : <Building2 className="h-5 w-5 text-primary shrink-0" />}
+              <p className="text-[15px] font-bold text-foreground">{isVirtual ? 'Video Call' : 'In-person'}</p>
             </div>
           </div>
         </div>
 
         {/* Join button */}
         {isVirtual && !isPast && (
-          <div className="space-y-2">
-            <Button
-              className="w-full h-13 rounded-full text-base font-semibold gap-2"
+          <div className="space-y-2.5">
+            <button
+              type="button"
+              className="w-full h-14 rounded-full bg-primary text-white text-[17px] font-bold flex items-center justify-center gap-2.5 active:opacity-90 transition-opacity"
               onClick={() => {
                 if (typeof apt.virtual_consultation_url === 'string') {
                   window.open(apt.virtual_consultation_url, '_blank');
@@ -218,33 +229,33 @@ function DetailContent() {
             >
               <Video className="h-5 w-5" />
               Join Session
-            </Button>
-            <p className="flex items-center justify-center gap-1.5 text-xs text-muted-foreground">
-              <Info className="h-3.5 w-3.5 shrink-0" />
+            </button>
+            <p className="flex items-center justify-center gap-1.5 text-[13px] text-muted-foreground">
+              <Info className="h-4 w-4 shrink-0" />
               You can join 10 minutes before start time
             </p>
           </div>
         )}
 
-        {/* Prepare for session */}
+        {/* Prepare for Session */}
         {!isPast && (
           <div>
-            <h2 className="text-base font-bold text-foreground mb-1">Prepare for Session</h2>
+            <h2 className="text-[19px] font-bold text-foreground mb-3">Prepare for Session</h2>
             <div className="bg-white rounded-2xl border border-border px-4">
               <PrepareItem
-                icon={<ClipboardList className="h-4 w-4" />}
+                icon={<ClipboardList className="h-5 w-5" />}
                 title="Pre-session Check-in"
                 subtitle="Complete a quick check-in before your session"
                 onClick={() => router.push('/assessment')}
               />
               <PrepareItem
-                icon={<BookOpen className="h-4 w-4" />}
+                icon={<BookOpen className="h-5 w-5" />}
                 title="Share Journal"
                 subtitle={`Select entries to share with ${doctorName}`}
                 onClick={() => router.push('/self-journaling')}
               />
               <PrepareItem
-                icon={<FileText className="h-4 w-4" />}
+                icon={<FileText className="h-5 w-5" />}
                 title="Previous Notes"
                 subtitle="Review notes from last session"
                 onClick={() => router.push('/appointments')}
@@ -256,28 +267,28 @@ function DetailContent() {
 
       {/* Bottom actions */}
       {!isPast && (
-        <div className="fixed bottom-0 left-0 right-0 bg-background border-t border-border px-4 py-3 flex gap-3">
-          <Button
-            variant="outline"
-            className="flex-1 rounded-full gap-2"
-            onClick={() => router.push(`/booking/${typeof apt.doctor[0] === 'number' ? apt.doctor[0] : apt.doctor[0]}`)}
+        <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-border px-5 py-4 flex gap-3 items-center">
+          <button
+            type="button"
+            className="flex-1 h-12 flex items-center justify-center gap-2 text-[15px] font-semibold text-foreground hover:bg-muted rounded-full transition-colors"
+            onClick={() => router.push(`/booking/${apt.doctor[0]}`)}
           >
-            <RefreshCw className="h-4 w-4" />
+            <RefreshCw className="h-4.5 w-4.5" />
             Reschedule
-          </Button>
+          </button>
 
           <AlertDialog>
             <AlertDialogTrigger asChild>
-              <Button
-                variant="outline"
-                className="flex-1 rounded-full gap-2 text-destructive border-destructive/30 hover:bg-destructive/10 hover:text-destructive"
+              <button
+                type="button"
                 disabled={cancelling}
+                className="flex-1 h-12 flex items-center justify-center gap-2 text-[15px] font-semibold text-destructive border border-destructive/40 rounded-full hover:bg-destructive/5 transition-colors disabled:opacity-60"
               >
                 {cancelling
                   ? <Loader2 className="h-4 w-4 animate-spin" />
-                  : <XCircle className="h-4 w-4" />}
+                  : <XCircle className="h-4.5 w-4.5" />}
                 Cancel
-              </Button>
+              </button>
             </AlertDialogTrigger>
             <AlertDialogContent>
               <AlertDialogHeader>
