@@ -9,8 +9,8 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
   const [ready, setReady] = useState(false);
 
   useEffect(() => {
-    const raw = localStorage.getItem('user');
-    if (!raw) {
+    const hasToken = document.cookie.includes('access_token=') || document.cookie.includes('refresh_token=');
+    if (!hasToken) {
       const path = window.location.pathname + window.location.search;
       localStorage.setItem('redirectPath', path);
       router.replace('/login');

@@ -56,9 +56,10 @@ export async function refreshAccessToken(): Promise<string> {
   })
     .then(async (res) => {
       if (!res.ok) throw new Error("Token refresh failed");
-      const { access_token, expires_in } = await res.json();
-      setTokenCookie("access_token", access_token, expires_in ?? 3600);
-      return access_token as string;
+      const { accessToken, expiresIn } = await res.json();
+      if (!accessToken) throw new Error("No access token in refresh response");
+      setTokenCookie("access_token", accessToken, expiresIn ?? 3600);
+      return accessToken as string;
     })
     .finally(() => {
       refreshPromise = null;

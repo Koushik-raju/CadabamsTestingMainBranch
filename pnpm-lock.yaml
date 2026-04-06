@@ -8,6 +8,9 @@ importers:
 
   .:
     dependencies:
+      '@cadabams/crm-sdk':
+        specifier: file:libs/crm-sdk
+        version: file:libs/crm-sdk
       '@capacitor/action-sheet':
         specifier: ^8.1.1
         version: 8.1.1(@capacitor/core@8.3.0)
@@ -331,6 +334,10 @@ packages:
   '@babel/types@7.29.0':
     resolution: {integrity: sha512-LwdZHpScM4Qz8Xw2iKSzS+cfglZzJGvofQICy7W7v4caru4EaAmyUuO6BGrbyQ2mYV11W0U8j5mBhd14dd3B0A==}
     engines: {node: '>=6.9.0'}
+
+  '@cadabams/crm-sdk@file:libs/crm-sdk':
+    resolution: {directory: libs/crm-sdk, type: directory}
+    engines: {node: '>=18.0.0'}
 
   '@capacitor/action-sheet@8.1.1':
     resolution: {integrity: sha512-yHuGSR/FS2dDr9oBmy+Ql+y7/i5XsUAlENx5oRND5NtzsNLLiFxpNPGLWV27aU9uf9ICjI92VzH93Zh0g2FL1A==}
@@ -2862,6 +2869,10 @@ packages:
   doctrine@2.1.0:
     resolution: {integrity: sha512-35mSku4ZXK0vfCuHEDAwt55dg2jNajHZ1odvF+8SSr82EsZY4QmXfuWso8oEd8zRhVObSN18aM0CjSdoBX7zIw==}
     engines: {node: '>=0.10.0'}
+
+  dotenv@16.6.1:
+    resolution: {integrity: sha512-uBq4egWHTcTt33a72vpSG0z3HnPuIl6NqYcTrKEg2azoEyl2hpW0zqlxysq2pK9HlDIHyHyakeYaYnSAwd8bow==}
+    engines: {node: '>=12'}
 
   dotenv@17.4.0:
     resolution: {integrity: sha512-kCKF62fwtzwYm0IGBNjRUjtJgMfGapII+FslMHIjMR5KTnwEmBmWLDRSnc3XSNP8bNy34tekgQyDT0hr7pERRQ==}
@@ -5443,6 +5454,14 @@ snapshots:
       '@babel/helper-string-parser': 7.27.1
       '@babel/helper-validator-identifier': 7.28.5
 
+  '@cadabams/crm-sdk@file:libs/crm-sdk':
+    dependencies:
+      axios: 1.14.0
+      dotenv: 16.6.1
+      oauth-1.0a: 2.2.6
+    transitivePeerDependencies:
+      - debug
+
   '@capacitor/action-sheet@8.1.1(@capacitor/core@8.3.0)':
     dependencies:
       '@capacitor/core': 8.3.0
@@ -7986,6 +8005,8 @@ snapshots:
   doctrine@2.1.0:
     dependencies:
       esutils: 2.0.3
+
+  dotenv@16.6.1: {}
 
   dotenv@17.4.0: {}
 

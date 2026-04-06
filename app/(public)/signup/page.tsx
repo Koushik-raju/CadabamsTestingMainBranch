@@ -103,7 +103,7 @@ function SignupContent() {
       });
       toast.success('Account created! Welcome to Cadabams.');
       login().catch(() => {});
-      router.replace(from === 'assessment' ? `/service-for?from=${from}&returnUrl=${returnUrl}` : '/home');
+      router.replace('/home');
     } catch (err: unknown) {
       const e = err as { status?: number; error?: string };
       if (e.error?.includes('already exists')) {

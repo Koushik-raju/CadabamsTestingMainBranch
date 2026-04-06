@@ -16,10 +16,11 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
+import type { AppointmentDetail } from '@/sdk/auth-and-crm';
 
 interface AppointmentCardProps {
-  appointment: Record<string, unknown>;
-  onCancel?: (id: string | number) => void;
+  appointment: AppointmentDetail;
+  onCancel?: (id: number) => void;
   isPast?: boolean;
 }
 
@@ -37,8 +38,7 @@ function getStatusColor(status: string): string {
   }
 }
 
-function formatDate(dateStr: unknown): string {
-  if (!dateStr || typeof dateStr !== 'string') return 'Date TBD';
+function formatDate(dateStr: string): string {
   try {
     return new Date(dateStr).toLocaleDateString('en-IN', {
       weekday: 'short',
@@ -47,34 +47,30 @@ function formatDate(dateStr: unknown): string {
       year: 'numeric',
     });
   } catch {
-    return String(dateStr);
+    return dateStr;
   }
 }
 
-function formatTime(timeStr: unknown): string {
-  if (!timeStr || typeof timeStr !== 'string') return '';
-  return timeStr;
+function formatTime(dateStr: string): string {
+  try {
+    return new Date(dateStr).toLocaleTimeString('en-IN', {
+      hour: '2-digit',
+      minute: '2-digit',
+    });
+  } catch {
+    return dateStr;
+  }
 }
 
 export function AppointmentCard({ appointment, onCancel, isPast }: AppointmentCardProps) {
-  const id = appointment.id as string | number;
-  const doctorRaw = appointment.doctor as Record<string, unknown> | undefined;
-  const doctorName =
-    (doctorRaw?.professional_name as string) ||
-    (appointment.doctor_name as string) ||
-    'Doctor';
-  const doctorImage =
-    (doctorRaw?.profile_image as string) ||
-    (appointment.doctor_image as string) ||
-    '';
-  const date = (appointment.appointment_date as string) || (appointment.date as string);
-  const time = (appointment.appointment_time as string) || (appointment.time as string);
-  const mode = (appointment.mode as string) || 'online';
-  const status = (appointment.status as string) || 'booked';
-  const speciality =
-    (doctorRaw?.speciality as string) ||
-    (appointment.speciality as string) ||
-    '';
+  const { id, doctor, doctor_image_url, start_datetime, availability, consultation_type_ids } = appointment;
+
+  // doctor is [id, name] tuple
+  const doctorName = typeof doctor[1] === 'string' ? doctor[1] : 'Doctor';
+  const doctorImage = doctor_image_url || '';
+  const speciality = typeof consultation_type_ids[1] === 'string' ? consultation_type_ids[1] : '';
+  const status = availability || 'booked';
+  const isVirtual = appointment.virtual_consultation_url !== false;
 
   const initials = doctorName
     .split(' ')
@@ -115,21 +111,19 @@ export function AppointmentCard({ appointment, onCancel, isPast }: AppointmentCa
             <div className="mt-2 space-y-1">
               <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
                 <Calendar className="h-3.5 w-3.5 shrink-0" />
-                <span>{formatDate(date)}</span>
+                <span>{formatDate(start_datetime)}</span>
               </div>
-              {time && (
-                <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                  <Clock className="h-3.5 w-3.5 shrink-0" />
-                  <span>{formatTime(time)}</span>
-                </div>
-              )}
               <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                {mode === 'online' ? (
+                <Clock className="h-3.5 w-3.5 shrink-0" />
+                <span>{formatTime(start_datetime)}</span>
+              </div>
+              <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                {isVirtual ? (
                   <Video className="h-3.5 w-3.5 shrink-0" />
                 ) : (
                   <Building2 className="h-3.5 w-3.5 shrink-0" />
                 )}
-                <span className="capitalize">{mode === 'online' ? 'Online' : 'In-person'}</span>
+                <span>{isVirtual ? 'Online' : 'In-person'}</span>
               </div>
             </div>
           </div>

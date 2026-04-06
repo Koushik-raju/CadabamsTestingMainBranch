@@ -1,10 +1,9 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { postAuthRefresh } from "@/sdk/auth-and-crm/sdk.gen";
-import { getRefreshToken, setTokens } from "@/lib/cookies";
 
-export async function POST() {
+export async function POST(req: NextRequest) {
   try {
-    const refreshToken = await getRefreshToken();
+    const refreshToken = req.cookies.get("refresh_token")?.value;
 
     if (!refreshToken) {
       return NextResponse.json({ error: "No refresh token" }, { status: 401 });
@@ -13,22 +12,14 @@ export async function POST() {
     const { data, error } = await postAuthRefresh({ body: { refreshToken } });
 
     if (error || !data) {
-      return NextResponse.json(
-        { error: "Token refresh failed" },
-        { status: 401 },
-      );
+      return NextResponse.json({ error: "Token refresh failed" }, { status: 401 });
     }
 
-    await setTokens(
-      { accessToken: data.accessToken, refreshToken: data.refreshToken },
-      { accessTokenOptions: { maxAge: data.expiresIn } },
-    );
-
-    return NextResponse.json({ success: true });
+    const res = NextResponse.json({ accessToken: data.accessToken, expiresIn: data.expiresIn });
+    res.cookies.set("access_token", data.accessToken, { path: "/", maxAge: data.expiresIn });
+    res.cookies.set("refresh_token", data.refreshToken, { path: "/", maxAge: 60 * 60 * 24 * 7 });
+    return res;
   } catch {
-    return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 },
-    );
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }

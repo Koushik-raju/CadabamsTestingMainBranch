@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import Link from 'next/link';
 import { Plus, CalendarX } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -8,52 +8,55 @@ import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { BackButton } from '@/components/common/back-button';
 import { AppointmentCard } from '@/components/appointment/appointment-card';
-import { useAppointments } from '@/hooks/use-appointments';
-import { useAuth } from '@/hooks/use-auth';
-import { appointmentService } from '@/services/appointment.service';
-
-function isUpcoming(apt: Record<string, unknown>): boolean {
-  const dateStr = (apt.appointment_date ?? apt.date) as string | undefined;
-  if (!dateStr) return true;
-  try {
-    return new Date(dateStr) >= new Date();
-  } catch {
-    return true;
-  }
-}
+import {
+  getAppointments,
+  getAppointmentsPrevious,
+  putAppointmentsCancelBySlotId,
+} from '@/sdk/auth-and-crm';
+import type { AppointmentDetail } from '@/sdk/auth-and-crm';
 
 export default function AppointmentsPage() {
-  const { user } = useAuth();
-  const { data, isLoading, mutate } = useAppointments();
-  const [cancelling, setCancelling] = useState<string | number | null>(null);
+  const [upcoming, setUpcoming] = useState<AppointmentDetail[]>([]);
+  const [past, setPast] = useState<AppointmentDetail[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [cancelling, setCancelling] = useState<number | null>(null);
 
-  const appointments: Record<string, unknown>[] = Array.isArray(data)
-    ? data
-    : Array.isArray((data as Record<string, unknown>)?.data)
-    ? ((data as Record<string, unknown>).data as Record<string, unknown>[])
-    : [];
+  const fetchAppointments = useCallback(async () => {
+    setIsLoading(true);
+    try {
+      const [upcomingRes, pastRes] = await Promise.all([
+        getAppointments({ query: { start_datetime: new Date().toISOString() } }),
+        getAppointmentsPrevious(),
+      ]);
+      setUpcoming(upcomingRes.data ?? []);
+      setPast(pastRes.data ?? []);
+    } catch (err) {
+      console.error('Failed to fetch appointments:', err);
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
 
-  const upcoming = appointments.filter((a) => isUpcoming(a));
-  const past = appointments.filter((a) => !isUpcoming(a));
+  useEffect(() => {
+    fetchAppointments();
+  }, [fetchAppointments]);
 
   const handleCancel = useCallback(
-    async (id: string | number) => {
-      if (!user?.lead_id) return;
+    async (id: number) => {
       setCancelling(id);
       try {
-        await appointmentService.cancelAppointment({
-          appointment_id: id,
-          lead_id: user.lead_id,
-        });
-        await mutate();
+        await putAppointmentsCancelBySlotId({ path: { slotId: Number(id) } });
+        await fetchAppointments();
       } catch (err) {
         console.error('Failed to cancel appointment:', err);
       } finally {
         setCancelling(null);
       }
     },
-    [user, mutate]
+    [fetchAppointments]
   );
+
+  const appointments = [...upcoming, ...past];
 
   return (
     <div className="min-h-screen bg-background">
@@ -123,7 +126,7 @@ export default function AppointmentsPage() {
                   ) : (
                     upcoming.map((apt) => (
                       <AppointmentCard
-                        key={String(apt.id)}
+                        key={apt.id}
                         appointment={apt}
                         onCancel={cancelling ? undefined : handleCancel}
                         isPast={false}
@@ -140,7 +143,7 @@ export default function AppointmentsPage() {
                   ) : (
                     past.map((apt) => (
                       <AppointmentCard
-                        key={String(apt.id)}
+                        key={apt.id}
                         appointment={apt}
                         isPast={true}
                       />

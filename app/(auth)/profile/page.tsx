@@ -1,14 +1,13 @@
-'use client';
+"use client";
 
-import { useRouter } from 'next/navigation';
-import Image from 'next/image';
-import useSWR from 'swr';
-import { toast } from 'react-toastify';
-import { ArrowLeft, LogOut, User } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Skeleton } from '@/components/ui/skeleton';
+import { useRouter } from "next/navigation";
+import useSWR from "swr";
+import { toast } from "react-toastify";
+import { ArrowLeft, LogOut, User } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Skeleton } from "@/components/ui/skeleton";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -19,9 +18,9 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
   AlertDialogTrigger,
-} from '@/components/ui/alert-dialog';
-import { useAuth } from '@/hooks/use-auth';
-import { getPatientsMe } from '@/sdk/auth-and-crm/sdk.gen';
+} from "@/components/ui/alert-dialog";
+import { useAuth } from "@/hooks/use-auth";
+import { getPatientsMe } from "@/sdk/auth-and-crm/sdk.gen";
 
 // SWR fetcher — calls SDK directly from client
 async function fetchProfile() {
@@ -34,16 +33,16 @@ export default function ProfilePage() {
   const router = useRouter();
   const { logout } = useAuth();
 
-  const { data: profile, isLoading } = useSWR('patients/me', fetchProfile, {
-    onError: () => toast.error('Failed to load profile'),
+  const { data: profile, isLoading } = useSWR("patients/me", fetchProfile, {
+    onError: () => toast.error("Failed to load profile"),
   });
 
   const handleLogout = async () => {
     await logout();
-    router.replace('/login');
+    router.replace("/login");
   };
 
-  const displayName = profile?.contact_name || profile?.partner_name || '—';
+  const displayName = profile?.contact_name || profile?.partner_name || "—";
 
   if (isLoading) {
     return (
@@ -90,7 +89,7 @@ export default function ProfilePage() {
 
         <div className="flex flex-col gap-1.5">
           <Label>Mobile Number</Label>
-          <Input value={profile?.caller_mobile ?? '—'} disabled />
+          <Input value={profile?.caller_mobile ?? "—"} disabled />
         </div>
 
         {profile?.caller_email && (
@@ -116,14 +115,17 @@ export default function ProfilePage() {
               <AlertDialogHeader>
                 <AlertDialogTitle>Delete your account?</AlertDialogTitle>
                 <AlertDialogDescription>
-                  This action is permanent. All your data will be removed and cannot be recovered.
+                  This action is permanent. All your data will be removed and
+                  cannot be recovered.
                 </AlertDialogDescription>
               </AlertDialogHeader>
               <AlertDialogFooter>
                 <AlertDialogCancel>Cancel</AlertDialogCancel>
                 <AlertDialogAction
                   className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                  onClick={() => toast.info('Please contact support to delete your account.')}
+                  onClick={() =>
+                    toast.info("Please contact support to delete your account.")
+                  }
                 >
                   Delete Account
                 </AlertDialogAction>

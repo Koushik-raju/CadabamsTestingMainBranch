@@ -24,7 +24,7 @@ async function get(name: string, options?: GetCookieOptions): Promise<string | n
     const store = await getNextCookieStore();
     const cookie = store?.get(name);
     if (!cookie) return null;
-    return (options?.decode ?? true) ? decodeURIComponent(cookie.value) : cookie.value;
+    return cookie.value;
   } catch {
     return null;
   }
@@ -35,10 +35,9 @@ async function set(name: string, value: string, options?: SetCookieOptions): Pro
     if (!isServer()) return false;
     const store = await getNextCookieStore();
     if (!store) return false;
-    const encoded = (options?.encode ?? true) ? encodeURIComponent(value) : value;
     store.set({
       name,
-      value: encoded,
+      value,
       path: options?.path ?? '/',
       domain: options?.domain,
       maxAge: options?.maxAge,

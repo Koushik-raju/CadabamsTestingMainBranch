@@ -2,19 +2,24 @@
 
 import { Clock } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import type { TimeSlot } from '@/sdk/auth-and-crm';
 
-export interface TimeSlotItem {
-  id: string | number;
-  slot?: string;
-  time?: string;
-  display_time?: string;
-  availability?: boolean | string;
+function formatSlotTime(isoStr: string): string {
+  try {
+    return new Date(isoStr).toLocaleTimeString('en-IN', {
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: true,
+    });
+  } catch {
+    return isoStr;
+  }
 }
 
 interface TimeSlotPickerProps {
-  slots: TimeSlotItem[];
-  selectedId: string | number | null;
-  onSelect: (id: string | number) => void;
+  slots: TimeSlot[];
+  selectedId: number | null;
+  onSelect: (id: number) => void;
   loading?: boolean;
 }
 
@@ -23,10 +28,7 @@ export function TimeSlotPicker({ slots, selectedId, onSelect, loading }: TimeSlo
     return (
       <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
         {Array.from({ length: 6 }).map((_, i) => (
-          <div
-            key={i}
-            className="h-11 rounded-xl bg-muted animate-pulse"
-          />
+          <div key={i} className="h-11 rounded-xl bg-muted animate-pulse" />
         ))}
       </div>
     );
@@ -44,18 +46,13 @@ export function TimeSlotPicker({ slots, selectedId, onSelect, loading }: TimeSlo
   return (
     <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
       {slots.map((slot) => {
-        const label = slot.display_time ?? slot.slot ?? slot.time ?? 'N/A';
+        const label = formatSlotTime(slot.start_datetime);
         const isSelected = slot.id === selectedId;
-        const isAvailable =
-          slot.availability === true ||
-          slot.availability === 'available' ||
-          slot.availability === undefined;
 
         return (
           <button
             key={slot.id}
             type="button"
-            disabled={!isAvailable}
             onClick={() => onSelect(slot.id)}
             aria-pressed={isSelected}
             aria-label={`Select time slot ${label}`}
@@ -63,9 +60,7 @@ export function TimeSlotPicker({ slots, selectedId, onSelect, loading }: TimeSlo
               'flex items-center justify-center gap-1.5 px-3 py-2.5 rounded-xl text-sm font-medium border transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-primary',
               isSelected
                 ? 'border-primary bg-primary/10 text-primary'
-                : isAvailable
-                ? 'border-border bg-card text-foreground hover:border-primary/50'
-                : 'border-border bg-muted text-muted-foreground cursor-not-allowed opacity-50'
+                : 'border-border bg-card text-foreground hover:border-primary/50'
             )}
           >
             {label}

@@ -12,7 +12,10 @@ export function attachRefreshInterceptor(axiosInstance: AxiosInstance) {
 
         try {
           const newToken = await refreshAccessToken();
-          original.headers['Authorization'] = `Bearer ${newToken}`;
+          original.headers = {
+            ...original.headers,
+            Authorization: `Bearer ${newToken}`,
+          };
           return axiosInstance(original); // retry with new token
         } catch {
           // Refresh failed — send user to login

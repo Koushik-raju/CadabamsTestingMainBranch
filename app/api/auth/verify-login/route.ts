@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
 import { postAuthPatientVerifyLogin } from "@/sdk/auth-and-crm/sdk.gen";
-import { setTokens } from "@/lib/cookies";
 
 export async function POST(req: NextRequest) {
   try {
@@ -9,29 +8,16 @@ export async function POST(req: NextRequest) {
 
     if (error) {
       const status = (error as { status?: number }).status ?? 401;
-      return NextResponse.json(
-        { error: "OTP verification failed" },
-        { status },
-      );
+      return NextResponse.json({ error: "OTP verification failed" }, { status });
     }
 
-    await setTokens(
-      { accessToken: data.accessToken, refreshToken: data.refreshToken },
-      { accessTokenOptions: { maxAge: data.expiresIn } },
-    );
+    const { accessToken, refreshToken, expiresIn, ...userInfo } = data;
 
-    // Strip tokens — never sent to the client
-    const {
-      accessToken: _a,
-      refreshToken: _r,
-      expiresIn: _e,
-      ...userInfo
-    } = data;
-    return NextResponse.json(userInfo);
+    const res = NextResponse.json(userInfo);
+    res.cookies.set("access_token", accessToken, { path: "/", maxAge: expiresIn });
+    res.cookies.set("refresh_token", refreshToken, { path: "/", maxAge: 60 * 60 * 24 * 7 });
+    return res;
   } catch {
-    return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 },
-    );
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }

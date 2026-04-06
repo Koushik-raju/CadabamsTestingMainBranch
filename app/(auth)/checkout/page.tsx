@@ -87,7 +87,6 @@ function CheckoutContent() {
         theme: { color: '#E7590F' },
         handler: (response: Record<string, unknown>) => {
           resolve();
-          // Callback to backend
           paymentService.razorpayCallback({
             razorpay_payment_id: response.razorpay_payment_id,
             razorpay_order_id:   response.razorpay_order_id,
@@ -110,8 +109,6 @@ function CheckoutContent() {
   };
 
   const handleCapacitorPayment = async (orderData: Record<string, unknown>) => {
-    // Use Function constructor so bundler does not statically resolve 'capacitor-razorpay'
-    // (the package only exists in the native Capacitor build, not in the web bundle)
     type RazorpayMod = { Checkout: { open(o: Record<string, unknown>): Promise<Record<string, unknown>> } };
     let mod: RazorpayMod | null = null;
     try {
@@ -148,7 +145,6 @@ function CheckoutContent() {
     setProcessing(true);
     setError(null);
     try {
-      // Create Razorpay order
       const orderRes = await paymentService.createRazorpayOrder({
         amount:               priceAmount * 100,
         currency:             'INR',
@@ -161,7 +157,6 @@ function CheckoutContent() {
       });
       const orderData = orderRes as Record<string, unknown>;
 
-      // Check if we're in Capacitor native environment
       const isNative =
         typeof window !== 'undefined' &&
         !!(window as unknown as Record<string, unknown>).Capacitor &&

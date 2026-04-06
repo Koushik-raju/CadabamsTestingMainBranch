@@ -16,9 +16,13 @@ import { Separator } from '@/components/ui/separator';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Calendar } from '@/components/ui/calendar';
 import { BackButton } from '@/components/common/back-button';
-import { TimeSlotPicker, TimeSlotItem } from '@/components/booking/time-slot-picker';
-import { appointmentService } from '@/services/appointment.service';
-import { useAuth } from '@/hooks/use-auth';
+import { TimeSlotPicker } from './time-slot-picker';
+import {
+  getAppointmentsSlots,
+  getAppointmentsSlotsBySlotIdPrice,
+  putAppointmentsBookBySlotId,
+} from '@/sdk/auth-and-crm';
+import type { TimeSlot } from '@/sdk/auth-and-crm';
 
 function displayName(name: string): string {
   const raw = name.trim();
@@ -29,7 +33,6 @@ function displayName(name: string): string {
 function BookingContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { user } = useAuth();
 
   const doctorId     = searchParams.get('id') ?? '';
   const doctorName   = searchParams.get('name') ?? '';
@@ -37,11 +40,11 @@ function BookingContent() {
   const mode         = searchParams.get('mode') ?? 'online';
   const campusId     = searchParams.get('campus_id') ?? '';
   const subCampusId  = searchParams.get('sub_campus_id') ?? '';
-  const ctId         = searchParams.get('consultationTypeId') ?? (mode === 'online' ? '2' : '1');
+  const ctId         = Number(searchParams.get('consultationTypeId') ?? (mode === 'online' ? '2' : '1'));
 
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
-  const [slots, setSlots]               = useState<TimeSlotItem[]>([]);
-  const [selectedSlot, setSelectedSlot] = useState<string | number | null>(null);
+  const [slots, setSlots]               = useState<TimeSlot[]>([]);
+  const [selectedSlot, setSelectedSlot] = useState<number | null>(null);
   const [slotPrice, setSlotPrice]       = useState<number | null>(null);
   const [loadingSlots, setLoadingSlots] = useState(false);
   const [booking, setBooking]           = useState(false);
@@ -53,29 +56,25 @@ function BookingContent() {
     setError(null);
     setSlots([]);
     setSelectedSlot(null);
+    setSlotPrice(null);
     try {
-      const dateStr = date.toISOString().split('T')[0];
-      const params: Record<string, unknown> = {
-        doctor_id:            doctorId,
-        date:                 dateStr,
-        consultation_type_id: ctId,
-      };
-      if (campusId)    params.campus_id     = campusId;
-      if (subCampusId) params.sub_campus_id = subCampusId;
+      const startOfDay = new Date(date);
+      startOfDay.setHours(0, 0, 0, 0);
+      const endOfDay = new Date(date);
+      endOfDay.setHours(23, 59, 59, 999);
 
-      const res = await appointmentService.getTimeSlots(params);
-      const rawSlots: unknown[] = Array.isArray(res)
-        ? res
-        : Array.isArray((res as Record<string, unknown>)?.data)
-        ? ((res as Record<string, unknown>).data as unknown[])
-        : [];
-
-      setSlots(rawSlots as TimeSlotItem[]);
-
-      // Fetch price
-      const priceRes = await appointmentService.getSlotPrice(params);
-      const price = (priceRes as Record<string, unknown>)?.price;
-      setSlotPrice(typeof price === 'number' ? price : null);
+      const res = await getAppointmentsSlots({
+        query: {
+          doctor_id:            Number(doctorId),
+          availability:         'open',
+          start_datetime:       startOfDay.toISOString(),
+          stop_datetime:        endOfDay.toISOString(),
+          consultation_type_ids: ctId,
+          campus_id:            campusId ? Number(campusId) : undefined,
+          sub_campus_id:        subCampusId ? Number(subCampusId) : undefined,
+        },
+      });
+      setSlots(res.data ?? []);
     } catch (err) {
       console.error(err);
       setError('Failed to load time slots. Please try again.');
@@ -89,6 +88,14 @@ function BookingContent() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  // Fetch price when a slot is selected
+  useEffect(() => {
+    if (selectedSlot === null) { setSlotPrice(null); return; }
+    getAppointmentsSlotsBySlotIdPrice({ path: { slotId: selectedSlot } })
+      .then((res) => setSlotPrice(res.data?.price ?? null))
+      .catch(() => setSlotPrice(null));
+  }, [selectedSlot]);
+
   const handleDateSelect = (date: Date | undefined) => {
     if (!date) return;
     setSelectedDate(date);
@@ -96,38 +103,34 @@ function BookingContent() {
   };
 
   const handleConfirm = async () => {
-    if (!selectedSlot || !user?.lead_id) {
+    if (!selectedSlot) {
       setError('Please select a time slot to continue.');
       return;
     }
     setBooking(true);
     setError(null);
     try {
+      await putAppointmentsBookBySlotId({
+        path: { slotId: selectedSlot },
+        body: {
+          consultation_type_id: ctId,
+          campus_id:   campusId    ? Number(campusId)    : undefined,
+          sub_campus_id: subCampusId ? Number(subCampusId) : undefined,
+          payment_mode: 'online',
+        },
+      });
+
       const dateStr = selectedDate.toISOString().split('T')[0];
-      const bookingData: Record<string, unknown> = {
-        slot_id:              selectedSlot,
-        lead_id:              user.lead_id,
-        doctor_id:            doctorId,
-        date:                 dateStr,
-        consultation_type_id: ctId,
-        payment_mode:         'online',
-      };
-      if (campusId)    bookingData.campus_id     = campusId;
-      if (subCampusId) bookingData.sub_campus_id = subCampusId;
-
-      await appointmentService.bookAppointment(bookingData);
-
-      // Navigate to checkout with params
       const params = new URLSearchParams();
-      params.set('id',                doctorId);
-      params.set('name',              doctorName);
-      params.set('speciality',        speciality);
-      params.set('selectedTimeSlot',  String(selectedSlot));
-      params.set('price',             String(slotPrice ?? ''));
-      params.set('consultationTypeId',ctId);
-      params.set('mode',              mode);
-      params.set('date',              dateStr);
-      if (campusId)    params.set('campusId',    campusId);
+      params.set('id',                 doctorId);
+      params.set('name',               doctorName);
+      params.set('speciality',         speciality);
+      params.set('selectedTimeSlot',   String(selectedSlot));
+      params.set('price',              String(slotPrice ?? ''));
+      params.set('consultationTypeId', String(ctId));
+      params.set('mode',               mode);
+      params.set('date',               dateStr);
+      if (campusId)    params.set('campusId',     campusId);
       if (subCampusId) params.set('sub_campus_id', subCampusId);
       router.push(`/checkout?${params.toString()}`);
     } catch (err) {
@@ -247,9 +250,7 @@ function BookingContent() {
           disabled={!selectedSlot || booking}
           onClick={handleConfirm}
         >
-          {booking ? (
-            <Loader2 className="h-5 w-5 animate-spin mr-2" />
-          ) : null}
+          {booking ? <Loader2 className="h-5 w-5 animate-spin mr-2" /> : null}
           {booking ? 'Processing…' : 'Confirm & Continue'}
         </Button>
       </div>

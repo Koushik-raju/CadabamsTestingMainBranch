@@ -18,23 +18,20 @@ export const DEFAULT_COOKIE_OPTIONS: CookieOptions = {
   sameSite: 'lax',
 };
 
-/**
- * Access token: readable on client AND server.
- * NOT httpOnly so client JS can attach it to Authorization headers.
- */
 export const ACCESS_TOKEN_OPTIONS: CookieOptions = {
-  ...DEFAULT_COOKIE_OPTIONS,
+  path: '/',
   httpOnly: false,
   serverOnly: false,
+  secure: false,
+  sameSite: 'lax',
   maxAge: DURATIONS.ACCESS_TOKEN,
 };
 
-/**
- * Refresh token: server-only, httpOnly — never exposed to client JS.
- */
 export const REFRESH_TOKEN_OPTIONS: CookieOptions = {
-  ...DEFAULT_COOKIE_OPTIONS,
-  httpOnly: true,
-  serverOnly: true,
+  path: '/',
+  httpOnly: false,
+  serverOnly: false,
+  secure: false,
+  sameSite: 'lax',
   maxAge: DURATIONS.REFRESH_TOKEN,
 };

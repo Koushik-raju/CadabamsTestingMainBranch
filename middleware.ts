@@ -1,40 +1,57 @@
-import { NextResponse } from 'next/server';
-import type { NextRequest } from 'next/server';
+import { NextResponse } from "next/server";
+import type { NextRequest } from "next/server";
 
-const publicRoutes = [
-  '/', '/login', '/signup', '/new-chat', '/find-therapist', '/assessment',
-  '/privacy-policy', '/term-and-condition', '/doctors-list', '/booking', '/checkout',
-  '/chat-history', '/worksheet', '/journey',
+// Routes accessible without a session. Everything else requires auth.
+const PUBLIC_ROUTES = [
+  "/login",
+  "/signup",
+  "/privacy-policy",
+  "/term-and-condition",
+  "/worksheet",
+  "/assessment",
+  "/journey",   // covers /journey/[id]
 ];
 
-const authOnlyRoutes = ['/login', '/signup'];
+function isPublicRoute(pathname: string): boolean {
+  return PUBLIC_ROUTES.some((r) => pathname === r || pathname.startsWith(r + "/"));
+}
 
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
-  // Use access_token (set by /api/auth/* route handlers)
-  // Fall back to refresh_token so a user with an expired access token
-  // but a valid refresh token isn't kicked to login immediately.
-  const hasSession =
-    !!request.cookies.get('access_token')?.value ||
-    !!request.cookies.get('refresh_token')?.value;
+  const accessToken = request.cookies.get("access_token")?.value;
+  const refreshToken = request.cookies.get("refresh_token")?.value;
+  const isLoggedIn = !!accessToken || !!refreshToken;
 
-  const isPublic = publicRoutes.some((r) => pathname === r || pathname.startsWith(r + '/'));
-  const isAuthOnly = authOnlyRoutes.includes(pathname);
+  console.log(`[middleware] ──────────────────────────────`);
+  console.log(`[middleware] path         : ${pathname}`);
+  console.log(`[middleware] access_token : ${accessToken ? accessToken.slice(0, 40) + "…" : "MISSING"}`);
+  console.log(`[middleware] refresh_token: ${refreshToken ? refreshToken.slice(0, 40) + "…" : "MISSING"}`);
+  console.log(`[middleware] isLoggedIn   : ${isLoggedIn} | isPublic: ${isPublicRoute(pathname)}`);
+  console.log(`[middleware] all cookies  : ${request.cookies.getAll().map((c) => c.name).join(", ") || "(none)"}`);
 
-  if (!hasSession && !isPublic) {
-    const url = new URL('/login', request.url);
-    url.searchParams.set('from', pathname);
+  // Logged-in users are redirected away from login/signup
+  if (isLoggedIn) {
+    if (pathname === "/login" || pathname === "/signup") {
+      console.log(`[middleware] → redirect to /home (already authenticated)`);
+      return NextResponse.redirect(new URL("/home", request.url));
+    }
+    console.log(`[middleware] → next() (authenticated)`);
+    return NextResponse.next();
+  }
+
+  // Unauthenticated users can only access public routes
+  if (!isPublicRoute(pathname)) {
+    console.log(`[middleware] → redirect to /login`);
+    const url = new URL("/login", request.url);
+    url.searchParams.set("from", pathname);
     return NextResponse.redirect(url);
   }
 
-  if (hasSession && isAuthOnly) {
-    return NextResponse.redirect(new URL('/home', request.url));
-  }
-
+  console.log(`[middleware] → next() (public route)`);
   return NextResponse.next();
 }
 
 export const config = {
-  matcher: '/((?!api|_next/static|_next/image|favicon.ico).*)',
+  matcher: "/((?!api|_next/static|_next/image|favicon.ico|manifest.json|\\.well-known).*)",
 };

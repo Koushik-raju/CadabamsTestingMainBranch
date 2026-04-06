@@ -2,25 +2,30 @@ import Image from 'next/image';
 import { Video } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import type { Appointment } from '@/types';
+import type { AppointmentDetail } from '@/sdk/auth-and-crm';
 
 interface Props {
-  appointments?: Appointment[];
+  appointments?: AppointmentDetail[];
   onJoin?: () => void;
+}
+
+function formatAppointmentTime(startDatetime: string): string {
+  try {
+    const d = new Date(startDatetime);
+    return `${d.toLocaleDateString('en-IN', { month: 'short', day: '2-digit' })}, ${d.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: true })}`;
+  } catch {
+    return 'Upcoming';
+  }
 }
 
 export function UpcomingSession({ appointments, onJoin }: Props) {
   const next = appointments?.[0];
   if (!next) return null;
 
-  const doctor = next.doctor as { professional_name?: string; profile_image?: string } | undefined;
-  const doctorName = doctor?.professional_name ?? (next.doctor_name as string | undefined) ?? 'Your Doctor';
-  const profileImage = doctor?.profile_image ?? '/doctor_ananya.png';
-  const dateStr = (next.appointment_date as string) ?? (next.date as string);
-  const timeStr = (next.appointment_time as string) ?? (next.time as string) ?? '';
-  const formattedTime = dateStr
-    ? `${new Date(dateStr).toLocaleDateString('en-IN', { month: 'short', day: '2-digit' })}, ${timeStr}`
-    : 'Upcoming';
+  const doctorName = typeof next.doctor[1] === 'string' ? next.doctor[1] : 'Your Doctor';
+  const profileImage = next.doctor_image_url || '/doctor_ananya.png';
+  const formattedTime = formatAppointmentTime(next.start_datetime);
+  const isVirtual = next.virtual_consultation_url !== false;
 
   return (
     <div className="px-4 mb-24">
@@ -36,15 +41,17 @@ export function UpcomingSession({ appointments, onJoin }: Props) {
             <h4 className="text-md font-bold line-clamp-1">{doctorName}</h4>
             <p className="text-muted-foreground text-xs font-medium">{formattedTime}</p>
           </div>
-          <Button
-            variant="secondary"
-            size="icon"
-            className="rounded-full shrink-0"
-            onClick={onJoin}
-            aria-label="Join session"
-          >
-            <Video className="w-5 h-5" />
-          </Button>
+          {isVirtual && (
+            <Button
+              variant="secondary"
+              size="icon"
+              className="rounded-full shrink-0"
+              onClick={onJoin}
+              aria-label="Join session"
+            >
+              <Video className="w-5 h-5" />
+            </Button>
+          )}
         </CardContent>
       </Card>
     </div>
