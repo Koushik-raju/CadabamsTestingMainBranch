@@ -44,3 +44,5 @@ next-env.d.ts
 # Agent worktrees (temporary)
 .claude/worktrees/
 .clone/
+
+src/sdk/

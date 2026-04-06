@@ -1,0 +1,40 @@
+import type { CookieOptions } from './types';
+
+export const COOKIE_NAMES = {
+  ACCESS_TOKEN: 'access_token',
+  REFRESH_TOKEN: 'refresh_token',
+} as const;
+
+export const DURATIONS = {
+  /** 15 minutes */
+  ACCESS_TOKEN: 15 * 60,
+  /** 7 days */
+  REFRESH_TOKEN: 7 * 24 * 60 * 60,
+} as const;
+
+export const DEFAULT_COOKIE_OPTIONS: CookieOptions = {
+  path: '/',
+  secure: process.env.NODE_ENV === 'production',
+  sameSite: 'lax',
+};
+
+/**
+ * Access token: readable on client AND server.
+ * NOT httpOnly so client JS can attach it to Authorization headers.
+ */
+export const ACCESS_TOKEN_OPTIONS: CookieOptions = {
+  ...DEFAULT_COOKIE_OPTIONS,
+  httpOnly: false,
+  serverOnly: false,
+  maxAge: DURATIONS.ACCESS_TOKEN,
+};
+
+/**
+ * Refresh token: server-only, httpOnly — never exposed to client JS.
+ */
+export const REFRESH_TOKEN_OPTIONS: CookieOptions = {
+  ...DEFAULT_COOKIE_OPTIONS,
+  httpOnly: true,
+  serverOnly: true,
+  maxAge: DURATIONS.REFRESH_TOKEN,
+};

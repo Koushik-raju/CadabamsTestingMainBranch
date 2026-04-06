@@ -1,98 +1,62 @@
 'use client';
 
 import { createContext, useContext, useState, useEffect, useCallback } from 'react';
-import { ref as storageRef, getDownloadURL } from 'firebase/storage';
-import { storage } from '@/lib/firebase';
+import { getPatientsMe } from '@/sdk/auth-and-crm/sdk.gen';
 import type { User } from '@/types';
-
-const CACHE_EXPIRATION = 24 * 60 * 60 * 1000;
 
 interface AuthContextValue {
   user: User | null;
-  profileImage: string;
-  login: (userData: User) => Promise<User>;
-  logout: () => void;
-  updateProfileImage: (url: string) => void;
+  /** Call after OTP verify — fetches profile via SDK and stores in state + localStorage */
+  login: () => Promise<User>;
+  logout: () => Promise<void>;
 }
 
 export const AuthContext = createContext<AuthContextValue>({
   user: null,
-  profileImage: '/profile.png',
-  login: async (u) => u,
-  logout: () => {},
-  updateProfileImage: () => {},
+  login: async () => { throw new Error('AuthProvider not mounted'); },
+  logout: async () => {},
 });
 
 export function useAuthProvider(): AuthContextValue {
   const [user, setUser] = useState<User | null>(null);
-  const [profileImage, setProfileImage] = useState('/profile.png');
 
-  const fetchProfileImage = useCallback(async (leadId: string | number): Promise<string> => {
-    const cacheKey = `profile_image_${leadId}`;
-    const cached = localStorage.getItem(cacheKey);
-    const now = Date.now();
-
-    if (cached) {
-      try {
-        const { url, timestamp } = JSON.parse(cached);
-        if (now - timestamp < CACHE_EXPIRATION) return url;
-      } catch {
-        localStorage.removeItem(cacheKey);
-      }
-    }
-
+  // Restore session from localStorage on mount
+  useEffect(() => {
     try {
-      const ref = storageRef(storage, `profile_images/${leadId}.jpg`);
-      const url = await getDownloadURL(ref);
-      localStorage.setItem(cacheKey, JSON.stringify({ url, timestamp: now }));
-      return url;
+      const raw = localStorage.getItem('user');
+      if (!raw) return;
+      setUser(JSON.parse(raw) as User);
     } catch {
-      return '/profile.png';
+      localStorage.removeItem('user');
     }
   }, []);
 
-  useEffect(() => {
-    (async () => {
-      try {
-        const raw = localStorage.getItem('user');
-        if (!raw) return;
-        const parsed: User = JSON.parse(raw);
-        setUser(parsed);
-        if (parsed?.lead_id) {
-          setProfileImage(await fetchProfileImage(parsed.lead_id));
-        }
-      } catch {
-        localStorage.removeItem('user');
-      }
-    })();
-  }, [fetchProfileImage]);
+  const login = useCallback(async (): Promise<User> => {
+    const { data, error } = await getPatientsMe();
+    if (error || !data) throw new Error('Failed to fetch profile');
 
-  const login = useCallback(async (userData: User): Promise<User> => {
+    const userData: User = {
+      lead_id: data.id,
+      phone_number: data.caller_mobile,
+      name: data.contact_name || data.partner_name,
+      email: data.caller_email,
+    };
+
     localStorage.setItem('user', JSON.stringify(userData));
     setUser(userData);
-    if (userData?.lead_id) {
-      setProfileImage(await fetchProfileImage(userData.lead_id));
-    }
     return userData;
-  }, [fetchProfileImage]);
-
-  const logout = useCallback(() => {
-    localStorage.clear();
-    setUser(null);
-    setProfileImage('/profile.png');
   }, []);
 
-  const updateProfileImage = useCallback((url: string) => {
-    setProfileImage(url);
-    if (user?.lead_id) {
-      localStorage.setItem(
-        `profile_image_${user.lead_id}`,
-        JSON.stringify({ url, timestamp: Date.now() })
-      );
+  const logout = useCallback(async () => {
+    try {
+      await fetch('/api/auth/logout', { method: 'POST', credentials: 'include' });
+    } finally {
+      localStorage.clear();
+      setUser(null);
     }
-  }, [user]);
+  }, []);
 
-  return { user, profileImage, login, logout, updateProfileImage };
+  return { user, login, logout };
 }
 
 export const useAuth = () => useContext(AuthContext);
