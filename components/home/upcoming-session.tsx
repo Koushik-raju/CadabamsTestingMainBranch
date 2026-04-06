@@ -40,7 +40,7 @@ export function UpcomingSession({ appointments, onJoin }: Props) {
   const hasAppointments = appointments && appointments.length > 0;
 
   return (
-    <div className="px-4 mb-24">
+    <div className="px-4 mb-4">
       <div className="flex items-center justify-between mb-3">
         <h2 className="text-lg font-bold text-foreground">
           Upcoming Appointments

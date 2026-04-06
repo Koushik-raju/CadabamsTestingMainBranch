@@ -11,6 +11,7 @@ const nextConfig: NextConfig = {
       { protocol: 'https', hostname: 'enterprise.mindtalkbuddy.com' },
       { protocol: 'https', hostname: 'firebasestorage.googleapis.com' },
       { protocol: 'https', hostname: 'physiotattava-website.s3.eu-central-1.amazonaws.com' },
+      { protocol: 'https', hostname: 'crm.cadabams.com' },
     ],
   },
 };

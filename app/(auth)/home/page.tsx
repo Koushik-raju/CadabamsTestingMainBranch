@@ -84,6 +84,11 @@ export default function HomePage() {
 
       {/* Main content — overlaps header by pulling up with negative margin */}
       <div className="relative mt-[-20px] pt-8 pb-20 bg-background rounded-t-2xl z-10 flex flex-col gap-0">
+        <UpcomingSession
+          appointments={appointments}
+          onJoin={() => handleAction("join_session")}
+        />
+
         <SupportSection
           onTalk={() => handleAction("quick_action", "therapist")}
           onMatch={() => handleAction("quick_action", "match")}
@@ -95,11 +100,6 @@ export default function HomePage() {
 
         <Recommendations
           onRecommendClick={(id) => handleAction("recommendation", id)}
-        />
-
-        <UpcomingSession
-          appointments={appointments}
-          onJoin={() => handleAction("join_session")}
         />
       </div>
     </div>
