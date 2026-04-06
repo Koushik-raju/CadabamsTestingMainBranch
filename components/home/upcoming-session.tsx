@@ -1,6 +1,5 @@
 import Image from 'next/image';
 import { Video } from 'lucide-react';
-import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import type { AppointmentDetail } from '@/sdk/auth-and-crm';
 
@@ -9,51 +8,109 @@ interface Props {
   onJoin?: () => void;
 }
 
-function formatAppointmentTime(startDatetime: string): string {
+function formatDateTime(startDatetime: string): string {
   try {
     const d = new Date(startDatetime);
-    return `${d.toLocaleDateString('en-IN', { month: 'short', day: '2-digit' })}, ${d.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: true })}`;
+    const date = d.toLocaleDateString('en-IN', {
+      weekday: 'short',
+      day: '2-digit',
+      month: 'short',
+      year: 'numeric',
+    });
+    const time = d.toLocaleTimeString('en-IN', {
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: true,
+    });
+    return `${date} • ${time}`;
   } catch {
-    return 'Upcoming';
+    return '';
   }
 }
 
-export function UpcomingSession({ appointments, onJoin }: Props) {
-  const next = appointments?.[0];
-  if (!next) return null;
+function getDoctorName(doctor: [number | string, number | string]): string {
+  return typeof doctor[1] === 'string' ? doctor[1] : 'Doctor';
+}
 
-  const doctorName = typeof next.doctor[1] === 'string' ? next.doctor[1] : 'Your Doctor';
-  const profileImage = next.doctor_image_url || '/doctor_ananya.png';
-  const formattedTime = formatAppointmentTime(next.start_datetime);
-  const isVirtual = next.virtual_consultation_url !== false;
+function getSpecialization(specialityId: [number | string, number | string]): string {
+  return typeof specialityId[1] === 'string' ? specialityId[1] : '';
+}
+
+export function UpcomingSession({ appointments, onJoin }: Props) {
+  const hasAppointments = appointments && appointments.length > 0;
 
   return (
     <div className="px-4 mb-24">
-      <Card>
-        <CardContent className="flex items-center gap-4 pt-5">
-          <div className="w-14 h-14 rounded-lg overflow-hidden flex-shrink-0 relative">
-            <Image src={profileImage} alt={doctorName} fill className="object-cover" />
-          </div>
-          <div className="flex-grow">
-            <span className="text-[10px] font-bold text-primary uppercase tracking-wider mb-1 block">
-              UPCOMING SESSION
-            </span>
-            <h4 className="text-md font-bold line-clamp-1">{doctorName}</h4>
-            <p className="text-muted-foreground text-xs font-medium">{formattedTime}</p>
-          </div>
-          {isVirtual && (
-            <Button
-              variant="secondary"
-              size="icon"
-              className="rounded-full shrink-0"
-              onClick={onJoin}
-              aria-label="Join session"
-            >
-              <Video className="w-5 h-5" />
-            </Button>
-          )}
-        </CardContent>
-      </Card>
+      <div className="flex items-center justify-between mb-3">
+        <h2 className="text-lg font-bold text-foreground">
+          Upcoming Appointments
+        </h2>
+        {hasAppointments && appointments.length > 2 && (
+          <button className="text-sm font-medium text-primary hover:underline">
+            View all →
+          </button>
+        )}
+      </div>
+
+      {!hasAppointments ? (
+        <div className="bg-white rounded-xl border border-border p-6 text-center">
+          <p className="text-sm text-muted-foreground">
+            You have no upcoming appointments
+          </p>
+        </div>
+      ) : (
+        <div className="flex flex-col gap-3">
+          {appointments.map((apt) => {
+            const doctorName = getDoctorName(apt.doctor);
+            const specialization = getSpecialization(apt.speciality_id);
+            const formattedTime = formatDateTime(apt.start_datetime);
+            const profileImage = apt.doctor_image_url || '/doctor_ananya.png';
+            const isVirtual = apt.virtual_consultation_url !== false;
+
+            return (
+              <div
+                key={apt.id}
+                className="bg-white rounded-xl border border-border p-4 flex items-center gap-3 shadow-sm"
+              >
+                <div className="w-12 h-12 rounded-full overflow-hidden flex-shrink-0 relative">
+                  <Image
+                    src={profileImage}
+                    alt={doctorName}
+                    fill
+                    className="object-cover"
+                  />
+                </div>
+
+                <div className="flex-grow min-w-0">
+                  <h4 className="text-sm font-bold text-foreground line-clamp-1">
+                    {doctorName}
+                  </h4>
+                  {specialization && (
+                    <p className="text-xs text-muted-foreground line-clamp-1">
+                      {specialization}
+                    </p>
+                  )}
+                  <p className="text-xs text-muted-foreground mt-0.5">
+                    {formattedTime}
+                  </p>
+                </div>
+
+                {isVirtual && (
+                  <Button
+                    variant="default"
+                    size="sm"
+                    className="rounded-full bg-green-500 hover:bg-green-600 text-white shrink-0 gap-1.5 px-3"
+                    onClick={onJoin}
+                  >
+                    <Video className="w-3.5 h-3.5" />
+                    <span>Join</span>
+                  </Button>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      )}
     </div>
   );
 }

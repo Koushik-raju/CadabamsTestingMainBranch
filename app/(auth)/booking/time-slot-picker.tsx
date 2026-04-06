@@ -1,72 +1,61 @@
 'use client';
 
-import { Clock } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { TimeSlot } from '@/sdk/auth-and-crm';
 
-function formatSlotTime(isoStr: string): string {
-  try {
-    return new Date(isoStr).toLocaleTimeString('en-IN', {
-      hour: '2-digit',
-      minute: '2-digit',
-      hour12: true,
-    });
-  } catch {
-    return isoStr;
-  }
+export function formatTime(isoStr: string): string {
+  return new Date(isoStr).toLocaleTimeString('en-US', {
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: true,
+  });
 }
 
-interface TimeSlotPickerProps {
+interface SlotSectionProps {
+  title: string;
   slots: TimeSlot[];
   selectedId: number | null;
   onSelect: (id: number) => void;
-  loading?: boolean;
 }
 
-export function TimeSlotPicker({ slots, selectedId, onSelect, loading }: TimeSlotPickerProps) {
-  if (loading) {
-    return (
-      <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
-        {Array.from({ length: 6 }).map((_, i) => (
-          <div key={i} className="h-11 rounded-xl bg-muted animate-pulse" />
-        ))}
-      </div>
-    );
-  }
+export function SlotSection({ title, slots, selectedId, onSelect }: SlotSectionProps) {
+  if (slots.length === 0) return null;
 
-  if (!slots.length) {
-    return (
-      <div className="flex flex-col items-center justify-center py-8 text-muted-foreground gap-2">
-        <Clock className="h-8 w-8" />
-        <p className="text-sm">No slots available for this date</p>
-      </div>
-    );
-  }
+  // Pad last row to complete a 3-column grid
+  const padCount = slots.length % 3 === 0 ? 0 : 3 - (slots.length % 3);
 
   return (
-    <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
-      {slots.map((slot) => {
-        const label = formatSlotTime(slot.start_datetime);
-        const isSelected = slot.id === selectedId;
-
-        return (
-          <button
-            key={slot.id}
-            type="button"
-            onClick={() => onSelect(slot.id)}
-            aria-pressed={isSelected}
-            aria-label={`Select time slot ${label}`}
-            className={cn(
-              'flex items-center justify-center gap-1.5 px-3 py-2.5 rounded-xl text-sm font-medium border transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-primary',
-              isSelected
-                ? 'border-primary bg-primary/10 text-primary'
-                : 'border-border bg-card text-foreground hover:border-primary/50'
-            )}
+    <div className="mb-4 last:mb-0">
+      <p className="text-xs text-muted-foreground font-medium mb-2">{title}</p>
+      <div className="grid grid-cols-3 gap-2">
+        {slots.map((slot) => {
+          const isSelected = slot.id === selectedId;
+          return (
+            <button
+              key={slot.id}
+              type="button"
+              onClick={() => onSelect(slot.id)}
+              aria-pressed={isSelected}
+              className={cn(
+                'h-10 rounded-xl text-xs font-medium border transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-primary',
+                isSelected
+                  ? 'border-primary bg-primary/10 text-primary'
+                  : 'border-border bg-white text-foreground hover:border-primary/40',
+              )}
+            >
+              {formatTime(slot.start_datetime)}
+            </button>
+          );
+        })}
+        {Array.from({ length: padCount }).map((_, i) => (
+          <div
+            key={`pad-${i}`}
+            className="h-10 flex items-center justify-center"
           >
-            {label}
-          </button>
-        );
-      })}
+            <span className="text-xs text-muted-foreground">No slots</span>
+          </div>
+        ))}
+      </div>
     </div>
   );
 }
