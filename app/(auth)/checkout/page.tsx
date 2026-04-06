@@ -18,6 +18,7 @@ import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { BackButton } from '@/components/common/back-button';
 import { paymentService } from '@/services/payment.service';
 import { useAuth } from '@/hooks/use-auth';
+import { useRazorpay } from 'react-razorpay';
 
 
 function displayName(name: string): string {
@@ -56,6 +57,7 @@ function CheckoutContent() {
   const campusId    = searchParams.get('campusId') ?? '';
   const subCampus   = searchParams.get('sub_campus_id') ?? '';
 
+  const { Razorpay } = useRazorpay();
   const [processing, setProcessing] = useState(false);
   const [error, setError]           = useState<string | null>(null);
   const [success, setSuccess]       = useState(false);
@@ -70,22 +72,22 @@ function CheckoutContent() {
     .join('')
     .toUpperCase();
 
-  const handleWebPayment = async (orderData: Record<string, unknown>) => {
+  const handleWebPayment = (orderData: Record<string, unknown>) => {
     return new Promise<void>((resolve, reject) => {
-      const options = {
-        key:         orderData.key_id ?? orderData.key ?? '',
-        amount:      orderData.amount ?? priceAmount * 100,
+      const rzp = new Razorpay({
+        key:         process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID ?? '',
+        amount:      String(orderData.amount ?? priceAmount * 100),
         currency:    'INR',
         name:        'Cadabams MindTalk',
         description: `Consultation with ${displayName(doctorName)}`,
-        order_id:    orderData.order_id ?? orderData.id ?? '',
+        order_id:    String(orderData.order_id ?? orderData.id ?? ''),
         prefill: {
-          name:    String(user?.caller_name ?? user?.name ?? ''),
+          name:    String(user?.name ?? ''),
           email:   String(user?.email ?? ''),
-          contact: String(user?.caller_mobile ?? user?.phone_number ?? ''),
+          contact: String(user?.phone_number ?? ''),
         },
         theme: { color: '#E7590F' },
-        handler: (response: Record<string, unknown>) => {
+        handler: (response) => {
           resolve();
           paymentService.razorpayCallback({
             razorpay_payment_id: response.razorpay_payment_id,
@@ -96,14 +98,7 @@ function CheckoutContent() {
         modal: {
           ondismiss: () => reject(new Error('Payment cancelled')),
         },
-      };
-
-      const RazorpayCtor = window.Razorpay;
-      if (!RazorpayCtor) {
-        reject(new Error('Razorpay not loaded'));
-        return;
-      }
-      const rzp = new RazorpayCtor(options);
+      });
       rzp.open();
     });
   };

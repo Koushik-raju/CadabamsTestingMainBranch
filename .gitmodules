@@ -1,0 +1,3 @@
+[submodule "libs/crm-sdk"]
+	path = libs/crm-sdk
+	url = https://github.com/EXARFit/crm-sdk

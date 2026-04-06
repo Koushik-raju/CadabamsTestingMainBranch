@@ -20,15 +20,34 @@ export const AuthContext = createContext<AuthContextValue>({
 export function useAuthProvider(): AuthContextValue {
   const [user, setUser] = useState<User | null>(null);
 
-  // Restore session from localStorage on mount
+  // Restore session from localStorage on mount; re-fetch if lead_id is missing
   useEffect(() => {
-    try {
-      const raw = localStorage.getItem('user');
-      if (!raw) return;
-      setUser(JSON.parse(raw) as User);
-    } catch {
-      localStorage.removeItem('user');
+    async function restoreSession() {
+      try {
+        const raw = localStorage.getItem('user');
+        if (raw) {
+          const stored = JSON.parse(raw) as User;
+          if (stored.lead_id) {
+            setUser(stored);
+            return;
+          }
+        }
+        // No stored user or lead_id missing — try to fetch from API
+        const { data } = await getPatientsMe();
+        if (!data) return;
+        const userData: User = {
+          lead_id: data.id,
+          phone_number: data.caller_mobile,
+          name: data.contact_name || data.partner_name,
+          email: data.caller_email,
+        };
+        localStorage.setItem('user', JSON.stringify(userData));
+        setUser(userData);
+      } catch {
+        localStorage.removeItem('user');
+      }
     }
+    restoreSession();
   }, []);
 
   const login = useCallback(async (): Promise<User> => {
