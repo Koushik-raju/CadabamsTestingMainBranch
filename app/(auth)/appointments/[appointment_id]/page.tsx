@@ -34,9 +34,10 @@ import {
 import {
   getAppointments,
   getAppointmentsPrevious,
+  getAppointmentsMediums,
   putAppointmentsCancelBySlotId,
 } from '@/sdk/auth-and-crm';
-import type { AppointmentDetail } from '@/sdk/auth-and-crm';
+import type { AppointmentDetail, MediumItem } from '@/sdk/auth-and-crm';
 
 // ── helpers ────────────────────────────────────────────────────────────────────
 
@@ -94,30 +95,38 @@ function DetailContent() {
   const router = useRouter();
   const { appointment_id } = useParams<{ appointment_id: string }>();
 
-  const [apt,        setApt]        = useState<AppointmentDetail | null>(null);
-  const [loading,    setLoading]    = useState(true);
-  const [notFound,   setNotFound]   = useState(false);
-  const [cancelling, setCancelling] = useState(false);
+  const [apt,          setApt]          = useState<AppointmentDetail | null>(null);
+  const [loading,      setLoading]      = useState(true);
+  const [notFound,     setNotFound]     = useState(false);
+  const [cancelling,   setCancelling]   = useState(false);
+  const [mediums,      setMediums]      = useState<MediumItem[]>([]);
+  const [mediumId,     setMediumId]     = useState<number | null>(null);
+  const [cancelReason, setCancelReason] = useState('');
 
   useEffect(() => {
     const id = Number(appointment_id);
     Promise.all([
       getAppointments({ query: { start_datetime: new Date(0).toISOString() } }),
       getAppointmentsPrevious(),
-    ]).then(([upRes, pastRes]) => {
+      getAppointmentsMediums(),
+    ]).then(([upRes, pastRes, mediumsRes]) => {
       const all = [...(upRes.data ?? []), ...(pastRes.data ?? [])];
       const found = all.find(a => a.id === id);
       if (found) setApt(found);
       else setNotFound(true);
+      setMediums(mediumsRes.data ?? []);
     }).catch(() => setNotFound(true))
       .finally(() => setLoading(false));
   }, [appointment_id]);
 
   const handleCancel = async () => {
-    if (!apt) return;
+    if (!apt || !cancelReason.trim() || mediumId === null) return;
     setCancelling(true);
     try {
-      await putAppointmentsCancelBySlotId({ path: { slotId: apt.id } });
+      await putAppointmentsCancelBySlotId({
+        path: { slotId: apt.id },
+        body: { medium_id: mediumId, cancel_reason: cancelReason.trim() },
+      });
       router.replace('/appointments');
     } catch (err) {
       console.error(err);
@@ -294,14 +303,47 @@ function DetailContent() {
               <AlertDialogHeader>
                 <AlertDialogTitle>Cancel appointment?</AlertDialogTitle>
                 <AlertDialogDescription>
-                  This will cancel your session with {doctorName}. This action cannot be undone.
+                  Please provide a reason to cancel your session with {doctorName}.
                 </AlertDialogDescription>
               </AlertDialogHeader>
+
+              <div className="space-y-3 py-1">
+                {mediums.length > 0 && (
+                  <div className="space-y-1.5">
+                    <p className="text-sm font-medium">Cancellation reason <span className="text-destructive">*</span></p>
+                    <select
+                      value={mediumId ?? ''}
+                      onChange={e => setMediumId(Number(e.target.value))}
+                      className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+                    >
+                      <option value="" disabled>Select a reason…</option>
+                      {mediums.map(m => (
+                        <option key={m.id} value={m.id}>{m.name}</option>
+                      ))}
+                    </select>
+                  </div>
+                )}
+
+                <div className="space-y-1.5">
+                  <p className="text-sm font-medium">Additional details <span className="text-destructive">*</span></p>
+                  <textarea
+                    value={cancelReason}
+                    onChange={e => setCancelReason(e.target.value)}
+                    placeholder="Tell us more about why you're cancelling…"
+                    rows={3}
+                    className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-primary"
+                  />
+                </div>
+              </div>
+
               <AlertDialogFooter>
-                <AlertDialogCancel>Keep it</AlertDialogCancel>
+                <AlertDialogCancel onClick={() => { setCancelReason(''); setMediumId(null); }}>
+                  Keep it
+                </AlertDialogCancel>
                 <AlertDialogAction
                   onClick={handleCancel}
-                  className="bg-destructive text-white hover:bg-destructive/90"
+                  disabled={!cancelReason.trim() || (mediums.length > 0 && mediumId === null)}
+                  className="bg-destructive text-white hover:bg-destructive/90 disabled:opacity-50"
                 >
                   Yes, cancel
                 </AlertDialogAction>
