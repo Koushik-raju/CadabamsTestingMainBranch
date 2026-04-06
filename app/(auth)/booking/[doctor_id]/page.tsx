@@ -1,7 +1,7 @@
 'use client';
 
 import { Suspense, useState, useEffect, useCallback, useMemo } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useRouter, useSearchParams, useParams } from 'next/navigation';
 import { ChevronLeft, ChevronRight, Video, Building2, Loader2, AlertCircle } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -12,18 +12,27 @@ import {
   getAppointmentsSlots,
   getAppointmentsSlotsBySlotIdPrice,
   putAppointmentsBookBySlotId,
+  getDoctorsById,
 } from '@/sdk/auth-and-crm';
-import type { TimeSlot } from '@/sdk/auth-and-crm';
+import type { TimeSlot, DoctorDetail } from '@/sdk/auth-and-crm';
 
 // ── helpers ────────────────────────────────────────────────────────────────────
 function toDateKey(d: Date): string {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
 }
 
-function displayName(name: string): string {
-  const raw = name.trim();
+function displayName(doctor: DoctorDetail | null): string {
+  if (!doctor) return 'Doctor';
+  const full = (doctor.display_name || doctor.name || '').trim();
+  // Odoo display_name is "Company, DR NAME" — take only the part after the last comma
+  const raw = full.includes(',') ? full.split(',').pop()!.trim() : full;
   if (!raw) return 'Doctor';
   return /^Dr\.?\s/i.test(raw) ? raw : `Dr. ${raw}`;
+}
+
+function specialityName(doctor: DoctorDetail | null): string {
+  if (!doctor) return '';
+  return String(doctor.speciality_id?.[1] ?? '');
 }
 
 type AvailStatus = 'available' | 'few-left' | 'no-slots' | 'full';
@@ -86,15 +95,16 @@ function DateTile({
 // ── BookingContent ─────────────────────────────────────────────────────────────
 function BookingContent() {
   const router       = useRouter();
+  const { doctor_id } = useParams<{ doctor_id: string }>();
   const searchParams = useSearchParams();
 
-  const doctorId    = searchParams.get('id')            ?? '';
-  const doctorName  = searchParams.get('name')          ?? '';
-  const speciality  = searchParams.get('speciality')    ?? '';
-  const imageUrl    = searchParams.get('image_url')     ?? '';
   const campusId    = searchParams.get('campus_id')     ?? '';
   const subCampusId = searchParams.get('sub_campus_id') ?? '';
   const initMode    = searchParams.get('mode')          ?? 'online';
+
+  const [doctor,       setDoctor]       = useState<DoctorDetail | null>(null);
+  const [loadingDoc,   setLoadingDoc]   = useState(true);
+  const [docError,     setDocError]     = useState<string | null>(null);
 
   // Next 14 days (stable after mount)
   const dates = useMemo(() => {
@@ -117,8 +127,21 @@ function BookingContent() {
   const [booking,       setBooking]       = useState(false);
   const [error,         setError]         = useState<string | null>(null);
 
-  const fetchAll = useCallback(async (consultTypeId: number) => {
-    if (!doctorId) return;
+  // Fetch doctor details
+  useEffect(() => {
+    if (!doctor_id) return;
+    setLoadingDoc(true);
+    getDoctorsById({ path: { id: Number(doctor_id) } })
+      .then(r => {
+        if (r.error || !r.data) throw new Error('Not found');
+        setDoctor(r.data);
+      })
+      .catch(() => setDocError('Failed to load doctor details.'))
+      .finally(() => setLoadingDoc(false));
+  }, [doctor_id]);
+
+  const fetchSlots = useCallback(async (consultTypeId: number) => {
+    if (!doctor_id) return;
     setLoadingSlots(true);
     setSlots([]);
     setSelectedSlot(null);
@@ -130,7 +153,7 @@ function BookingContent() {
       end.setHours(23, 59, 59, 999);
       const res = await getAppointmentsSlots({
         query: {
-          doctor_id:             Number(doctorId),
+          doctor_id:             Number(doctor_id),
           availability:          'open',
           start_datetime:        start.toISOString(),
           stop_datetime:         end.toISOString(),
@@ -146,10 +169,10 @@ function BookingContent() {
     } finally {
       setLoadingSlots(false);
     }
-  }, [doctorId, campusId, subCampusId, dates]);
+  }, [doctor_id, campusId, subCampusId, dates]);
 
   useEffect(() => {
-    fetchAll(isOnline ? 2 : 1);
+    fetchSlots(isOnline ? 2 : 1);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -162,7 +185,7 @@ function BookingContent() {
 
   const handleSessionToggle = (online: boolean) => {
     setIsOnline(online);
-    fetchAll(online ? 2 : 1);
+    fetchSlots(online ? 2 : 1);
   };
 
   const slotsByDate = useMemo(() => {
@@ -193,9 +216,9 @@ function BookingContent() {
 
   const sessionDuration = slots[0]?.duration ?? null;
 
-  const initials = doctorName
+  const initials = (doctor?.display_name || doctor?.name || '')
     .replace(/^Dr\.?\s*/i, '')
-    .split(' ').map(w => w[0]).slice(0, 2).join('').toUpperCase();
+    .split(' ').map((w: string) => w[0]).slice(0, 2).join('').toUpperCase();
 
   const handleConfirm = async () => {
     if (!selectedSlot) { setError('Please select a time slot to continue.'); return; }
@@ -212,7 +235,9 @@ function BookingContent() {
         },
       });
       const params = new URLSearchParams({
-        id: doctorId, name: doctorName, speciality,
+        id:                 doctor_id,
+        name:               doctor?.display_name || doctor?.name || '',
+        speciality:         specialityName(doctor),
         selectedTimeSlot:   String(selectedSlot),
         price:              String(slotPrice ?? ''),
         consultationTypeId: String(isOnline ? 2 : 1),
@@ -230,6 +255,24 @@ function BookingContent() {
     }
   };
 
+  if (loadingDoc) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+
+  if (docError) {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center gap-3 px-6 text-center">
+        <AlertCircle className="h-8 w-8 text-destructive" />
+        <p className="text-sm text-destructive">{docError}</p>
+        <Button variant="outline" onClick={() => router.back()}>Go back</Button>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-background flex flex-col">
       {/* Header */}
@@ -240,19 +283,19 @@ function BookingContent() {
 
       <div className="flex-1 px-4 pb-32 space-y-5 max-w-xl mx-auto w-full">
 
-        {/* ── Doctor card (only true "card") ── */}
+        {/* ── Doctor card ── */}
         <div className="rounded-2xl border border-border bg-background p-3 flex items-center justify-between gap-3">
           <div className="flex items-center gap-3 min-w-0">
             <Avatar className="h-11 w-11 shrink-0 rounded-xl">
-              {imageUrl && <AvatarImage src={imageUrl} alt={doctorName} />}
+              {doctor?.image && <AvatarImage src={doctor.image} alt={displayName(doctor)} />}
               <AvatarFallback className="bg-primary/10 text-primary font-semibold text-sm rounded-xl">
                 {initials || 'DR'}
               </AvatarFallback>
             </Avatar>
             <div className="min-w-0">
-              <p className="font-semibold text-sm truncate">{displayName(doctorName)}</p>
+              <p className="font-semibold text-sm truncate">{displayName(doctor)}</p>
               <p className="text-xs text-muted-foreground leading-snug">
-                {[speciality, sessionDuration ? `${sessionDuration} min session` : null]
+                {[specialityName(doctor), sessionDuration ? `${sessionDuration} min session` : null]
                   .filter(Boolean).join(' · ')}
               </p>
             </div>
@@ -264,7 +307,7 @@ function BookingContent() {
           </div>
         </div>
 
-        {/* ── Session type toggle (no card) ── */}
+        {/* ── Session type toggle ── */}
         <div className="flex items-center justify-between">
           <span className="text-sm text-muted-foreground">Session type</span>
           <div className="flex rounded-lg bg-muted p-0.5 text-sm font-medium">
@@ -291,9 +334,8 @@ function BookingContent() {
           </div>
         </div>
 
-        {/* ── Date strip (no card) ── */}
+        {/* ── Date strip ── */}
         <div>
-          {/* Month nav */}
           <div className="flex items-center justify-between mb-3">
             <span className="text-sm font-semibold text-foreground">{monthLabel}</span>
             <div className="flex items-center gap-0.5">
@@ -316,7 +358,6 @@ function BookingContent() {
             </div>
           </div>
 
-          {/* Row 1 */}
           <div className="flex gap-1">
             {dateRow1.map(date => {
               const key = toDateKey(date);
@@ -332,7 +373,6 @@ function BookingContent() {
             })}
           </div>
 
-          {/* Row 2 */}
           {dateRow2.length > 0 && (
             <div className="flex gap-1 mt-1">
               {dateRow2.map(date => {
@@ -354,7 +394,7 @@ function BookingContent() {
           )}
         </div>
 
-        {/* ── Slots (no card) ── */}
+        {/* ── Slots ── */}
         <div>
           <h2 className="font-semibold text-foreground mb-4">
             Available slots for {slotHeading}

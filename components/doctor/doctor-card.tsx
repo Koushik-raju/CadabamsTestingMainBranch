@@ -30,7 +30,9 @@ function processDoctorImage(imageData: unknown): string | null {
 }
 
 function displayName(name: string): string {
-  const raw = name.trim();
+  const full = name.trim();
+  // Odoo display_name is "Company, DR NAME" — take only the part after the last comma
+  const raw = full.includes(',') ? full.split(',').pop()!.trim() : full;
   if (!raw) return 'Doctor';
   return /^Dr\.?\s/i.test(raw) ? raw : `Dr. ${raw}`;
 }
