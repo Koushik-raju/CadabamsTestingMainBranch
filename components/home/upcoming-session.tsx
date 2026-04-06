@@ -1,4 +1,5 @@
 import Image from 'next/image';
+import Link from 'next/link';
 import { Video } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import type { AppointmentDetail } from '@/sdk/auth-and-crm';
@@ -45,11 +46,9 @@ export function UpcomingSession({ appointments, onJoin }: Props) {
         <h2 className="text-lg font-bold text-foreground">
           Upcoming Appointments
         </h2>
-        {hasAppointments && appointments.length > 2 && (
-          <button className="text-sm font-medium text-primary hover:underline">
-            View all →
-          </button>
-        )}
+        <Link href="/appointments" className="text-sm font-medium text-primary hover:underline">
+          View all →
+        </Link>
       </div>
 
       {!hasAppointments ? (
