@@ -7,12 +7,9 @@ import { BackButton } from '@/components/common/back-button';
 import { BookedPackageCard } from '@/components/package/booked-package-card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Package, AlertCircle, PlusCircle } from 'lucide-react';
-import { packageService } from '@/services/package.service';
+import { getPackagesManaged, postPaymentsPackage } from '@/sdk/auth-and-crm';
 import { useAuth } from '@/hooks/use-auth';
 import type { BookedPackage } from '@/types/package';
-import axios from 'axios';
-import { endpoints } from '@/config/api-endpoints';
-import { BEARER_TOKEN } from '@/config/env';
 
 export default function PackagesPage() {
   const router = useRouter();
@@ -24,19 +21,17 @@ export default function PackagesPage() {
   const [paymentError, setPaymentError] = useState<string | null>(null);
 
   const loadPackages = useCallback(async () => {
-    if (!user?.lead_id) return;
     try {
       setLoading(true);
       setError(null);
-      const data = await packageService.managedBookedPackages(user.lead_id);
-      const list = Array.isArray(data) ? data : [];
-      setPackages(list as BookedPackage[]);
+      const res = await getPackagesManaged();
+      setPackages((res.data ?? []) as unknown as BookedPackage[]);
     } catch {
       setError('Failed to load packages. Please try again.');
     } finally {
       setLoading(false);
     }
-  }, [user?.lead_id]);
+  }, []);
 
   useEffect(() => {
     loadPackages();
@@ -48,32 +43,19 @@ export default function PackagesPage() {
       setPaymentLoading(pkg.booked_package_id);
       setPaymentError(null);
 
-      const paymentData = {
-        lead_id: Number(user.lead_id),
-        booked_package_id: Number(pkg.booked_package_id),
-        campus_id: Number(pkg.campus_id[0]),
-      };
-
-      const response = await axios.post(endpoints.RAZORPAY_PAYMENT_URL, paymentData, {
-        params: { user_id: '1' },
-        headers: {
-          Authorization: `Bearer ${BEARER_TOKEN}`,
-          'Content-Type': 'application/json',
+      const res = await postPaymentsPackage({
+        body: {
+          booked_package_id: Number(pkg.booked_package_id),
+          campus_id: Number(pkg.campus_id[0]),
+          lead_id: Number(user.lead_id),
         },
       });
-
-      const shortUrl: string | undefined = (response.data as { result?: { short_url?: string } })?.result?.short_url;
-      if (shortUrl) {
-        window.location.href = encodeURI(shortUrl);
-      } else {
-        throw new Error('No payment URL received.');
-      }
+      if (res.error) throw new Error(JSON.stringify(res.error));
+      const url = res.data?.redirect_url;
+      if (!url) throw new Error('No payment URL received.');
+      window.location.href = url;
     } catch (err: unknown) {
-      const message =
-        (err as { response?: { data?: { message?: string } }; message?: string })?.response?.data?.message ??
-        (err as { message?: string })?.message ??
-        'Failed to process payment';
-      setPaymentError(message);
+      setPaymentError((err as { message?: string })?.message ?? 'Failed to process payment');
     } finally {
       setPaymentLoading(null);
     }

@@ -9,6 +9,7 @@ import { SupportSection } from "@/components/home/support-section";
 import { QuickActions } from "@/components/home/quick-actions";
 import { Recommendations } from "@/components/home/recommendations";
 import { UpcomingSession } from "@/components/home/upcoming-session";
+import { JourneySection } from "@/components/home/journey-section";
 import { useAuth } from "@/hooks/use-auth";
 import { getAppointments } from "@/sdk/auth-and-crm";
 import type { AppointmentDetail } from "@/sdk/auth-and-crm";
@@ -97,6 +98,8 @@ export default function HomePage() {
         <QuickActions
           onActionClick={(type) => handleAction("quick_action", type)}
         />
+
+        <JourneySection />
 
         <Recommendations
           onRecommendClick={(id) => handleAction("recommendation", id)}

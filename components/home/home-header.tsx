@@ -20,8 +20,12 @@ export function HomeHeader({ userName, profileImage, moodTracker, onMoodClick }:
   return (
     <div className="home-header-gradient relative w-full rounded-b-2xl px-4 pt-5 pb-8 text-white z-[16]">
       <div className="relative z-20 flex flex-col gap-4">
-        {/* Top bar — profile avatar */}
-        <div className="flex justify-end items-center h-12">
+        {/* Top bar — greeting + profile avatar */}
+        <div className="flex justify-between items-center h-12">
+          <div className="flex flex-col leading-tight">
+            <span className="text-[13px] font-medium text-white/80">Good Morning,</span>
+            <span className="text-[20px] font-black text-white leading-tight">{userName.split(' ')[0]}</span>
+          </div>
           <button
             onClick={() => router.push('/profile')}
             className="w-10 h-10 rounded-full overflow-hidden border border-white/30 transition-all hover:scale-105 active:scale-95 bg-white/10"
@@ -80,15 +84,19 @@ export function HomeHeader({ userName, profileImage, moodTracker, onMoodClick }:
 
         {/* AI search bar — overlaps the card section below */}
         <div className="mt-1 mb-[-24px] z-50">
-          <div className="bg-card rounded-xl shadow-lg px-4 py-2 flex items-center gap-4 border border-border">
+          <button
+            onClick={() => router.push('/new-chat')}
+            className="w-full bg-card rounded-xl shadow-lg px-4 py-2 flex items-center gap-4 border border-border hover:bg-muted/30 transition-all active:scale-[0.98]"
+            aria-label="Chat with Dr. Riya"
+          >
             <Sparkles className="w-5 h-5 text-primary flex-shrink-0" />
-            <span className="text-[14px] flex-grow font-semibold text-muted-foreground tracking-tight">
+            <span className="text-[14px] flex-grow font-semibold text-muted-foreground tracking-tight text-left">
               Ask Dr. Riya anything...
             </span>
-            <div className="w-9 h-9 rounded-full bg-muted flex items-center justify-center flex-shrink-0 cursor-pointer hover:bg-muted/80 transition-all active:scale-90">
+            <div className="w-9 h-9 rounded-full bg-muted flex items-center justify-center flex-shrink-0">
               <Mic className="w-4 h-4 text-muted-foreground" />
             </div>
-          </div>
+          </button>
         </div>
       </div>
     </div>

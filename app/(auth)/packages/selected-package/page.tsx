@@ -14,12 +14,9 @@ import {
   Loader2,
   BookOpen,
 } from 'lucide-react';
-import { packageService } from '@/services/package.service';
+import { postPackagesBook, postPaymentsPackage } from '@/sdk/auth-and-crm';
 import { useAuth } from '@/hooks/use-auth';
 import type { AvailablePackage } from '@/types/package';
-import axios from 'axios';
-import { endpoints } from '@/config/api-endpoints';
-import { BEARER_TOKEN } from '@/config/env';
 
 const JOURNEY_BASE_URL = 'https://mindtalkbuddy.com/api/mindful-journeys';
 
@@ -121,57 +118,36 @@ function SelectedPackageContent() {
     setError(null);
 
     try {
-      const now = new Date();
-      const formattedDate = now.toISOString().split('T')[0];
-
-      const bookingData = {
-        date: formattedDate,
-        package_id: pkg.id,
-        caller_name: (user as unknown as Record<string, unknown>).caller_name ?? '',
-        patient_name: (user as unknown as Record<string, unknown>).caller_name ?? '',
-        lead_id: Number(user.lead_id),
-        campus_id: '1',
-        sequence_booking: false,
-        package_stage: 'booked',
-        payment_mode: 'online',
-      };
-
-      const bookingRes = await packageService.bookPackage(bookingData);
-      const result = ((bookingRes as Record<string, unknown>).result as Array<Record<string, unknown>> | undefined)?.[0];
-
-      if (!result) throw new Error('Failed to book package.');
-
-      const bookingId = result.booking_id as number;
-      const campusId = result.campus_id as number;
-
-      if (!bookingId) throw new Error('No booking ID returned.');
-
-      const paymentData = {
-        lead_id: Number(user.lead_id),
-        booked_package_id: Number(bookingId),
-        campus_id: Number(campusId),
-      };
-
-      const paymentRes = await axios.post(endpoints.RAZORPAY_PAYMENT_URL, paymentData, {
-        params: { user_id: '1' },
-        headers: {
-          Authorization: `Bearer ${BEARER_TOKEN}`,
-          'Content-Type': 'application/json',
+      const bookRes = await postPackagesBook({
+        body: {
+          package_id: pkg.id,
+          caller_name: String((user as unknown as Record<string, unknown>).caller_name ?? ''),
+          patient_name: String((user as unknown as Record<string, unknown>).caller_name ?? ''),
+          lead_id: Number(user.lead_id),
+          campus_id: 1,
+          sequence_booking: false,
+          package_stage: 'booked',
+          payment_mode: 'online',
+          date: new Date().toISOString().split('T')[0],
         },
       });
+      if (bookRes.error) throw new Error(JSON.stringify(bookRes.error));
+      const bookingId = bookRes.data?.booking_id;
+      if (!bookingId) throw new Error('No booking ID returned.');
 
-      const shortUrl = (paymentRes.data as { result?: { short_url?: string } })?.result?.short_url;
-      if (shortUrl) {
-        window.location.href = encodeURI(shortUrl);
-      } else {
-        throw new Error('No payment URL received.');
-      }
+      const payRes = await postPaymentsPackage({
+        body: {
+          booked_package_id: bookingId,
+          campus_id: 1,
+          lead_id: Number(user.lead_id),
+        },
+      });
+      if (payRes.error) throw new Error(JSON.stringify(payRes.error));
+      const url = payRes.data?.redirect_url;
+      if (!url) throw new Error('No payment URL received.');
+      window.location.href = url;
     } catch (err: unknown) {
-      const msg =
-        (err as { response?: { data?: { message?: string } } })?.response?.data?.message ??
-        (err as { message?: string })?.message ??
-        'Failed to process payment';
-      setError(msg);
+      setError((err as { message?: string })?.message ?? 'Failed to process payment');
     } finally {
       setIsLoading(false);
     }

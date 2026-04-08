@@ -6,6 +6,7 @@ import { SWRProvider } from "./swr-provider";
 import { ThemeProvider } from "./theme-provider";
 import { DeviceProvider } from "./device-provider";
 import { AuthProvider } from "./auth-provider";
+import { MastraDataContextProvider } from "@/contexts/mastra-data-context";
 
 export function AppProviders({ children }: { children: React.ReactNode }) {
   return (
@@ -13,7 +14,9 @@ export function AppProviders({ children }: { children: React.ReactNode }) {
       <ThemeProvider>
         <DeviceProvider>
           <AuthProvider>
-            {children}
+            <MastraDataContextProvider>
+              {children}
+            </MastraDataContextProvider>
             <ToastContainer
               position="top-right"
               autoClose={3000}

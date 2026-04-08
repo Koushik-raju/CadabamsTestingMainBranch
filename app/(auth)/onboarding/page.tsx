@@ -14,7 +14,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { BackButton } from '@/components/common/back-button';
 import { crmClient } from '@/lib/api-client';
 import { endpoints } from '@/config/api-endpoints';
-import { authService } from '@/services/auth.service';
+import { getMastersRelationships } from '@/sdk/auth-and-crm';
 import { useAuth } from '@/hooks/use-auth';
 import { cn } from '@/lib/utils';
 
@@ -74,8 +74,8 @@ function OnboardingContent() {
   });
 
   useEffect(() => {
-    crmClient.get(endpoints.GET_RELATIONSHIP_MASTER)
-      .then((r) => setRelationships(r.data?.result ?? []))
+    getMastersRelationships()
+      .then((r) => setRelationships(r.data ?? []))
       .catch(() => {});
   }, []);
 
@@ -100,7 +100,7 @@ function OnboardingContent() {
   const handleDone = async () => {
     setLoading(true);
     try {
-      await authService.sendSignupQuestions({
+      await crmClient.post(endpoints.SEND_SIGN_UP_QUESTIONS, {
         lead_id: user?.lead_id,
         dob: data.dob,
         tags: data.tags.join(','),

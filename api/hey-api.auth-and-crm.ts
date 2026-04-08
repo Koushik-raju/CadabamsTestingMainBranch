@@ -1,18 +1,22 @@
 import axios from 'axios';
 import type { CreateClientConfig } from '@/sdk/auth-and-crm/client.gen';
-import { getToken } from '@/lib/token';
+import { getAccessToken } from '@/lib/cookies';
 import { attachRefreshInterceptor } from '@/lib/interceptors';
 
 // Create a standalone axios instance — avoids the circular dependency that
 // occurs when importing `client` from client.gen (which itself imports this file).
 const instance = axios.create();
-attachRefreshInterceptor(instance);
+
+// Only attach the refresh interceptor in the browser.
+// refreshPatientToken() writes cookies via document.cookie and is client-only.
+if (typeof window !== 'undefined') {
+  attachRefreshInterceptor(instance);
+}
 
 // Auth + CRM share the same lambda — unauthenticated auth endpoints ignore the header.
 export const createClientConfig: CreateClientConfig = (config) => ({
   ...config,
-  baseURL:
-    'https://asjkuqm3eoea6q7sqkfpuqt2ye0letxc.lambda-url.ap-south-1.on.aws/api/v1',
-  auth: () => getToken(),
+  baseURL: 'https://auth.cadabams.com/api/v1',
+  auth: () => getAccessToken(),
   instance,
 });

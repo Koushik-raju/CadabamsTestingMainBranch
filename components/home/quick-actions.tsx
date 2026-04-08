@@ -11,9 +11,9 @@ interface Action {
 }
 
 const ACTIONS: Action[] = [
-  { key: 'assessment', title: 'Assessments', description: 'Check anxiety, mood & more.', badge: 'Suggested', icon: ClipboardList },
-  { key: 'journey', title: 'Guided journeys', description: 'Duolingo-style paths for your mind.', badge: 'Explore', icon: Map },
-  { key: 'journal', title: 'Journal & reflect', description: 'Free-flow or guided prompts.', badge: '5 min', icon: BookOpen },
+  { key: 'assessment', title: 'Assessments', description: 'Check anxiety, mood & more.', badge: '2 new suggested', icon: ClipboardList },
+  { key: 'journey', title: 'Guided journeys', description: 'Duolingo-style paths for your mind.', badge: 'Day 9 of 36%', icon: Map },
+  { key: 'journal', title: 'Journal & reflect', description: 'Free-flow or guided prompts.', badge: '3-min gratitude', icon: BookOpen },
   { key: 'breathe', title: 'Quick relief', description: 'Breath, audio & visual resets.', badge: 'Under 5 min', icon: Sparkles },
 ];
 

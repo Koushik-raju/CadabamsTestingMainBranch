@@ -10,7 +10,8 @@ import { Progress } from '@/components/ui/progress';
 import { Skeleton } from '@/components/ui/skeleton';
 import { BackButton } from '@/components/common/back-button';
 import { QuestionRenderer, type Question, type AnswerValue } from '@/components/assessment/question-renderer';
-import { chatService } from '@/services/chat.service';
+import { backendClient } from '@/lib/api-client';
+import { endpoints } from '@/config/api-endpoints';
 import { ChevronRight, ChevronLeft, CheckCircle2, AlertCircle } from 'lucide-react';
 
 const ASSESSMENT_API = 'https://mindtalkbuddy.com/api/assessments';
@@ -152,7 +153,7 @@ function AssessmentFormContent() {
       }
 
       // Save to backend
-      await chatService.saveAssessment({
+      await backendClient.post(endpoints.saveAssessment, {
         lead_id: leadId,
         assessment_id: assessmentId,
         answers: payload,

@@ -1,5 +1,5 @@
 import type { AxiosInstance } from 'axios';
-import { refreshAccessToken } from './token';
+import { refreshPatientToken } from './auth';
 
 export function attachRefreshInterceptor(axiosInstance: AxiosInstance) {
   axiosInstance.interceptors.response.use(
@@ -11,10 +11,10 @@ export function attachRefreshInterceptor(axiosInstance: AxiosInstance) {
         original._retry = true;
 
         try {
-          const newToken = await refreshAccessToken();
+          const tokenData = await refreshPatientToken();
           original.headers = {
             ...original.headers,
-            Authorization: `Bearer ${newToken}`,
+            Authorization: `Bearer ${tokenData.accessToken}`,
           };
           return axiosInstance(original); // retry with new token
         } catch {

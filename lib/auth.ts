@@ -76,7 +76,7 @@ export async function refreshPatientToken() {
   if (!refreshToken) throw new Error("No refresh token");
 
   const { data, error } = await postAuthRefresh({ body: { refreshToken } });
-  if (error || !data) throw error;
+  if (error || !data) throw error ?? new Error("Token refresh failed");
 
   await setTokens(
     {
@@ -98,7 +98,7 @@ export async function logoutPatient() {
 
   if (refreshToken) {
     const { error } = await postAuthLogout({ body: { refreshToken } });
-    if (error || !data) throw error;
+    if (error) throw error;
   }
 
   await clearTokens();

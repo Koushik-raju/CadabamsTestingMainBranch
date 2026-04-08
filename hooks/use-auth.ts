@@ -2,7 +2,17 @@
 
 import { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { getPatientsMe } from '@/sdk/auth-and-crm/sdk.gen';
+import { getAccessToken } from '@/lib/cookies';
 import type { User } from '@/types';
+
+function getSubFromToken(token: string): string | undefined {
+  try {
+    const payload = JSON.parse(atob(token.split('.')[1]));
+    return payload.sub as string | undefined;
+  } catch {
+    return undefined;
+  }
+}
 
 interface AuthContextValue {
   user: User | null;
@@ -35,8 +45,10 @@ export function useAuthProvider(): AuthContextValue {
         // No stored user or lead_id missing — try to fetch from API
         const { data } = await getPatientsMe();
         if (!data) return;
+        const token = await getAccessToken();
         const userData: User = {
           lead_id: data.id,
+          sub: token ? getSubFromToken(token) : undefined,
           phone_number: data.caller_mobile,
           name: data.contact_name || data.partner_name,
           email: data.caller_email,
@@ -54,8 +66,10 @@ export function useAuthProvider(): AuthContextValue {
     const { data, error } = await getPatientsMe();
     if (error || !data) throw new Error('Failed to fetch profile');
 
+    const token = await getAccessToken();
     const userData: User = {
       lead_id: data.id,
+      sub: token ? getSubFromToken(token) : undefined,
       phone_number: data.caller_mobile,
       name: data.contact_name || data.partner_name,
       email: data.caller_email,

@@ -1,5 +1,6 @@
 export interface User {
   lead_id: string | number;
+  sub?: string;
   phone_number?: string;
   email?: string;
   name?: string;

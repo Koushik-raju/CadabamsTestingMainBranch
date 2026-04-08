@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback, Suspense } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { BackButton } from '@/components/common/back-button';
@@ -18,7 +18,7 @@ import {
 } from '@/components/ui/dialog';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Search, Filter, Check, AlertCircle, PackageOpen } from 'lucide-react';
-import { packageService } from '@/services/package.service';
+import { getPackages, getPackagesProductLines } from '@/sdk/auth-and-crm';
 import type { AvailablePackage, PackageProductLine } from '@/types/package';
 
 const ILLNESSES = [
@@ -85,69 +85,39 @@ function storeSelectedPackage(pkg: AvailablePackage) {
 
 function BookPackageContent() {
   const router = useRouter();
-  const searchParams = useSearchParams();
 
   const [allPackages, setAllPackages] = useState<AvailablePackage[]>([]);
   const [filteredPackages, setFilteredPackages] = useState<AvailablePackage[]>([]);
   const [productLines, setProductLines] = useState<PackageProductLine[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [pendingMessage, setPendingMessage] = useState<string | null>(null);
-
   const [showFilter, setShowFilter] = useState(false);
   const [filterSearch, setFilterSearch] = useState('');
   const [selectedIllnessIds, setSelectedIllnessIds] = useState<number[]>([]);
   const [tempIllnessIds, setTempIllnessIds] = useState<number[]>([]);
 
-  const loadPackages = useCallback(async (domain: unknown = '[]') => {
+  const loadPackages = useCallback(async (serviceIds: number[] = []) => {
     try {
       setLoading(true);
       setError(null);
 
-      const [packagesData, productData] = await Promise.all([
-        packageService.getAllPackages({
-          domain: domain as string,
-          fields: JSON.stringify(['package_name', 'package_product_ids', 'amount_total', 'service_id', 'journey_id', 'journey_document_id']),
-          user_id: '1',
-        }),
-        packageService.getProductList(),
+      const [pkgRes, linesRes] = await Promise.all([
+        getPackages(serviceIds.length ? { query: { service_ids: serviceIds.join(',') } } : undefined),
+        getPackagesProductLines(),
       ]);
 
-      const rawPackages = (packagesData as Record<string, unknown>)['package.package'];
-      const list: AvailablePackage[] = Array.isArray(rawPackages)
-        ? (rawPackages as AvailablePackage[])
-        : rawPackages
-        ? [rawPackages as AvailablePackage]
-        : [];
-
-      const rawLines = (productData as Record<string, unknown>)['package.product.lines'];
-      const lines: PackageProductLine[] = Array.isArray(rawLines) ? (rawLines as PackageProductLine[]) : [];
+      const list = (pkgRes.data ?? []) as unknown as AvailablePackage[];
+      const lines = (linesRes.data ?? []) as unknown as PackageProductLine[];
 
       setAllPackages(list);
       setFilteredPackages(list);
       setProductLines(lines);
-
-      // Handle journeyId redirect from query param
-      const journeyId = searchParams.get('journeyId');
-      if (journeyId && list.length > 0) {
-        const match = list.find(
-          (p) =>
-            String(p.journey_id ?? '').trim() === journeyId ||
-            String(p.journey_document_id ?? '').trim() === journeyId
-        );
-        if (match) {
-          storeSelectedPackage(match);
-          router.replace(`/packages/selected-package?journeyId=${encodeURIComponent(journeyId)}`);
-        } else {
-          setPendingMessage('No matching package found for this journey. Please select a package below.');
-        }
-      }
     } catch {
       setError('Failed to load packages. Please try again.');
     } finally {
       setLoading(false);
     }
-  }, [searchParams, router]);
+  }, []);
 
   useEffect(() => {
     loadPackages();
@@ -159,17 +129,12 @@ function BookPackageContent() {
       setFilteredPackages(allPackages);
       return;
     }
-    const domain = JSON.stringify([['service_id', 'in', ids]]);
-    await loadPackages(domain);
+    await loadPackages(ids);
   };
 
   const handleSelect = (pkg: AvailablePackage) => {
     storeSelectedPackage(pkg);
-    const journeyId = pkg.journey_id ?? pkg.journey_document_id;
-    const url = journeyId
-      ? `/packages/selected-package?journeyId=${encodeURIComponent(String(journeyId))}`
-      : '/packages/selected-package';
-    router.push(url);
+    router.push('/packages/selected-package');
   };
 
   const filteredIllnesses = ILLNESSES.filter((i) =>
@@ -187,23 +152,6 @@ function BookPackageContent() {
             <p className="text-sm text-muted-foreground">Find the perfect healthcare package</p>
           </div>
         </div>
-
-        {/* Pending message */}
-        {pendingMessage && (
-          <Alert className="mb-4">
-            <AlertCircle className="h-4 w-4" />
-            <AlertDescription className="flex items-start justify-between gap-2">
-              <span>{pendingMessage}</span>
-              <button
-                onClick={() => setPendingMessage(null)}
-                className="shrink-0 text-muted-foreground hover:text-foreground"
-                aria-label="Dismiss"
-              >
-                ×
-              </button>
-            </AlertDescription>
-          </Alert>
-        )}
 
         {/* Stats + filter */}
         <div className="flex items-center justify-between mb-4">

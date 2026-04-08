@@ -37,7 +37,7 @@ import {
   getAppointmentsMediums,
   putAppointmentsCancelBySlotId,
 } from '@/sdk/auth-and-crm';
-import type { AppointmentDetail, MediumItem } from '@/sdk/auth-and-crm';
+import type { AppointmentDetail } from '@/sdk/auth-and-crm';
 
 // ── helpers ────────────────────────────────────────────────────────────────────
 
@@ -51,20 +51,35 @@ function formatDate(iso: string): string {
     const d = new Date(iso);
     const isToday = new Date().toDateString() === d.toDateString();
     if (isToday) return 'Today';
-    return d.toLocaleDateString('en-US', { weekday: 'short', day: 'numeric', month: 'short' });
-  } catch { return ''; }
+    return d.toLocaleDateString('en-US', {
+      weekday: 'short',
+      day: 'numeric',
+      month: 'short',
+    });
+  } catch {
+    return '';
+  }
 }
 
 function formatTime(iso: string): string {
   try {
-    return new Date(iso).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
-  } catch { return ''; }
+    return new Date(iso).toLocaleTimeString('en-US', {
+      hour: 'numeric',
+      minute: '2-digit',
+      hour12: true,
+    });
+  } catch {
+    return '';
+  }
 }
 
 // ── PrepareItem ────────────────────────────────────────────────────────────────
 
 function PrepareItem({
-  icon, title, subtitle, onClick,
+  icon,
+  title,
+  subtitle,
+  onClick,
 }: {
   icon: React.ReactNode;
   title: string;
@@ -81,8 +96,12 @@ function PrepareItem({
         {icon}
       </div>
       <div className="flex-1 min-w-0">
-        <p className="text-[15px] font-semibold text-foreground leading-snug">{title}</p>
-        <p className="text-sm text-muted-foreground leading-snug mt-0.5">{subtitle}</p>
+        <p className="text-[15px] font-semibold text-foreground leading-snug">
+          {title}
+        </p>
+        <p className="text-sm text-muted-foreground leading-snug mt-0.5">
+          {subtitle}
+        </p>
       </div>
       <ChevronRight className="h-4 w-4 text-muted-foreground shrink-0" />
     </button>
@@ -95,12 +114,11 @@ function DetailContent() {
   const router = useRouter();
   const { appointment_id } = useParams<{ appointment_id: string }>();
 
-  const [apt,          setApt]          = useState<AppointmentDetail | null>(null);
-  const [loading,      setLoading]      = useState(true);
-  const [notFound,     setNotFound]     = useState(false);
-  const [cancelling,   setCancelling]   = useState(false);
-  const [mediums,      setMediums]      = useState<MediumItem[]>([]);
-  const [mediumId,     setMediumId]     = useState<number | null>(null);
+  const [apt, setApt] = useState<AppointmentDetail | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [notFound, setNotFound] = useState(false);
+  const [cancelling, setCancelling] = useState(false);
+  const [mediumId, setMediumId] = useState<number | null>(null);
   const [cancelReason, setCancelReason] = useState('');
 
   useEffect(() => {
@@ -109,25 +127,33 @@ function DetailContent() {
       getAppointments({ query: { start_datetime: new Date(0).toISOString() } }),
       getAppointmentsPrevious(),
       getAppointmentsMediums(),
-    ]).then(([upRes, pastRes, mediumsRes]) => {
-      const all = [...(upRes.data ?? []), ...(pastRes.data ?? [])];
-      const found = all.find(a => a.id === id);
-      if (found) setApt(found);
-      else setNotFound(true);
-      setMediums(mediumsRes.data ?? []);
-    }).catch(() => setNotFound(true))
+    ])
+      .then(([upRes, pastRes, mediumsRes]) => {
+        const all = [...(upRes.data ?? []), ...(pastRes.data ?? [])];
+        const found = all.find((a) => a.id === id);
+        if (found) setApt(found);
+        else setNotFound(true);
+        const mediums = mediumsRes.data ?? [];
+        const online =
+          mediums.find((m) => m.name.toLowerCase().includes('online')) ??
+          mediums[0];
+        if (online) setMediumId(online.id);
+      })
+      .catch(() => setNotFound(true))
       .finally(() => setLoading(false));
   }, [appointment_id]);
 
   const handleCancel = async () => {
     if (!apt || !cancelReason.trim() || mediumId === null) return;
+
     setCancelling(true);
     try {
-      await putAppointmentsCancelBySlotId({
+      const { data, error } = await putAppointmentsCancelBySlotId({
         path: { slotId: apt.id },
         body: { medium_id: mediumId, cancel_reason: cancelReason.trim() },
       });
-      router.replace('/appointments');
+      console.log({ error, data });
+      router.push('/appointments');
     } catch (err) {
       console.error(err);
     } finally {
@@ -148,18 +174,29 @@ function DetailContent() {
       <div className="min-h-screen flex flex-col items-center justify-center gap-3 px-6 text-center">
         <AlertCircle className="h-8 w-8 text-destructive" />
         <p className="text-sm text-destructive">Appointment not found.</p>
-        <Button variant="outline" onClick={() => router.back()}>Go back</Button>
+        <Button variant="outline" onClick={() => router.back()}>
+          Go back
+        </Button>
       </div>
     );
   }
 
-  const doctorName  = cleanDoctorName(typeof apt.doctor[1] === 'string' ? apt.doctor[1] : 'Doctor');
-  const speciality  = typeof apt.speciality_id[1] === 'string' ? apt.speciality_id[1] : '';
-  const isVirtual   = apt.virtual_consultation_url !== false;
+  const doctorName = cleanDoctorName(
+    typeof apt.doctor[1] === 'string' ? apt.doctor[1] : 'Doctor'
+  );
+  const speciality =
+    typeof apt.speciality_id[1] === 'string' ? apt.speciality_id[1] : '';
+  const isVirtual = apt.virtual_consultation_url !== false;
   const isCancelled = apt.availability?.toLowerCase() === 'cancelled';
   const isCompleted = apt.availability?.toLowerCase() === 'completed';
-  const isPast      = isCancelled || isCompleted;
-  const initials    = doctorName.replace(/^Dr\.?\s*/i, '').split(' ').map(w => w[0]).slice(0, 2).join('').toUpperCase();
+  const isPast = isCancelled || isCompleted;
+  const initials = doctorName
+    .replace(/^Dr\.?\s*/i, '')
+    .split(' ')
+    .map((w) => w[0])
+    .slice(0, 2)
+    .join('')
+    .toUpperCase();
 
   return (
     <div className="min-h-screen bg-white flex flex-col">
@@ -182,12 +219,15 @@ function DetailContent() {
       </div>
 
       <div className="flex-1 px-5 pb-28 space-y-6 overflow-y-auto">
-
         {/* Doctor profile */}
         <div className="flex flex-col items-center pt-4 pb-2 gap-3">
           <div className="relative">
             <Avatar className="h-24 w-24 border-2 border-border">
-              <AvatarImage src={apt.doctor_image_url || ''} alt={doctorName} className="object-cover" />
+              <AvatarImage
+                src={apt.doctor_image_url || ''}
+                alt={doctorName}
+                className="object-cover"
+              />
               <AvatarFallback className="bg-primary/10 text-primary text-2xl font-bold">
                 {initials}
               </AvatarFallback>
@@ -195,31 +235,49 @@ function DetailContent() {
             <span className="absolute bottom-1.5 right-1.5 h-4 w-4 rounded-full bg-green-500 border-2 border-white" />
           </div>
           <div className="text-center">
-            <p className="text-[22px] font-bold text-foreground leading-tight">{doctorName}</p>
-            {speciality && <p className="text-[15px] text-muted-foreground mt-0.5">{speciality}</p>}
+            <p className="text-[22px] font-bold text-foreground leading-tight">
+              {doctorName}
+            </p>
+            {speciality && (
+              <p className="text-[15px] text-muted-foreground mt-0.5">
+                {speciality}
+              </p>
+            )}
           </div>
         </div>
 
         {/* Date & Type — single card, two columns */}
         <div className="bg-[#f5f5f5] rounded-2xl flex overflow-hidden">
           <div className="flex-1 p-4">
-            <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-widest mb-2">Date &amp; Time</p>
+            <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-widest mb-2">
+              Date &amp; Time
+            </p>
             <div className="flex items-start gap-2">
               <Calendar className="h-5 w-5 text-primary shrink-0 mt-0.5" />
               <div>
-                <p className="text-[15px] font-bold text-foreground leading-snug">{formatDate(apt.start_datetime)},</p>
-                <p className="text-[15px] font-bold text-foreground leading-snug">{formatTime(apt.start_datetime)}</p>
+                <p className="text-[15px] font-bold text-foreground leading-snug">
+                  {formatDate(apt.start_datetime)},
+                </p>
+                <p className="text-[15px] font-bold text-foreground leading-snug">
+                  {formatTime(apt.start_datetime)}
+                </p>
               </div>
             </div>
           </div>
           <div className="w-px bg-border/50 my-3" />
           <div className="flex-1 p-4">
-            <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-widest mb-2">Type</p>
+            <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-widest mb-2">
+              Type
+            </p>
             <div className="flex items-center gap-2">
-              {isVirtual
-                ? <Video className="h-5 w-5 text-primary shrink-0" />
-                : <Building2 className="h-5 w-5 text-primary shrink-0" />}
-              <p className="text-[15px] font-bold text-foreground">{isVirtual ? 'Video Call' : 'In-person'}</p>
+              {isVirtual ? (
+                <Video className="h-5 w-5 text-primary shrink-0" />
+              ) : (
+                <Building2 className="h-5 w-5 text-primary shrink-0" />
+              )}
+              <p className="text-[15px] font-bold text-foreground">
+                {isVirtual ? 'Video Call' : 'In-person'}
+              </p>
             </div>
           </div>
         </div>
@@ -249,7 +307,9 @@ function DetailContent() {
         {/* Prepare for Session */}
         {!isPast && (
           <div>
-            <h2 className="text-[19px] font-bold text-foreground mb-3">Prepare for Session</h2>
+            <h2 className="text-[19px] font-bold text-foreground mb-3">
+              Prepare for Session
+            </h2>
             <div className="bg-white rounded-2xl border border-border px-4">
               <PrepareItem
                 icon={<ClipboardList className="h-5 w-5" />}
@@ -293,9 +353,11 @@ function DetailContent() {
                 disabled={cancelling}
                 className="flex-1 h-12 flex items-center justify-center gap-2 text-[15px] font-semibold text-destructive border border-destructive/40 rounded-full hover:bg-destructive/5 transition-colors disabled:opacity-60"
               >
-                {cancelling
-                  ? <Loader2 className="h-4 w-4 animate-spin" />
-                  : <XCircle className="h-4.5 w-4.5" />}
+                {cancelling ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <XCircle className="h-4.5 w-4.5" />
+                )}
                 Cancel
               </button>
             </AlertDialogTrigger>
@@ -303,32 +365,20 @@ function DetailContent() {
               <AlertDialogHeader>
                 <AlertDialogTitle>Cancel appointment?</AlertDialogTitle>
                 <AlertDialogDescription>
-                  Please provide a reason to cancel your session with {doctorName}.
+                  Please provide a reason to cancel your session with{' '}
+                  {doctorName}.
                 </AlertDialogDescription>
               </AlertDialogHeader>
 
               <div className="space-y-3 py-1">
-                {mediums.length > 0 && (
-                  <div className="space-y-1.5">
-                    <p className="text-sm font-medium">Cancellation reason <span className="text-destructive">*</span></p>
-                    <select
-                      value={mediumId ?? ''}
-                      onChange={e => setMediumId(Number(e.target.value))}
-                      className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
-                    >
-                      <option value="" disabled>Select a reason…</option>
-                      {mediums.map(m => (
-                        <option key={m.id} value={m.id}>{m.name}</option>
-                      ))}
-                    </select>
-                  </div>
-                )}
-
                 <div className="space-y-1.5">
-                  <p className="text-sm font-medium">Additional details <span className="text-destructive">*</span></p>
+                  <p className="text-sm font-medium">
+                    Reason for cancellation{' '}
+                    <span className="text-destructive">*</span>
+                  </p>
                   <textarea
                     value={cancelReason}
-                    onChange={e => setCancelReason(e.target.value)}
+                    onChange={(e) => setCancelReason(e.target.value)}
                     placeholder="Tell us more about why you're cancelling…"
                     rows={3}
                     className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-primary"
@@ -337,12 +387,16 @@ function DetailContent() {
               </div>
 
               <AlertDialogFooter>
-                <AlertDialogCancel onClick={() => { setCancelReason(''); setMediumId(null); }}>
+                <AlertDialogCancel
+                  onClick={() => {
+                    setCancelReason('');
+                  }}
+                >
                   Keep it
                 </AlertDialogCancel>
                 <AlertDialogAction
                   onClick={handleCancel}
-                  disabled={!cancelReason.trim() || (mediums.length > 0 && mediumId === null)}
+                  disabled={!cancelReason.trim()}
                   className="bg-destructive text-white hover:bg-destructive/90 disabled:opacity-50"
                 >
                   Yes, cancel
@@ -358,11 +412,13 @@ function DetailContent() {
 
 export default function AppointmentDetailPage() {
   return (
-    <Suspense fallback={
-      <div className="min-h-screen flex items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
-      </div>
-    }>
+    <Suspense
+      fallback={
+        <div className="min-h-screen flex items-center justify-center">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        </div>
+      }
+    >
       <DetailContent />
     </Suspense>
   );
