@@ -9,27 +9,6 @@ export type IdName = {
     name: string;
 };
 
-export type Language = {
-    name: string;
-    code: string;
-};
-
-export type AgePreference = {
-    name: string;
-};
-
-export type City = {
-    id: number;
-    name: string;
-    [key: string]: unknown;
-};
-
-export type Area = {
-    id: number;
-    name: string;
-    [key: string]: unknown;
-};
-
 export type Campus = {
     id: number;
     name: string;
@@ -61,12 +40,6 @@ export type CampusMaster = {
     is_hospital: boolean;
     create_patient: boolean;
     enable_emergency: boolean;
-};
-
-export type MindtalkCampus = {
-    id: number;
-    name: string;
-    [key: string]: unknown;
 };
 
 export type Medium = {
@@ -107,16 +80,6 @@ export type Error = {
     error: string;
 };
 
-export type DoctorSimple = {
-    id: number;
-    name: string;
-    speciality_id: [
-        number | string,
-        number | string
-    ];
-    book_appointments: boolean;
-};
-
 export type DoctorDetail = {
     id: number;
     name: string;
@@ -145,17 +108,6 @@ export type DoctorAvailabilityResponse = {
         city: string;
         sub_campus_id: number | false;
     }>;
-};
-
-export type CampusResponse = {
-    id: number;
-    name: string;
-    city: [
-        number | string,
-        number | string
-    ];
-    latitude: number;
-    longitude: number;
 };
 
 export type TimeSlot = {
@@ -244,10 +196,68 @@ export type AppointmentDashboard = {
 };
 
 export type BookAppointmentResult = {
-    success: boolean;
-    message?: string;
-    slot?: unknown;
-    status?: number;
+    id: number;
+    name: string;
+    availability: string;
+    appointment_type: string;
+    consultation_type: string;
+    consultation_type_id: [
+        number | string,
+        number | string
+    ] | false;
+    start_datetime: string;
+    stop_datetime: string;
+    duration: number;
+    doctor_id: [
+        number | string,
+        number | string
+    ] | false;
+    lead_id: [
+        number | string,
+        number | string
+    ] | false;
+    campus_id: [
+        number | string,
+        number | string
+    ] | false;
+    sub_campus_id: [
+        number | string,
+        number | string
+    ] | false;
+    speciality_id: [
+        number | string,
+        number | string
+    ] | false;
+    slot_id: [
+        number | string,
+        number | string
+    ] | false;
+    caller_name: string;
+    patient_name: string;
+    payment_mode: string | false;
+    amount: number;
+    online_payment_url: string | false;
+    virtual_consultation_url: string | false;
+    zegocloud_uuid: string | false;
+    booked_package_name: [
+        number | string,
+        number | string
+    ] | false;
+    product_id: [
+        number | string,
+        number | string
+    ] | false;
+    sale_id: [
+        number | string,
+        number | string
+    ] | false;
+    invoice_id: [
+        number | string,
+        number | string
+    ] | false;
+    invoice_count: number;
+    create_date: string;
+    write_date: string;
 };
 
 export type BookAppointmentData = {
@@ -255,25 +265,26 @@ export type BookAppointmentData = {
      * Required for doctors, auto-resolved for patients
      */
     lead_id?: number;
-    consultation_type_id?: number;
-    campus_id?: number;
+    /**
+     * 1=In-Person, 2=Virtual, 3=Home-Based
+     */
+    consultation_type_id: 1 | 2 | 3;
+    campus_id: number;
     sub_campus_id?: number;
-    appointment_type?: string;
-    availability?: string;
-    caller_name?: string;
-    patient_name?: string;
-    payment_mode?: string;
-    [key: string]: unknown;
+    appointment_type: 'individual_appointment' | 'from_packaage';
+    availability: 'booked';
+    caller_name: string;
+    patient_name: string;
+    payment_mode: 'cash' | 'online';
 };
 
 export type RescheduleAppointmentData = BookAppointmentData & {
     reschedule_slot_id: number;
-    [key: string]: unknown;
 };
 
 export type CancelAppointmentResult = {
     message: string;
-    refund_initiated: boolean;
+    sucess: boolean;
 };
 
 export type CancelAppointmentData = {
@@ -413,17 +424,31 @@ export type ConfirmPackageData = {
 };
 
 export type PaymentInitResponse = {
-    order_id: string;
-    enc_val: string;
-    cancel_url: string;
-    redirect_url: string;
-    access_code: string;
-    amount: number;
-    merchant_param1: string;
-    merchant_param2?: string;
-    merchant_param3: string;
-    merchant_param4: number;
-    merchant_param5?: string;
+    jsonrpc: '2.0';
+    id: unknown;
+    result: {
+        id: string;
+        short_url: string;
+        reference_id: string;
+        status: string;
+        amount: number;
+        currency: string;
+        description: string;
+        customer: {
+            name: string;
+            email: string;
+            contact: string;
+        };
+        accept_partial: boolean;
+        expire_by: number;
+        created_at: number;
+        callback_url: string;
+        callback_method: string;
+        upi_link: boolean | string;
+        whatsapp_link: boolean | string;
+        reminder_enable: boolean;
+        [key: string]: unknown;
+    };
 };
 
 export type AppointmentPaymentParams = {
@@ -431,6 +456,10 @@ export type AppointmentPaymentParams = {
      * Auto-resolved for patients
      */
     lead_id?: number;
+    /**
+     * CRM lead UID
+     */
+    uid: string;
     slot_id: number;
     campus_id: number;
 };
@@ -440,32 +469,12 @@ export type PackagePaymentParams = {
      * Auto-resolved for patients
      */
     lead_id?: number;
+    /**
+     * CRM lead UID
+     */
+    uid: string;
     booked_package_id: number;
     campus_id: number;
-};
-
-export type PaymentReference = {
-    reference_no: string;
-    order_no: string;
-    slot_id?: number;
-};
-
-export type PaymentStatus = {
-    order_currncy: string;
-    order_bank_ref_no: string;
-    order_status_date_time: string;
-    order_date_time: string;
-    order_no: string;
-    order_fraud_status: string;
-    order_status: string;
-    reference_no: string;
-    order_capt_amt: number;
-    order_amt: number;
-};
-
-export type PaymentStatusParams = {
-    order_no: string;
-    reference_no: string;
 };
 
 export type NotificationPreferences = {
@@ -720,22 +729,6 @@ export type PostAuthLogoutResponses = {
 
 export type PostAuthLogoutResponse = PostAuthLogoutResponses[keyof PostAuthLogoutResponses];
 
-export type GetMastersSpecialtiesData = {
-    body?: never;
-    path?: never;
-    query?: never;
-    url: '/masters/specialties';
-};
-
-export type GetMastersSpecialtiesResponses = {
-    /**
-     * Success
-     */
-    200: Array<IdName>;
-};
-
-export type GetMastersSpecialtiesResponse = GetMastersSpecialtiesResponses[keyof GetMastersSpecialtiesResponses];
-
 export type GetMastersIllnessesData = {
     body?: never;
     path?: never;
@@ -767,92 +760,6 @@ export type GetMastersServicesResponses = {
 };
 
 export type GetMastersServicesResponse = GetMastersServicesResponses[keyof GetMastersServicesResponses];
-
-export type GetMastersLanguagesData = {
-    body?: never;
-    path?: never;
-    query?: never;
-    url: '/masters/languages';
-};
-
-export type GetMastersLanguagesResponses = {
-    /**
-     * Success
-     */
-    200: Array<Language>;
-};
-
-export type GetMastersLanguagesResponse = GetMastersLanguagesResponses[keyof GetMastersLanguagesResponses];
-
-export type GetMastersAgePreferencesData = {
-    body?: never;
-    path?: never;
-    query?: never;
-    url: '/masters/age-preferences';
-};
-
-export type GetMastersAgePreferencesResponses = {
-    /**
-     * Success
-     */
-    200: Array<AgePreference>;
-};
-
-export type GetMastersAgePreferencesResponse = GetMastersAgePreferencesResponses[keyof GetMastersAgePreferencesResponses];
-
-export type GetMastersCnsPreferencesData = {
-    body?: never;
-    path?: never;
-    query?: never;
-    url: '/masters/cns-preferences';
-};
-
-export type GetMastersCnsPreferencesResponses = {
-    /**
-     * Success
-     */
-    200: Array<IdName>;
-};
-
-export type GetMastersCnsPreferencesResponse = GetMastersCnsPreferencesResponses[keyof GetMastersCnsPreferencesResponses];
-
-export type GetMastersCitiesData = {
-    body?: never;
-    path?: never;
-    query?: {
-        page?: number;
-        per_page?: number;
-    };
-    url: '/masters/cities';
-};
-
-export type GetMastersCitiesResponses = {
-    /**
-     * List of cities
-     */
-    200: Array<City>;
-};
-
-export type GetMastersCitiesResponse = GetMastersCitiesResponses[keyof GetMastersCitiesResponses];
-
-export type GetMastersAreasData = {
-    body?: never;
-    path?: never;
-    query?: {
-        page?: number;
-        per_page?: number;
-    };
-    url: '/masters/areas';
-};
-
-export type GetMastersAreasResponses = {
-    /**
-     * List of areas
-     */
-    200: Array<Area>;
-};
-
-export type GetMastersAreasResponse = GetMastersAreasResponses[keyof GetMastersAreasResponses];
 
 export type GetMastersRelationshipsData = {
     body?: never;
@@ -901,22 +808,6 @@ export type GetMastersCampusesResponses = {
 };
 
 export type GetMastersCampusesResponse = GetMastersCampusesResponses[keyof GetMastersCampusesResponses];
-
-export type GetMastersSubCampusesData = {
-    body?: never;
-    path?: never;
-    query?: never;
-    url: '/masters/sub-campuses';
-};
-
-export type GetMastersSubCampusesResponses = {
-    /**
-     * Success
-     */
-    200: Array<MindtalkCampus>;
-};
-
-export type GetMastersSubCampusesResponse = GetMastersSubCampusesResponses[keyof GetMastersSubCampusesResponses];
 
 export type GetMastersMediumsData = {
     body?: never;
@@ -980,41 +871,12 @@ export type GetDoctorsError = GetDoctorsErrors[keyof GetDoctorsErrors];
 
 export type GetDoctorsResponses = {
     /**
-     * Filtered list of doctors with availability and campus info
+     * Filtered list of doctors
      */
     200: DoctorListResponse;
 };
 
 export type GetDoctorsResponse = GetDoctorsResponses[keyof GetDoctorsResponses];
-
-export type GetDoctorsSimpleData = {
-    body?: never;
-    path?: never;
-    query?: {
-        speciality_id?: number;
-        consultation_type_id?: number;
-        campus_id?: number;
-    };
-    url: '/doctors/simple';
-};
-
-export type GetDoctorsSimpleErrors = {
-    /**
-     * Unauthorized
-     */
-    401: Error;
-};
-
-export type GetDoctorsSimpleError = GetDoctorsSimpleErrors[keyof GetDoctorsSimpleErrors];
-
-export type GetDoctorsSimpleResponses = {
-    /**
-     * Simplified list of doctors
-     */
-    200: Array<DoctorSimple>;
-};
-
-export type GetDoctorsSimpleResponse = GetDoctorsSimpleResponses[keyof GetDoctorsSimpleResponses];
 
 export type GetDoctorsByIdData = {
     body?: never;
@@ -1086,10 +948,18 @@ export type GetDoctorsByIdAvailabilityData = {
         id?: number;
     };
     query?: {
+        /**
+         * ISO date string e.g. '2025-05-05'
+         */
+        start_datetime?: string;
+        /**
+         * ISO date string e.g. '2025-05-09'
+         */
         stop_datetime?: string;
-        consultation_type_ids?: number;
-        campus_id?: number;
-        sub_campus_id?: number;
+        /**
+         * 1=In-Person, 2=Virtual
+         */
+        consultation_type_id?: number;
     };
     url: '/doctors/{id}/availability';
 };
@@ -1105,39 +975,12 @@ export type GetDoctorsByIdAvailabilityError = GetDoctorsByIdAvailabilityErrors[k
 
 export type GetDoctorsByIdAvailabilityResponses = {
     /**
-     * Availability info
+     * Doctor listing with availability
      */
     200: DoctorAvailabilityResponse;
 };
 
 export type GetDoctorsByIdAvailabilityResponse = GetDoctorsByIdAvailabilityResponses[keyof GetDoctorsByIdAvailabilityResponses];
-
-export type GetDoctorsByIdCampusesData = {
-    body?: never;
-    path?: {
-        id?: number;
-    };
-    query?: never;
-    url: '/doctors/{id}/campuses';
-};
-
-export type GetDoctorsByIdCampusesErrors = {
-    /**
-     * Unauthorized
-     */
-    401: Error;
-};
-
-export type GetDoctorsByIdCampusesError = GetDoctorsByIdCampusesErrors[keyof GetDoctorsByIdCampusesErrors];
-
-export type GetDoctorsByIdCampusesResponses = {
-    /**
-     * List of campuses
-     */
-    200: Array<CampusResponse>;
-};
-
-export type GetDoctorsByIdCampusesResponse = GetDoctorsByIdCampusesResponses[keyof GetDoctorsByIdCampusesResponses];
 
 export type GetAppointmentsSlotsData = {
     body?: never;
@@ -1853,65 +1696,6 @@ export type PostPaymentsPackageResponses = {
 };
 
 export type PostPaymentsPackageResponse = PostPaymentsPackageResponses[keyof PostPaymentsPackageResponses];
-
-export type GetPaymentsReferenceData = {
-    body?: never;
-    path?: never;
-    query?: {
-        lead_id?: number;
-        campus_id?: number;
-        slot_id?: number;
-        booked_package_id?: number;
-    };
-    url: '/payments/reference';
-};
-
-export type GetPaymentsReferenceErrors = {
-    /**
-     * Bad request
-     */
-    400: Error;
-    /**
-     * Unauthorized
-     */
-    401: Error;
-};
-
-export type GetPaymentsReferenceError = GetPaymentsReferenceErrors[keyof GetPaymentsReferenceErrors];
-
-export type GetPaymentsReferenceResponses = {
-    /**
-     * Payment reference
-     */
-    200: PaymentReference;
-};
-
-export type GetPaymentsReferenceResponse = GetPaymentsReferenceResponses[keyof GetPaymentsReferenceResponses];
-
-export type PostPaymentsStatusData = {
-    body?: PaymentStatusParams;
-    path?: never;
-    query?: never;
-    url: '/payments/status';
-};
-
-export type PostPaymentsStatusErrors = {
-    /**
-     * Unauthorized
-     */
-    401: Error;
-};
-
-export type PostPaymentsStatusError = PostPaymentsStatusErrors[keyof PostPaymentsStatusErrors];
-
-export type PostPaymentsStatusResponses = {
-    /**
-     * Payment status
-     */
-    200: PaymentStatus;
-};
-
-export type PostPaymentsStatusResponse = PostPaymentsStatusResponses[keyof PostPaymentsStatusResponses];
 
 export type GetConsultationsPsychiatricData = {
     body?: never;

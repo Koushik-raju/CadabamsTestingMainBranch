@@ -2,7 +2,7 @@
 
 import type { Client, Options as Options2, TDataShape } from './client';
 import { client } from './client.gen';
-import type { GetAppointmentsDashboardData, GetAppointmentsDashboardErrors, GetAppointmentsDashboardResponses, GetAppointmentsData, GetAppointmentsErrors, GetAppointmentsMediumsData, GetAppointmentsMediumsErrors, GetAppointmentsMediumsResponses, GetAppointmentsPreviousData, GetAppointmentsPreviousErrors, GetAppointmentsPreviousResponses, GetAppointmentsResponses, GetAppointmentsRoomBySlotIdData, GetAppointmentsRoomBySlotIdErrors, GetAppointmentsRoomBySlotIdResponses, GetAppointmentsSlotsBySlotIdPriceData, GetAppointmentsSlotsBySlotIdPriceErrors, GetAppointmentsSlotsBySlotIdPriceResponses, GetAppointmentsSlotsData, GetAppointmentsSlotsErrors, GetAppointmentsSlotsResponses, GetConsultationsHistoryData, GetConsultationsHistoryErrors, GetConsultationsHistoryResponses, GetConsultationsPsychiatricData, GetConsultationsPsychiatricErrors, GetConsultationsPsychiatricResponses, GetConsultationsPsychologistData, GetConsultationsPsychologistErrors, GetConsultationsPsychologistResponses, GetConsultationsSummaryData, GetConsultationsSummaryErrors, GetConsultationsSummaryResponses, GetDoctorsByIdAvailabilityData, GetDoctorsByIdAvailabilityErrors, GetDoctorsByIdAvailabilityResponses, GetDoctorsByIdCampusesData, GetDoctorsByIdCampusesErrors, GetDoctorsByIdCampusesResponses, GetDoctorsByIdData, GetDoctorsByIdErrors, GetDoctorsByIdInfoData, GetDoctorsByIdInfoErrors, GetDoctorsByIdInfoResponses, GetDoctorsByIdResponses, GetDoctorsData, GetDoctorsErrors, GetDoctorsResponses, GetDoctorsSimpleData, GetDoctorsSimpleErrors, GetDoctorsSimpleResponses, GetMastersAgePreferencesData, GetMastersAgePreferencesResponses, GetMastersAreasData, GetMastersAreasResponses, GetMastersCampusesData, GetMastersCampusesResponses, GetMastersCitiesData, GetMastersCitiesResponses, GetMastersCnsPreferencesData, GetMastersCnsPreferencesResponses, GetMastersIllnessesData, GetMastersIllnessesResponses, GetMastersLanguagesData, GetMastersLanguagesResponses, GetMastersLocationsData, GetMastersLocationsResponses, GetMastersMediumsData, GetMastersMediumsResponses, GetMastersProductsData, GetMastersProductsResponses, GetMastersRelationshipsData, GetMastersRelationshipsResponses, GetMastersServicesData, GetMastersServicesResponses, GetMastersSpecialtiesData, GetMastersSpecialtiesResponses, GetMastersSubCampusesData, GetMastersSubCampusesResponses, GetNotificationsData, GetNotificationsErrors, GetNotificationsResponses, GetPackagesBookedLineByBookedPackageIdBySequenceNoData, GetPackagesBookedLineByBookedPackageIdBySequenceNoErrors, GetPackagesBookedLineByBookedPackageIdBySequenceNoResponses, GetPackagesData, GetPackagesErrors, GetPackagesManagedData, GetPackagesManagedErrors, GetPackagesManagedResponses, GetPackagesProductLinesByPackageIdData, GetPackagesProductLinesByPackageIdErrors, GetPackagesProductLinesByPackageIdResponses, GetPackagesProductLinesData, GetPackagesProductLinesErrors, GetPackagesProductLinesResponses, GetPackagesResponses, GetPatientsByEmailByEmailData, GetPatientsByEmailByEmailErrors, GetPatientsByEmailByEmailResponses, GetPatientsByLeadIdData, GetPatientsByLeadIdErrors, GetPatientsByLeadIdResponses, GetPatientsByMobileByMobileData, GetPatientsByMobileByMobileErrors, GetPatientsByMobileByMobileResponses, GetPatientsMeData, GetPatientsMeErrors, GetPatientsMeResponses, GetPaymentsReferenceData, GetPaymentsReferenceErrors, GetPaymentsReferenceResponses, PostAuthDoctorLoginData, PostAuthDoctorLoginErrors, PostAuthDoctorLoginResponses, PostAuthLogoutData, PostAuthLogoutErrors, PostAuthLogoutResponses, PostAuthPatientSendOtpData, PostAuthPatientSendOtpResponses, PostAuthPatientSignupVerifyData, PostAuthPatientSignupVerifyErrors, PostAuthPatientSignupVerifyResponses, PostAuthPatientVerifyLoginData, PostAuthPatientVerifyLoginErrors, PostAuthPatientVerifyLoginResponses, PostAuthRefreshData, PostAuthRefreshErrors, PostAuthRefreshResponses, PostPackagesBookData, PostPackagesBookErrors, PostPackagesBookResponses, PostPaymentsAppointmentData, PostPaymentsAppointmentErrors, PostPaymentsAppointmentResponses, PostPaymentsPackageData, PostPaymentsPackageErrors, PostPaymentsPackageResponses, PostPaymentsStatusData, PostPaymentsStatusErrors, PostPaymentsStatusResponses, PutAppointmentsBookBySlotIdData, PutAppointmentsBookBySlotIdErrors, PutAppointmentsBookBySlotIdResponses, PutAppointmentsCancelBySlotIdData, PutAppointmentsCancelBySlotIdErrors, PutAppointmentsCancelBySlotIdResponses, PutAppointmentsRescheduleBySlotIdData, PutAppointmentsRescheduleBySlotIdErrors, PutAppointmentsRescheduleBySlotIdResponses, PutNotificationsData, PutNotificationsErrors, PutNotificationsResponses, PutPackagesConfirmByBookedPackageIdData, PutPackagesConfirmByBookedPackageIdErrors, PutPackagesConfirmByBookedPackageIdResponses } from './types.gen';
+import type { GetAppointmentsDashboardData, GetAppointmentsDashboardErrors, GetAppointmentsDashboardResponses, GetAppointmentsData, GetAppointmentsErrors, GetAppointmentsMediumsData, GetAppointmentsMediumsErrors, GetAppointmentsMediumsResponses, GetAppointmentsPreviousData, GetAppointmentsPreviousErrors, GetAppointmentsPreviousResponses, GetAppointmentsResponses, GetAppointmentsRoomBySlotIdData, GetAppointmentsRoomBySlotIdErrors, GetAppointmentsRoomBySlotIdResponses, GetAppointmentsSlotsBySlotIdPriceData, GetAppointmentsSlotsBySlotIdPriceErrors, GetAppointmentsSlotsBySlotIdPriceResponses, GetAppointmentsSlotsData, GetAppointmentsSlotsErrors, GetAppointmentsSlotsResponses, GetConsultationsHistoryData, GetConsultationsHistoryErrors, GetConsultationsHistoryResponses, GetConsultationsPsychiatricData, GetConsultationsPsychiatricErrors, GetConsultationsPsychiatricResponses, GetConsultationsPsychologistData, GetConsultationsPsychologistErrors, GetConsultationsPsychologistResponses, GetConsultationsSummaryData, GetConsultationsSummaryErrors, GetConsultationsSummaryResponses, GetDoctorsByIdAvailabilityData, GetDoctorsByIdAvailabilityErrors, GetDoctorsByIdAvailabilityResponses, GetDoctorsByIdData, GetDoctorsByIdErrors, GetDoctorsByIdInfoData, GetDoctorsByIdInfoErrors, GetDoctorsByIdInfoResponses, GetDoctorsByIdResponses, GetDoctorsData, GetDoctorsErrors, GetDoctorsResponses, GetMastersCampusesData, GetMastersCampusesResponses, GetMastersIllnessesData, GetMastersIllnessesResponses, GetMastersLocationsData, GetMastersLocationsResponses, GetMastersMediumsData, GetMastersMediumsResponses, GetMastersProductsData, GetMastersProductsResponses, GetMastersRelationshipsData, GetMastersRelationshipsResponses, GetMastersServicesData, GetMastersServicesResponses, GetNotificationsData, GetNotificationsErrors, GetNotificationsResponses, GetPackagesBookedLineByBookedPackageIdBySequenceNoData, GetPackagesBookedLineByBookedPackageIdBySequenceNoErrors, GetPackagesBookedLineByBookedPackageIdBySequenceNoResponses, GetPackagesData, GetPackagesErrors, GetPackagesManagedData, GetPackagesManagedErrors, GetPackagesManagedResponses, GetPackagesProductLinesByPackageIdData, GetPackagesProductLinesByPackageIdErrors, GetPackagesProductLinesByPackageIdResponses, GetPackagesProductLinesData, GetPackagesProductLinesErrors, GetPackagesProductLinesResponses, GetPackagesResponses, GetPatientsByEmailByEmailData, GetPatientsByEmailByEmailErrors, GetPatientsByEmailByEmailResponses, GetPatientsByLeadIdData, GetPatientsByLeadIdErrors, GetPatientsByLeadIdResponses, GetPatientsByMobileByMobileData, GetPatientsByMobileByMobileErrors, GetPatientsByMobileByMobileResponses, GetPatientsMeData, GetPatientsMeErrors, GetPatientsMeResponses, PostAuthDoctorLoginData, PostAuthDoctorLoginErrors, PostAuthDoctorLoginResponses, PostAuthLogoutData, PostAuthLogoutErrors, PostAuthLogoutResponses, PostAuthPatientSendOtpData, PostAuthPatientSendOtpResponses, PostAuthPatientSignupVerifyData, PostAuthPatientSignupVerifyErrors, PostAuthPatientSignupVerifyResponses, PostAuthPatientVerifyLoginData, PostAuthPatientVerifyLoginErrors, PostAuthPatientVerifyLoginResponses, PostAuthRefreshData, PostAuthRefreshErrors, PostAuthRefreshResponses, PostPackagesBookData, PostPackagesBookErrors, PostPackagesBookResponses, PostPaymentsAppointmentData, PostPaymentsAppointmentErrors, PostPaymentsAppointmentResponses, PostPaymentsPackageData, PostPaymentsPackageErrors, PostPaymentsPackageResponses, PutAppointmentsBookBySlotIdData, PutAppointmentsBookBySlotIdErrors, PutAppointmentsBookBySlotIdResponses, PutAppointmentsCancelBySlotIdData, PutAppointmentsCancelBySlotIdErrors, PutAppointmentsCancelBySlotIdResponses, PutAppointmentsRescheduleBySlotIdData, PutAppointmentsRescheduleBySlotIdErrors, PutAppointmentsRescheduleBySlotIdResponses, PutNotificationsData, PutNotificationsErrors, PutNotificationsResponses, PutPackagesConfirmByBookedPackageIdData, PutPackagesConfirmByBookedPackageIdErrors, PutPackagesConfirmByBookedPackageIdResponses } from './types.gen';
 
 export type Options<TData extends TDataShape = TDataShape, ThrowOnError extends boolean = boolean, TResponse = unknown> = Options2<TData, ThrowOnError, TResponse> & {
     /**
@@ -103,16 +103,6 @@ export const postAuthLogout = <ThrowOnError extends boolean = false>(options?: O
 });
 
 /**
- * List all medical specialties
- */
-export const getMastersSpecialties = <ThrowOnError extends boolean = false>(options?: Options<GetMastersSpecialtiesData, ThrowOnError>) => (options?.client ?? client).get<GetMastersSpecialtiesResponses, unknown, ThrowOnError>({
-    responseType: 'json',
-    security: [{ scheme: 'bearer', type: 'http' }, { name: 'X-API-Key', type: 'apiKey' }],
-    url: '/masters/specialties',
-    ...options
-});
-
-/**
  * List all illnesses/conditions
  */
 export const getMastersIllnesses = <ThrowOnError extends boolean = false>(options?: Options<GetMastersIllnessesData, ThrowOnError>) => (options?.client ?? client).get<GetMastersIllnessesResponses, unknown, ThrowOnError>({
@@ -129,56 +119,6 @@ export const getMastersServices = <ThrowOnError extends boolean = false>(options
     responseType: 'json',
     security: [{ scheme: 'bearer', type: 'http' }, { name: 'X-API-Key', type: 'apiKey' }],
     url: '/masters/services',
-    ...options
-});
-
-/**
- * List all available languages
- */
-export const getMastersLanguages = <ThrowOnError extends boolean = false>(options?: Options<GetMastersLanguagesData, ThrowOnError>) => (options?.client ?? client).get<GetMastersLanguagesResponses, unknown, ThrowOnError>({
-    responseType: 'json',
-    security: [{ scheme: 'bearer', type: 'http' }, { name: 'X-API-Key', type: 'apiKey' }],
-    url: '/masters/languages',
-    ...options
-});
-
-/**
- * List age preference categories
- */
-export const getMastersAgePreferences = <ThrowOnError extends boolean = false>(options?: Options<GetMastersAgePreferencesData, ThrowOnError>) => (options?.client ?? client).get<GetMastersAgePreferencesResponses, unknown, ThrowOnError>({
-    responseType: 'json',
-    security: [{ scheme: 'bearer', type: 'http' }, { name: 'X-API-Key', type: 'apiKey' }],
-    url: '/masters/age-preferences',
-    ...options
-});
-
-/**
- * List CNS preference options
- */
-export const getMastersCnsPreferences = <ThrowOnError extends boolean = false>(options?: Options<GetMastersCnsPreferencesData, ThrowOnError>) => (options?.client ?? client).get<GetMastersCnsPreferencesResponses, unknown, ThrowOnError>({
-    responseType: 'json',
-    security: [{ scheme: 'bearer', type: 'http' }, { name: 'X-API-Key', type: 'apiKey' }],
-    url: '/masters/cns-preferences',
-    ...options
-});
-
-/**
- * List cities with optional pagination
- */
-export const getMastersCities = <ThrowOnError extends boolean = false>(options?: Options<GetMastersCitiesData, ThrowOnError>) => (options?.client ?? client).get<GetMastersCitiesResponses, unknown, ThrowOnError>({
-    responseType: 'json',
-    security: [{ scheme: 'bearer', type: 'http' }, { name: 'X-API-Key', type: 'apiKey' }],
-    url: '/masters/cities',
-    ...options
-});
-
-/**
- * List areas with optional pagination
- */
-export const getMastersAreas = <ThrowOnError extends boolean = false>(options?: Options<GetMastersAreasData, ThrowOnError>) => (options?.client ?? client).get<GetMastersAreasResponses, unknown, ThrowOnError>({
-    responseType: 'json',
-    security: [{ scheme: 'bearer', type: 'http' }, { name: 'X-API-Key', type: 'apiKey' }],
-    url: '/masters/areas',
     ...options
 });
 
@@ -213,16 +153,6 @@ export const getMastersCampuses = <ThrowOnError extends boolean = false>(options
 });
 
 /**
- * List all Mindtalk sub-campuses
- */
-export const getMastersSubCampuses = <ThrowOnError extends boolean = false>(options?: Options<GetMastersSubCampusesData, ThrowOnError>) => (options?.client ?? client).get<GetMastersSubCampusesResponses, unknown, ThrowOnError>({
-    responseType: 'json',
-    security: [{ scheme: 'bearer', type: 'http' }, { name: 'X-API-Key', type: 'apiKey' }],
-    url: '/masters/sub-campuses',
-    ...options
-});
-
-/**
  * List medium types (for cancellation reasons)
  */
 export const getMastersMediums = <ThrowOnError extends boolean = false>(options?: Options<GetMastersMediumsData, ThrowOnError>) => (options?.client ?? client).get<GetMastersMediumsResponses, unknown, ThrowOnError>({
@@ -253,16 +183,6 @@ export const getDoctors = <ThrowOnError extends boolean = false>(options?: Optio
 });
 
 /**
- * Simplified doctor list with basic info
- */
-export const getDoctorsSimple = <ThrowOnError extends boolean = false>(options?: Options<GetDoctorsSimpleData, ThrowOnError>) => (options?.client ?? client).get<GetDoctorsSimpleResponses, GetDoctorsSimpleErrors, ThrowOnError>({
-    responseType: 'json',
-    security: [{ scheme: 'bearer', type: 'http' }, { name: 'X-API-Key', type: 'apiKey' }],
-    url: '/doctors/simple',
-    ...options
-});
-
-/**
  * Get detailed doctor record by ID
  */
 export const getDoctorsById = <ThrowOnError extends boolean = false>(options?: Options<GetDoctorsByIdData, ThrowOnError>) => (options?.client ?? client).get<GetDoctorsByIdResponses, GetDoctorsByIdErrors, ThrowOnError>({
@@ -283,22 +203,12 @@ export const getDoctorsByIdInfo = <ThrowOnError extends boolean = false>(options
 });
 
 /**
- * Get doctor availability across campuses and time slots
+ * Get doctor availability across campuses and time slots using rich doctor listing
  */
 export const getDoctorsByIdAvailability = <ThrowOnError extends boolean = false>(options?: Options<GetDoctorsByIdAvailabilityData, ThrowOnError>) => (options?.client ?? client).get<GetDoctorsByIdAvailabilityResponses, GetDoctorsByIdAvailabilityErrors, ThrowOnError>({
     responseType: 'json',
     security: [{ scheme: 'bearer', type: 'http' }, { name: 'X-API-Key', type: 'apiKey' }],
     url: '/doctors/{id}/availability',
-    ...options
-});
-
-/**
- * List campuses where this doctor is available
- */
-export const getDoctorsByIdCampuses = <ThrowOnError extends boolean = false>(options?: Options<GetDoctorsByIdCampusesData, ThrowOnError>) => (options?.client ?? client).get<GetDoctorsByIdCampusesResponses, GetDoctorsByIdCampusesErrors, ThrowOnError>({
-    responseType: 'json',
-    security: [{ scheme: 'bearer', type: 'http' }, { name: 'X-API-Key', type: 'apiKey' }],
-    url: '/doctors/{id}/campuses',
     ...options
 });
 
@@ -455,7 +365,7 @@ export const getPatientsByLeadId = <ThrowOnError extends boolean = false>(option
 });
 
 /**
- * List all available packages, optionally filtered by service IDs
+ * List all available packages
  */
 export const getPackages = <ThrowOnError extends boolean = false>(options?: Options<GetPackagesData, ThrowOnError>) => (options?.client ?? client).get<GetPackagesResponses, GetPackagesErrors, ThrowOnError>({
     responseType: 'json',
@@ -465,7 +375,7 @@ export const getPackages = <ThrowOnError extends boolean = false>(options?: Opti
 });
 
 /**
- * Get package product lines by line IDs
+ * Get all package product lines, optionally filtered by line IDs
  */
 export const getPackagesProductLines = <ThrowOnError extends boolean = false>(options?: Options<GetPackagesProductLinesData, ThrowOnError>) => (options?.client ?? client).get<GetPackagesProductLinesResponses, GetPackagesProductLinesErrors, ThrowOnError>({
     responseType: 'json',
@@ -533,7 +443,7 @@ export const getPackagesBookedLineByBookedPackageIdBySequenceNo = <ThrowOnError 
 });
 
 /**
- * Initiate CCAvenue payment for an appointment
+ * Initiate Razorpay payment for an appointment
  */
 export const postPaymentsAppointment = <ThrowOnError extends boolean = false>(options?: Options<PostPaymentsAppointmentData, ThrowOnError>) => (options?.client ?? client).post<PostPaymentsAppointmentResponses, PostPaymentsAppointmentErrors, ThrowOnError>({
     responseType: 'json',
@@ -547,36 +457,12 @@ export const postPaymentsAppointment = <ThrowOnError extends boolean = false>(op
 });
 
 /**
- * Initiate CCAvenue payment for a package
+ * Initiate Razorpay payment for a package
  */
 export const postPaymentsPackage = <ThrowOnError extends boolean = false>(options?: Options<PostPaymentsPackageData, ThrowOnError>) => (options?.client ?? client).post<PostPaymentsPackageResponses, PostPaymentsPackageErrors, ThrowOnError>({
     responseType: 'json',
     security: [{ scheme: 'bearer', type: 'http' }, { name: 'X-API-Key', type: 'apiKey' }],
     url: '/payments/package',
-    ...options,
-    headers: {
-        'Content-Type': 'application/json',
-        ...options?.headers
-    }
-});
-
-/**
- * Get payment reference number for status checks
- */
-export const getPaymentsReference = <ThrowOnError extends boolean = false>(options?: Options<GetPaymentsReferenceData, ThrowOnError>) => (options?.client ?? client).get<GetPaymentsReferenceResponses, GetPaymentsReferenceErrors, ThrowOnError>({
-    responseType: 'json',
-    security: [{ scheme: 'bearer', type: 'http' }, { name: 'X-API-Key', type: 'apiKey' }],
-    url: '/payments/reference',
-    ...options
-});
-
-/**
- * Check payment status by order and reference number
- */
-export const postPaymentsStatus = <ThrowOnError extends boolean = false>(options?: Options<PostPaymentsStatusData, ThrowOnError>) => (options?.client ?? client).post<PostPaymentsStatusResponses, PostPaymentsStatusErrors, ThrowOnError>({
-    responseType: 'json',
-    security: [{ scheme: 'bearer', type: 'http' }, { name: 'X-API-Key', type: 'apiKey' }],
-    url: '/payments/status',
     ...options,
     headers: {
         'Content-Type': 'application/json',
