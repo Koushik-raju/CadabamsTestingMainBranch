@@ -35,7 +35,6 @@ export interface BookedPackage {
   campus_id: [number, string];
   lead_id: number;
   journey_id?: string | number | null;
-  lines?: Array<{ product_id: [number, string] }>;
 }
 
 // Prescription / medicine line item from hospital API

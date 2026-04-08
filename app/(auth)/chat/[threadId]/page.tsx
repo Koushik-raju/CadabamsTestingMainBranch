@@ -152,7 +152,11 @@ export default function ChatPage() {
       const result = await client.listMemoryThreads({
         resourceId: resource_id,
       });
-      setThreads(result.threads ?? []);
+      setThreads((result.threads ?? []).map((t) => ({
+        ...t,
+        createdAt: t.createdAt instanceof Date ? t.createdAt.toISOString() : t.createdAt,
+        updatedAt: t.updatedAt instanceof Date ? t.updatedAt.toISOString() : t.updatedAt,
+      })));
     } catch (err) {
       console.error("Failed to fetch chat history:", err);
       setThreads([]);

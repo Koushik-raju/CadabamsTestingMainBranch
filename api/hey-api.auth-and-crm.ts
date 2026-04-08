@@ -17,6 +17,6 @@ if (typeof window !== 'undefined') {
 export const createClientConfig: CreateClientConfig = (config) => ({
   ...config,
   baseURL: 'https://auth.cadabams.com/api/v1',
-  auth: () => getAccessToken(),
+  auth: async () => (await getAccessToken()) ?? '',
   instance,
 });

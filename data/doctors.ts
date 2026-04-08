@@ -5,7 +5,8 @@ import type { DoctorListing } from '@cadabams/crm-sdk';
 
 export type { DoctorListing };
 
-export const DOCTORS: DoctorListing[] = [
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export const DOCTORS: DoctorListing[] = ([
   {
     "illness_treated": [
       [
@@ -8208,4 +8209,4 @@ export const DOCTORS: DoctorListing[] = [
       ]
     ]
   }
-];
+] as unknown) as DoctorListing[];

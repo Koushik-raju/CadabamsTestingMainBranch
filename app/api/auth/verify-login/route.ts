@@ -6,8 +6,8 @@ export async function POST(req: NextRequest) {
     const body = await req.json();
     const { data, error } = await postAuthPatientVerifyLogin({ body });
 
-    if (error) {
-      const status = (error as { status?: number }).status ?? 401;
+    if (error || !data) {
+      const status = (error as { status?: number })?.status ?? 401;
       return NextResponse.json({ error: "OTP verification failed" }, { status });
     }
 

@@ -5,7 +5,6 @@ export * from './assessment';
 export * from './worksheet';
 export * from './journey';
 export * from './package';
-export * from './chat';
 export * from './notification';
 export * from './wellness';
 export * from './payment';

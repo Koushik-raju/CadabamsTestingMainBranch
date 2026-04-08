@@ -7,12 +7,14 @@ import { Button } from '@/components/ui/button';
 interface BackButtonProps {
   fallback?: string;
   className?: string;
+  onClick?: () => void;
 }
 
-export function BackButton({ fallback, className }: BackButtonProps) {
+export function BackButton({ fallback, className, onClick }: BackButtonProps) {
   const goBack = useSafeBack(fallback);
+  const handleClick = onClick ?? goBack;
   return (
-    <Button variant="ghost" size="icon" onClick={goBack} className={className}>
+    <Button variant="ghost" size="icon" onClick={handleClick} className={className}>
       <ChevronLeft className="h-5 w-5" />
     </Button>
   );

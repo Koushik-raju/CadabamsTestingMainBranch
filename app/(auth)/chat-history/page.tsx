@@ -95,7 +95,11 @@ export default function ChatHistoryPage() {
         const result = await client.listMemoryThreads({
           resourceId: resource_id,
         });
-        setThreads(result.threads ?? []);
+        setThreads((result.threads ?? []).map((t) => ({
+          ...t,
+          createdAt: t.createdAt instanceof Date ? t.createdAt.toISOString() : t.createdAt,
+          updatedAt: t.updatedAt instanceof Date ? t.updatedAt.toISOString() : t.updatedAt,
+        })));
       } catch {
         setThreads([]);
       } finally {
