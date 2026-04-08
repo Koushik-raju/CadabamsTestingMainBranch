@@ -11,9 +11,6 @@ importers:
       '@ai-sdk/react':
         specifier: ^3.0.151
         version: 3.0.151(react@19.2.4)(zod@4.3.6)
-      '@cadabams/crm-sdk':
-        specifier: file:libs/crm-sdk
-        version: file:libs/crm-sdk
       '@capacitor/action-sheet':
         specifier: ^8.1.1
         version: 8.1.1(@capacitor/core@8.3.0)
@@ -424,10 +421,6 @@ packages:
 
   '@braintree/sanitize-url@7.1.2':
     resolution: {integrity: sha512-jigsZK+sMF/cuiB7sERuo9V7N9jx+dhmHHnQyDSVdpZwVutaBu7WvNYqMDLSgFgfB30n452TP3vjDAvFC973mA==}
-
-  '@cadabams/crm-sdk@file:libs/crm-sdk':
-    resolution: {directory: libs/crm-sdk, type: directory}
-    engines: {node: '>=18.0.0'}
 
   '@capacitor/action-sheet@8.1.1':
     resolution: {integrity: sha512-yHuGSR/FS2dDr9oBmy+Ql+y7/i5XsUAlENx5oRND5NtzsNLLiFxpNPGLWV27aU9uf9ICjI92VzH93Zh0g2FL1A==}
@@ -3462,10 +3455,6 @@ packages:
   dompurify@3.3.3:
     resolution: {integrity: sha512-Oj6pzI2+RqBfFG+qOaOLbFXLQ90ARpcGG6UePL82bJLtdsa6CYJD7nmiU8MW9nQNOtCHV3lZ/Bzq1X0QYbBZCA==}
 
-  dotenv@16.6.1:
-    resolution: {integrity: sha512-uBq4egWHTcTt33a72vpSG0z3HnPuIl6NqYcTrKEg2azoEyl2hpW0zqlxysq2pK9HlDIHyHyakeYaYnSAwd8bow==}
-    engines: {node: '>=12'}
-
   dotenv@17.4.0:
     resolution: {integrity: sha512-kCKF62fwtzwYm0IGBNjRUjtJgMfGapII+FslMHIjMR5KTnwEmBmWLDRSnc3XSNP8bNy34tekgQyDT0hr7pERRQ==}
     engines: {node: '>=12'}
@@ -6444,14 +6433,6 @@ snapshots:
       '@babel/helper-validator-identifier': 7.28.5
 
   '@braintree/sanitize-url@7.1.2': {}
-
-  '@cadabams/crm-sdk@file:libs/crm-sdk':
-    dependencies:
-      axios: 1.14.0
-      dotenv: 16.6.1
-      oauth-1.0a: 2.2.6
-    transitivePeerDependencies:
-      - debug
 
   '@capacitor/action-sheet@8.1.1(@capacitor/core@8.3.0)':
     dependencies:
@@ -9612,8 +9593,6 @@ snapshots:
   dompurify@3.3.3:
     optionalDependencies:
       '@types/trusted-types': 2.0.7
-
-  dotenv@16.6.1: {}
 
   dotenv@17.4.0: {}
 

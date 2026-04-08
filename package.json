@@ -11,7 +11,6 @@
   },
   "dependencies": {
     "@ai-sdk/react": "^3.0.151",
-    "@cadabams/crm-sdk": "file:libs/crm-sdk",
     "@capacitor/action-sheet": "^8.1.1",
     "@capacitor/app": "^8.1.0",
     "@capacitor/browser": "^8.0.3",
