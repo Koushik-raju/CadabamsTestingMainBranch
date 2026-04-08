@@ -45,64 +45,81 @@ export function UpcomingSession({ appointments, onJoin }: Props) {
   return (
     <div className="px-4 mb-4">
       <div className="flex items-center justify-between mb-3">
+        <span className="text-sm font-medium text-foreground">Upcoming</span>
         <Link href="/appointments" className="text-sm font-medium text-primary hover:underline">
           View all →
         </Link>
       </div>
 
-      {(
-        <div className="flex flex-col gap-3">
-          {appointments.map((apt) => {
-            const doctorName = getDoctorName(apt.doctor);
-            const specialization = getSpecialization(apt.speciality_id);
-            const formattedTime = formatDateTime(apt.start_datetime);
-            const profileImage = apt.doctor_image_url || '/doctor_ananya.png';
-            const isVirtual = apt.virtual_consultation_url !== false;
+      <div className="flex flex-col gap-3">
+        {appointments.map((apt, index) => {
+          const doctorName = getDoctorName(apt.doctor);
+          const specialization = getSpecialization(apt.speciality_id);
+          const formattedTime = formatDateTime(apt.start_datetime);
+          const profileImage = apt.doctor_image_url || '/doctor_ananya.png';
+          const isVirtual = apt.virtual_consultation_url !== false;
 
-            return (
-              <div
-                key={apt.id}
-                className="bg-white rounded-xl border border-border p-4 flex items-center gap-3 shadow-sm"
-              >
-                <div className="w-12 h-12 rounded-full overflow-hidden flex-shrink-0 relative">
-                  <Image
-                    src={profileImage}
-                    alt={doctorName}
-                    fill
-                    className="object-cover"
-                  />
-                </div>
-
-                <div className="flex-grow min-w-0">
-                  <h4 className="text-sm font-bold text-foreground line-clamp-1">
-                    {doctorName}
-                  </h4>
-                  {specialization && (
-                    <p className="text-xs text-muted-foreground line-clamp-1">
-                      {specialization}
-                    </p>
-                  )}
-                  <p className="text-xs text-muted-foreground mt-0.5">
-                    {formattedTime}
-                  </p>
-                </div>
-
-                {isVirtual && (
-                  <Button
-                    variant="default"
-                    size="sm"
-                    className="rounded-full bg-green-500 hover:bg-green-600 text-white shrink-0 gap-1.5 px-3"
-                    onClick={onJoin}
-                  >
-                    <Video className="w-3.5 h-3.5" />
-                    <span>Join</span>
-                  </Button>
-                )}
+          const content = (
+            <>
+              <div className="w-12 h-12 rounded-full overflow-hidden flex-shrink-0 relative">
+                <Image
+                  src={profileImage}
+                  alt={doctorName}
+                  fill
+                  className="object-cover"
+                />
               </div>
-            );
-          })}
-        </div>
-      )}
+
+              <div className="flex-grow min-w-0">
+                <h4 className="text-sm font-bold text-foreground line-clamp-1">
+                  {doctorName}
+                </h4>
+                {specialization && (
+                  <p className="text-xs text-muted-foreground line-clamp-1">
+                    {specialization}
+                  </p>
+                )}
+                <p className="text-xs text-muted-foreground mt-0.5">
+                  {formattedTime}
+                </p>
+              </div>
+
+              {isVirtual && (
+                <Button
+                  variant="default"
+                  size="sm"
+                  className="rounded-full bg-green-500 hover:bg-green-600 text-white shrink-0 gap-1.5 px-3"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    onJoin?.();
+                  }}
+                >
+                  <Video className="w-3.5 h-3.5" />
+                  <span>Join</span>
+                </Button>
+              )}
+            </>
+          );
+
+          return (
+            <div key={apt.id}>
+              {index === 0 ? (
+                <Link
+                  href={`/appointments/${apt.id}`}
+                  className="bg-white rounded-xl border border-border p-4 flex items-center gap-3 shadow-sm"
+                >
+                  {content}
+                </Link>
+              ) : (
+                <div className="bg-white rounded-xl border border-border p-4 flex items-center gap-3 shadow-sm">
+                  {content}
+                </div>
+              )}
+            </div>
+          );
+        })}
+      </div>
     </div>
   );
 }

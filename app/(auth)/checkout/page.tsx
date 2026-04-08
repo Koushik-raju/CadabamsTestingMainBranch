@@ -138,7 +138,7 @@ function CheckoutContent() {
       if (!url) throw new Error('No payment URL received from server.');
 
       clearBooking();
-      router.push(url);
+      window.location.href = url;
     } catch (err) {
       console.error(err);
       setError(

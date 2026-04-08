@@ -1,33 +1,27 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { useRouter } from 'next/navigation';
+import Link from 'next/link';
+import { Plus, Package } from 'lucide-react';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
+import { Skeleton } from '@/components/ui/skeleton';
 import { BackButton } from '@/components/common/back-button';
-import { BookedPackageCard } from '@/components/package/booked-package-card';
-import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Package, AlertCircle, PlusCircle } from 'lucide-react';
-import { getPackagesManaged, postPaymentsPackage } from '@/sdk/auth-and-crm';
-import { useAuth } from '@/hooks/use-auth';
+import { PackageListCard } from '@/components/package/package-list-card';
+import { getPackagesManaged } from '@/sdk/auth-and-crm';
 import type { BookedPackage } from '@/types/package';
 
 export default function PackagesPage() {
-  const router = useRouter();
-  const { user } = useAuth();
   const [packages, setPackages] = useState<BookedPackage[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [paymentLoading, setPaymentLoading] = useState<number | null>(null);
-  const [paymentError, setPaymentError] = useState<string | null>(null);
 
   const loadPackages = useCallback(async () => {
+    setLoading(true);
     try {
-      setLoading(true);
-      setError(null);
       const res = await getPackagesManaged();
       setPackages((res.data ?? []) as unknown as BookedPackage[]);
-    } catch {
-      setError('Failed to load packages. Please try again.');
+    } catch (err) {
+      console.error('Failed to load packages:', err);
     } finally {
       setLoading(false);
     }
@@ -37,122 +31,95 @@ export default function PackagesPage() {
     loadPackages();
   }, [loadPackages]);
 
-  const handlePayNow = async (pkg: BookedPackage) => {
-    if (!user?.lead_id) return;
-    try {
-      setPaymentLoading(pkg.booked_package_id);
-      setPaymentError(null);
-
-      const res = await postPaymentsPackage({
-        body: {
-          booked_package_id: Number(pkg.booked_package_id),
-          campus_id: Number(pkg.campus_id[0]),
-          lead_id: Number(user.lead_id),
-        },
-      });
-      if (res.error) throw new Error(JSON.stringify(res.error));
-      const url = res.data?.redirect_url;
-      if (!url) throw new Error('No payment URL received.');
-      window.location.href = url;
-    } catch (err: unknown) {
-      setPaymentError((err as { message?: string })?.message ?? 'Failed to process payment');
-    } finally {
-      setPaymentLoading(null);
-    }
-  };
-
-  const handleViewJourney = (pkg: BookedPackage) => {
-    if (pkg.journey_id) {
-      const isPreview = pkg.package_stage === 'booked' ? '&isPreview=true' : '';
-      router.push(`/journey?id=${pkg.journey_id}${isPreview}`);
-    }
-  };
+  const active  = packages.filter(p => p.package_stage === 'in_progress' || p.package_stage === 'confirm');
+  const pending = packages.filter(p => p.package_stage === 'booked');
+  const done    = packages.filter(p => p.package_stage === 'done');
+  const total   = packages.length;
 
   return (
-    <div className="min-h-screen bg-background pb-24">
-      {/* Header */}
-      <div className="px-4 pt-safe-top pt-4 pb-4">
-        <div className="flex items-center gap-3 mb-4">
-          <BackButton fallback="/home" />
-          <div>
-            <h1 className="text-xl font-bold text-foreground">My Packages</h1>
-            <p className="text-sm text-muted-foreground">Manage your healthcare packages</p>
-          </div>
+    <div className="min-h-screen bg-background">
+      <div className="flex items-center gap-3 px-4 pt-6 pb-4">
+        <BackButton fallback="/home" />
+        <h1 className="text-xl font-bold text-foreground">My Packages</h1>
+      </div>
+
+      {loading && (
+        <div className="px-4 space-y-3">
+          <Skeleton className="h-10 w-full rounded-full" />
+          {[0, 1, 2].map(i => <Skeleton key={i} className="h-20 w-full rounded-2xl" />)}
         </div>
+      )}
 
-        {/* Book new package CTA */}
-        <Button
-          className="w-full gap-2"
-          onClick={() => router.push('/packages/book-package')}
-        >
-          <PlusCircle className="w-4 h-4" />
-          Book New Package
-        </Button>
-      </div>
-
-      <div className="px-4 space-y-4">
-        {/* Payment error */}
-        {paymentError && (
-          <Alert variant="destructive">
-            <AlertCircle className="h-4 w-4" />
-            <AlertDescription>{paymentError}</AlertDescription>
-          </Alert>
-        )}
-
-        {/* Loading */}
-        {loading && (
-          <div className="flex flex-col items-center justify-center py-16 gap-3">
-            <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin" />
-            <p className="text-sm text-muted-foreground">Loading packages...</p>
+      {!loading && total === 0 && (
+        <div className="flex flex-col items-center justify-center px-6 py-16 text-center gap-4">
+          <Package className="h-16 w-16 text-muted-foreground/50" />
+          <div>
+            <p className="text-lg font-semibold text-foreground">No packages yet</p>
+            <p className="text-sm text-muted-foreground mt-1 max-w-xs mx-auto">
+              Browse and purchase a healthcare package to begin your wellness journey.
+            </p>
           </div>
-        )}
-
-        {/* Error */}
-        {!loading && error && (
-          <Alert variant="destructive">
-            <AlertCircle className="h-4 w-4" />
-            <AlertDescription className="flex items-center justify-between">
-              {error}
-              <Button size="sm" variant="outline" onClick={loadPackages} className="ml-2">
-                Retry
-              </Button>
-            </AlertDescription>
-          </Alert>
-        )}
-
-        {/* Empty state */}
-        {!loading && !error && packages.length === 0 && (
-          <div className="flex flex-col items-center justify-center py-16 gap-4 text-center">
-            <div className="w-16 h-16 rounded-full bg-muted flex items-center justify-center">
-              <Package className="w-8 h-8 text-muted-foreground" />
-            </div>
-            <div>
-              <h2 className="text-lg font-semibold text-foreground mb-1">No Packages Yet</h2>
-              <p className="text-sm text-muted-foreground max-w-xs">
-                You have not purchased any packages. Browse available packages to start your wellness journey.
-              </p>
-            </div>
-            <Button onClick={() => router.push('/packages/book-package')}>
+          <Button asChild className="rounded-full px-8 mt-2">
+            <Link href="/packages/book-package">
+              <Plus className="h-4 w-4 mr-1.5" strokeWidth={3} />
               Browse Packages
-            </Button>
-          </div>
-        )}
+            </Link>
+          </Button>
+        </div>
+      )}
 
-        {/* Package list */}
-        {!loading && !error && packages.length > 0 && (
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            {packages.map((pkg) => (
-              <BookedPackageCard
-                key={pkg.booked_package_id}
-                pkg={pkg}
-                onPayNow={() => handlePayNow(pkg)}
-                onViewJourney={() => handleViewJourney(pkg)}
-                paymentLoading={paymentLoading === pkg.booked_package_id}
-              />
-            ))}
-          </div>
-        )}
-      </div>
+      {!loading && total > 0 && (
+        <div className="px-4 pb-24">
+          <Tabs defaultValue="active">
+            <TabsList className="w-full rounded-full mb-4">
+              <TabsTrigger value="active" className="flex-1 rounded-full">
+                Active ({active.length})
+              </TabsTrigger>
+              <TabsTrigger value="pending" className="flex-1 rounded-full">
+                Pending ({pending.length})
+              </TabsTrigger>
+              {done.length > 0 && (
+                <TabsTrigger value="done" className="flex-1 rounded-full">
+                  Done ({done.length})
+                </TabsTrigger>
+              )}
+            </TabsList>
+
+            <TabsContent value="active" className="space-y-3 mt-0">
+              {active.length === 0 ? (
+                <p className="text-center text-muted-foreground text-sm py-10">No active packages</p>
+              ) : (
+                active.map(pkg => <PackageListCard key={pkg.booked_package_id} pkg={pkg} />)
+              )}
+            </TabsContent>
+
+            <TabsContent value="pending" className="space-y-3 mt-0">
+              {pending.length === 0 ? (
+                <p className="text-center text-muted-foreground text-sm py-10">No pending packages</p>
+              ) : (
+                pending.map(pkg => <PackageListCard key={pkg.booked_package_id} pkg={pkg} />)
+              )}
+            </TabsContent>
+
+            {done.length > 0 && (
+              <TabsContent value="done" className="space-y-3 mt-0">
+                {done.map(pkg => <PackageListCard key={pkg.booked_package_id} pkg={pkg} />)}
+              </TabsContent>
+            )}
+          </Tabs>
+        </div>
+      )}
+
+      {!loading && total > 0 && (
+        <div className="fixed bottom-6 right-4">
+          <Button asChild size="lg" className="rounded-full shadow-lg gap-2">
+            <Link href="/packages/book-package">
+              <Plus className="h-5 w-5" strokeWidth={3} />
+              New
+            </Link>
+          </Button>
+        </div>
+      )}
     </div>
   );
 }

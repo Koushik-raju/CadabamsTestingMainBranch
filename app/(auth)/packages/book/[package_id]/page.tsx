@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useMemo, Suspense } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useRouter, useParams } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
@@ -67,9 +67,8 @@ function extractDescription(data: JourneyData | null): string {
   return '';
 }
 
-function SelectedPackageContent() {
+function BookPackageContent({ packageId }: { packageId: string }) {
   const router = useRouter();
-  const searchParams = useSearchParams();
   const { user } = useAuth();
 
   const [pkg, setPkg] = useState<AvailablePackage | null>(null);
@@ -80,14 +79,14 @@ function SelectedPackageContent() {
 
   useEffect(() => {
     const stored = getPackageFromSession();
-    if (!stored) {
-      router.replace('/packages/book-package');
-    } else {
+    if (stored && String(stored.id) === packageId) {
       setPkg(stored);
+    } else {
+      router.replace('/packages/book-package');
     }
-  }, [router]);
+  }, [packageId, router]);
 
-  const journeyId = searchParams.get('journeyId') ?? pkg?.journey_document_id ?? (pkg?.journey_id ? String(pkg.journey_id) : null);
+  const journeyId = pkg?.journey_document_id ?? (pkg?.journey_id ? String(pkg.journey_id) : null);
 
   useEffect(() => {
     if (!journeyId) return;
@@ -165,19 +164,17 @@ function SelectedPackageContent() {
 
   return (
     <div className="min-h-screen bg-background pb-24">
-      {/* Header */}
       <div className="px-4 pt-safe-top pt-4 mb-6">
         <div className="flex items-center gap-3">
-          <BackButton fallback="/packages/book-package" />
+          <BackButton fallback={`/packages/browse/${packageId}`} />
           <div>
-            <h1 className="text-xl font-bold text-foreground">Package Details</h1>
+            <h1 className="text-xl font-bold text-foreground">Book Package</h1>
             <p className="text-sm text-muted-foreground">Review and confirm your selection</p>
           </div>
         </div>
       </div>
 
       <div className="px-4 space-y-4">
-        {/* Package card */}
         <Card className="border-border">
           <CardContent className="p-5 space-y-5">
             <div className="flex items-start gap-4">
@@ -192,7 +189,6 @@ function SelectedPackageContent() {
 
             <Separator />
 
-            {/* Price */}
             <div className="flex items-center justify-between p-4 rounded-xl bg-muted">
               <div className="flex items-center gap-3">
                 <div className="p-2 bg-background rounded-lg">
@@ -208,7 +204,6 @@ function SelectedPackageContent() {
               </p>
             </div>
 
-            {/* Security notice */}
             <div className="flex items-start gap-3 p-3 rounded-lg bg-muted/50">
               <Shield className="w-4 h-4 text-muted-foreground mt-0.5 shrink-0" />
               <div>
@@ -221,7 +216,6 @@ function SelectedPackageContent() {
           </CardContent>
         </Card>
 
-        {/* Journey overview */}
         {(journeyId || journeyLoading || description) && (
           <Card className="border-border">
             <CardContent className="p-5 space-y-3">
@@ -248,7 +242,6 @@ function SelectedPackageContent() {
           </Card>
         )}
 
-        {/* Payment summary */}
         <Card className="border-border">
           <CardContent className="p-4 space-y-2">
             <h3 className="font-semibold text-foreground mb-3">Payment Summary</h3>
@@ -268,12 +261,10 @@ function SelectedPackageContent() {
           </CardContent>
         </Card>
 
-        {/* Error */}
         {error && (
           <p className="text-sm text-destructive text-center">{error}</p>
         )}
 
-        {/* Pay button */}
         <Button
           size="lg"
           className="w-full gap-2"
@@ -303,14 +294,17 @@ function SelectedPackageContent() {
   );
 }
 
-export default function SelectedPackagePage() {
+export default function BookPackagePage() {
+  const params = useParams();
+  const packageId = params.package_id as string;
+
   return (
     <Suspense fallback={
       <div className="flex items-center justify-center min-h-screen">
         <Loader2 className="w-8 h-8 animate-spin text-primary" />
       </div>
     }>
-      <SelectedPackageContent />
+      <BookPackageContent packageId={packageId} />
     </Suspense>
   );
 }

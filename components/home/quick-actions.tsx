@@ -1,4 +1,4 @@
-import { ClipboardList, Map, BookOpen, Sparkles, LucideIcon } from 'lucide-react';
+import { ClipboardList, Map, BookOpen, Sparkles, Package, LucideIcon } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 
@@ -13,6 +13,7 @@ interface Action {
 const ACTIONS: Action[] = [
   { key: 'assessment', title: 'Assessments', description: 'Check anxiety, mood & more.', badge: '2 new suggested', icon: ClipboardList },
   { key: 'journey', title: 'Guided journeys', description: 'Duolingo-style paths for your mind.', badge: 'Day 9 of 36%', icon: Map },
+  { key: 'packages', title: 'Packages', description: 'Comprehensive care plans.', badge: 'Browse now', icon: Package },
   { key: 'journal', title: 'Journal & reflect', description: 'Free-flow or guided prompts.', badge: '3-min gratitude', icon: BookOpen },
   { key: 'breathe', title: 'Quick relief', description: 'Breath, audio & visual resets.', badge: 'Under 5 min', icon: Sparkles },
 ];
