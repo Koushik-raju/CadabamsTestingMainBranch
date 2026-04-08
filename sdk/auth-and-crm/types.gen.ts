@@ -387,42 +387,6 @@ export type BookPackageData = {
     date?: string;
 };
 
-export type ConfirmedPackage = {
-    id: number;
-    package_stage: string;
-    payment_method: string;
-    payment_date: string;
-    package_cost: number;
-    customer: string;
-    campus_id: [
-        number | string,
-        number | string
-    ];
-    lead_id: [
-        number | string,
-        number | string
-    ];
-    Package_name: [
-        number | string,
-        number | string
-    ];
-    sequence_booking: boolean;
-    payment_link: string | false;
-    invoice_id: [
-        number | string,
-        number | string
-    ] | false;
-    amount: number;
-};
-
-export type ConfirmPackageData = {
-    package_stage: 'confirm';
-    customer: string;
-    payment_method: 'cash' | 'razerpay';
-    payment_date?: string;
-    amount?: number;
-};
-
 export type PaymentInitResponse = {
     jsonrpc: '2.0';
     id: unknown;
@@ -469,10 +433,6 @@ export type PackagePaymentParams = {
      * Auto-resolved for patients
      */
     lead_id?: number;
-    /**
-     * CRM lead UID
-     */
-    uid: string;
     booked_package_id: number;
     campus_id: number;
 };
@@ -1579,33 +1539,6 @@ export type PostPackagesBookResponses = {
 };
 
 export type PostPackagesBookResponse = PostPackagesBookResponses[keyof PostPackagesBookResponses];
-
-export type PutPackagesConfirmByBookedPackageIdData = {
-    body?: ConfirmPackageData;
-    path?: {
-        bookedPackageId?: number;
-    };
-    query?: never;
-    url: '/packages/confirm/{bookedPackageId}';
-};
-
-export type PutPackagesConfirmByBookedPackageIdErrors = {
-    /**
-     * Unauthorized
-     */
-    401: Error;
-};
-
-export type PutPackagesConfirmByBookedPackageIdError = PutPackagesConfirmByBookedPackageIdErrors[keyof PutPackagesConfirmByBookedPackageIdErrors];
-
-export type PutPackagesConfirmByBookedPackageIdResponses = {
-    /**
-     * Confirmed package
-     */
-    200: ConfirmedPackage;
-};
-
-export type PutPackagesConfirmByBookedPackageIdResponse = PutPackagesConfirmByBookedPackageIdResponses[keyof PutPackagesConfirmByBookedPackageIdResponses];
 
 export type GetPackagesBookedLineByBookedPackageIdBySequenceNoData = {
     body?: never;
