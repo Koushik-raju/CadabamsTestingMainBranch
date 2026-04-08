@@ -1,9 +1,18 @@
 // AUTO-GENERATED — do not edit manually.
 // Run: pnpm tsx scripts/fetch-and-cache-doctors.ts
 
-import type { DoctorListing } from '@cadabams/crm-sdk';
+import type { Doctor } from '@/sdk/auth-and-crm';
 
-export type { DoctorListing };
+type DoctorPreferenceTuple = [string, number];
+
+export type DoctorListing = Doctor & {
+  cns_preference?: DoctorPreferenceTuple[] | null;
+  illness_treated?: DoctorPreferenceTuple[] | null;
+  age_preference?: DoctorPreferenceTuple[] | null;
+  language_preference?: DoctorPreferenceTuple[] | null;
+  city?: DoctorPreferenceTuple[] | null;
+  area?: DoctorPreferenceTuple[] | null;
+};
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export const DOCTORS: DoctorListing[] = ([

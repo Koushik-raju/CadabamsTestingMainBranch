@@ -87,14 +87,14 @@ export function ListView() {
     // issues: illness_treated = [name, id] — match by id (index 1)
     if (issues.length > 0) {
       const ids = new Set(issues.map((i) => i.id));
-      results = results.filter((d) => d.illness_treated?.some(([, id]) => ids.has(id as number)));
+      results = results.filter((d) => d.illness_treated?.some(([, id]: [unknown, unknown]) => ids.has(id as number)));
     }
 
     // languages: language_preference = [name, id] — match by name
     if (languages.length > 0) {
       const names = new Set(languages.map((l) => l.name.toLowerCase()));
       results = results.filter((d) =>
-        d.language_preference?.some(([name]) => names.has((name as string).toLowerCase()))
+        d.language_preference?.some(([name]: [unknown, ...unknown[]]) => names.has((name as string).toLowerCase()))
       );
     }
 
