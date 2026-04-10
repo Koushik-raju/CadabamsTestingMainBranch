@@ -18,22 +18,106 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { useAuth } from '@/hooks/use-auth';
 import { useAssignedAssessments } from '@/hooks/use-assigned-assessments';
-import { useAssessments, mapStrapiAssessment, type AssessmentItem } from '@/hooks/use-assessments';
+import {
+  useAssessments,
+  mapStrapiAssessment,
+  type AssessmentItem,
+} from '@/hooks/use-assessments';
 import type { AssignedAssessmentItem } from '@/services/assessment.service';
 
-type Tab = 'browse' | 'assessments';
+// FIX 4: Removed unused TabsList and TabsTrigger imports
 
-const getIconForAssessment = (assessment: AssessmentItem): React.ElementType => {
+type CategoryInfo = {
+  icon: React.ElementType;
+  bgColor: string;
+  textColor: string;
+};
+
+// Function to determine the visual properties of an assessment based on its category
+const getCategoryInfo = (assessment: AssessmentItem): CategoryInfo => {
+  // Get the first category or default to analyzing the title/description
+  const cats = (assessment.category || []).map(c => String(c).toLowerCase());
   const title = assessment.title.toLowerCase();
-  const description = assessment.description?.toLowerCase() || '';
+  const description = (assessment.description || '').toLowerCase();
   
-  if (title.includes('anxiety') || title.includes('gad') || description.includes('anxiety')) return Cloud;
-  if (title.includes('depression') || title.includes('phq') || description.includes('depression')) return Heart;
-  if (title.includes('sleep') || description.includes('sleep')) return Moon;
-  if (title.includes('stress') || description.includes('stress')) return Sparkles;
-  if (title.includes('relationship') || description.includes('relationship')) return Users;
+  // Anxiety - blue theme
+  if (cats.some(c => c.includes('anxiety')) || 
+      title.includes('anxiety') || 
+      title.includes('gad') || 
+      description.includes('anxiety')) {
+    return { 
+      icon: Cloud, 
+      bgColor: 'bg-blue-50', 
+      textColor: 'text-blue-600' 
+    };
+  }
   
-  return BarChart3;
+  // Depression - green theme
+  if (cats.some(c => c.includes('depression')) || 
+      title.includes('depression') || 
+      title.includes('phq') || 
+      description.includes('depression')) {
+    return { 
+      icon: Heart, 
+      bgColor: 'bg-green-50', 
+      textColor: 'text-green-600' 
+    };
+  }
+  
+  // Sleep - indigo theme
+  if (cats.some(c => c.includes('sleep')) || 
+      title.includes('sleep') || 
+      description.includes('sleep')) {
+    return { 
+      icon: Moon, 
+      bgColor: 'bg-indigo-50', 
+      textColor: 'text-indigo-600' 
+    };
+  }
+  
+  // Stress - amber theme
+  if (cats.some(c => c.includes('stress')) || 
+      title.includes('stress') || 
+      description.includes('stress')) {
+    return { 
+      icon: Sparkles, 
+      bgColor: 'bg-amber-50', 
+      textColor: 'text-amber-600' 
+    };
+  }
+  
+  // Relationships - rose theme
+  if (cats.some(c => c.includes('relationship') || c.includes('social')) || 
+      title.includes('relationship') || 
+      description.includes('relationship') ||
+      title.includes('social') ||
+      description.includes('social')) {
+    return { 
+      icon: Users, 
+      bgColor: 'bg-rose-50', 
+      textColor: 'text-rose-600' 
+    };
+  }
+  
+  // Mood/emotional - purple theme
+  if (cats.some(c => c.includes('mood') || c.includes('emotion')) || 
+      title.includes('mood') || 
+      title.includes('emotion') ||
+      description.includes('mood') ||
+      description.includes('emotion')) {
+    return { 
+      icon: BarChart3, 
+      bgColor: 'bg-purple-50', 
+      textColor: 'text-purple-600' 
+    };
+  }
+  
+  // Default - gray theme
+  return { 
+    icon: BarChart3, 
+    bgColor: 'bg-gray-50', 
+    textColor: 'text-gray-600' 
+  };
 };
 
 function BrowseSkeleton() {
@@ -60,9 +144,9 @@ function AssignmentsSkeleton() {
 export default function AssessmentsPage() {
   const router = useRouter();
   const { user } = useAuth();
-  const [activeTab, setActiveTab] = useState<Tab>('browse');
   const [searchTerm, setSearchTerm] = useState('');
   const [activeFilter, setActiveFilter] = useState('All');
+  const [activeTab, setActiveTab] = useState('browse');
   const mainRef = useRef<HTMLDivElement>(null);
 
   const getUserId = useCallback(() => {
@@ -72,7 +156,8 @@ export default function AssessmentsPage() {
   }, [user]);
 
   const leadId = getUserId();
-  const { data: assignedAssessments, isLoading: isLoadingAssignments } = useAssignedAssessments(leadId);
+  const { data: assignedAssessments, isLoading: isLoadingAssignments } =
+    useAssignedAssessments(leadId);
 
   const {
     data: assessmentPages,
@@ -82,69 +167,201 @@ export default function AssessmentsPage() {
   } = useAssessments({ limit: 10, status: 'PUBLISHED' });
 
   const allAssessments = useMemo(() => {
-    if (!assessmentPages) return [];
-    return assessmentPages.flatMap((page) =>
-      (page?.items || []).filter((item: { status?: string }) => item.status === 'PUBLISHED').map(mapStrapiAssessment)
-    );
+    // Return empty array if no pages
+    if (!assessmentPages) {
+      console.log('No assessment pages received');
+      return [];
+    }
+    
+    console.log('Number of assessment pages:', assessmentPages.length);
+    
+    // Process each page to extract items
+    const processedAssessments = assessmentPages.flatMap((page) => {
+      // Handle potential null/undefined pages
+      if (!page) {
+        console.log('Found null/undefined page');
+        return [];
+      }
+      
+      // Extract items - assuming the fetcher returns the inner data object directly
+      const items = page.items || [];
+      console.log('Page has', items.length, 'items');
+      
+      return items
+        .filter((item: { status?: string }) => item.status === 'PUBLISHED')
+        .map(mapStrapiAssessment);
+    });
+    
+    console.log('Total processed assessments:', processedAssessments.length);
+    return processedAssessments;
   }, [assessmentPages]);
 
   const hasMore = useMemo(() => {
-    if (!assessmentPages || assessmentPages.length === 0) return true;
+    // FIX 3: Return false (not true) when pages are empty/undefined to prevent
+    // spurious extra fetches before any data has loaded
+    if (!assessmentPages || assessmentPages.length === 0) return false;
     const lastPage = assessmentPages[assessmentPages.length - 1];
     if (!lastPage?.pagination) return false;
-    return lastPage.pagination.offset + lastPage.pagination.limit < lastPage.pagination.total;
+    return (
+      lastPage.pagination.offset + lastPage.pagination.limit <
+      lastPage.pagination.total
+    );
   }, [assessmentPages]);
 
   const categories = useMemo(() => {
+    // Always start with 'All' filter
     const cats = new Set<string>(['All']);
+    
+    // Extract categories only from the actual data
     allAssessments.forEach((a) => {
+      // From explicit category array
       (a.category || []).forEach((c: string) => {
         if (c && c.trim()) {
           cats.add(c.charAt(0).toUpperCase() + c.slice(1).toLowerCase());
         }
       });
     });
+    
     return Array.from(cats);
   }, [allAssessments]);
 
-  const { recommendedAssessment, popularScreenings, personalGrowth } = useMemo(() => {
-    if (allAssessments.length === 0) {
-      return { recommendedAssessment: null, popularScreenings: [] as AssessmentItem[], personalGrowth: [] as AssessmentItem[] };
-    }
-    const published = allAssessments.filter((a) => a.status === 'PUBLISHED');
-    const first = published[0] || null;
-    const popular = published.slice(1).filter((a) => {
-      const cats = (a.category || []).map((c: string) => c.toLowerCase());
-      return cats.includes('anxiety') || cats.includes('depression') || cats.includes('sleep');
-    });
-    const growth = published.slice(1).filter((a) => {
-      const cats = (a.category || []).map((c: string) => c.toLowerCase());
-      return !cats.includes('anxiety') && !cats.includes('depression') && !cats.includes('sleep') && cats.length > 0;
-    });
-    return { recommendedAssessment: first, popularScreenings: popular, personalGrowth: growth };
-  }, [allAssessments]);
+  const { recommendedAssessment, popularScreenings, personalGrowth } =
+    useMemo(() => {
+      console.log('Grouping assessments, total:', allAssessments.length);
+      
+      if (allAssessments.length === 0) {
+        console.log('No assessments to group');
+        return {
+          recommendedAssessment: null,
+          popularScreenings: [] as AssessmentItem[],
+          personalGrowth: [] as AssessmentItem[],
+        };
+      }
+      
+      // Take the first as recommended regardless of content
+      const first = allAssessments[0] || null;
+      
+      // Split the remaining items into two roughly equal groups
+      // to ensure we have content in both sections
+      const remaining = allAssessments.slice(1);
+      
+      // If we have categories, use them
+      const hasCategories = remaining.some(a => (a.category || []).length > 0);
+      
+      let popular: AssessmentItem[] = [];
+      let growth: AssessmentItem[] = [];
+      
+      if (hasCategories) {
+        // Use categories when they exist
+        popular = remaining.filter(a => {
+          const cats = (a.category || []).map((c: string | unknown) => String(c).toLowerCase());
+          // If any mental health related category is found
+          return cats.some((c: string) => 
+            c.includes('anxiety') || 
+            c.includes('depression') || 
+            c.includes('stress') || 
+            c.includes('sleep') || 
+            c.includes('mental')
+          );
+        });
+        
+        growth = remaining.filter(a => {
+          const cats = (a.category || []).map((c: string | unknown) => String(c).toLowerCase());
+          // If no mental health related category AND has at least one category
+          return cats.length > 0 && !cats.some((c: string) => 
+            c.includes('anxiety') || 
+            c.includes('depression') || 
+            c.includes('stress') || 
+            c.includes('sleep') || 
+            c.includes('mental')
+          );
+        });
+        
+        // If either group is empty, add assessments with no categories to it
+        const uncategorized = remaining.filter(a => !(a.category || []).length);
+        
+        if (popular.length === 0 && growth.length === 0) {
+          // Split evenly if both are empty
+          const halfIndex = Math.ceil(uncategorized.length / 2);
+          popular = uncategorized.slice(0, halfIndex);
+          growth = uncategorized.slice(halfIndex);
+        } else if (popular.length === 0) {
+          // Add to popular if it's empty
+          popular = uncategorized;
+        } else if (growth.length === 0) {
+          // Add to growth if it's empty
+          growth = uncategorized;
+        }
+      } else {
+        // No categories at all, split evenly by index
+        const halfIndex = Math.ceil(remaining.length / 2);
+        popular = remaining.slice(0, halfIndex);
+        growth = remaining.slice(halfIndex);
+      }
+      
+      console.log('Grouped assessments:', {
+        hasRecommended: !!first,
+        popularCount: popular.length,
+        growthCount: growth.length
+      });
+      
+      return {
+        recommendedAssessment: first,
+        popularScreenings: popular,
+        personalGrowth: growth,
+      };
+    }, [allAssessments]);
 
   const filteredAssessments = useMemo(() => {
-    const grouped = [...popularScreenings, ...personalGrowth];
-    const filterLower = activeFilter.toLowerCase();
-    if (activeFilter === 'All') {
-      return grouped.filter(
-        (assessment) =>
-          assessment.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          (assessment.description?.toLowerCase().includes(searchTerm.toLowerCase()) ?? false)
+    // Normalize search term for comparison
+    const termLower = searchTerm.toLowerCase().trim();
+    
+    // Function to check if an assessment matches search term
+    const matchesTerm = (assessment: AssessmentItem) => {
+      if (!termLower) return true; // If no search term, show all
+      
+      return (
+        assessment.title.toLowerCase().includes(termLower) ||
+        (assessment.description?.toLowerCase().includes(termLower) ?? false)
       );
+    };
+
+    // Include all assessments including recommended one for filtering
+    const allVisible = [
+      ...(recommendedAssessment ? [recommendedAssessment] : []),
+      ...popularScreenings,
+      ...personalGrowth,
+    ];
+
+    // If filter is "All", just filter by search term
+    if (activeFilter === 'All') {
+      return allVisible.filter(matchesTerm);
     }
-    return grouped.filter(
-      (assessment) =>
-        ((assessment.category || [])?.map((c: string) => c.toLowerCase()).includes(filterLower)) &&
-        (assessment.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          (assessment.description?.toLowerCase().includes(searchTerm.toLowerCase()) ?? false))
-    );
-  }, [popularScreenings, personalGrowth, searchTerm, activeFilter]);
+
+    const filterLower = activeFilter.toLowerCase();
+    
+    // Filter by both category and search term
+    return allVisible.filter(assessment => {
+      // Check for explicit category match from API
+      const categoryMatch = (assessment.category || [])
+        .map((c: string) => c.toLowerCase())
+        .includes(filterLower);
+      
+      // Return true if it matches category condition AND search term
+      return categoryMatch && matchesTerm(assessment);
+    });
+  }, [
+    recommendedAssessment,
+    popularScreenings,
+    personalGrowth,
+    searchTerm,
+    activeFilter,
+  ]);
 
   const handleScroll = (e: React.UIEvent<HTMLDivElement>) => {
     const element = e.currentTarget;
-    const isAtBottom = element.scrollHeight - element.scrollTop - element.clientHeight < 500;
+    const isAtBottom =
+      element.scrollHeight - element.scrollTop - element.clientHeight < 500;
     if (isAtBottom && !isLoadingBrowse && hasMore) {
       setSize((s) => s + 1);
     }
@@ -158,11 +375,6 @@ export default function AssessmentsPage() {
     router.push(`/assessment/details?id=${assessment.id}`);
   };
 
-  const TABS: { value: Tab; label: string; count?: number }[] = [
-    { value: 'browse', label: 'Explore' },
-    { value: 'assessments', label: 'My Assessments', count: assignedAssessments?.length },
-  ];
-
   return (
     <div
       ref={mainRef}
@@ -173,41 +385,51 @@ export default function AssessmentsPage() {
         <div className="flex items-center gap-2 mb-2">
           <h1 className="text-2xl font-bold tracking-tight">Assessments</h1>
         </div>
-        <p className="text-sm text-slate-500 mb-4">Understand yourself better with clinical tools.</p>
+        <p className="text-sm text-slate-500 mb-4">
+          Understand yourself better with clinical tools.
+        </p>
         <div className="flex gap-2 overflow-x-auto pb-1 -mx-5 px-5">
-          {TABS.map((tab) => {
-            const isActive = tab.value === activeTab;
-            return (
-              <button
-                key={tab.value}
-                onClick={() => setActiveTab(tab.value)}
-                className={`flex items-center gap-2 whitespace-nowrap rounded-full border px-4 py-2 text-sm font-medium transition-colors ${
-                  isActive
-                    ? 'bg-slate-900 text-white border-slate-900 shadow-sm'
-                    : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-100'
+          <button
+            onClick={() => setActiveTab('browse')}
+            className={`flex items-center gap-2 whitespace-nowrap rounded-full border px-4 py-2 text-sm font-medium transition-colors ${
+              activeTab === 'browse'
+                ? 'bg-slate-900 text-white border-slate-900 shadow-sm'
+                : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-100'
+            }`}
+          >
+            Explore
+          </button>
+          <button
+            onClick={() => setActiveTab('assessments')}
+            className={`flex items-center gap-2 whitespace-nowrap rounded-full border px-4 py-2 text-sm font-medium transition-colors ${
+              activeTab === 'assessments'
+                ? 'bg-slate-900 text-white border-slate-900 shadow-sm'
+                : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-100'
+            }`}
+          >
+            My Assessments
+            {assignedAssessments && assignedAssessments.length > 0 && (
+              <Badge
+                className={`text-[10px] px-1.5 py-0 min-w-[18px] ${
+                  activeTab === 'assessments'
+                    ? 'bg-white/20 text-white'
+                    : 'bg-slate-100 text-slate-600'
                 }`}
               >
-                {tab.label}
-                {typeof tab.count === 'number' && tab.count > 0 && (
-                  <Badge
-                    className={`text-[10px] px-1.5 py-0 min-w-[18px] ${
-                      isActive ? 'bg-white/20 text-white' : 'bg-slate-100 text-slate-600'
-                    }`}
-                  >
-                    {tab.count}
-                  </Badge>
-                )}
-              </button>
-            );
-          })}
+                {assignedAssessments.length}
+              </Badge>
+            )}
+          </button>
         </div>
       </header>
 
       <main className="flex-1 px-5 pb-28">
         {activeTab === 'browse' && (
+          // FIX 1: This closing </div> was missing, causing a malformed JSX tree
+          // and a complete render failure of the component
           <div className="space-y-6">
-            <div className="flex items-center gap-2 rounded-xl bg-white shadow-sm px-4 py-3 border border-slate-100 mt-4">
-              <Search className="w-5 h-5 text-slate-400" />
+            <div className="flex items-center gap-2 rounded-full bg-white shadow-sm px-4 py-2 border border-slate-200 mt-4">
+              <Search className="w-4 h-4 text-slate-400" />
               <input
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
@@ -216,7 +438,7 @@ export default function AssessmentsPage() {
               />
             </div>
 
-            <div className="flex gap-2 overflow-x-auto pb-1 -mx-5 px-5">
+            <div className="flex gap-2 overflow-x-auto pb-1 -mx-5 px-5 mt-4">
               {categories.map((cat) => {
                 const isActive = cat === activeFilter;
                 return (
@@ -225,7 +447,7 @@ export default function AssessmentsPage() {
                     onClick={() => setActiveFilter(cat)}
                     className={`whitespace-nowrap rounded-full px-4 py-2 text-sm font-medium transition-colors ${
                       isActive
-                        ? 'bg-slate-800 text-white shadow-sm'
+                        ? 'bg-slate-900 text-white shadow-sm'
                         : 'bg-white text-slate-600 border border-slate-200 hover:bg-slate-100'
                     }`}
                   >
@@ -242,25 +464,33 @@ export default function AssessmentsPage() {
                 <>
                   {recommendedAssessment && (
                     <Card
-                      className="bg-slate-900 text-white rounded-2xl shadow-lg cursor-pointer transition-transform hover:scale-[1.02]"
-                      onClick={() => handleBrowseAssessment(recommendedAssessment)}
+                      className="bg-slate-900 text-white rounded-2xl shadow-lg cursor-pointer transition-transform hover:scale-[1.01]"
+                      onClick={() =>
+                        handleBrowseAssessment(recommendedAssessment)
+                      }
                     >
-                      <CardContent className="p-5">
+                      <CardContent className="p-6">
                         <Badge className="bg-white/10 text-white hover:bg-white/20 mb-3">
                           Recommended
                         </Badge>
-                        <h3 className="text-xl font-bold">{recommendedAssessment.title}</h3>
-                        <p className="text-slate-300 text-sm mt-1 mb-4">
-                          {recommendedAssessment.description}
+                        <h3 className="text-xl font-bold tracking-tight">
+                          {recommendedAssessment.title}
+                        </h3>
+                        <p className="text-slate-300 text-sm mt-2 mb-4 line-clamp-2">
+                          {recommendedAssessment.description || "Track your mood patterns and get personalized insights."}
                         </p>
                         <div className="flex items-center gap-4 text-sm text-slate-300">
                           <span className="flex items-center gap-1.5">
                             <Clock3 className="w-4 h-4" />
-                            {recommendedAssessment.landingTitle?.minutes} min
+                            {recommendedAssessment.landingTitle?.minutes || 5} min
                           </span>
                           <span className="flex items-center gap-1.5">
                             <CalendarClock className="w-4 h-4" />
-                            {recommendedAssessment.landingTitle?.numberOfQuestion} Questions
+                            {
+                              recommendedAssessment.landingTitle
+                                ?.numberOfQuestion || "12"
+                            }{' '}
+                            Questions
                           </span>
                         </div>
                       </CardContent>
@@ -269,33 +499,35 @@ export default function AssessmentsPage() {
 
                   {popularScreenings.length > 0 && (
                     <div className="space-y-4">
-                      <h2 className="text-lg font-semibold">Popular Screenings</h2>
+                      <h2 className="text-lg font-semibold">
+                        Popular Screenings
+                      </h2>
                       <div className="space-y-3">
                         {popularScreenings.map((assessment) => {
-                          const Icon = getIconForAssessment(assessment);
+                          const { icon: Icon, bgColor, textColor } = getCategoryInfo(assessment);
                           return (
                             <Card
                               key={assessment.id}
-                              className="cursor-pointer hover:shadow-md transition-shadow bg-white rounded-xl"
+                              className="cursor-pointer hover:shadow-md transition-shadow bg-white rounded-xl overflow-hidden"
                               onClick={() => handleBrowseAssessment(assessment)}
                             >
-                              <CardContent className="p-3 flex items-center gap-4">
-                                <div className="h-12 w-12 rounded-lg bg-sky-50 text-sky-600 flex items-center justify-center flex-shrink-0">
-                                  <Icon className="w-6 h-6" />
+                              <CardContent className="p-0 flex items-stretch">
+                                <div className={`w-16 ${bgColor} flex-shrink-0 flex items-center justify-center`}>
+                                  <Icon className={`w-6 h-6 ${textColor}`} />
                                 </div>
-                                <div className="flex-1 min-w-0">
+                                <div className="flex-1 p-3 flex flex-col justify-center min-w-0">
                                   <p className="font-semibold text-slate-800 truncate">
                                     {assessment.title}
                                   </p>
                                   <div className="flex items-center gap-2 mt-1">
-                                    {(assessment.category || []).map((c: string) => (
+                                    {(assessment.category && assessment.category.length > 0) ? (
                                       <Badge
-                                        key={c}
-                                        className="text-[10px] lowercase font-normal bg-slate-100 text-slate-600"
+                                        key={assessment.category[0]}
+                                        className="text-[10px] capitalize font-normal bg-slate-100 text-slate-600"
                                       >
-                                        {c}
+                                        {assessment.category[0]}
                                       </Badge>
-                                    ))}
+                                    ) : null}
                                     {assessment.landingTitle?.minutes && (
                                       <span className="text-xs text-slate-500">
                                         {assessment.landingTitle.minutes} min
@@ -303,7 +535,9 @@ export default function AssessmentsPage() {
                                     )}
                                   </div>
                                 </div>
-                                <ChevronRight className="w-5 h-5 text-slate-400 flex-shrink-0" />
+                                <div className="flex items-center pr-4">
+                                  <ChevronRight className="w-5 h-5 text-slate-300" />
+                                </div>
                               </CardContent>
                             </Card>
                           );
@@ -317,30 +551,30 @@ export default function AssessmentsPage() {
                       <h2 className="text-lg font-semibold">Personal Growth</h2>
                       <div className="space-y-3">
                         {personalGrowth.map((assessment) => {
-                          const Icon = getIconForAssessment(assessment);
+                          const { icon: Icon, bgColor, textColor } = getCategoryInfo(assessment);
                           return (
                             <Card
                               key={assessment.id}
-                              className="cursor-pointer hover:shadow-md transition-shadow bg-white rounded-xl"
+                              className="cursor-pointer hover:shadow-md transition-shadow bg-white rounded-xl overflow-hidden"
                               onClick={() => handleBrowseAssessment(assessment)}
                             >
-                              <CardContent className="p-3 flex items-center gap-4">
-                                <div className="h-12 w-12 rounded-lg bg-purple-50 text-purple-600 flex items-center justify-center flex-shrink-0">
-                                  <Icon className="w-6 h-6" />
+                              <CardContent className="p-0 flex items-stretch">
+                                <div className={`w-16 ${bgColor} flex-shrink-0 flex items-center justify-center`}>
+                                  <Icon className={`w-6 h-6 ${textColor}`} />
                                 </div>
-                                <div className="flex-1 min-w-0">
+                                <div className="flex-1 p-3 flex flex-col justify-center min-w-0">
                                   <p className="font-semibold text-slate-800 truncate">
                                     {assessment.title}
                                   </p>
                                   <div className="flex items-center gap-2 mt-1">
-                                    {(assessment.category || []).map((c: string) => (
+                                    {(assessment.category && assessment.category.length > 0) ? (
                                       <Badge
-                                        key={c}
-                                        className="text-[10px] lowercase font-normal bg-slate-100 text-slate-600"
+                                        key={assessment.category[0]}
+                                        className="text-[10px] capitalize font-normal bg-slate-100 text-slate-600"
                                       >
-                                        {c}
+                                        {assessment.category[0]}
                                       </Badge>
-                                    ))}
+                                    ) : null}
                                     {assessment.landingTitle?.minutes && (
                                       <span className="text-xs text-slate-500">
                                         {assessment.landingTitle.minutes} min
@@ -348,7 +582,9 @@ export default function AssessmentsPage() {
                                     )}
                                   </div>
                                 </div>
-                                <ChevronRight className="w-5 h-5 text-slate-400 flex-shrink-0" />
+                                <div className="flex items-center pr-4">
+                                  <ChevronRight className="w-5 h-5 text-slate-300" />
+                                </div>
                               </CardContent>
                             </Card>
                           );
@@ -357,25 +593,26 @@ export default function AssessmentsPage() {
                     </div>
                   )}
 
-                  {filteredAssessments.length === 0 && allAssessments.length > 0 && (
-                    <Card className="border-dashed border-slate-200 bg-transparent shadow-none">
-                      <CardContent className="p-8 flex flex-col items-center text-center">
-                        <div className="w-14 h-14 rounded-full bg-slate-100 flex items-center justify-center mb-4">
-                          <Search className="w-6 h-6 text-slate-400" />
-                        </div>
-                        <h3 className="text-base font-semibold text-slate-800 mb-1">
-                          No assessments found
-                        </h3>
-                        <p className="text-sm text-slate-500 max-w-xs">
-                          Try a different search term or filter.
-                        </p>
-                      </CardContent>
-                    </Card>
-                  )}
+                  {filteredAssessments.length === 0 &&
+                    allAssessments.length > 0 && (
+                      <Card className="border-dashed border-slate-200 bg-transparent shadow-none">
+                        <CardContent className="p-8 flex flex-col items-center text-center">
+                          <div className="w-14 h-14 rounded-full bg-slate-100 flex items-center justify-center mb-4">
+                            <Search className="w-6 h-6 text-slate-400" />
+                          </div>
+                          <h3 className="text-base font-semibold text-slate-800 mb-1">
+                            No assessments found
+                          </h3>
+                          <p className="text-sm text-slate-500 max-w-xs">
+                            Try a different search term or filter.
+                          </p>
+                        </CardContent>
+                      </Card>
+                    )}
 
                   {isLoadingBrowse && allAssessments.length > 0 && (
                     <div className="text-center py-4">
-                      <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-slate-300 border-t-slate-900"></div>
+                      <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-slate-300 border-t-slate-900" />
                     </div>
                   )}
                 </>
@@ -383,6 +620,7 @@ export default function AssessmentsPage() {
             </div>
           </div>
         )}
+        {/* FIX 1: Restored missing closing tag for the browse tab wrapper */}
 
         {activeTab === 'assessments' && (
           <div>

@@ -28,8 +28,9 @@ function AssessmentDetailsContent() {
   const { data: assessmentData, isLoading, error } = useAssessmentById(assessmentId);
 
   const assessment = useMemo(() => {
-    if (!assessmentData?.data) return null;
-    return mapStrapiAssessment(assessmentData.data);
+    // With the new structure we don't need to access .data anymore
+    if (!assessmentData) return null;
+    return mapStrapiAssessment(assessmentData);
   }, [assessmentData]);
 
   const imageUrl = useMemo(() => {

@@ -6,11 +6,32 @@ import { swrConfig } from '@/lib/swr-config';
 
 const assessmentFetcher = async (query: { limit: number; offset: number; status?: 'ALL' | 'DRAFT' | 'PUBLISHED' }) => {
   const response = await getApiV1Assessments({ query });
+  
+  // Log detailed structure 
+  console.log('API response structure:', {
+    hasData: !!response.data,
+    success: response.data?.success,
+    hasNestedData: !!response.data?.data,
+    hasItems: !!response.data?.data?.items,
+    itemsCount: response.data?.data?.items?.length || 0,
+    // Show first item structure (without content)
+    firstItemKeys: response.data?.data?.items?.[0] ? Object.keys(response.data.data.items[0]) : []
+  });
+  
+  // For debugging: Return exactly the data structure we need for the page
   return response.data?.data;
 };
 
 const assessmentByIdFetcher = async (id: string) => {
   const response = await getApiV1AssessmentsById({ path: { id } });
+  
+  // Log the response structure 
+  console.log('API by-id response structure:', {
+    hasData: !!response.data,
+    success: response.data?.success,
+    hasData2: !!response.data?.data
+  });
+  
   return response.data?.data;
 };
 
