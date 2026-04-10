@@ -1,10 +1,9 @@
 'use client';
 
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useMemo, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import {
   BarChart3,
-  BookOpen,
   CalendarClock,
   Clock3,
   Search,
@@ -17,13 +16,11 @@ import {
 } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { useAuth } from '@/hooks/use-auth';
-import { WorksheetCard } from '@/components/worksheet/worksheet-card';
 import { useAssignedAssessments } from '@/hooks/use-assigned-assessments';
 import { useAssessments, mapStrapiAssessment, type AssessmentItem } from '@/hooks/use-assessments';
-import type { AssignedAssessmentItem, AssignedWorksheetItem } from '@/services/assessment.service';
-
-type Tab = 'browse' | 'assessments' | 'worksheets';
+import type { AssignedAssessmentItem } from '@/services/assessment.service';
 
 const getIconForAssessment = (assessment: AssessmentItem): React.ElementType => {
   const title = assessment.title.toLowerCase();
@@ -62,9 +59,9 @@ function AssignmentsSkeleton() {
 export default function AssessmentsPage() {
   const router = useRouter();
   const { user } = useAuth();
-  const [activeTab, setActiveTab] = useState<Tab>('browse');
   const [searchTerm, setSearchTerm] = useState('');
   const [activeFilter, setActiveFilter] = useState('All');
+  const [activeTab, setActiveTab] = useState('browse');
   const mainRef = useRef<HTMLDivElement>(null);
 
   const getUserId = useCallback(() => {
@@ -75,7 +72,6 @@ export default function AssessmentsPage() {
 
   const leadId = getUserId();
   const { data: assignedAssessments, isLoading: isLoadingAssignments } = useAssignedAssessments(leadId);
-  const assignedWorksheets: AssignedWorksheetItem[] = [];
 
   const {
     data: assessmentPages,
@@ -160,29 +156,9 @@ export default function AssessmentsPage() {
     router.push(`/assessment/${item.documentId || item.id}`);
   };
 
-  const handleOpenWorksheet = (item: AssignedWorksheetItem) => {
-    router.push(`/worksheet/${item.documentId || item.id}`);
-  };
-
   const handleBrowseAssessment = (assessment: AssessmentItem) => {
     router.push(`/assessment/details?id=${assessment.id}`);
   };
-
-  const TABS: { value: Tab; label: string; icon?: React.ElementType; count?: number }[] = [
-    { value: 'browse', label: 'Browse' },
-    {
-      value: 'assessments',
-      label: 'My Assessments',
-      icon: BarChart3,
-      count: assignedAssessments?.length ?? 0,
-    },
-    {
-      value: 'worksheets',
-      label: 'Worksheets',
-      icon: BookOpen,
-      count: assignedWorksheets.length,
-    },
-  ];
 
   return (
     <div
@@ -194,309 +170,263 @@ export default function AssessmentsPage() {
         <div className="flex items-center gap-2 mb-2">
           <h1 className="text-2xl font-bold tracking-tight">Assessments</h1>
         </div>
-        <p className="text-sm text-slate-500 mb-5">Understand yourself better with clinical tools.</p>
-        <div className="flex gap-2 overflow-x-auto pb-1 -mx-5 px-5">
-          {TABS.map((tab) => {
-            const isActive = tab.value === activeTab;
-            return (
-              <button
-                key={tab.value}
-                onClick={() => setActiveTab(tab.value)}
-                className={`flex items-center gap-2 whitespace-nowrap rounded-full border px-4 py-2 text-sm font-medium transition-colors ${
-                  isActive
-                    ? 'bg-slate-900 text-white border-slate-900 shadow-sm'
-                    : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-100'
-                }`}
-              >
-                {tab.icon && <tab.icon className="w-4 h-4" />}
-                {tab.label}
-                {typeof tab.count === 'number' && tab.count > 0 && (
-                  <Badge
-                    className={`text-[10px] px-1.5 py-0 min-w-[18px] ${
-                      isActive ? 'bg-white/20 text-white' : 'bg-slate-100 text-slate-600'
-                    }`}
-                  >
-                    {tab.count}
-                  </Badge>
-                )}
-              </button>
-            );
-          })}
-        </div>
+        <p className="text-sm text-slate-500 mb-4">Understand yourself better with clinical tools.</p>
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+          <TabsList className="w-full justify-start bg-transparent p-0 h-auto gap-2">
+            <TabsTrigger
+              value="browse"
+              className="data-[state=active]:bg-slate-900 data-[state=active]:text-white data-[state=active]:shadow-sm rounded-full px-4 py-2 bg-white border border-slate-200 text-slate-600 hover:bg-slate-100"
+            >
+              Explore
+            </TabsTrigger>
+            <TabsTrigger
+              value="assessments"
+              className="data-[state=active]:bg-slate-900 data-[state=active]:text-white data-[state=active]:shadow-sm rounded-full px-4 py-2 bg-white border border-slate-200 text-slate-600 hover:bg-slate-100"
+            >
+              My Assessments
+              {assignedAssessments && assignedAssessments.length > 0 && (
+                <Badge className="ml-2 bg-white/20 text-white text-[10px] px-1.5 py-0 min-w-[18px]">
+                  {assignedAssessments.length}
+                </Badge>
+              )}
+            </TabsTrigger>
+          </TabsList>
+        </Tabs>
       </header>
 
       <main className="flex-1 px-5 pb-28">
-        {activeTab === 'browse' && (
-          <div className="space-y-6">
-            <div className="flex items-center gap-2 rounded-xl bg-white shadow-sm px-4 py-3 border border-slate-100 mt-4">
-              <Search className="w-5 h-5 text-slate-400" />
-              <input
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                placeholder="Search assessments..."
-                className="flex-1 bg-transparent outline-none text-sm text-slate-700 placeholder:text-slate-400"
-              />
-            </div>
-
-            <div className="flex gap-2 overflow-x-auto pb-1 -mx-5 px-5">
-              {categories.map((cat) => {
-                const isActive = cat === activeFilter;
-                return (
-                  <button
-                    key={cat}
-                    onClick={() => setActiveFilter(cat)}
-                    className={`whitespace-nowrap rounded-full px-4 py-2 text-sm font-medium transition-colors ${
-                      isActive
-                        ? 'bg-slate-800 text-white shadow-sm'
-                        : 'bg-white text-slate-600 border border-slate-200 hover:bg-slate-100'
-                    }`}
-                  >
-                    {cat}
-                  </button>
-                );
-              })}
-            </div>
-
-            <div className="space-y-8">
-              {isLoadingBrowse && allAssessments.length === 0 ? (
-                <BrowseSkeleton />
-              ) : (
-                <>
-                  {recommendedAssessment && (
-                    <Card
-                      className="bg-slate-900 text-white rounded-2xl shadow-lg cursor-pointer transition-transform hover:scale-[1.02]"
-                      onClick={() => handleBrowseAssessment(recommendedAssessment)}
-                    >
-                      <CardContent className="p-5">
-                        <Badge className="bg-white/10 text-white hover:bg-white/20 mb-3">
-                          Recommended
-                        </Badge>
-                        <h3 className="text-xl font-bold">{recommendedAssessment.title}</h3>
-                        <p className="text-slate-300 text-sm mt-1 mb-4">
-                          {recommendedAssessment.description}
-                        </p>
-                        <div className="flex items-center gap-4 text-sm text-slate-300">
-                          <span className="flex items-center gap-1.5">
-                            <Clock3 className="w-4 h-4" />
-                            {recommendedAssessment.landingTitle?.minutes} min
-                          </span>
-                          <span className="flex items-center gap-1.5">
-                            <CalendarClock className="w-4 h-4" />
-                            {recommendedAssessment.landingTitle?.numberOfQuestion} Questions
-                          </span>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  )}
-
-                  {popularScreenings.length > 0 && (
-                    <div className="space-y-4">
-                      <h2 className="text-lg font-semibold">Popular Screenings</h2>
-                      <div className="space-y-3">
-                        {popularScreenings.map((assessment) => {
-                          const Icon = getIconForAssessment(assessment);
-                          return (
-                            <Card
-                              key={assessment.id}
-                              className="cursor-pointer hover:shadow-md transition-shadow bg-white rounded-xl"
-                              onClick={() => handleBrowseAssessment(assessment)}
-                            >
-                              <CardContent className="p-3 flex items-center gap-4">
-                                <div className="h-12 w-12 rounded-lg bg-sky-50 text-sky-600 flex items-center justify-center flex-shrink-0">
-                                  <Icon className="w-6 h-6" />
-                                </div>
-                                <div className="flex-1 min-w-0">
-                                  <p className="font-semibold text-slate-800 truncate">
-                                    {assessment.title}
-                                  </p>
-                                  <div className="flex items-center gap-2 mt-1">
-                                    {(assessment.category || []).map((c: string) => (
-                                      <Badge
-                                        key={c}
-                                        className="text-[10px] lowercase font-normal bg-slate-100 text-slate-600"
-                                      >
-                                        {c}
-                                      </Badge>
-                                    ))}
-                                    {assessment.landingTitle?.minutes && (
-                                      <span className="text-xs text-slate-500">
-                                        {assessment.landingTitle.minutes} min
-                                      </span>
-                                    )}
-                                  </div>
-                                </div>
-                                <ChevronRight className="w-5 h-5 text-slate-400 flex-shrink-0" />
-                              </CardContent>
-                            </Card>
-                          );
-                        })}
-                      </div>
-                    </div>
-                  )}
-
-                  {personalGrowth.length > 0 && (
-                    <div className="space-y-4">
-                      <h2 className="text-lg font-semibold">Personal Growth</h2>
-                      <div className="space-y-3">
-                        {personalGrowth.map((assessment) => {
-                          const Icon = getIconForAssessment(assessment);
-                          return (
-                            <Card
-                              key={assessment.id}
-                              className="cursor-pointer hover:shadow-md transition-shadow bg-white rounded-xl"
-                              onClick={() => handleBrowseAssessment(assessment)}
-                            >
-                              <CardContent className="p-3 flex items-center gap-4">
-                                <div className="h-12 w-12 rounded-lg bg-purple-50 text-purple-600 flex items-center justify-center flex-shrink-0">
-                                  <Icon className="w-6 h-6" />
-                                </div>
-                                <div className="flex-1 min-w-0">
-                                  <p className="font-semibold text-slate-800 truncate">
-                                    {assessment.title}
-                                  </p>
-                                  <div className="flex items-center gap-2 mt-1">
-                                    {(assessment.category || []).map((c: string) => (
-                                      <Badge
-                                        key={c}
-                                        className="text-[10px] lowercase font-normal bg-slate-100 text-slate-600"
-                                      >
-                                        {c}
-                                      </Badge>
-                                    ))}
-                                    {assessment.landingTitle?.minutes && (
-                                      <span className="text-xs text-slate-500">
-                                        {assessment.landingTitle.minutes} min
-                                      </span>
-                                    )}
-                                  </div>
-                                </div>
-                                <ChevronRight className="w-5 h-5 text-slate-400 flex-shrink-0" />
-                              </CardContent>
-                            </Card>
-                          );
-                        })}
-                      </div>
-                    </div>
-                  )}
-
-                  {filteredAssessments.length === 0 && allAssessments.length > 0 && (
-                    <Card className="border-dashed border-slate-200 bg-transparent shadow-none">
-                      <CardContent className="p-8 flex flex-col items-center text-center">
-                        <div className="w-14 h-14 rounded-full bg-slate-100 flex items-center justify-center mb-4">
-                          <Search className="w-6 h-6 text-slate-400" />
-                        </div>
-                        <h3 className="text-base font-semibold text-slate-800 mb-1">
-                          No assessments found
-                        </h3>
-                        <p className="text-sm text-slate-500 max-w-xs">
-                          Try a different search term or filter.
-                        </p>
-                      </CardContent>
-                    </Card>
-                  )}
-
-                  {isLoadingBrowse && allAssessments.length > 0 && (
-                    <div className="text-center py-4">
-                      <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-slate-300 border-t-slate-900"></div>
-                    </div>
-                  )}
-                </>
-              )}
-            </div>
+        <TabsContent value="browse" className="mt-0 space-y-6">
+          <div className="flex items-center gap-2 rounded-xl bg-white shadow-sm px-4 py-3 border border-slate-100 mt-4">
+            <Search className="w-5 h-5 text-slate-400" />
+            <input
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              placeholder="Search assessments..."
+              className="flex-1 bg-transparent outline-none text-sm text-slate-700 placeholder:text-slate-400"
+            />
           </div>
-        )}
 
-        {activeTab === 'assessments' && (
-          <div>
-            <p className="text-sm text-slate-500 my-4">
-              Your assigned assessments from your clinician.
-            </p>
-            {isLoadingAssignments ? (
-              <AssignmentsSkeleton />
-            ) : assignedAssessments && assignedAssessments.length > 0 ? (
-              <div className="grid grid-cols-1 gap-3">
-                {assignedAssessments.map((item) => (
+          <div className="flex gap-2 overflow-x-auto pb-1 -mx-5 px-5">
+            {categories.map((cat) => {
+              const isActive = cat === activeFilter;
+              return (
+                <button
+                  key={cat}
+                  onClick={() => setActiveFilter(cat)}
+                  className={`whitespace-nowrap rounded-full px-4 py-2 text-sm font-medium transition-colors ${
+                    isActive
+                      ? 'bg-slate-800 text-white shadow-sm'
+                      : 'bg-white text-slate-600 border border-slate-200 hover:bg-slate-100'
+                  }`}
+                >
+                  {cat}
+                </button>
+              );
+            })}
+          </div>
+
+          <div className="space-y-8">
+            {isLoadingBrowse && allAssessments.length === 0 ? (
+              <BrowseSkeleton />
+            ) : (
+              <>
+                {recommendedAssessment && (
                   <Card
-                    key={item.documentId || String(item.id)}
-                    className="cursor-pointer hover:shadow-md transition-shadow bg-white rounded-xl"
-                    onClick={() => handleOpenAssessment(item)}
+                    className="bg-slate-900 text-white rounded-2xl shadow-lg cursor-pointer transition-transform hover:scale-[1.02]"
+                    onClick={() => handleBrowseAssessment(recommendedAssessment)}
                   >
-                    <CardContent className="p-4">
-                      <div className="flex items-center justify-between">
-                        <div className="flex-1">
-                          <p className="text-sm font-semibold text-slate-900">
-                            {item.label}
-                          </p>
-                          {item.status && (
-                            <Badge
-                              className={`mt-1 text-[10px] ${
-                                item.status === 'completed'
-                                  ? 'bg-green-100 text-green-600'
-                                  : 'bg-orange-100 text-orange-600'
-                              }`}
-                            >
-                              {item.status}
-                            </Badge>
-                          )}
-                        </div>
-                        <ChevronRight className="w-4 h-4 text-slate-400" />
+                    <CardContent className="p-5">
+                      <Badge className="bg-white/10 text-white hover:bg-white/20 mb-3">
+                        Recommended
+                      </Badge>
+                      <h3 className="text-xl font-bold">{recommendedAssessment.title}</h3>
+                      <p className="text-slate-300 text-sm mt-1 mb-4">
+                        {recommendedAssessment.description}
+                      </p>
+                      <div className="flex items-center gap-4 text-sm text-slate-300">
+                        <span className="flex items-center gap-1.5">
+                          <Clock3 className="w-4 h-4" />
+                          {recommendedAssessment.landingTitle?.minutes} min
+                        </span>
+                        <span className="flex items-center gap-1.5">
+                          <CalendarClock className="w-4 h-4" />
+                          {recommendedAssessment.landingTitle?.numberOfQuestion} Questions
+                        </span>
                       </div>
                     </CardContent>
                   </Card>
-                ))}
-              </div>
-            ) : (
-              <Card className="border-dashed border-slate-200 bg-transparent shadow-none">
-                <CardContent className="p-8 flex flex-col items-center text-center">
-                  <div className="w-14 h-14 rounded-full bg-slate-100 flex items-center justify-center mb-4">
-                    <BarChart3 className="w-6 h-6 text-slate-400" />
-                  </div>
-                  <h3 className="text-base font-semibold text-slate-800 mb-1">
-                    No Assigned Assessments
-                  </h3>
-                  <p className="text-sm text-slate-500 max-w-xs">
-                    You don&apos;t have any assigned assessments yet.
-                  </p>
-                </CardContent>
-              </Card>
-            )}
-          </div>
-        )}
+                )}
 
-        {activeTab === 'worksheets' && (
-          <div>
-            <p className="text-sm text-slate-500 my-4">
-              Your assigned worksheets from your clinician.
-            </p>
-            {false ? (
-              <AssignmentsSkeleton />
-            ) : assignedWorksheets.length > 0 ? (
-              <div className="grid grid-cols-1 gap-3">
-                {assignedWorksheets.map((item) => (
-                  <WorksheetCard
-                    key={item.documentId || String(item.id)}
-                    item={item}
-                    onOpen={handleOpenWorksheet}
-                  />
-                ))}
-              </div>
-            ) : (
-              <Card className="border-dashed border-slate-200 bg-transparent shadow-none">
-                <CardContent className="p-8 flex flex-col items-center text-center">
-                  <div className="w-14 h-14 rounded-full bg-green-100 flex items-center justify-center mb-4">
-                    <BookOpen className="w-6 h-6 text-green-600" />
+                {popularScreenings.length > 0 && (
+                  <div className="space-y-4">
+                    <h2 className="text-lg font-semibold">Popular Screenings</h2>
+                    <div className="space-y-3">
+                      {popularScreenings.map((assessment) => {
+                        const Icon = getIconForAssessment(assessment);
+                        return (
+                          <Card
+                            key={assessment.id}
+                            className="cursor-pointer hover:shadow-md transition-shadow bg-white rounded-xl"
+                            onClick={() => handleBrowseAssessment(assessment)}
+                          >
+                            <CardContent className="p-3 flex items-center gap-4">
+                              <div className="h-12 w-12 rounded-lg bg-sky-50 text-sky-600 flex items-center justify-center flex-shrink-0">
+                                <Icon className="w-6 h-6" />
+                              </div>
+                              <div className="flex-1 min-w-0">
+                                <p className="font-semibold text-slate-800 truncate">
+                                  {assessment.title}
+                                </p>
+                                <div className="flex items-center gap-2 mt-1">
+                                  {(assessment.category || []).map((c: string) => (
+                                    <Badge
+                                      key={c}
+                                      className="text-[10px] lowercase font-normal bg-slate-100 text-slate-600"
+                                    >
+                                      {c}
+                                    </Badge>
+                                  ))}
+                                  {assessment.landingTitle?.minutes && (
+                                    <span className="text-xs text-slate-500">
+                                      {assessment.landingTitle.minutes} min
+                                    </span>
+                                  )}
+                                </div>
+                              </div>
+                              <ChevronRight className="w-5 h-5 text-slate-400 flex-shrink-0" />
+                            </CardContent>
+                          </Card>
+                        );
+                      })}
+                    </div>
                   </div>
-                  <h3 className="text-base font-semibold text-slate-800 mb-1">
-                    No Assigned Worksheets
-                  </h3>
-                  <p className="text-sm text-slate-500 max-w-xs">
-                    You don&apos;t have any assigned worksheets yet.
-                  </p>
-                </CardContent>
-              </Card>
+                )}
+
+                {personalGrowth.length > 0 && (
+                  <div className="space-y-4">
+                    <h2 className="text-lg font-semibold">Personal Growth</h2>
+                    <div className="space-y-3">
+                      {personalGrowth.map((assessment) => {
+                        const Icon = getIconForAssessment(assessment);
+                        return (
+                          <Card
+                            key={assessment.id}
+                            className="cursor-pointer hover:shadow-md transition-shadow bg-white rounded-xl"
+                            onClick={() => handleBrowseAssessment(assessment)}
+                          >
+                            <CardContent className="p-3 flex items-center gap-4">
+                              <div className="h-12 w-12 rounded-lg bg-purple-50 text-purple-600 flex items-center justify-center flex-shrink-0">
+                                <Icon className="w-6 h-6" />
+                              </div>
+                              <div className="flex-1 min-w-0">
+                                <p className="font-semibold text-slate-800 truncate">
+                                  {assessment.title}
+                                </p>
+                                <div className="flex items-center gap-2 mt-1">
+                                  {(assessment.category || []).map((c: string) => (
+                                    <Badge
+                                      key={c}
+                                      className="text-[10px] lowercase font-normal bg-slate-100 text-slate-600"
+                                    >
+                                      {c}
+                                    </Badge>
+                                  ))}
+                                  {assessment.landingTitle?.minutes && (
+                                    <span className="text-xs text-slate-500">
+                                      {assessment.landingTitle.minutes} min
+                                    </span>
+                                  )}
+                                </div>
+                              </div>
+                              <ChevronRight className="w-5 h-5 text-slate-400 flex-shrink-0" />
+                            </CardContent>
+                          </Card>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+
+                {filteredAssessments.length === 0 && allAssessments.length > 0 && (
+                  <Card className="border-dashed border-slate-200 bg-transparent shadow-none">
+                    <CardContent className="p-8 flex flex-col items-center text-center">
+                      <div className="w-14 h-14 rounded-full bg-slate-100 flex items-center justify-center mb-4">
+                        <Search className="w-6 h-6 text-slate-400" />
+                      </div>
+                      <h3 className="text-base font-semibold text-slate-800 mb-1">
+                        No assessments found
+                      </h3>
+                      <p className="text-sm text-slate-500 max-w-xs">
+                        Try a different search term or filter.
+                      </p>
+                    </CardContent>
+                  </Card>
+                )}
+
+                {isLoadingBrowse && allAssessments.length > 0 && (
+                  <div className="text-center py-4">
+                    <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-slate-300 border-t-slate-900"></div>
+                  </div>
+                )}
+              </>
             )}
           </div>
-        )}
+        </TabsContent>
+
+        <TabsContent value="assessments" className="mt-0">
+          <p className="text-sm text-slate-500 my-4">
+            Your assigned assessments from your clinician.
+          </p>
+          {isLoadingAssignments ? (
+            <AssignmentsSkeleton />
+          ) : assignedAssessments && assignedAssessments.length > 0 ? (
+            <div className="grid grid-cols-1 gap-3">
+              {assignedAssessments.map((item) => (
+                <Card
+                  key={item.documentId || String(item.id)}
+                  className="cursor-pointer hover:shadow-md transition-shadow bg-white rounded-xl"
+                  onClick={() => handleOpenAssessment(item)}
+                >
+                  <CardContent className="p-4">
+                    <div className="flex items-center justify-between">
+                      <div className="flex-1">
+                        <p className="text-sm font-semibold text-slate-900">
+                          {item.label}
+                        </p>
+                        {item.status && (
+                          <Badge
+                            className={`mt-1 text-[10px] ${
+                              item.status === 'completed'
+                                ? 'bg-green-100 text-green-600'
+                                : 'bg-orange-100 text-orange-600'
+                            }`}
+                          >
+                            {item.status}
+                          </Badge>
+                        )}
+                      </div>
+                      <ChevronRight className="w-4 h-4 text-slate-400" />
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          ) : (
+            <Card className="border-dashed border-slate-200 bg-transparent shadow-none">
+              <CardContent className="p-8 flex flex-col items-center text-center">
+                <div className="w-14 h-14 rounded-full bg-slate-100 flex items-center justify-center mb-4">
+                  <BarChart3 className="w-6 h-6 text-slate-400" />
+                </div>
+                <h3 className="text-base font-semibold text-slate-800 mb-1">
+                  No Assigned Assessments
+                </h3>
+                <p className="text-sm text-slate-500 max-w-xs">
+                  You don&apos;t have any assigned assessments yet.
+                </p>
+              </CardContent>
+            </Card>
+          )}
+        </TabsContent>
       </main>
     </div>
   );
