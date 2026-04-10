@@ -41,7 +41,6 @@ function CheckoutContent() {
     subCampusId,
     consultationTypeId,
     startDatetime,
-    clearBooking,
   } = useBooking();
 
   const [doctor, setDoctor] = useState<DoctorDetail | null>(null);
@@ -114,7 +113,6 @@ function CheckoutContent() {
       const url = payRes.data?.result?.short_url;
       if (!url) throw new Error('No payment URL received from server.');
 
-      clearBooking();
       window.location.href = url;
     } catch (err) {
       console.error(err);
