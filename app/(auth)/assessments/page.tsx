@@ -195,7 +195,8 @@ export default function AssessmentsPage() {
       </header>
 
       <main className="flex-1 px-5 pb-28">
-        <TabsContent value="browse" className="mt-0 space-y-6">
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+          <TabsContent value="browse" className="mt-0 space-y-6">
           <div className="flex items-center gap-2 rounded-xl bg-white shadow-sm px-4 py-3 border border-slate-100 mt-4">
             <Search className="w-5 h-5 text-slate-400" />
             <input
@@ -427,6 +428,7 @@ export default function AssessmentsPage() {
             </Card>
           )}
         </TabsContent>
+        </Tabs>
       </main>
     </div>
   );
