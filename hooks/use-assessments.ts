@@ -6,14 +6,12 @@ import { swrConfig } from '@/lib/swr-config';
 
 const assessmentFetcher = async (query: { limit: number; offset: number; status?: 'ALL' | 'DRAFT' | 'PUBLISHED' }) => {
   const response = await getApiV1Assessments({ query });
-  console.log('[use-assessments] Raw response:', JSON.stringify(response, null, 2).slice(0, 500));
-  return response.data;
+  return response.data?.data;
 };
 
 const assessmentByIdFetcher = async (id: string) => {
   const response = await getApiV1AssessmentsById({ path: { id } });
-  console.log('[use-assessment-by-id] Raw response:', JSON.stringify(response, null, 2).slice(0, 500));
-  return response.data;
+  return response.data?.data;
 };
 
 export interface AssessmentItem {
