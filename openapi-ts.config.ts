@@ -2,6 +2,7 @@ import { defineConfig } from '@hey-api/openapi-ts';
 
 const OPENAPI_URL = 'https://auth.cadabams.com/api/v1/openapi';
 const STRAPI_BACKEND_URL = `https://console.mindtalkbuddy.com/docs/json`;
+// const STRAPI_BACKEND_URL = `http://127.0.0.1:4010/docs/json`;
 
 export default defineConfig([
   {
