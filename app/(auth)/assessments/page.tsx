@@ -84,6 +84,9 @@ export default function AssessmentsPage() {
     isLoading: isLoadingBrowse,
   } = useAssessments({ limit: 10, status: 'PUBLISHED' });
 
+  console.log('[assessments-page] assessmentPages:', assessmentPages);
+  console.log('[assessments-page] isLoadingBrowse:', isLoadingBrowse);
+
   const allAssessments = useMemo(() => {
     if (!assessmentPages) return [];
     return assessmentPages.flatMap((page) =>
