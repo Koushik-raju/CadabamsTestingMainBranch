@@ -46,7 +46,7 @@ export function UpcomingSession({ appointments, onJoin }: Props) {
     <div className="px-4 mb-4">
       <div className="flex items-center justify-between mb-3">
         <span className="text-sm font-medium text-foreground">Upcoming</span>
-        <Link href="/appointments" className="text-sm font-medium text-primary hover:underline">
+        <Link href="/consult/appointments" className="text-sm font-medium text-primary hover:underline">
           View all →
         </Link>
       </div>
@@ -106,7 +106,7 @@ export function UpcomingSession({ appointments, onJoin }: Props) {
             <div key={apt.id}>
               {index === 0 ? (
                 <Link
-                  href={`/appointments/${apt.id}`}
+                  href={`/consult/appointments/${apt.id}`}
                   className="bg-white rounded-xl border border-border p-4 flex items-center gap-3 shadow-sm"
                 >
                   {content}

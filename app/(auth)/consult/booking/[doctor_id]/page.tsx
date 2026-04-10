@@ -2,18 +2,14 @@
 
 import { Suspense, useState, useEffect, useCallback, useMemo } from 'react';
 import { useRouter, useSearchParams, useParams } from 'next/navigation';
-import { ChevronLeft, ChevronRight, Video, Building2, Loader2, AlertCircle, MapPin, ChevronRight as ChevronRightIcon } from 'lucide-react';
+import { Video, Building2, Loader2, AlertCircle } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
-import { BackButton } from '@/components/common/back-button';
-import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-} from '@/components/ui/sheet';
-import { SlotSection } from './time-slot-picker';
+import { BackButton } from '@/components/shared/navigation/back-button';
+import { SlotSection } from '@/components/booking/slot-section';
+import { DateStrip, toDateKey } from '@/components/booking/date-strip';
+import { CampusSheet } from '@/components/booking/campus-sheet';
 import { useBooking } from '@/contexts/booking-context';
 import {
   getAppointmentsSlots,
@@ -25,10 +21,6 @@ import {
 import type { TimeSlot, DoctorDetail, CampusMaster, DoctorAvailabilityResponse } from '@/sdk/auth-and-crm';
 
 // ── helpers ────────────────────────────────────────────────────────────────────
-function toDateKey(d: Date): string {
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
-}
-
 function displayName(doctor: DoctorDetail | null): string {
   if (!doctor) return 'Doctor';
   const full = (doctor.display_name || doctor.name || '').trim();
@@ -40,74 +32,6 @@ function displayName(doctor: DoctorDetail | null): string {
 function specialityName(doctor: DoctorDetail | null): string {
   if (!doctor) return '';
   return String(doctor.speciality_id?.[1] ?? '');
-}
-
-type AvailStatus = 'available' | 'few-left' | 'no-slots' | 'full';
-
-function getAvailStatus(count: number): AvailStatus {
-  if (count === 0) return 'no-slots';
-  if (count <= 2) return 'few-left';
-  return 'available';
-}
-
-const AVAIL_CFG: Record<AvailStatus, { label: string; cls: string }> = {
-  available:  { label: 'Available', cls: 'bg-green-100  text-green-700' },
-  'few-left': { label: 'Few left',  cls: 'bg-orange-100 text-orange-600' },
-  'no-slots': { label: 'No slots',  cls: 'bg-red-100    text-red-600' },
-  full:       { label: 'Full',      cls: 'bg-red-100    text-red-600' },
-};
-
-// ── DateTile ───────────────────────────────────────────────────────────────────
-function DateTile({
-  date, slotCount, isSelected, onClick,
-}: {
-  date: Date; slotCount: number; isSelected: boolean; onClick: () => void;
-}) {
-  const status = getAvailStatus(slotCount);
-  const { label, cls } = AVAIL_CFG[status];
-  const dayName = date.toLocaleDateString('en-US', { weekday: 'short' });
-  const dayNum  = date.getDate();
-
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      className={cn(
-        'flex flex-col items-center gap-1 py-2 rounded-xl flex-1 min-w-0 transition-all',
-        isSelected ? 'bg-primary' : 'hover:bg-muted/40',
-      )}
-    >
-      <span className={cn(
-        'text-[11px] font-medium',
-        isSelected ? 'text-primary-foreground/80' : 'text-muted-foreground',
-      )}>
-        {dayName}
-      </span>
-      <span className={cn(
-        'text-lg font-bold leading-none',
-        isSelected ? 'text-primary-foreground' : 'text-foreground',
-      )}>
-        {dayNum}
-      </span>
-      <span className={cn(
-        'text-[9px] font-semibold px-1.5 py-0.5 rounded-full leading-tight',
-        isSelected ? 'bg-white/20 text-white' : cls,
-      )}>
-        {label}
-      </span>
-    </button>
-  );
-}
-
-// ── CheckIcon ──────────────────────────────────────────────────────────────────
-function CheckDot() {
-  return (
-    <span className="h-5 w-5 rounded-full bg-primary flex items-center justify-center shrink-0">
-      <svg className="h-3 w-3 text-primary-foreground" fill="none" viewBox="0 0 12 12">
-        <path d="M2 6l3 3 5-5" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
-      </svg>
-    </span>
-  );
 }
 
 // ── BookingContent ─────────────────────────────────────────────────────────────
@@ -242,13 +166,6 @@ function BookingContent() {
   };
 
   // ── derived availability sets ─────────────────────────────────────────────────
-  const availableCampusIds = useMemo(
-    () => new Set((availability?.campuses ?? []).map(c => c.campus_id)),
-    [availability],
-  );
-
-  // Returns sub-campus options for a given campus:
-  // prefers availability data; falls back to CampusMaster.area
   const getSubCampusOptions = useCallback((campusId: number) => {
     const fromAvailability = (availability?.campuses ?? [])
       .filter(c => c.campus_id === campusId && c.sub_campus_id !== false)
@@ -257,37 +174,6 @@ function BookingContent() {
     const master = campuses.find(c => c.id === campusId);
     return (master?.area ?? []).map(([id, name]) => ({ id: Number(id), name: String(name) }));
   }, [availability, campuses]);
-
-  const subCampusesForPending = useMemo(
-    () => pendingCampusId !== null ? getSubCampusOptions(pendingCampusId) : [],
-    [pendingCampusId, getSubCampusOptions],
-  );
-
-  // ── campus sheet handlers ─────────────────────────────────────────────────────
-  const handleCampusPick = (campusId: number) => {
-    setPendingCampusId(campusId);
-    if (isOnline) {
-      setConfirmedCampusId(campusId);
-      setConfirmedSubId(null);
-      setSheetOpen(false);
-    } else {
-      const subs = getSubCampusOptions(campusId);
-      if (subs.length === 0) {
-        // No sub-campuses — confirm campus directly
-        setConfirmedCampusId(campusId);
-        setConfirmedSubId(null);
-        setSheetOpen(false);
-      } else {
-        setSheetStep('sub-campus');
-      }
-    }
-  };
-
-  const handleSubCampusPick = (subId: number) => {
-    setConfirmedCampusId(pendingCampusId);
-    setConfirmedSubId(subId);
-    setSheetOpen(false);
-  };
 
   // ── derived display values ───────────────────────────────────────────────────
   const slotsByDate = useMemo(() => {
@@ -300,10 +186,6 @@ function BookingContent() {
   }, [slots]);
 
   const maxPage      = Math.ceil(dates.length / 10) - 1;
-  const visibleDates = dates.slice(datePage * 10, datePage * 10 + 10);
-  const dateRow1     = visibleDates.slice(0, 5);
-  const dateRow2     = visibleDates.slice(5, 10);
-  const monthLabel   = visibleDates[0]?.toLocaleDateString('en-US', { month: 'long', year: 'numeric' }) ?? '';
 
   const selectedKey    = toDateKey(selectedDate);
   const daySlots       = slotsByDate[selectedKey] ?? [];
@@ -344,7 +226,7 @@ function BookingContent() {
       consultationTypeId: isOnline ? 2 : 1,
       startDatetime:      slot?.start_datetime ?? null,
     });
-    router.push('/checkout');
+    router.push('/consult/checkout');
   };
 
   // ── loading / error states ────────────────────────────────────────────────────
@@ -370,7 +252,7 @@ function BookingContent() {
     <div className="min-h-screen bg-background flex flex-col">
       {/* Header */}
       <div className="flex items-center gap-3 px-4 pt-6 pb-4">
-        <BackButton fallback="/find-therapist" />
+        <BackButton fallback="/consult/find-therapist" />
         <h1 className="text-base font-semibold">Select a slot</h1>
       </div>
 
@@ -428,64 +310,16 @@ function BookingContent() {
         </div>
 
         {/* ── Date strip ── */}
-        <div>
-          <div className="flex items-center justify-between mb-3">
-            <span className="text-sm font-semibold text-foreground">{monthLabel}</span>
-            <div className="flex items-center gap-0.5">
-              <button
-                type="button"
-                disabled={datePage === 0}
-                onClick={() => setDatePage(p => Math.max(0, p - 1))}
-                className="p-1.5 rounded-full hover:bg-muted disabled:opacity-30 transition-colors"
-              >
-                <ChevronLeft className="h-4 w-4" />
-              </button>
-              <button
-                type="button"
-                disabled={datePage >= maxPage}
-                onClick={() => setDatePage(p => Math.min(maxPage, p + 1))}
-                className="p-1.5 rounded-full hover:bg-muted disabled:opacity-30 transition-colors"
-              >
-                <ChevronRight className="h-4 w-4" />
-              </button>
-            </div>
-          </div>
-
-          <div className="flex gap-1">
-            {dateRow1.map(date => {
-              const key = toDateKey(date);
-              return (
-                <DateTile
-                  key={key}
-                  date={date}
-                  slotCount={loadingSlots ? 0 : (slotsByDate[key]?.length ?? 0)}
-                  isSelected={selectedKey === key}
-                  onClick={() => setSelectedDate(date)}
-                />
-              );
-            })}
-          </div>
-
-          {dateRow2.length > 0 && (
-            <div className="flex gap-1 mt-1">
-              {dateRow2.map(date => {
-                const key = toDateKey(date);
-                return (
-                  <DateTile
-                    key={key}
-                    date={date}
-                    slotCount={loadingSlots ? 0 : (slotsByDate[key]?.length ?? 0)}
-                    isSelected={selectedKey === key}
-                    onClick={() => setSelectedDate(date)}
-                  />
-                );
-              })}
-              {Array.from({ length: 5 - dateRow2.length }).map((_, i) => (
-                <div key={i} className="flex-1" />
-              ))}
-            </div>
-          )}
-        </div>
+        <DateStrip
+          dates={dates}
+          slotsByDate={slotsByDate}
+          selectedDate={selectedDate}
+          datePage={datePage}
+          maxPage={maxPage}
+          loadingSlots={loadingSlots}
+          onDateSelect={setSelectedDate}
+          onPageChange={setDatePage}
+        />
 
         {/* ── Slots ── */}
         <div>
@@ -568,131 +402,22 @@ function BookingContent() {
       </div>
 
       {/* ── Campus / Sub-campus Sheet ── */}
-      <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
-        <SheetContent side="bottom" showCloseButton className="rounded-t-2xl max-h-[80vh] overflow-y-auto pb-8">
-
-          {sheetStep === 'campus' && (
-            <>
-              <SheetHeader className="pb-2">
-                <SheetTitle>Select a campus</SheetTitle>
-                <p className="text-sm text-muted-foreground">Choose where you&apos;d like your session</p>
-              </SheetHeader>
-
-              {loadingMeta ? (
-                <div className="flex justify-center py-8">
-                  <Loader2 className="h-5 w-5 animate-spin text-primary" />
-                </div>
-              ) : campuses.length === 0 ? (
-                <p className="text-sm text-muted-foreground px-4 py-6 text-center">No campuses available.</p>
-              ) : (
-                <div className="flex flex-col gap-2 px-4 pt-2">
-                  {campuses.map(campus => {
-                    const doctorAvailable = availableCampusIds.size === 0 || availableCampusIds.has(campus.id);
-                    const isSelected = pendingCampusId === campus.id;
-                    return (
-                      <button
-                        key={campus.id}
-                        type="button"
-                        disabled={!doctorAvailable}
-                        onClick={() => handleCampusPick(campus.id)}
-                        className={cn(
-                          'flex items-center gap-3 rounded-xl border px-4 py-3 text-left transition-all',
-                          !doctorAvailable && 'opacity-40 cursor-not-allowed',
-                          isSelected
-                            ? 'border-primary bg-primary/5'
-                            : doctorAvailable
-                              ? 'border-border bg-background hover:bg-muted/40'
-                              : 'border-border bg-background',
-                        )}
-                      >
-                        <Building2 className={cn(
-                          'h-4 w-4 shrink-0',
-                          isSelected ? 'text-primary' : 'text-muted-foreground',
-                        )} />
-                        <div className="min-w-0 flex-1">
-                          <p className={cn(
-                            'text-sm font-medium truncate',
-                            isSelected ? 'text-primary' : 'text-foreground',
-                          )}>
-                            {campus.display_name || campus.name}
-                          </p>
-                          {campus.city?.[1] && (
-                            <p className="text-xs text-muted-foreground truncate flex items-center gap-1 mt-0.5">
-                              <MapPin className="h-3 w-3 shrink-0" />
-                              {String(campus.city[1])}
-                            </p>
-                          )}
-                          {!doctorAvailable && (
-                            <p className="text-[11px] text-muted-foreground mt-0.5">Not available at this campus</p>
-                          )}
-                        </div>
-                        {isSelected
-                          ? <CheckDot />
-                          : !isOnline && doctorAvailable && (
-                            <ChevronRightIcon className="h-4 w-4 text-muted-foreground shrink-0" />
-                          )
-                        }
-                      </button>
-                    );
-                  })}
-                </div>
-              )}
-            </>
-          )}
-
-          {sheetStep === 'sub-campus' && (
-            <>
-              <SheetHeader className="pb-2">
-                <button
-                  type="button"
-                  onClick={() => setSheetStep('campus')}
-                  className="flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground mb-1 -ml-1"
-                >
-                  <ChevronLeft className="h-4 w-4" />
-                  Back
-                </button>
-                <SheetTitle>Select a center</SheetTitle>
-                <p className="text-sm text-muted-foreground">
-                  {campuses.find(c => c.id === pendingCampusId)?.display_name
-                    || campuses.find(c => c.id === pendingCampusId)?.name}
-                </p>
-              </SheetHeader>
-
-              <div className="flex flex-col gap-2 px-4 pt-2">
-                {subCampusesForPending.map(sub => {
-                  const isSelected = confirmedSubId === sub.id;
-                  return (
-                    <button
-                      key={sub.id}
-                      type="button"
-                      onClick={() => handleSubCampusPick(sub.id)}
-                      className={cn(
-                        'flex items-center gap-3 rounded-xl border px-4 py-3 text-left transition-all',
-                        isSelected
-                          ? 'border-primary bg-primary/5'
-                          : 'border-border bg-background hover:bg-muted/40',
-                      )}
-                    >
-                      <Building2 className={cn(
-                        'h-4 w-4 shrink-0',
-                        isSelected ? 'text-primary' : 'text-muted-foreground',
-                      )} />
-                      <span className={cn(
-                        'flex-1 text-sm font-medium truncate',
-                        isSelected ? 'text-primary' : 'text-foreground',
-                      )}>
-                        {sub.name}
-                      </span>
-                      {isSelected && <CheckDot />}
-                    </button>
-                  );
-                })}
-              </div>
-            </>
-          )}
-
-        </SheetContent>
-      </Sheet>
+      <CampusSheet
+        open={sheetOpen}
+        onOpenChange={setSheetOpen}
+        step={sheetStep}
+        onStepChange={setSheetStep}
+        pendingCampusId={pendingCampusId}
+        onPendingCampusChange={setPendingCampusId}
+        confirmedCampusId={confirmedCampusId}
+        onConfirmedCampusChange={setConfirmedCampusId}
+        confirmedSubId={confirmedSubId}
+        onConfirmedSubChange={setConfirmedSubId}
+        campuses={campuses}
+        availability={availability}
+        isOnline={isOnline}
+        loading={loadingMeta}
+      />
     </div>
   );
 }

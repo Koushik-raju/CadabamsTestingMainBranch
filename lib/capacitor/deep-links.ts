@@ -10,8 +10,8 @@ import { isNative } from './platform';
  * Returns a cleanup function that removes all listeners.
  *
  * URL mapping:
- *   consult.cadabams.com/payment-success → /booking/success
- *   consult.cadabams.com/payment-failed  → /booking/failed
+ *   consult.cadabams.com/payment-success → /consult/booking/success
+ *   consult.cadabams.com/payment-failed  → /consult/booking/failed
  *   consult.cadabams.com/callback        → /callback (with search params)
  *   consult.cadabams.com/*               → pass-through path
  */
@@ -32,11 +32,11 @@ export async function setupDeepLinks(router: AppRouterInstance): Promise<() => v
 
         // Explicit route overrides
         if (path === '/payment-success') {
-          router.push('/booking/success');
+          router.push('/consult/booking/success');
           return;
         }
         if (path === '/payment-failed') {
-          router.push('/booking/failed');
+          router.push('/consult/booking/failed');
           return;
         }
         if (path === '/callback') {

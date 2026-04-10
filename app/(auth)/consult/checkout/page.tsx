@@ -4,18 +4,16 @@ import { Suspense, useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import {
   User as UserIcon,
-  Video,
-  Building2,
   CreditCard,
   Loader2,
   AlertCircle,
   CheckCircle2,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Separator } from '@/components/ui/separator';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { BackButton } from '@/components/common/back-button';
+import { Card, CardContent } from '@/components/ui/card';
+import { BackButton } from '@/components/shared/navigation/back-button';
+import { BookingSummaryCard } from '@/components/checkout/booking-summary-card';
+import { PaymentSummaryCard } from '@/components/checkout/payment-summary-card';
 import { useAuth } from '@/hooks/use-auth';
 import { useBooking } from '@/contexts/booking-context';
 import {
@@ -31,27 +29,6 @@ function displayName(doctor: DoctorDetail | null): string {
   const full = (doctor.display_name || doctor.name || '').trim();
   const raw = full.includes(',') ? full.split(',').pop()!.trim() : full;
   return /^Dr\.?\s/i.test(raw) ? raw : `Dr. ${raw}`;
-}
-
-function formatDatetime(iso: string | null): string {
-  if (!iso) return '';
-  try {
-    return (
-      new Date(iso).toLocaleDateString('en-IN', {
-        weekday: 'long',
-        day: 'numeric',
-        month: 'long',
-        year: 'numeric',
-      }) +
-      ' at ' +
-      new Date(iso).toLocaleTimeString('en-IN', {
-        hour: '2-digit',
-        minute: '2-digit',
-      })
-    );
-  } catch {
-    return '';
-  }
 }
 
 function CheckoutContent() {
@@ -194,88 +171,14 @@ function CheckoutContent() {
 
       <div className="px-4 py-5 pb-32 max-w-2xl mx-auto space-y-4">
         {/* Doctor summary */}
-        <Card className="border-border">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">
-              Appointment details
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="flex items-center gap-4">
-              <Avatar className="h-14 w-14">
-                {doctor?.image && (
-                  <AvatarImage src={doctor.image} alt={displayName(doctor)} />
-                )}
-                <AvatarFallback className="bg-primary/10 text-primary font-semibold">
-                  {initials || <UserIcon className="h-6 w-6" />}
-                </AvatarFallback>
-              </Avatar>
-              <div>
-                <p className="font-semibold text-foreground">
-                  {displayName(doctor)}
-                </p>
-                {doctor?.speciality_id?.[1] && (
-                  <p className="text-sm text-muted-foreground">
-                    {String(doctor.speciality_id[1])}
-                  </p>
-                )}
-              </div>
-            </div>
-
-            <Separator />
-
-            <div className="space-y-2.5 text-sm">
-              {startDatetime && (
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Date &amp; Time</span>
-                  <span className="font-medium text-foreground">
-                    {formatDatetime(startDatetime)}
-                  </span>
-                </div>
-              )}
-              <div className="flex justify-between">
-                <span className="text-muted-foreground">Mode</span>
-                <span className="flex items-center gap-1 font-medium text-foreground">
-                  {isOnline ? (
-                    <>
-                      <Video className="h-3.5 w-3.5" /> Online
-                    </>
-                  ) : (
-                    <>
-                      <Building2 className="h-3.5 w-3.5" /> In-person
-                    </>
-                  )}
-                </span>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+        <BookingSummaryCard
+          doctor={doctor}
+          startDatetime={startDatetime}
+          isOnline={isOnline}
+        />
 
         {/* Price breakdown */}
-        <Card className="border-border">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">
-              Payment summary
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-2">
-            <div className="flex justify-between text-sm">
-              <span className="text-muted-foreground">Consultation fee</span>
-              <span className="text-foreground">
-                {price !== null ? `₹${price}` : '—'}
-              </span>
-            </div>
-            <div className="flex justify-between text-sm">
-              <span className="text-muted-foreground">Platform fee</span>
-              <span className="text-foreground">₹0</span>
-            </div>
-            <Separator className="my-1" />
-            <div className="flex justify-between font-bold text-foreground">
-              <span>Total</span>
-              <span>{price !== null ? `₹${price}` : '—'}</span>
-            </div>
-          </CardContent>
-        </Card>
+        <PaymentSummaryCard price={price} />
 
         {/* Logged-in user */}
         {user && (

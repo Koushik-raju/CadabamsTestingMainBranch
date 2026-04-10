@@ -3,7 +3,6 @@
 import { Suspense, useState, useEffect } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import {
-  ChevronLeft,
   ChevronRight,
   MoreHorizontal,
   Calendar,
@@ -20,6 +19,7 @@ import {
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { BackButton } from '@/components/shared/navigation/back-button';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -153,7 +153,7 @@ function DetailContent() {
         body: { medium_id: mediumId, cancel_reason: cancelReason.trim() },
       });
       console.log({ error, data });
-      router.push('/appointments');
+      router.push('/consult/appointments');
     } catch (err) {
       console.error(err);
     } finally {
@@ -202,13 +202,7 @@ function DetailContent() {
     <div className="min-h-screen bg-white flex flex-col">
       {/* Header */}
       <div className="flex items-center justify-between px-4 pt-6 pb-2">
-        <button
-          type="button"
-          onClick={() => router.back()}
-          className="h-9 w-9 flex items-center justify-center rounded-full hover:bg-muted transition-colors"
-        >
-          <ChevronLeft className="h-6 w-6" />
-        </button>
+        <BackButton fallback="/appointments" />
         <h1 className="text-[17px] font-bold">Session Details</h1>
         <button
           type="button"
@@ -340,7 +334,7 @@ function DetailContent() {
           <button
             type="button"
             className="flex-1 h-12 flex items-center justify-center gap-2 text-[15px] font-semibold text-foreground hover:bg-muted rounded-full transition-colors"
-            onClick={() => router.push(`/booking/${apt.doctor[0]}`)}
+            onClick={() => router.push(`/consult/booking/${apt.doctor[0]}`)}
           >
             <RefreshCw className="h-4.5 w-4.5" />
             Reschedule

@@ -32,10 +32,10 @@ export default function HomePage() {
       case 'quick_action':
         switch (subtype) {
           case 'therapist':
-            router.push('/find-therapist');
+            router.push('/consult/find-therapist');
             break;
           case 'match':
-            router.push('/find-therapist');
+            router.push('/consult/find-therapist');
             break;
           case 'assessment':
             router.push('/assessments');
@@ -58,7 +58,7 @@ export default function HomePage() {
         router.push(`/wellness-resources/${subtype}`);
         break;
       case 'join_session':
-        router.push('/appointments');
+        router.push('/consult/appointments');
         break;
     }
   };
@@ -82,7 +82,7 @@ export default function HomePage() {
         userName={(user?.caller_name as string | undefined) ?? 'There'}
         profileImage={profileImage}
         onMoodClick={() =>
-          router.push('/assessment/form?id=avym73d4x6258t3ligurl56r')
+          router.push('/assessment/avym73d4x6258t3ligurl56r')
         }
       />
 

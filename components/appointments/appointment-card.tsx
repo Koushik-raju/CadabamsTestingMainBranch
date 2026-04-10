@@ -58,7 +58,7 @@ export function AppointmentCard({ appointment, isPast }: AppointmentCardProps) {
   return (
     <button
       type="button"
-      onClick={() => router.push(`/appointments/${id}`)}
+      onClick={() => router.push(`/consult/appointments/${id}`)}
       className="w-full text-left bg-white rounded-2xl border border-border shadow-sm p-4 flex items-center gap-3 active:scale-[0.98] transition-transform"
     >
       <div className="relative shrink-0">

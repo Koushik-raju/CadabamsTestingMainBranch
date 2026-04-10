@@ -22,7 +22,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
-import { BackButton } from '@/components/common/back-button';
+import { BackButton } from '@/components/shared/navigation/back-button';
 import { getPackagesManaged, postPaymentsPackage } from '@/sdk/auth-and-crm';
 import { useAuth } from '@/hooks/use-auth';
 import type { BookedPackage } from '@/types/package';
@@ -315,7 +315,7 @@ export default function PackageDetailPage({ params }: { params: Promise<{ id: st
         {(pkg.package_stage === 'confirm' || pkg.package_stage === 'in_progress') && (
           <Button
             className="w-full rounded-full h-12 text-base font-semibold gap-2"
-            onClick={() => router.push('/find-therapist')}
+            onClick={() => router.push('/consult/find-therapist')}
           >
             <CalendarPlus className="h-5 w-5" />
             Book a Session

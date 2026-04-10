@@ -1,38 +1,16 @@
 'use client';
 
-import { useState, useCallback, useEffect } from 'react';
 import Link from 'next/link';
-import { Plus, CalendarX } from 'lucide-react';
+import { Plus, CalendarX, AlertCircle } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
-import { BackButton } from '@/components/common/back-button';
-import { AppointmentCard } from '@/components/appointment/appointment-card';
-import { getAppointments, getAppointmentsPrevious } from '@/sdk/auth-and-crm';
-import type { AppointmentDetail } from '@/sdk/auth-and-crm';
+import { BackButton } from '@/components/shared/navigation/back-button';
+import { AppointmentCard } from '@/components/appointments/appointment-card';
+import { useAppointments } from '@/hooks/use-appointments';
 
 export default function AppointmentsPage() {
-  const [upcoming, setUpcoming] = useState<AppointmentDetail[]>([]);
-  const [past,     setPast]     = useState<AppointmentDetail[]>([]);
-  const [loading,  setLoading]  = useState(true);
-
-  const fetchAll = useCallback(async () => {
-    setLoading(true);
-    try {
-      const [upRes, pastRes] = await Promise.all([
-        getAppointments({ query: { start_datetime: new Date().toISOString() } }),
-        getAppointmentsPrevious(),
-      ]);
-      setUpcoming(upRes.data ?? []);
-      setPast(pastRes.data ?? []);
-    } catch (err) {
-      console.error('Failed to fetch appointments:', err);
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  useEffect(() => { fetchAll(); }, [fetchAll]);
+  const { upcoming, past, isLoading, error } = useAppointments();
 
   const total = upcoming.length + past.length;
 
@@ -43,14 +21,29 @@ export default function AppointmentsPage() {
         <h1 className="text-xl font-bold text-foreground">My Appointments</h1>
       </div>
 
-      {loading && (
+      {isLoading && (
         <div className="px-4 space-y-3">
           <Skeleton className="h-10 w-full rounded-full" />
           {[0, 1, 2].map(i => <Skeleton key={i} className="h-20 w-full rounded-2xl" />)}
         </div>
       )}
 
-      {!loading && total === 0 && (
+      {error && (
+        <div className="flex flex-col items-center justify-center px-6 py-16 text-center gap-4">
+          <AlertCircle className="h-16 w-16 text-destructive" />
+          <div>
+            <p className="text-lg font-semibold text-destructive">Failed to load appointments</p>
+            <p className="text-sm text-muted-foreground mt-1 max-w-xs mx-auto">
+              {error.message || 'Something went wrong'}
+            </p>
+          </div>
+          <Button onClick={() => window.location.reload()} className="rounded-full px-8">
+            Try again
+          </Button>
+        </div>
+      )}
+
+      {!isLoading && total === 0 && (
         <div className="flex flex-col items-center justify-center px-6 py-16 text-center gap-4">
           <CalendarX className="h-16 w-16 text-muted-foreground/50" />
           <div>
@@ -60,7 +53,7 @@ export default function AppointmentsPage() {
             </p>
           </div>
           <Button asChild className="rounded-full px-8 mt-2">
-            <Link href="/find-therapist">
+            <Link href="/consult/find-therapist">
               <Plus className="h-4 w-4 mr-1.5" strokeWidth={3} />
               Schedule appointment
             </Link>
@@ -68,7 +61,7 @@ export default function AppointmentsPage() {
         </div>
       )}
 
-      {!loading && total > 0 && (
+      {!isLoading && total > 0 && (
         <div className="px-4 pb-24">
           <Tabs defaultValue="upcoming">
             <TabsList className="w-full rounded-full mb-4">
@@ -85,7 +78,7 @@ export default function AppointmentsPage() {
                 <div className="text-center py-10">
                   <p className="text-muted-foreground text-sm">No upcoming appointments</p>
                   <Button asChild variant="outline" className="mt-4 rounded-full">
-                    <Link href="/find-therapist">
+                    <Link href="/consult/find-therapist">
                       <Plus className="h-4 w-4 mr-1.5" />
                       Book one now
                     </Link>
@@ -107,10 +100,10 @@ export default function AppointmentsPage() {
         </div>
       )}
 
-      {!loading && total > 0 && (
+      {!isLoading && total > 0 && (
         <div className="fixed bottom-6 right-4">
           <Button asChild size="lg" className="rounded-full shadow-lg gap-2">
-            <Link href="/find-therapist">
+            <Link href="/consult/find-therapist">
               <Plus className="h-5 w-5" strokeWidth={3} />
               New
             </Link>

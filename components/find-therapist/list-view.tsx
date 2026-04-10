@@ -1,12 +1,12 @@
 'use client';
 
 import { useState, useMemo } from 'react';
-import { Search, SlidersHorizontal, ChevronDown, ArrowRight } from 'lucide-react';
-import { BackButton } from '@/components/common/back-button';
+import { Search, ChevronDown, ArrowRight } from 'lucide-react';
+import { BackButton } from '@/components/shared/navigation/back-button';
 import { Input } from '@/components/ui/input';
-import { DoctorCard } from '@/components/doctor/doctor-card';
+import { DoctorCard } from '@/components/find-therapist/doctor-card';
 import { DOCTORS } from '@/data/doctors';
-import { useFindTherapist, PROFESSION_OPTIONS, ALL_ISSUES } from './context';
+import { useFindTherapist, PROFESSION_OPTIONS } from './context';
 import {
   DoctorTypeSheet,
   ModeSheet,

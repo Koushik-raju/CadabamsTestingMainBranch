@@ -68,6 +68,8 @@ export function WizardView() {
     issueSearch, setIssueSearch,
     issuesToShow, languageList, centersForCity, canNext,
     handleNext, handleBack,
+    clearIssues,
+    clearLanguages,
   } = useFindTherapist();
 
   const totalSteps = mode === 'in-person' ? 5 : 4;
@@ -201,7 +203,7 @@ export function WizardView() {
                 </Button>
                 <button
                   type="button"
-                  onClick={handleNext}
+                  onClick={() => { clearIssues(); handleNext(); }}
                   className="w-full text-sm text-center text-muted-foreground hover:text-foreground py-1"
                 >
                   Skip for now
@@ -405,7 +407,7 @@ export function WizardView() {
                 </Button>
                 <button
                   type="button"
-                  onClick={handleNext}
+                  onClick={() => { clearLanguages(); handleNext(); }}
                   className="w-full text-sm text-center text-muted-foreground hover:text-foreground py-1"
                 >
                   Skip — no preference

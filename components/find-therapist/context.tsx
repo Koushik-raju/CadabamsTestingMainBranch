@@ -321,7 +321,7 @@ export function FindTherapistProvider({
       if (center?.campus_id) params.set('campus_id', String(center.campus_id));
       if (center?.sub_campus_id)
         params.set('sub_campus_id', String(center.sub_campus_id));
-      router.push(`/booking/${doctor.id}?${params.toString()}`);
+      router.push(`/consult/booking/${doctor.id}?${params.toString()}`);
     },
     [router, mode, center]
   );
