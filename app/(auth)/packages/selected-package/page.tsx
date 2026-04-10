@@ -5,7 +5,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
-import { BackButton } from '@/components/common/back-button';
+import { BackButton } from '@/components/shared/navigation/back-button';
 import {
   Package,
   IndianRupee,

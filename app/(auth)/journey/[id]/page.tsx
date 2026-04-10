@@ -3,61 +3,50 @@
 import { use, useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { ChevronRight, Clock, Lock, Sparkles } from 'lucide-react';
-import { BackButton } from '@/components/common/back-button';
+import { BackButton } from '@/components/shared/navigation/back-button';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { JourneyDayList } from '@/components/journey/journey-day-list';
 import { PremiumBadge } from '@/components/journey/premium-badge';
 import type { JourneyDayItem } from '@/components/journey/journey-day-list';
+import { getApiV1JourneysById } from '@/sdk/strapi';
+import type { JourneyItem, JourneyDetailResponse, JourneyStep, JourneyTask } from '@/types/journey';
+import { extractJourneyName, extractJourneyDescription } from '@/types/journey';
 
 const STRAPI_BASE = 'https://mindtalkbuddy.com';
 
-interface StrapiJourneyDay {
-  dayNumber?: number;
-  journeyTitle?: string;
-  [key: string]: unknown;
-}
-
-interface StrapiJourney {
-  documentId?: string;
-  id?: string | number;
-  name?: string | unknown;
-  description?: string | unknown;
-  isPremium?: boolean;
-  icon?: { url?: string };
-  banner?: { url?: string };
-  journey?: StrapiJourneyDay[];
-}
-
-function getSafeString(val: unknown): string {
-  if (typeof val === 'string') return val;
-  if (!val) return '';
-  if (typeof val === 'object') {
-    const o = val as Record<string, unknown>;
-    return String(o.name ?? o.title ?? o.text ?? '');
-  }
-  return String(val);
+async function fetchJourneyDetail(id: string): Promise<JourneyItem | null> {
+  const res = await getApiV1JourneysById({ path: { id } });
+  const data = res.data as JourneyDetailResponse | undefined;
+  return data?.data ?? null;
 }
 
 function fixImageUrl(url: unknown): string {
-  if (!url || typeof url !== 'string') return '/journey/default.png';
-  if (url.startsWith('http') || url.startsWith('data:') || url.startsWith('blob:')) return url;
-  if (url.startsWith('/uploads/')) return `${STRAPI_BASE}${url}`;
-  return url;
-}
-
-async function fetchJourneyDetail(id: string): Promise<StrapiJourney | null> {
-  const res = await fetch(
-    `${STRAPI_BASE}/api/mindful-journeys?filters[documentId][$eq]=${id}&populate=journey&populate=icon`
-  );
-  if (!res.ok) return null;
-  const data = await res.json() as { data?: StrapiJourney[] };
-  return data.data?.[0] ?? null;
+  if (!url) return '/journey/default.png';
+  if (typeof url === 'string') {
+    if (url.startsWith('http') || url.startsWith('data:') || url.startsWith('blob:')) return url;
+    if (url.startsWith('/uploads/')) return `${STRAPI_BASE}${url}`;
+    return url;
+  }
+  if (typeof url === 'object') {
+    const u = url as { url?: string };
+    if (u.url) return fixImageUrl(u.url);
+  }
+  return '/journey/default.png';
 }
 
 interface PageProps {
   params: Promise<{ id: string }>;
+}
+
+function getFirstAssessmentId(step: JourneyStep): string | null {
+  for (const task of step.tasks ?? []) {
+    if (task.assessments && task.assessments.length > 0) {
+      return task.assessments[0].id;
+    }
+  }
+  return null;
 }
 
 function JourneyDetailContent({ params }: PageProps) {
@@ -66,7 +55,7 @@ function JourneyDetailContent({ params }: PageProps) {
   const searchParams = useSearchParams();
   const isPreview = searchParams.get('isPreview') === 'true';
 
-  const [journey, setJourney] = useState<StrapiJourney | null>(null);
+  const [journey, setJourney] = useState<JourneyItem | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -76,19 +65,32 @@ function JourneyDetailContent({ params }: PageProps) {
       .finally(() => setLoading(false));
   }, [journeyId]);
 
-  const days: JourneyDayItem[] = (journey?.journey ?? []).map((day, idx) => ({
-    dayNumber: day.dayNumber ?? idx + 1,
-    unlocked: idx === 0, // Only first day is unlocked in preview
+  const steps = journey?.steps ?? [];
+  const days: JourneyDayItem[] = steps.map((step, idx) => ({
+    dayNumber: step.orderNo ?? idx + 1,
+    unlocked: idx === 0,
     available: idx === 0,
     completed: false,
-    title: day.journeyTitle ?? `Day ${day.dayNumber ?? idx + 1}`,
+    title: step.title ?? `Day ${idx + 1}`,
   }));
 
-  const name = getSafeString(journey?.name);
-  const description = getSafeString(journey?.description);
-  const imageUrl = fixImageUrl(journey?.icon?.url ?? journey?.banner?.url);
+  const name = extractJourneyName(journey?.name);
+  const description = extractJourneyDescription(journey?.description);
+  const imageUrl = fixImageUrl(journey?.icon);
   const isPremium = journey?.isPremium ?? false;
   const totalDays = days.length;
+
+  const handleDayClick = (day: JourneyDayItem) => {
+    const step = steps.find((s) => (s.orderNo ?? steps.indexOf(s) + 1) === day.dayNumber);
+    if (!step) return;
+
+    const assessmentId = getFirstAssessmentId(step);
+    if (assessmentId) {
+      router.push(`/assessment/${assessmentId}?journey=${journeyId}&day=${day.dayNumber}`);
+    } else {
+      alert(`Day ${day.dayNumber}: "${step.title}" - No assessment available yet.`);
+    }
+  };
 
   if (loading) {
     return (
@@ -188,7 +190,7 @@ function JourneyDetailContent({ params }: PageProps) {
         {days.length > 0 ? (
           <JourneyDayList
             days={days}
-            onDayClick={() => router.push('/signup')}
+            onDayClick={handleDayClick}
           />
         ) : (
           <p className="text-muted-foreground text-sm text-center py-6">

@@ -6,19 +6,21 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { PremiumBadge } from './premium-badge';
 import { cn } from '@/lib/utils';
+import type { JourneyRichText } from '@/types/journey';
 
 export interface DiscoveryJourney {
   id: string;
   documentId?: string;
-  name?: string | { name?: string; title?: string } | unknown;
-  description?: string | { name?: string; title?: string } | unknown;
+  name?: string | JourneyRichText[] | { name?: string; title?: string } | unknown;
+  description?: string | JourneyRichText[] | { name?: string; title?: string } | unknown;
   isPremium?: boolean;
-  icon?: { url?: string };
+  icon?: string | { url?: string };
   banner?: { url?: string };
   journey?: unknown[];
   days?: unknown[];
   category?: string;
   isFeatured?: boolean;
+  steps?: Array<{ id: string }>;
 }
 
 interface JourneyDiscoveryCardProps {
@@ -33,6 +35,20 @@ interface JourneyDiscoveryCardProps {
 function getSafeString(val: unknown): string {
   if (typeof val === 'string') return val;
   if (!val) return '';
+  if (Array.isArray(val)) {
+    for (const block of val as JourneyRichText[]) {
+      if (block.children) {
+        for (const child of block.children) {
+          if (child.text) return child.text;
+          if (child.children) {
+            for (const nested of child.children) {
+              if (nested.text) return nested.text;
+            }
+          }
+        }
+      }
+    }
+  }
   if (typeof val === 'object') {
     const o = val as Record<string, unknown>;
     return String(o.name ?? o.title ?? o.text ?? '');
@@ -41,10 +57,17 @@ function getSafeString(val: unknown): string {
 }
 
 function fixImageUrl(url: unknown): string {
-  if (!url || typeof url !== 'string') return '/journey/default.png';
-  if (url.startsWith('http') || url.startsWith('data:') || url.startsWith('blob:')) return url;
-  if (url.startsWith('/uploads/')) return `https://admin.mindtalkbuddy.com${url}`;
-  return url;
+  if (!url) return '/journey/default.png';
+  if (typeof url === 'string') {
+    if (url.startsWith('http') || url.startsWith('data:') || url.startsWith('blob:')) return url;
+    if (url.startsWith('/uploads/')) return `https://admin.mindtalkbuddy.com${url}`;
+    return url;
+  }
+  if (typeof url === 'object') {
+    const u = url as { url?: string };
+    if (u.url) return fixImageUrl(u.url);
+  }
+  return '/journey/default.png';
 }
 
 export function JourneyDiscoveryCard({
@@ -56,10 +79,10 @@ export function JourneyDiscoveryCard({
   className,
 }: JourneyDiscoveryCardProps) {
   const router = useRouter();
-  const journeyId = journey.documentId ?? journey.id;
+  const journeyId = journey.id;
   const name = getSafeString(journey.name);
-  const dayCount = (journey.journey?.length ?? journey.days?.length) ?? 30;
-  const imageUrl = fixImageUrl(journey.icon?.url ?? journey.banner?.url);
+  const dayCount = (journey.steps?.length ?? journey.days?.length ?? journey.journey?.length) ?? 30;
+  const imageUrl = fixImageUrl(typeof journey.icon === 'string' ? journey.icon : journey.icon?.url ?? journey.banner?.url);
   const isPremium = journey.isPremium ?? false;
 
   const handleClick = () => {

@@ -29,21 +29,32 @@ export interface ResourceBlock {
 }
 
 export interface MindfulMinuteAudio {
+  id: string;
   documentId: string;
   title: string;
-  duration?: string;
-  category?: string | string[];
-  audio?: { url: string };
-  backgroundVisual?: { url: string };
+  audioUrl?: string;
+  backgroundVisualUrl?: string;
 }
 
 export interface MindfulMinute {
-  id: number;
+  id: string;
   documentId?: string;
   slug: string;
   title: string;
-  duration?: string;
-  category?: string[];
-  coverImage?: CoverImage;
-  audio?: MindfulMinuteAudio[];
+  category?: string;
+  coverImageUrl?: string;
+  audios?: MindfulMinuteAudio[];
+}
+
+export interface MindfulMinutesListResponse {
+  success: boolean;
+  data: {
+    items: MindfulMinute[];
+    pagination: { total: number; limit: number; offset: number };
+  };
+}
+
+export interface MindfulMinuteDetailResponse {
+  success: boolean;
+  data: MindfulMinute;
 }

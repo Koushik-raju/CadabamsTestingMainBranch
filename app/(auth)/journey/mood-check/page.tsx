@@ -2,7 +2,7 @@
 
 import { Suspense, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { BackButton } from '@/components/common/back-button';
+import { BackButton } from '@/components/shared/navigation/back-button';
 import { MoodCheckForm } from '@/components/journey/mood-check-form';
 import { useAuth } from '@/hooks/use-auth';
 import { Skeleton } from '@/components/ui/skeleton';

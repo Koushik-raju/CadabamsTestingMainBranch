@@ -2,7 +2,7 @@
 
 import { Trophy, TrendingUp, Zap, Star } from 'lucide-react';
 import useSWR from 'swr';
-import { BackButton } from '@/components/common/back-button';
+import { BackButton } from '@/components/shared/navigation/back-button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Podium } from '@/components/leaderboard/podium';

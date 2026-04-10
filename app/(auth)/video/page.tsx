@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
 import Image from 'next/image';
 import Link from 'next/link';
-import { BackButton } from '@/components/common/back-button';
+import { BackButton } from '@/components/shared/navigation/back-button';
 import { VideoPlayer } from '@/components/wellness/video-player';
 import { CategoryFilter } from '@/components/wellness/category-filter';
 import { Skeleton } from '@/components/ui/skeleton';

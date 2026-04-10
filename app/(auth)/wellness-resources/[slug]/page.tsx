@@ -7,7 +7,7 @@ import Link from 'next/link';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
-import { BackButton } from '@/components/common/back-button';
+import { BackButton } from '@/components/shared/navigation/back-button';
 import { AudioPlayer } from '@/components/wellness/audio-player';
 import { VideoPlayer } from '@/components/wellness/video-player';
 import { ResourceCard } from '@/components/wellness/resource-card';

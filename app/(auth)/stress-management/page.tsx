@@ -95,10 +95,10 @@ export default function StressManagementPage() {
       color: 'text-purple-600 bg-purple-50',
     },
     {
-      label: 'Stress Check',
-      description: 'Record your stress level',
+      label: 'Assessments',
+      description: 'Explore & track your wellbeing',
       icon: ClipboardCheck,
-      href: '/stress-management/assessment',
+      href: '/assessments',
       color: 'text-primary bg-primary/10',
     },
   ];
@@ -140,7 +140,7 @@ export default function StressManagementPage() {
 
         {/* Add button */}
         <div className="flex justify-center mt-4">
-          <Link href="/stress-management/assessment">
+          <Link href="/assessments">
             <Button
               size="icon"
               className="rounded-full w-12 h-12 bg-white text-primary hover:bg-white/90 shadow-lg"

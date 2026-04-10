@@ -22,8 +22,112 @@ export type GetApiV1AssessmentsResponses = {
     /**
      * Default Response
      */
-    200: unknown;
+    200: {
+        success: true;
+        data: {
+            items: Array<{
+                id: string;
+                title: string;
+                description: string | null;
+                category: Array<string>;
+                grade: Array<string>;
+                forJourney: boolean;
+                visibleToAll: boolean;
+                label: string | null;
+                hint: string | null;
+                citationText: string | null;
+                image: string | null;
+                status: 'DRAFT' | 'PUBLISHED';
+                createdAt: string;
+                updatedAt: string;
+                createdBy: string | null;
+                updatedBy: string | null;
+                strapiId: string | null;
+                documentId: string | null;
+                landingTitle: {
+                    id: string;
+                    assessmentId: string;
+                    title: string | null;
+                    landingDescription: string | null;
+                    footer: string | null;
+                    minutes: number | null;
+                    numberOfQuestion: string | null;
+                    badgeText: string | null;
+                    actionLabel: string | null;
+                    points: Array<{
+                        id: string;
+                        landingPageId: string;
+                        icon: string | null;
+                        item: string | null;
+                    }>;
+                } | null;
+                Questions: Array<{
+                    id: string;
+                    assessmentId: string;
+                    type: string;
+                    title: string;
+                    subtitle: string | null;
+                    hint: string | null;
+                    continueLabel: string | null;
+                    order: number;
+                    smileys: Array<string>;
+                    count: number | null;
+                    label: string | null;
+                    prompt: string | null;
+                    choice: string | null;
+                    answer: string | null;
+                    text: string | null;
+                    keyValue?: unknown;
+                    questions?: unknown;
+                    answers?: unknown;
+                    citationText: string | null;
+                    options: Array<{
+                        id: string;
+                        questionId: string;
+                        label: string;
+                        value: string;
+                        order: number;
+                    }>;
+                }>;
+                journeyTasks?: Array<{
+                    id: string;
+                    strapiId: number | null;
+                    stepId: string;
+                    order: number;
+                    taskType: string | null;
+                    fillSelfJournal: boolean;
+                    showAppointments: boolean;
+                    showFirstBooking: boolean;
+                    moodCheckIn: boolean;
+                    extraTaskTitle: string | null;
+                    extraTaskDescription?: unknown;
+                    postAudioAssessmentId: string | null;
+                }>;
+                postAudioJourneyTasks?: Array<{
+                    id: string;
+                    strapiId: number | null;
+                    stepId: string;
+                    order: number;
+                    taskType: string | null;
+                    fillSelfJournal: boolean;
+                    showAppointments: boolean;
+                    showFirstBooking: boolean;
+                    moodCheckIn: boolean;
+                    extraTaskTitle: string | null;
+                    extraTaskDescription?: unknown;
+                    postAudioAssessmentId: string | null;
+                }>;
+            }>;
+            pagination: {
+                total: number;
+                limit: number;
+                offset: number;
+            };
+        };
+    };
 };
+
+export type GetApiV1AssessmentsResponse = GetApiV1AssessmentsResponses[keyof GetApiV1AssessmentsResponses];
 
 export type GetApiV1AssessmentsByIdData = {
     body?: never;
@@ -49,35 +153,105 @@ export type GetApiV1AssessmentsByIdResponses = {
     /**
      * Default Response
      */
-    200: unknown;
-};
-
-export type PostApiV1AssessmentsByIdUnpublishData = {
-    body?: never;
-    path: {
-        id: string;
+    200: {
+        success: true;
+        data: {
+            id: string;
+            title: string;
+            description: string | null;
+            category: Array<string>;
+            grade: Array<string>;
+            forJourney: boolean;
+            visibleToAll: boolean;
+            label: string | null;
+            hint: string | null;
+            citationText: string | null;
+            image: string | null;
+            status: 'DRAFT' | 'PUBLISHED';
+            createdAt: string;
+            updatedAt: string;
+            createdBy: string | null;
+            updatedBy: string | null;
+            strapiId: string | null;
+            documentId: string | null;
+            landingTitle: {
+                id: string;
+                assessmentId: string;
+                title: string | null;
+                landingDescription: string | null;
+                footer: string | null;
+                minutes: number | null;
+                numberOfQuestion: string | null;
+                badgeText: string | null;
+                actionLabel: string | null;
+                points: Array<{
+                    id: string;
+                    landingPageId: string;
+                    icon: string | null;
+                    item: string | null;
+                }>;
+            } | null;
+            Questions: Array<{
+                id: string;
+                assessmentId: string;
+                type: string;
+                title: string;
+                subtitle: string | null;
+                hint: string | null;
+                continueLabel: string | null;
+                order: number;
+                smileys: Array<string>;
+                count: number | null;
+                label: string | null;
+                prompt: string | null;
+                choice: string | null;
+                answer: string | null;
+                text: string | null;
+                keyValue?: unknown;
+                questions?: unknown;
+                answers?: unknown;
+                citationText: string | null;
+                options: Array<{
+                    id: string;
+                    questionId: string;
+                    label: string;
+                    value: string;
+                    order: number;
+                }>;
+            }>;
+            journeyTasks?: Array<{
+                id: string;
+                strapiId: number | null;
+                stepId: string;
+                order: number;
+                taskType: string | null;
+                fillSelfJournal: boolean;
+                showAppointments: boolean;
+                showFirstBooking: boolean;
+                moodCheckIn: boolean;
+                extraTaskTitle: string | null;
+                extraTaskDescription?: unknown;
+                postAudioAssessmentId: string | null;
+            }>;
+            postAudioJourneyTasks?: Array<{
+                id: string;
+                strapiId: number | null;
+                stepId: string;
+                order: number;
+                taskType: string | null;
+                fillSelfJournal: boolean;
+                showAppointments: boolean;
+                showFirstBooking: boolean;
+                moodCheckIn: boolean;
+                extraTaskTitle: string | null;
+                extraTaskDescription?: unknown;
+                postAudioAssessmentId: string | null;
+            }>;
+        };
     };
-    query?: never;
-    url: '/api/v1/assessments/{id}/unpublish';
 };
 
-export type PostApiV1AssessmentsByIdUnpublishErrors = {
-    /**
-     * Default Response
-     */
-    404: {
-        message: string;
-    };
-};
-
-export type PostApiV1AssessmentsByIdUnpublishError = PostApiV1AssessmentsByIdUnpublishErrors[keyof PostApiV1AssessmentsByIdUnpublishErrors];
-
-export type PostApiV1AssessmentsByIdUnpublishResponses = {
-    /**
-     * Default Response
-     */
-    200: unknown;
-};
+export type GetApiV1AssessmentsByIdResponse = GetApiV1AssessmentsByIdResponses[keyof GetApiV1AssessmentsByIdResponses];
 
 export type GetApiV1WorksheetsData = {
     body?: never;
@@ -100,8 +274,97 @@ export type GetApiV1WorksheetsResponses = {
     /**
      * Default Response
      */
-    200: unknown;
+    200: {
+        success: true;
+        data: {
+            items: Array<{
+                id: string;
+                title: string;
+                description: string | null;
+                category: Array<string>;
+                grade: Array<string>;
+                forJourney: boolean;
+                visibleToAll: boolean;
+                label: string | null;
+                hint: string | null;
+                citationText: string | null;
+                image: string | null;
+                status: 'DRAFT' | 'PUBLISHED';
+                createdAt: string;
+                updatedAt: string;
+                createdBy: string | null;
+                updatedBy: string | null;
+                strapiId: string | null;
+                landingTitle: {
+                    id: string;
+                    worksheetId: string;
+                    title: string | null;
+                    landingDescription: string | null;
+                    footer: string | null;
+                    minutes: number | null;
+                    numberOfQuestion: string | null;
+                    badgeText: string | null;
+                    actionLabel: string | null;
+                    points: Array<{
+                        id: string;
+                        landingPageId: string;
+                        icon: string | null;
+                        item: string | null;
+                    }>;
+                } | null;
+                Questions: Array<{
+                    id: string;
+                    worksheetId: string;
+                    type: string;
+                    title: string;
+                    subtitle: string | null;
+                    hint: string | null;
+                    continueLabel: string | null;
+                    order: number;
+                    smileys: Array<string>;
+                    count: number | null;
+                    label: string | null;
+                    prompt: string | null;
+                    choice: string | null;
+                    answer: string | null;
+                    text: string | null;
+                    keyValue: string | null;
+                    questions?: unknown;
+                    answers?: unknown;
+                    citationText: string | null;
+                    options: Array<{
+                        id: string;
+                        questionId: string;
+                        label: string;
+                        value: string;
+                        order: number;
+                    }>;
+                }>;
+                journeyTasks?: Array<{
+                    id: string;
+                    strapiId: number | null;
+                    stepId: string;
+                    order: number;
+                    taskType: string | null;
+                    fillSelfJournal: boolean;
+                    showAppointments: boolean;
+                    showFirstBooking: boolean;
+                    moodCheckIn: boolean;
+                    extraTaskTitle: string | null;
+                    extraTaskDescription?: unknown;
+                    postAudioAssessmentId: string | null;
+                }>;
+            }>;
+            pagination: {
+                total: number;
+                limit: number;
+                offset: number;
+            };
+        };
+    };
 };
+
+export type GetApiV1WorksheetsResponse = GetApiV1WorksheetsResponses[keyof GetApiV1WorksheetsResponses];
 
 export type GetApiV1WorksheetsByIdData = {
     body?: never;
@@ -127,35 +390,90 @@ export type GetApiV1WorksheetsByIdResponses = {
     /**
      * Default Response
      */
-    200: unknown;
-};
-
-export type PostApiV1WorksheetsByIdUnpublishData = {
-    body?: never;
-    path: {
-        id: string;
+    200: {
+        success: true;
+        data: {
+            id: string;
+            title: string;
+            description: string | null;
+            category: Array<string>;
+            grade: Array<string>;
+            forJourney: boolean;
+            visibleToAll: boolean;
+            label: string | null;
+            hint: string | null;
+            citationText: string | null;
+            image: string | null;
+            status: 'DRAFT' | 'PUBLISHED';
+            createdAt: string;
+            updatedAt: string;
+            createdBy: string | null;
+            updatedBy: string | null;
+            strapiId: string | null;
+            landingTitle: {
+                id: string;
+                worksheetId: string;
+                title: string | null;
+                landingDescription: string | null;
+                footer: string | null;
+                minutes: number | null;
+                numberOfQuestion: string | null;
+                badgeText: string | null;
+                actionLabel: string | null;
+                points: Array<{
+                    id: string;
+                    landingPageId: string;
+                    icon: string | null;
+                    item: string | null;
+                }>;
+            } | null;
+            Questions: Array<{
+                id: string;
+                worksheetId: string;
+                type: string;
+                title: string;
+                subtitle: string | null;
+                hint: string | null;
+                continueLabel: string | null;
+                order: number;
+                smileys: Array<string>;
+                count: number | null;
+                label: string | null;
+                prompt: string | null;
+                choice: string | null;
+                answer: string | null;
+                text: string | null;
+                keyValue: string | null;
+                questions?: unknown;
+                answers?: unknown;
+                citationText: string | null;
+                options: Array<{
+                    id: string;
+                    questionId: string;
+                    label: string;
+                    value: string;
+                    order: number;
+                }>;
+            }>;
+            journeyTasks?: Array<{
+                id: string;
+                strapiId: number | null;
+                stepId: string;
+                order: number;
+                taskType: string | null;
+                fillSelfJournal: boolean;
+                showAppointments: boolean;
+                showFirstBooking: boolean;
+                moodCheckIn: boolean;
+                extraTaskTitle: string | null;
+                extraTaskDescription?: unknown;
+                postAudioAssessmentId: string | null;
+            }>;
+        };
     };
-    query?: never;
-    url: '/api/v1/worksheets/{id}/unpublish';
 };
 
-export type PostApiV1WorksheetsByIdUnpublishErrors = {
-    /**
-     * Default Response
-     */
-    404: {
-        message: string;
-    };
-};
-
-export type PostApiV1WorksheetsByIdUnpublishError = PostApiV1WorksheetsByIdUnpublishErrors[keyof PostApiV1WorksheetsByIdUnpublishErrors];
-
-export type PostApiV1WorksheetsByIdUnpublishResponses = {
-    /**
-     * Default Response
-     */
-    200: unknown;
-};
+export type GetApiV1WorksheetsByIdResponse = GetApiV1WorksheetsByIdResponses[keyof GetApiV1WorksheetsByIdResponses];
 
 export type GetApiV1AudiosData = {
     body?: never;
@@ -171,8 +489,81 @@ export type GetApiV1AudiosResponses = {
     /**
      * Default Response
      */
-    200: unknown;
+    200: {
+        success: true;
+        data: {
+            items: Array<{
+                id: string;
+                documentId: string | null;
+                title: string;
+                description: string | null;
+                audioUrl: string | null;
+                backgroundVisualUrl: string | null;
+                status: 'DRAFT' | 'PUBLISHED';
+                createdAt: string;
+                updatedAt: string;
+                mindfulMinuteId: string | null;
+                mindfulMinute?: {
+                    id: string;
+                    title: string;
+                    slug: string;
+                    coverImageUrl: string | null;
+                    category: string;
+                    status: 'DRAFT' | 'PUBLISHED';
+                    createdAt: string;
+                    updatedAt: string;
+                } | null;
+                journeyTasks?: Array<{
+                    id: string;
+                    strapiId: number | null;
+                    stepId: string;
+                    order: number;
+                    taskType: string | null;
+                    fillSelfJournal: boolean;
+                    showAppointments: boolean;
+                    showFirstBooking: boolean;
+                    moodCheckIn: boolean;
+                    extraTaskTitle: string | null;
+                    extraTaskDescription?: unknown;
+                    postAudioAssessmentId: string | null;
+                    step: {
+                        id: string;
+                        strapiId: number | null;
+                        journeyId: string;
+                        orderNo: number;
+                        title: string;
+                        description?: unknown;
+                        icon: string | null;
+                        iconId: string | null;
+                        extraTaskTitle: string | null;
+                        extraTaskDescription?: unknown;
+                        journey: {
+                            id: string;
+                            documentId: string | null;
+                            name: string;
+                            description?: unknown;
+                            icon: string | null;
+                            iconId: string | null;
+                            grade: Array<string>;
+                            isPremium: boolean;
+                            inDraft: boolean;
+                            status: 'DRAFT' | 'PUBLISHED';
+                            createdAt: string;
+                            updatedAt: string;
+                        };
+                    };
+                }>;
+            }>;
+            pagination: {
+                total: number;
+                limit: number;
+                offset: number;
+            };
+        };
+    };
 };
+
+export type GetApiV1AudiosResponse = GetApiV1AudiosResponses[keyof GetApiV1AudiosResponses];
 
 export type GetApiV1AudiosByIdData = {
     body?: never;
@@ -198,35 +589,74 @@ export type GetApiV1AudiosByIdResponses = {
     /**
      * Default Response
      */
-    200: unknown;
-};
-
-export type PostApiV1AudiosByIdUnpublishData = {
-    body?: never;
-    path: {
-        id: string;
+    200: {
+        success: true;
+        data: {
+            id: string;
+            documentId: string | null;
+            title: string;
+            description: string | null;
+            audioUrl: string | null;
+            backgroundVisualUrl: string | null;
+            status: 'DRAFT' | 'PUBLISHED';
+            createdAt: string;
+            updatedAt: string;
+            mindfulMinuteId: string | null;
+            mindfulMinute?: {
+                id: string;
+                title: string;
+                slug: string;
+                coverImageUrl: string | null;
+                category: string;
+                status: 'DRAFT' | 'PUBLISHED';
+                createdAt: string;
+                updatedAt: string;
+            } | null;
+            journeyTasks?: Array<{
+                id: string;
+                strapiId: number | null;
+                stepId: string;
+                order: number;
+                taskType: string | null;
+                fillSelfJournal: boolean;
+                showAppointments: boolean;
+                showFirstBooking: boolean;
+                moodCheckIn: boolean;
+                extraTaskTitle: string | null;
+                extraTaskDescription?: unknown;
+                postAudioAssessmentId: string | null;
+                step: {
+                    id: string;
+                    strapiId: number | null;
+                    journeyId: string;
+                    orderNo: number;
+                    title: string;
+                    description?: unknown;
+                    icon: string | null;
+                    iconId: string | null;
+                    extraTaskTitle: string | null;
+                    extraTaskDescription?: unknown;
+                    journey: {
+                        id: string;
+                        documentId: string | null;
+                        name: string;
+                        description?: unknown;
+                        icon: string | null;
+                        iconId: string | null;
+                        grade: Array<string>;
+                        isPremium: boolean;
+                        inDraft: boolean;
+                        status: 'DRAFT' | 'PUBLISHED';
+                        createdAt: string;
+                        updatedAt: string;
+                    };
+                };
+            }>;
+        };
     };
-    query?: never;
-    url: '/api/v1/audios/{id}/unpublish';
 };
 
-export type PostApiV1AudiosByIdUnpublishErrors = {
-    /**
-     * Default Response
-     */
-    404: {
-        message: string;
-    };
-};
-
-export type PostApiV1AudiosByIdUnpublishError = PostApiV1AudiosByIdUnpublishErrors[keyof PostApiV1AudiosByIdUnpublishErrors];
-
-export type PostApiV1AudiosByIdUnpublishResponses = {
-    /**
-     * Default Response
-     */
-    200: unknown;
-};
+export type GetApiV1AudiosByIdResponse = GetApiV1AudiosByIdResponses[keyof GetApiV1AudiosByIdResponses];
 
 export type GetApiV1MindfulMinutesData = {
     body?: never;
@@ -244,8 +674,81 @@ export type GetApiV1MindfulMinutesResponses = {
     /**
      * Default Response
      */
-    200: unknown;
+    200: {
+        success: true;
+        data: {
+            items: Array<{
+                id: string;
+                title: string;
+                slug: string;
+                coverImageUrl: string | null;
+                category: 'Healthcare' | 'AI' | 'Medical' | 'General' | 'Schizophrenia' | 'Bipolar_Disorder' | 'OCD' | 'Dementia' | 'Alzheimers' | 'ADHD' | 'Autism' | 'Relationship_Issues' | 'Stress' | 'Anxiety' | 'PTSD' | 'Trauma' | 'Sleep' | 'Personality_Disorder' | 'Addiction' | 'Drug_Addiction' | 'Alcohol_Addiction' | 'Learning_Disability' | 'Depression' | 'Family_Issues' | 'Cerebral_Palsy' | 'Conduct_Disorder' | 'Eating_Disorder' | 'Gender_Identity_Disorder' | 'Intellectual_Disability' | 'Mood_Disorder' | 'Developmental_Delay' | 'Psychosis' | 'Dual_Diagnosis' | 'Parenting' | 'Mindfulness' | 'Love' | 'Self_Love' | 'Self_Help' | 'Meditation' | 'Yoga';
+                status: 'DRAFT' | 'PUBLISHED';
+                createdAt: string;
+                updatedAt: string;
+                audios: Array<{
+                    id: string;
+                    documentId: string | null;
+                    title: string;
+                    description: string | null;
+                    audioUrl: string | null;
+                    backgroundVisualUrl: string | null;
+                    status: 'DRAFT' | 'PUBLISHED';
+                    createdAt: string;
+                    updatedAt: string;
+                    mindfulMinuteId: string | null;
+                    journeyTasks?: Array<{
+                        id: string;
+                        strapiId: number | null;
+                        stepId: string;
+                        order: number;
+                        taskType: string | null;
+                        fillSelfJournal: boolean;
+                        showAppointments: boolean;
+                        showFirstBooking: boolean;
+                        moodCheckIn: boolean;
+                        extraTaskTitle: string | null;
+                        extraTaskDescription?: unknown;
+                        postAudioAssessmentId: string | null;
+                        step: {
+                            id: string;
+                            strapiId: number | null;
+                            journeyId: string;
+                            orderNo: number;
+                            title: string;
+                            description?: unknown;
+                            icon: string | null;
+                            iconId: string | null;
+                            extraTaskTitle: string | null;
+                            extraTaskDescription?: unknown;
+                            journey: {
+                                id: string;
+                                documentId: string | null;
+                                name: string;
+                                description?: unknown;
+                                icon: string | null;
+                                iconId: string | null;
+                                grade: Array<string>;
+                                isPremium: boolean;
+                                inDraft: boolean;
+                                status: 'DRAFT' | 'PUBLISHED';
+                                createdAt: string;
+                                updatedAt: string;
+                            };
+                        };
+                    }>;
+                }>;
+            }>;
+            pagination: {
+                total: number;
+                limit: number;
+                offset: number;
+            };
+        };
+    };
 };
+
+export type GetApiV1MindfulMinutesResponse = GetApiV1MindfulMinutesResponses[keyof GetApiV1MindfulMinutesResponses];
 
 export type GetApiV1MindfulMinutesSlugBySlugData = {
     body?: never;
@@ -271,8 +774,74 @@ export type GetApiV1MindfulMinutesSlugBySlugResponses = {
     /**
      * Default Response
      */
-    200: unknown;
+    200: {
+        success: true;
+        data: {
+            id: string;
+            title: string;
+            slug: string;
+            coverImageUrl: string | null;
+            category: 'Healthcare' | 'AI' | 'Medical' | 'General' | 'Schizophrenia' | 'Bipolar_Disorder' | 'OCD' | 'Dementia' | 'Alzheimers' | 'ADHD' | 'Autism' | 'Relationship_Issues' | 'Stress' | 'Anxiety' | 'PTSD' | 'Trauma' | 'Sleep' | 'Personality_Disorder' | 'Addiction' | 'Drug_Addiction' | 'Alcohol_Addiction' | 'Learning_Disability' | 'Depression' | 'Family_Issues' | 'Cerebral_Palsy' | 'Conduct_Disorder' | 'Eating_Disorder' | 'Gender_Identity_Disorder' | 'Intellectual_Disability' | 'Mood_Disorder' | 'Developmental_Delay' | 'Psychosis' | 'Dual_Diagnosis' | 'Parenting' | 'Mindfulness' | 'Love' | 'Self_Love' | 'Self_Help' | 'Meditation' | 'Yoga';
+            status: 'DRAFT' | 'PUBLISHED';
+            createdAt: string;
+            updatedAt: string;
+            audios: Array<{
+                id: string;
+                documentId: string | null;
+                title: string;
+                description: string | null;
+                audioUrl: string | null;
+                backgroundVisualUrl: string | null;
+                status: 'DRAFT' | 'PUBLISHED';
+                createdAt: string;
+                updatedAt: string;
+                mindfulMinuteId: string | null;
+                journeyTasks?: Array<{
+                    id: string;
+                    strapiId: number | null;
+                    stepId: string;
+                    order: number;
+                    taskType: string | null;
+                    fillSelfJournal: boolean;
+                    showAppointments: boolean;
+                    showFirstBooking: boolean;
+                    moodCheckIn: boolean;
+                    extraTaskTitle: string | null;
+                    extraTaskDescription?: unknown;
+                    postAudioAssessmentId: string | null;
+                    step: {
+                        id: string;
+                        strapiId: number | null;
+                        journeyId: string;
+                        orderNo: number;
+                        title: string;
+                        description?: unknown;
+                        icon: string | null;
+                        iconId: string | null;
+                        extraTaskTitle: string | null;
+                        extraTaskDescription?: unknown;
+                        journey: {
+                            id: string;
+                            documentId: string | null;
+                            name: string;
+                            description?: unknown;
+                            icon: string | null;
+                            iconId: string | null;
+                            grade: Array<string>;
+                            isPremium: boolean;
+                            inDraft: boolean;
+                            status: 'DRAFT' | 'PUBLISHED';
+                            createdAt: string;
+                            updatedAt: string;
+                        };
+                    };
+                }>;
+            }>;
+        };
+    };
 };
+
+export type GetApiV1MindfulMinutesSlugBySlugResponse = GetApiV1MindfulMinutesSlugBySlugResponses[keyof GetApiV1MindfulMinutesSlugBySlugResponses];
 
 export type GetApiV1MindfulMinutesByIdData = {
     body?: never;
@@ -298,35 +867,74 @@ export type GetApiV1MindfulMinutesByIdResponses = {
     /**
      * Default Response
      */
-    200: unknown;
-};
-
-export type PostApiV1MindfulMinutesByIdUnpublishData = {
-    body?: never;
-    path: {
-        id: string;
+    200: {
+        success: true;
+        data: {
+            id: string;
+            title: string;
+            slug: string;
+            coverImageUrl: string | null;
+            category: 'Healthcare' | 'AI' | 'Medical' | 'General' | 'Schizophrenia' | 'Bipolar_Disorder' | 'OCD' | 'Dementia' | 'Alzheimers' | 'ADHD' | 'Autism' | 'Relationship_Issues' | 'Stress' | 'Anxiety' | 'PTSD' | 'Trauma' | 'Sleep' | 'Personality_Disorder' | 'Addiction' | 'Drug_Addiction' | 'Alcohol_Addiction' | 'Learning_Disability' | 'Depression' | 'Family_Issues' | 'Cerebral_Palsy' | 'Conduct_Disorder' | 'Eating_Disorder' | 'Gender_Identity_Disorder' | 'Intellectual_Disability' | 'Mood_Disorder' | 'Developmental_Delay' | 'Psychosis' | 'Dual_Diagnosis' | 'Parenting' | 'Mindfulness' | 'Love' | 'Self_Love' | 'Self_Help' | 'Meditation' | 'Yoga';
+            status: 'DRAFT' | 'PUBLISHED';
+            createdAt: string;
+            updatedAt: string;
+            audios: Array<{
+                id: string;
+                documentId: string | null;
+                title: string;
+                description: string | null;
+                audioUrl: string | null;
+                backgroundVisualUrl: string | null;
+                status: 'DRAFT' | 'PUBLISHED';
+                createdAt: string;
+                updatedAt: string;
+                mindfulMinuteId: string | null;
+                journeyTasks?: Array<{
+                    id: string;
+                    strapiId: number | null;
+                    stepId: string;
+                    order: number;
+                    taskType: string | null;
+                    fillSelfJournal: boolean;
+                    showAppointments: boolean;
+                    showFirstBooking: boolean;
+                    moodCheckIn: boolean;
+                    extraTaskTitle: string | null;
+                    extraTaskDescription?: unknown;
+                    postAudioAssessmentId: string | null;
+                    step: {
+                        id: string;
+                        strapiId: number | null;
+                        journeyId: string;
+                        orderNo: number;
+                        title: string;
+                        description?: unknown;
+                        icon: string | null;
+                        iconId: string | null;
+                        extraTaskTitle: string | null;
+                        extraTaskDescription?: unknown;
+                        journey: {
+                            id: string;
+                            documentId: string | null;
+                            name: string;
+                            description?: unknown;
+                            icon: string | null;
+                            iconId: string | null;
+                            grade: Array<string>;
+                            isPremium: boolean;
+                            inDraft: boolean;
+                            status: 'DRAFT' | 'PUBLISHED';
+                            createdAt: string;
+                            updatedAt: string;
+                        };
+                    };
+                }>;
+            }>;
+        };
     };
-    query?: never;
-    url: '/api/v1/mindful-minutes/{id}/unpublish';
 };
 
-export type PostApiV1MindfulMinutesByIdUnpublishErrors = {
-    /**
-     * Default Response
-     */
-    404: {
-        message: string;
-    };
-};
-
-export type PostApiV1MindfulMinutesByIdUnpublishError = PostApiV1MindfulMinutesByIdUnpublishErrors[keyof PostApiV1MindfulMinutesByIdUnpublishErrors];
-
-export type PostApiV1MindfulMinutesByIdUnpublishResponses = {
-    /**
-     * Default Response
-     */
-    200: unknown;
-};
+export type GetApiV1MindfulMinutesByIdResponse = GetApiV1MindfulMinutesByIdResponses[keyof GetApiV1MindfulMinutesByIdResponses];
 
 export type GetApiV1MediaUploadUrlData = {
     body?: never;
@@ -370,8 +978,69 @@ export type GetApiV1MediaResponses = {
     /**
      * Default Response
      */
-    200: unknown;
+    200: {
+        success: true;
+        data: {
+            items: Array<{
+                id: string;
+                name: string;
+                url: string;
+                key: string;
+                mimeType: string;
+                size: number;
+                createdAt: string;
+                updatedAt: string;
+                journeys?: Array<{
+                    id: string;
+                    documentId: string | null;
+                    name: string;
+                    description?: unknown;
+                    icon: string | null;
+                    iconId: string | null;
+                    grade: Array<string>;
+                    isPremium: boolean;
+                    inDraft: boolean;
+                    status: 'DRAFT' | 'PUBLISHED';
+                    createdAt: string;
+                    updatedAt: string;
+                }>;
+                journeySteps?: Array<{
+                    id: string;
+                    strapiId: number | null;
+                    journeyId: string;
+                    orderNo: number;
+                    title: string;
+                    description?: unknown;
+                    icon: string | null;
+                    iconId: string | null;
+                    extraTaskTitle: string | null;
+                    extraTaskDescription?: unknown;
+                    journey: {
+                        id: string;
+                        documentId: string | null;
+                        name: string;
+                        description?: unknown;
+                        icon: string | null;
+                        iconId: string | null;
+                        grade: Array<string>;
+                        isPremium: boolean;
+                        inDraft: boolean;
+                        status: 'DRAFT' | 'PUBLISHED';
+                        createdAt: string;
+                        updatedAt: string;
+                    };
+                }>;
+            }>;
+            pagination: {
+                total: number;
+                limit: number;
+                offset: number;
+            };
+        };
+    };
 };
+
+export type GetApiV1MediaResponse = GetApiV1MediaResponses[keyof GetApiV1MediaResponses];
 
 export type GetApiV1JournalingData = {
     body?: never;
@@ -387,8 +1056,95 @@ export type GetApiV1JournalingResponses = {
     /**
      * Default Response
      */
-    200: unknown;
+    200: {
+        success: true;
+        data: {
+            total: number;
+            items: Array<{
+                id: string;
+                title: string;
+                description: string | null;
+                icon: string | null;
+                status: 'DRAFT' | 'PUBLISHED';
+                createdAt: string;
+                updatedAt: string;
+                subJournalings: Array<{
+                    id: string;
+                    documentId: string | null;
+                    journalingId: string;
+                    title: string;
+                    description: string | null;
+                    icon: string | null;
+                    aiPrompt: string | null;
+                    slug: string;
+                    isSubscribable: boolean;
+                    isAssignableInJourney: boolean;
+                    isAssignableByDoctor: boolean;
+                    recommendedCadence: 'Daily' | 'Once_in_two_days' | 'Weekly_7_days' | 'Every_15_days' | 'Every_21_days' | 'Monthly_30_days';
+                    status: 'DRAFT' | 'PUBLISHED';
+                    createdAt: string;
+                    updatedAt: string;
+                    journeys?: Array<{
+                        id: string;
+                        documentId: string | null;
+                        name: string;
+                        description?: unknown;
+                        icon: string | null;
+                        iconId: string | null;
+                        grade: Array<string>;
+                        isPremium: boolean;
+                        inDraft: boolean;
+                        status: 'DRAFT' | 'PUBLISHED';
+                        createdAt: string;
+                        updatedAt: string;
+                    }>;
+                    journeyTasks?: Array<{
+                        id: string;
+                        strapiId: number | null;
+                        stepId: string;
+                        order: number;
+                        taskType: string | null;
+                        fillSelfJournal: boolean;
+                        showAppointments: boolean;
+                        showFirstBooking: boolean;
+                        moodCheckIn: boolean;
+                        extraTaskTitle: string | null;
+                        extraTaskDescription?: unknown;
+                        postAudioAssessmentId: string | null;
+                        step: {
+                            id: string;
+                            strapiId: number | null;
+                            journeyId: string;
+                            orderNo: number;
+                            title: string;
+                            description?: unknown;
+                            icon: string | null;
+                            iconId: string | null;
+                            extraTaskTitle: string | null;
+                            extraTaskDescription?: unknown;
+                            journey: {
+                                id: string;
+                                documentId: string | null;
+                                name: string;
+                                description?: unknown;
+                                icon: string | null;
+                                iconId: string | null;
+                                grade: Array<string>;
+                                isPremium: boolean;
+                                inDraft: boolean;
+                                status: 'DRAFT' | 'PUBLISHED';
+                                createdAt: string;
+                                updatedAt: string;
+                            };
+                        };
+                    }>;
+                }>;
+            }>;
+        };
+    };
 };
+
+export type GetApiV1JournalingResponse = GetApiV1JournalingResponses[keyof GetApiV1JournalingResponses];
 
 export type GetApiV1JournalingSubData = {
     body?: never;
@@ -406,8 +1162,99 @@ export type GetApiV1JournalingSubResponses = {
     /**
      * Default Response
      */
-    200: unknown;
+    200: {
+        success: true;
+        data: {
+            items: Array<{
+                id: string;
+                documentId: string | null;
+                journalingId: string;
+                title: string;
+                description: string | null;
+                icon: string | null;
+                aiPrompt: string | null;
+                slug: string;
+                isSubscribable: boolean;
+                isAssignableInJourney: boolean;
+                isAssignableByDoctor: boolean;
+                recommendedCadence: 'Daily' | 'Once_in_two_days' | 'Weekly_7_days' | 'Every_15_days' | 'Every_21_days' | 'Monthly_30_days';
+                status: 'DRAFT' | 'PUBLISHED';
+                createdAt: string;
+                updatedAt: string;
+                journeys?: Array<{
+                    id: string;
+                    documentId: string | null;
+                    name: string;
+                    description?: unknown;
+                    icon: string | null;
+                    iconId: string | null;
+                    grade: Array<string>;
+                    isPremium: boolean;
+                    inDraft: boolean;
+                    status: 'DRAFT' | 'PUBLISHED';
+                    createdAt: string;
+                    updatedAt: string;
+                }>;
+                journeyTasks?: Array<{
+                    id: string;
+                    strapiId: number | null;
+                    stepId: string;
+                    order: number;
+                    taskType: string | null;
+                    fillSelfJournal: boolean;
+                    showAppointments: boolean;
+                    showFirstBooking: boolean;
+                    moodCheckIn: boolean;
+                    extraTaskTitle: string | null;
+                    extraTaskDescription?: unknown;
+                    postAudioAssessmentId: string | null;
+                    step: {
+                        id: string;
+                        strapiId: number | null;
+                        journeyId: string;
+                        orderNo: number;
+                        title: string;
+                        description?: unknown;
+                        icon: string | null;
+                        iconId: string | null;
+                        extraTaskTitle: string | null;
+                        extraTaskDescription?: unknown;
+                        journey: {
+                            id: string;
+                            documentId: string | null;
+                            name: string;
+                            description?: unknown;
+                            icon: string | null;
+                            iconId: string | null;
+                            grade: Array<string>;
+                            isPremium: boolean;
+                            inDraft: boolean;
+                            status: 'DRAFT' | 'PUBLISHED';
+                            createdAt: string;
+                            updatedAt: string;
+                        };
+                    };
+                }>;
+                journaling: {
+                    id: string;
+                    title: string;
+                    description: string | null;
+                    icon: string | null;
+                    status: 'DRAFT' | 'PUBLISHED';
+                    createdAt: string;
+                    updatedAt: string;
+                };
+            }>;
+            pagination: {
+                total: number;
+                limit: number;
+                offset: number;
+            };
+        };
+    };
 };
+
+export type GetApiV1JournalingSubResponse = GetApiV1JournalingSubResponses[keyof GetApiV1JournalingSubResponses];
 
 export type GetApiV1JournalingSubByIdData = {
     body?: never;
@@ -433,35 +1280,92 @@ export type GetApiV1JournalingSubByIdResponses = {
     /**
      * Default Response
      */
-    200: unknown;
-};
-
-export type PostApiV1JournalingSubByIdUnpublishData = {
-    body?: never;
-    path: {
-        id: string;
+    200: {
+        success: true;
+        data: {
+            id: string;
+            documentId: string | null;
+            journalingId: string;
+            title: string;
+            description: string | null;
+            icon: string | null;
+            aiPrompt: string | null;
+            slug: string;
+            isSubscribable: boolean;
+            isAssignableInJourney: boolean;
+            isAssignableByDoctor: boolean;
+            recommendedCadence: 'Daily' | 'Once_in_two_days' | 'Weekly_7_days' | 'Every_15_days' | 'Every_21_days' | 'Monthly_30_days';
+            status: 'DRAFT' | 'PUBLISHED';
+            createdAt: string;
+            updatedAt: string;
+            journeys?: Array<{
+                id: string;
+                documentId: string | null;
+                name: string;
+                description?: unknown;
+                icon: string | null;
+                iconId: string | null;
+                grade: Array<string>;
+                isPremium: boolean;
+                inDraft: boolean;
+                status: 'DRAFT' | 'PUBLISHED';
+                createdAt: string;
+                updatedAt: string;
+            }>;
+            journeyTasks?: Array<{
+                id: string;
+                strapiId: number | null;
+                stepId: string;
+                order: number;
+                taskType: string | null;
+                fillSelfJournal: boolean;
+                showAppointments: boolean;
+                showFirstBooking: boolean;
+                moodCheckIn: boolean;
+                extraTaskTitle: string | null;
+                extraTaskDescription?: unknown;
+                postAudioAssessmentId: string | null;
+                step: {
+                    id: string;
+                    strapiId: number | null;
+                    journeyId: string;
+                    orderNo: number;
+                    title: string;
+                    description?: unknown;
+                    icon: string | null;
+                    iconId: string | null;
+                    extraTaskTitle: string | null;
+                    extraTaskDescription?: unknown;
+                    journey: {
+                        id: string;
+                        documentId: string | null;
+                        name: string;
+                        description?: unknown;
+                        icon: string | null;
+                        iconId: string | null;
+                        grade: Array<string>;
+                        isPremium: boolean;
+                        inDraft: boolean;
+                        status: 'DRAFT' | 'PUBLISHED';
+                        createdAt: string;
+                        updatedAt: string;
+                    };
+                };
+            }>;
+            journaling: {
+                id: string;
+                title: string;
+                description: string | null;
+                icon: string | null;
+                status: 'DRAFT' | 'PUBLISHED';
+                createdAt: string;
+                updatedAt: string;
+            };
+        };
     };
-    query?: never;
-    url: '/api/v1/journaling/sub/{id}/unpublish';
 };
 
-export type PostApiV1JournalingSubByIdUnpublishErrors = {
-    /**
-     * Default Response
-     */
-    404: {
-        message: string;
-    };
-};
-
-export type PostApiV1JournalingSubByIdUnpublishError = PostApiV1JournalingSubByIdUnpublishErrors[keyof PostApiV1JournalingSubByIdUnpublishErrors];
-
-export type PostApiV1JournalingSubByIdUnpublishResponses = {
-    /**
-     * Default Response
-     */
-    200: unknown;
-};
+export type GetApiV1JournalingSubByIdResponse = GetApiV1JournalingSubByIdResponses[keyof GetApiV1JournalingSubByIdResponses];
 
 export type GetApiV1JournalingSelfData = {
     body?: never;
@@ -477,8 +1381,26 @@ export type GetApiV1JournalingSelfResponses = {
     /**
      * Default Response
      */
-    200: unknown;
+    200: {
+        success: true;
+        data: {
+            total: number;
+            items: Array<{
+                id: string;
+                title: string | null;
+                stressLevel: number | null;
+                leadId: number | null;
+                entry: string | null;
+                emotion: number | null;
+                stressors: string | null;
+                createdAt: string;
+                updatedAt: string;
+            }>;
+        };
+    };
 };
+
+export type GetApiV1JournalingSelfResponse = GetApiV1JournalingSelfResponses[keyof GetApiV1JournalingSelfResponses];
 
 export type GetApiV1JournalingSelfByIdData = {
     body?: never;
@@ -504,8 +1426,23 @@ export type GetApiV1JournalingSelfByIdResponses = {
     /**
      * Default Response
      */
-    200: unknown;
+    200: {
+        success: true;
+        data: {
+            id: string;
+            title: string | null;
+            stressLevel: number | null;
+            leadId: number | null;
+            entry: string | null;
+            emotion: number | null;
+            stressors: string | null;
+            createdAt: string;
+            updatedAt: string;
+        };
+    };
 };
+
+export type GetApiV1JournalingSelfByIdResponse = GetApiV1JournalingSelfByIdResponses[keyof GetApiV1JournalingSelfByIdResponses];
 
 export type GetApiV1JournalingByIdData = {
     body?: never;
@@ -531,35 +1468,92 @@ export type GetApiV1JournalingByIdResponses = {
     /**
      * Default Response
      */
-    200: unknown;
-};
-
-export type PostApiV1JournalingByIdUnpublishData = {
-    body?: never;
-    path: {
-        id: string;
+    200: {
+        success: true;
+        data: {
+            id: string;
+            title: string;
+            description: string | null;
+            icon: string | null;
+            status: 'DRAFT' | 'PUBLISHED';
+            createdAt: string;
+            updatedAt: string;
+            subJournalings: Array<{
+                id: string;
+                documentId: string | null;
+                journalingId: string;
+                title: string;
+                description: string | null;
+                icon: string | null;
+                aiPrompt: string | null;
+                slug: string;
+                isSubscribable: boolean;
+                isAssignableInJourney: boolean;
+                isAssignableByDoctor: boolean;
+                recommendedCadence: 'Daily' | 'Once_in_two_days' | 'Weekly_7_days' | 'Every_15_days' | 'Every_21_days' | 'Monthly_30_days';
+                status: 'DRAFT' | 'PUBLISHED';
+                createdAt: string;
+                updatedAt: string;
+                journeys?: Array<{
+                    id: string;
+                    documentId: string | null;
+                    name: string;
+                    description?: unknown;
+                    icon: string | null;
+                    iconId: string | null;
+                    grade: Array<string>;
+                    isPremium: boolean;
+                    inDraft: boolean;
+                    status: 'DRAFT' | 'PUBLISHED';
+                    createdAt: string;
+                    updatedAt: string;
+                }>;
+                journeyTasks?: Array<{
+                    id: string;
+                    strapiId: number | null;
+                    stepId: string;
+                    order: number;
+                    taskType: string | null;
+                    fillSelfJournal: boolean;
+                    showAppointments: boolean;
+                    showFirstBooking: boolean;
+                    moodCheckIn: boolean;
+                    extraTaskTitle: string | null;
+                    extraTaskDescription?: unknown;
+                    postAudioAssessmentId: string | null;
+                    step: {
+                        id: string;
+                        strapiId: number | null;
+                        journeyId: string;
+                        orderNo: number;
+                        title: string;
+                        description?: unknown;
+                        icon: string | null;
+                        iconId: string | null;
+                        extraTaskTitle: string | null;
+                        extraTaskDescription?: unknown;
+                        journey: {
+                            id: string;
+                            documentId: string | null;
+                            name: string;
+                            description?: unknown;
+                            icon: string | null;
+                            iconId: string | null;
+                            grade: Array<string>;
+                            isPremium: boolean;
+                            inDraft: boolean;
+                            status: 'DRAFT' | 'PUBLISHED';
+                            createdAt: string;
+                            updatedAt: string;
+                        };
+                    };
+                }>;
+            }>;
+        };
     };
-    query?: never;
-    url: '/api/v1/journaling/{id}/unpublish';
 };
 
-export type PostApiV1JournalingByIdUnpublishErrors = {
-    /**
-     * Default Response
-     */
-    404: {
-        message: string;
-    };
-};
-
-export type PostApiV1JournalingByIdUnpublishError = PostApiV1JournalingByIdUnpublishErrors[keyof PostApiV1JournalingByIdUnpublishErrors];
-
-export type PostApiV1JournalingByIdUnpublishResponses = {
-    /**
-     * Default Response
-     */
-    200: unknown;
-};
+export type GetApiV1JournalingByIdResponse = GetApiV1JournalingByIdResponses[keyof GetApiV1JournalingByIdResponses];
 
 export type GetApiV1JourneysData = {
     body?: never;
@@ -569,7 +1563,7 @@ export type GetApiV1JourneysData = {
         offset?: number;
         search?: string;
         status?: 'ALL' | 'DRAFT' | 'PUBLISHED';
-        sortBy?: 'name' | 'status' | 'createdAt' | 'updatedAt' | 'isPremium' | 'documentId';
+        sortBy?: string;
         sortOrder?: 'asc' | 'desc';
     };
     url: '/api/v1/journeys/';
@@ -579,8 +1573,200 @@ export type GetApiV1JourneysResponses = {
     /**
      * Default Response
      */
-    200: unknown;
+    200: {
+        success: true;
+        data: {
+            items: Array<{
+                id: string;
+                documentId: string | null;
+                name: string;
+                description?: unknown;
+                icon: string | null;
+                iconId: string | null;
+                grade: Array<string>;
+                isPremium: boolean;
+                inDraft: boolean;
+                status: 'DRAFT' | 'PUBLISHED';
+                createdAt: string;
+                updatedAt: string;
+                mediaIcon?: {
+                    id: string;
+                    name: string;
+                    url: string;
+                    key: string;
+                    mimeType: string;
+                    size: number;
+                    createdAt: string;
+                    updatedAt: string;
+                } | null;
+                achievements: Array<{
+                    id: string;
+                    strapiId: number | null;
+                    journeyId: string;
+                    icon: string | null;
+                    label: string | null;
+                }>;
+                steps: Array<{
+                    id: string;
+                    strapiId: number | null;
+                    journeyId: string;
+                    orderNo: number;
+                    title: string;
+                    description?: unknown;
+                    icon: string | null;
+                    iconId: string | null;
+                    extraTaskTitle: string | null;
+                    extraTaskDescription?: unknown;
+                    mediaIcon?: {
+                        id: string;
+                        name: string;
+                        url: string;
+                        key: string;
+                        mimeType: string;
+                        size: number;
+                        createdAt: string;
+                        updatedAt: string;
+                    } | null;
+                    tasks: Array<{
+                        id: string;
+                        strapiId: number | null;
+                        stepId: string;
+                        order: number;
+                        taskType: string | null;
+                        fillSelfJournal: boolean;
+                        showAppointments: boolean;
+                        showFirstBooking: boolean;
+                        moodCheckIn: boolean;
+                        extraTaskTitle: string | null;
+                        extraTaskDescription?: unknown;
+                        postAudioAssessmentId: string | null;
+                        assessments: Array<{
+                            id: string;
+                            title: string;
+                            description: string | null;
+                            category: Array<string>;
+                            grade: Array<string>;
+                            forJourney: boolean;
+                            visibleToAll: boolean;
+                            label: string | null;
+                            hint: string | null;
+                            citationText: string | null;
+                            image: string | null;
+                            status: 'DRAFT' | 'PUBLISHED';
+                            createdAt: string;
+                            updatedAt: string;
+                            createdBy: string | null;
+                            updatedBy: string | null;
+                            strapiId: string | null;
+                        }>;
+                        worksheets: Array<{
+                            id: string;
+                            title: string;
+                            description: string | null;
+                            category: Array<string>;
+                            grade: Array<string>;
+                            forJourney: boolean;
+                            visibleToAll: boolean;
+                            label: string | null;
+                            hint: string | null;
+                            citationText: string | null;
+                            image: string | null;
+                            status: 'DRAFT' | 'PUBLISHED';
+                            createdAt: string;
+                            updatedAt: string;
+                            createdBy: string | null;
+                            updatedBy: string | null;
+                            strapiId: string | null;
+                        }>;
+                        audios: Array<{
+                            id: string;
+                            documentId: string | null;
+                            title: string;
+                            description: string | null;
+                            audioUrl: string | null;
+                            backgroundVisualUrl: string | null;
+                            status: 'DRAFT' | 'PUBLISHED';
+                            createdAt: string;
+                            updatedAt: string;
+                            mindfulMinuteId: string | null;
+                        }>;
+                        subJournalings: Array<{
+                            id: string;
+                            documentId: string | null;
+                            journalingId: string;
+                            title: string;
+                            description: string | null;
+                            icon: string | null;
+                            aiPrompt: string | null;
+                            slug: string;
+                            isSubscribable: boolean;
+                            isAssignableInJourney: boolean;
+                            isAssignableByDoctor: boolean;
+                            recommendedCadence: 'Daily' | 'Once_in_two_days' | 'Weekly_7_days' | 'Every_15_days' | 'Every_21_days' | 'Monthly_30_days';
+                            status: 'DRAFT' | 'PUBLISHED';
+                            createdAt: string;
+                            updatedAt: string;
+                        }>;
+                        videos: Array<{
+                            id: string;
+                            documentId: string | null;
+                            title: string;
+                            description: string | null;
+                            videoUrl: string | null;
+                            thumbnailUrl: string | null;
+                            status: 'DRAFT' | 'PUBLISHED';
+                            createdAt: string;
+                            updatedAt: string;
+                        }>;
+                        postAudioAssessment: {
+                            id: string;
+                            title: string;
+                            description: string | null;
+                            category: Array<string>;
+                            grade: Array<string>;
+                            forJourney: boolean;
+                            visibleToAll: boolean;
+                            label: string | null;
+                            hint: string | null;
+                            citationText: string | null;
+                            image: string | null;
+                            status: 'DRAFT' | 'PUBLISHED';
+                            createdAt: string;
+                            updatedAt: string;
+                            createdBy: string | null;
+                            updatedBy: string | null;
+                            strapiId: string | null;
+                        } | null;
+                    }>;
+                }>;
+                subJournalings: Array<{
+                    id: string;
+                    documentId: string | null;
+                    journalingId: string;
+                    title: string;
+                    description: string | null;
+                    icon: string | null;
+                    aiPrompt: string | null;
+                    slug: string;
+                    isSubscribable: boolean;
+                    isAssignableInJourney: boolean;
+                    isAssignableByDoctor: boolean;
+                    recommendedCadence: 'Daily' | 'Once_in_two_days' | 'Weekly_7_days' | 'Every_15_days' | 'Every_21_days' | 'Monthly_30_days';
+                    status: 'DRAFT' | 'PUBLISHED';
+                    createdAt: string;
+                    updatedAt: string;
+                }>;
+            }>;
+            pagination: {
+                total: number;
+                limit: number;
+                offset: number;
+            };
+        };
+    };
 };
+
+export type GetApiV1JourneysResponse = GetApiV1JourneysResponses[keyof GetApiV1JourneysResponses];
 
 export type GetApiV1JourneysByIdData = {
     body?: never;
@@ -606,35 +1792,193 @@ export type GetApiV1JourneysByIdResponses = {
     /**
      * Default Response
      */
-    200: unknown;
-};
-
-export type PostApiV1JourneysByIdUnpublishData = {
-    body?: never;
-    path: {
-        id: string;
+    200: {
+        success: true;
+        data: {
+            id: string;
+            documentId: string | null;
+            name: string;
+            description?: unknown;
+            icon: string | null;
+            iconId: string | null;
+            grade: Array<string>;
+            isPremium: boolean;
+            inDraft: boolean;
+            status: 'DRAFT' | 'PUBLISHED';
+            createdAt: string;
+            updatedAt: string;
+            mediaIcon?: {
+                id: string;
+                name: string;
+                url: string;
+                key: string;
+                mimeType: string;
+                size: number;
+                createdAt: string;
+                updatedAt: string;
+            } | null;
+            achievements: Array<{
+                id: string;
+                strapiId: number | null;
+                journeyId: string;
+                icon: string | null;
+                label: string | null;
+            }>;
+            steps: Array<{
+                id: string;
+                strapiId: number | null;
+                journeyId: string;
+                orderNo: number;
+                title: string;
+                description?: unknown;
+                icon: string | null;
+                iconId: string | null;
+                extraTaskTitle: string | null;
+                extraTaskDescription?: unknown;
+                mediaIcon?: {
+                    id: string;
+                    name: string;
+                    url: string;
+                    key: string;
+                    mimeType: string;
+                    size: number;
+                    createdAt: string;
+                    updatedAt: string;
+                } | null;
+                tasks: Array<{
+                    id: string;
+                    strapiId: number | null;
+                    stepId: string;
+                    order: number;
+                    taskType: string | null;
+                    fillSelfJournal: boolean;
+                    showAppointments: boolean;
+                    showFirstBooking: boolean;
+                    moodCheckIn: boolean;
+                    extraTaskTitle: string | null;
+                    extraTaskDescription?: unknown;
+                    postAudioAssessmentId: string | null;
+                    assessments: Array<{
+                        id: string;
+                        title: string;
+                        description: string | null;
+                        category: Array<string>;
+                        grade: Array<string>;
+                        forJourney: boolean;
+                        visibleToAll: boolean;
+                        label: string | null;
+                        hint: string | null;
+                        citationText: string | null;
+                        image: string | null;
+                        status: 'DRAFT' | 'PUBLISHED';
+                        createdAt: string;
+                        updatedAt: string;
+                        createdBy: string | null;
+                        updatedBy: string | null;
+                        strapiId: string | null;
+                    }>;
+                    worksheets: Array<{
+                        id: string;
+                        title: string;
+                        description: string | null;
+                        category: Array<string>;
+                        grade: Array<string>;
+                        forJourney: boolean;
+                        visibleToAll: boolean;
+                        label: string | null;
+                        hint: string | null;
+                        citationText: string | null;
+                        image: string | null;
+                        status: 'DRAFT' | 'PUBLISHED';
+                        createdAt: string;
+                        updatedAt: string;
+                        createdBy: string | null;
+                        updatedBy: string | null;
+                        strapiId: string | null;
+                    }>;
+                    audios: Array<{
+                        id: string;
+                        documentId: string | null;
+                        title: string;
+                        description: string | null;
+                        audioUrl: string | null;
+                        backgroundVisualUrl: string | null;
+                        status: 'DRAFT' | 'PUBLISHED';
+                        createdAt: string;
+                        updatedAt: string;
+                        mindfulMinuteId: string | null;
+                    }>;
+                    subJournalings: Array<{
+                        id: string;
+                        documentId: string | null;
+                        journalingId: string;
+                        title: string;
+                        description: string | null;
+                        icon: string | null;
+                        aiPrompt: string | null;
+                        slug: string;
+                        isSubscribable: boolean;
+                        isAssignableInJourney: boolean;
+                        isAssignableByDoctor: boolean;
+                        recommendedCadence: 'Daily' | 'Once_in_two_days' | 'Weekly_7_days' | 'Every_15_days' | 'Every_21_days' | 'Monthly_30_days';
+                        status: 'DRAFT' | 'PUBLISHED';
+                        createdAt: string;
+                        updatedAt: string;
+                    }>;
+                    videos: Array<{
+                        id: string;
+                        documentId: string | null;
+                        title: string;
+                        description: string | null;
+                        videoUrl: string | null;
+                        thumbnailUrl: string | null;
+                        status: 'DRAFT' | 'PUBLISHED';
+                        createdAt: string;
+                        updatedAt: string;
+                    }>;
+                    postAudioAssessment: {
+                        id: string;
+                        title: string;
+                        description: string | null;
+                        category: Array<string>;
+                        grade: Array<string>;
+                        forJourney: boolean;
+                        visibleToAll: boolean;
+                        label: string | null;
+                        hint: string | null;
+                        citationText: string | null;
+                        image: string | null;
+                        status: 'DRAFT' | 'PUBLISHED';
+                        createdAt: string;
+                        updatedAt: string;
+                        createdBy: string | null;
+                        updatedBy: string | null;
+                        strapiId: string | null;
+                    } | null;
+                }>;
+            }>;
+            subJournalings: Array<{
+                id: string;
+                documentId: string | null;
+                journalingId: string;
+                title: string;
+                description: string | null;
+                icon: string | null;
+                aiPrompt: string | null;
+                slug: string;
+                isSubscribable: boolean;
+                isAssignableInJourney: boolean;
+                isAssignableByDoctor: boolean;
+                recommendedCadence: 'Daily' | 'Once_in_two_days' | 'Weekly_7_days' | 'Every_15_days' | 'Every_21_days' | 'Monthly_30_days';
+                status: 'DRAFT' | 'PUBLISHED';
+                createdAt: string;
+                updatedAt: string;
+            }>;
+        };
     };
-    query?: never;
-    url: '/api/v1/journeys/{id}/unpublish';
 };
 
-export type PostApiV1JourneysByIdUnpublishErrors = {
-    /**
-     * Default Response
-     */
-    404: {
-        message: string;
-    };
-};
-
-export type PostApiV1JourneysByIdUnpublishError = PostApiV1JourneysByIdUnpublishErrors[keyof PostApiV1JourneysByIdUnpublishErrors];
-
-export type PostApiV1JourneysByIdUnpublishResponses = {
-    /**
-     * Default Response
-     */
-    200: unknown;
-};
+export type GetApiV1JourneysByIdResponse = GetApiV1JourneysByIdResponses[keyof GetApiV1JourneysByIdResponses];
 
 export type GetApiV1MonitoringHealthData = {
     body?: never;
@@ -647,8 +1991,13 @@ export type GetApiV1MonitoringHealthResponses = {
     /**
      * Default Response
      */
-    200: unknown;
+    200: {
+        success: true;
+        data?: unknown;
+    };
 };
+
+export type GetApiV1MonitoringHealthResponse = GetApiV1MonitoringHealthResponses[keyof GetApiV1MonitoringHealthResponses];
 
 export type GetApiV1MonitoringOverviewData = {
     body?: never;
@@ -661,8 +2010,13 @@ export type GetApiV1MonitoringOverviewResponses = {
     /**
      * Default Response
      */
-    200: unknown;
+    200: {
+        success: true;
+        data?: unknown;
+    };
 };
+
+export type GetApiV1MonitoringOverviewResponse = GetApiV1MonitoringOverviewResponses[keyof GetApiV1MonitoringOverviewResponses];
 
 export type GetApiV1DebugEnvData = {
     body?: never;

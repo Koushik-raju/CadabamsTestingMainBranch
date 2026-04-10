@@ -1,18 +1,16 @@
 'use client';
 
-import { useState, useEffect, Suspense } from 'react';
-import { useSearchParams, useRouter } from 'next/navigation';
-import axios from 'axios';
+import { useState, useEffect, use } from 'react';
+import { useRouter } from 'next/navigation';
 import { ref, push } from 'firebase/database';
 import { database } from '@/lib/firebase';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { Skeleton } from '@/components/ui/skeleton';
-import { BackButton } from '@/components/common/back-button';
+import { BackButton } from '@/components/shared/navigation/back-button';
 import { QuestionRenderer, type Question, type AnswerValue } from '@/components/assessment/question-renderer';
 import { ChevronRight, ChevronLeft, CheckCircle2, AlertCircle } from 'lucide-react';
-
-const WORKSHEET_API = 'https://mindtalkbuddy.com/api/worksheets';
+import { getApiV1WorksheetsById } from '@/sdk/strapi';
 
 interface WorksheetData {
   label?: string;
@@ -21,10 +19,9 @@ interface WorksheetData {
   Questions?: Question[];
 }
 
-function WorksheetFormContent() {
-  const searchParams = useSearchParams();
+export default function WorksheetFormPage({ params }: { params: Promise<{ id: string }> }) {
+  const { id: worksheetId } = use(params);
   const router = useRouter();
-  const worksheetId = searchParams.get('id');
 
   const [worksheet, setWorksheet] = useState<WorksheetData | null>(null);
   const [questions, setQuestions] = useState<Question[]>([]);
@@ -37,18 +34,10 @@ function WorksheetFormContent() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!worksheetId) {
-      setError('No worksheet ID provided.');
-      setLoading(false);
-      return;
-    }
-
     async function fetchData() {
       try {
-        const res = await axios.get<{ data: WorksheetData }>(
-          `${WORKSHEET_API}/${worksheetId}?pLevel=4`
-        );
-        const data = res.data.data;
+        const res = await getApiV1WorksheetsById({ path: { id: worksheetId } });
+        const data = (res.data as { data: WorksheetData })?.data;
         setWorksheet(data);
         setQuestions(data.Questions || []);
 
@@ -274,19 +263,5 @@ function WorksheetFormContent() {
         </Button>
       </div>
     </div>
-  );
-}
-
-export default function WorksheetFormPage() {
-  return (
-    <Suspense
-      fallback={
-        <div className="min-h-screen bg-background flex items-center justify-center">
-          <Skeleton className="h-24 w-24 rounded-full" />
-        </div>
-      }
-    >
-      <WorksheetFormContent />
-    </Suspense>
   );
 }

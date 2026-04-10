@@ -2,7 +2,7 @@
 
 import type { Client, Options as Options2, TDataShape } from './client';
 import { client } from './client.gen';
-import type { GetApiV1AssessmentsByIdData, GetApiV1AssessmentsByIdErrors, GetApiV1AssessmentsByIdResponses, GetApiV1AssessmentsData, GetApiV1AssessmentsResponses, GetApiV1AudiosByIdData, GetApiV1AudiosByIdErrors, GetApiV1AudiosByIdResponses, GetApiV1AudiosData, GetApiV1AudiosResponses, GetApiV1DebugEnvData, GetApiV1DebugEnvResponses, GetApiV1JournalingByIdData, GetApiV1JournalingByIdErrors, GetApiV1JournalingByIdResponses, GetApiV1JournalingData, GetApiV1JournalingResponses, GetApiV1JournalingSelfByIdData, GetApiV1JournalingSelfByIdErrors, GetApiV1JournalingSelfByIdResponses, GetApiV1JournalingSelfData, GetApiV1JournalingSelfResponses, GetApiV1JournalingSubByIdData, GetApiV1JournalingSubByIdErrors, GetApiV1JournalingSubByIdResponses, GetApiV1JournalingSubData, GetApiV1JournalingSubResponses, GetApiV1JourneysByIdData, GetApiV1JourneysByIdErrors, GetApiV1JourneysByIdResponses, GetApiV1JourneysData, GetApiV1JourneysResponses, GetApiV1MediaData, GetApiV1MediaResponses, GetApiV1MediaUploadUrlData, GetApiV1MediaUploadUrlResponses, GetApiV1MindfulMinutesByIdData, GetApiV1MindfulMinutesByIdErrors, GetApiV1MindfulMinutesByIdResponses, GetApiV1MindfulMinutesData, GetApiV1MindfulMinutesResponses, GetApiV1MindfulMinutesSlugBySlugData, GetApiV1MindfulMinutesSlugBySlugErrors, GetApiV1MindfulMinutesSlugBySlugResponses, GetApiV1MonitoringHealthData, GetApiV1MonitoringHealthResponses, GetApiV1MonitoringOverviewData, GetApiV1MonitoringOverviewResponses, GetApiV1WorksheetsByIdData, GetApiV1WorksheetsByIdErrors, GetApiV1WorksheetsByIdResponses, GetApiV1WorksheetsData, GetApiV1WorksheetsResponses, GetHealthData, GetHealthResponses, PostApiV1AssessmentsByIdUnpublishData, PostApiV1AssessmentsByIdUnpublishErrors, PostApiV1AssessmentsByIdUnpublishResponses, PostApiV1AudiosByIdUnpublishData, PostApiV1AudiosByIdUnpublishErrors, PostApiV1AudiosByIdUnpublishResponses, PostApiV1JournalingByIdUnpublishData, PostApiV1JournalingByIdUnpublishErrors, PostApiV1JournalingByIdUnpublishResponses, PostApiV1JournalingSubByIdUnpublishData, PostApiV1JournalingSubByIdUnpublishErrors, PostApiV1JournalingSubByIdUnpublishResponses, PostApiV1JourneysByIdUnpublishData, PostApiV1JourneysByIdUnpublishErrors, PostApiV1JourneysByIdUnpublishResponses, PostApiV1MindfulMinutesByIdUnpublishData, PostApiV1MindfulMinutesByIdUnpublishErrors, PostApiV1MindfulMinutesByIdUnpublishResponses, PostApiV1WorksheetsByIdUnpublishData, PostApiV1WorksheetsByIdUnpublishErrors, PostApiV1WorksheetsByIdUnpublishResponses } from './types.gen';
+import type { GetApiV1AssessmentsByIdData, GetApiV1AssessmentsByIdErrors, GetApiV1AssessmentsByIdResponses, GetApiV1AssessmentsData, GetApiV1AssessmentsResponses, GetApiV1AudiosByIdData, GetApiV1AudiosByIdErrors, GetApiV1AudiosByIdResponses, GetApiV1AudiosData, GetApiV1AudiosResponses, GetApiV1DebugEnvData, GetApiV1DebugEnvResponses, GetApiV1JournalingByIdData, GetApiV1JournalingByIdErrors, GetApiV1JournalingByIdResponses, GetApiV1JournalingData, GetApiV1JournalingResponses, GetApiV1JournalingSelfByIdData, GetApiV1JournalingSelfByIdErrors, GetApiV1JournalingSelfByIdResponses, GetApiV1JournalingSelfData, GetApiV1JournalingSelfResponses, GetApiV1JournalingSubByIdData, GetApiV1JournalingSubByIdErrors, GetApiV1JournalingSubByIdResponses, GetApiV1JournalingSubData, GetApiV1JournalingSubResponses, GetApiV1JourneysByIdData, GetApiV1JourneysByIdErrors, GetApiV1JourneysByIdResponses, GetApiV1JourneysData, GetApiV1JourneysResponses, GetApiV1MediaData, GetApiV1MediaResponses, GetApiV1MediaUploadUrlData, GetApiV1MediaUploadUrlResponses, GetApiV1MindfulMinutesByIdData, GetApiV1MindfulMinutesByIdErrors, GetApiV1MindfulMinutesByIdResponses, GetApiV1MindfulMinutesData, GetApiV1MindfulMinutesResponses, GetApiV1MindfulMinutesSlugBySlugData, GetApiV1MindfulMinutesSlugBySlugErrors, GetApiV1MindfulMinutesSlugBySlugResponses, GetApiV1MonitoringHealthData, GetApiV1MonitoringHealthResponses, GetApiV1MonitoringOverviewData, GetApiV1MonitoringOverviewResponses, GetApiV1WorksheetsByIdData, GetApiV1WorksheetsByIdErrors, GetApiV1WorksheetsByIdResponses, GetApiV1WorksheetsData, GetApiV1WorksheetsResponses, GetHealthData, GetHealthResponses } from './types.gen';
 
 export type Options<TData extends TDataShape = TDataShape, ThrowOnError extends boolean = boolean, TResponse = unknown> = Options2<TData, ThrowOnError, TResponse> & {
     /**
@@ -30,12 +30,6 @@ export const getApiV1AssessmentsById = <ThrowOnError extends boolean = false>(op
     ...options
 });
 
-export const postApiV1AssessmentsByIdUnpublish = <ThrowOnError extends boolean = false>(options: Options<PostApiV1AssessmentsByIdUnpublishData, ThrowOnError>) => (options.client ?? client).post<PostApiV1AssessmentsByIdUnpublishResponses, PostApiV1AssessmentsByIdUnpublishErrors, ThrowOnError>({
-    responseType: 'json',
-    url: '/api/v1/assessments/{id}/unpublish',
-    ...options
-});
-
 export const getApiV1Worksheets = <ThrowOnError extends boolean = false>(options?: Options<GetApiV1WorksheetsData, ThrowOnError>) => (options?.client ?? client).get<GetApiV1WorksheetsResponses, unknown, ThrowOnError>({
     responseType: 'json',
     url: '/api/v1/worksheets/',
@@ -48,12 +42,6 @@ export const getApiV1WorksheetsById = <ThrowOnError extends boolean = false>(opt
     ...options
 });
 
-export const postApiV1WorksheetsByIdUnpublish = <ThrowOnError extends boolean = false>(options: Options<PostApiV1WorksheetsByIdUnpublishData, ThrowOnError>) => (options.client ?? client).post<PostApiV1WorksheetsByIdUnpublishResponses, PostApiV1WorksheetsByIdUnpublishErrors, ThrowOnError>({
-    responseType: 'json',
-    url: '/api/v1/worksheets/{id}/unpublish',
-    ...options
-});
-
 export const getApiV1Audios = <ThrowOnError extends boolean = false>(options?: Options<GetApiV1AudiosData, ThrowOnError>) => (options?.client ?? client).get<GetApiV1AudiosResponses, unknown, ThrowOnError>({
     responseType: 'json',
     url: '/api/v1/audios/',
@@ -63,12 +51,6 @@ export const getApiV1Audios = <ThrowOnError extends boolean = false>(options?: O
 export const getApiV1AudiosById = <ThrowOnError extends boolean = false>(options: Options<GetApiV1AudiosByIdData, ThrowOnError>) => (options.client ?? client).get<GetApiV1AudiosByIdResponses, GetApiV1AudiosByIdErrors, ThrowOnError>({
     responseType: 'json',
     url: '/api/v1/audios/{id}',
-    ...options
-});
-
-export const postApiV1AudiosByIdUnpublish = <ThrowOnError extends boolean = false>(options: Options<PostApiV1AudiosByIdUnpublishData, ThrowOnError>) => (options.client ?? client).post<PostApiV1AudiosByIdUnpublishResponses, PostApiV1AudiosByIdUnpublishErrors, ThrowOnError>({
-    responseType: 'json',
-    url: '/api/v1/audios/{id}/unpublish',
     ...options
 });
 
@@ -87,12 +69,6 @@ export const getApiV1MindfulMinutesSlugBySlug = <ThrowOnError extends boolean = 
 export const getApiV1MindfulMinutesById = <ThrowOnError extends boolean = false>(options: Options<GetApiV1MindfulMinutesByIdData, ThrowOnError>) => (options.client ?? client).get<GetApiV1MindfulMinutesByIdResponses, GetApiV1MindfulMinutesByIdErrors, ThrowOnError>({
     responseType: 'json',
     url: '/api/v1/mindful-minutes/{id}',
-    ...options
-});
-
-export const postApiV1MindfulMinutesByIdUnpublish = <ThrowOnError extends boolean = false>(options: Options<PostApiV1MindfulMinutesByIdUnpublishData, ThrowOnError>) => (options.client ?? client).post<PostApiV1MindfulMinutesByIdUnpublishResponses, PostApiV1MindfulMinutesByIdUnpublishErrors, ThrowOnError>({
-    responseType: 'json',
-    url: '/api/v1/mindful-minutes/{id}/unpublish',
     ...options
 });
 
@@ -126,12 +102,6 @@ export const getApiV1JournalingSubById = <ThrowOnError extends boolean = false>(
     ...options
 });
 
-export const postApiV1JournalingSubByIdUnpublish = <ThrowOnError extends boolean = false>(options: Options<PostApiV1JournalingSubByIdUnpublishData, ThrowOnError>) => (options.client ?? client).post<PostApiV1JournalingSubByIdUnpublishResponses, PostApiV1JournalingSubByIdUnpublishErrors, ThrowOnError>({
-    responseType: 'json',
-    url: '/api/v1/journaling/sub/{id}/unpublish',
-    ...options
-});
-
 export const getApiV1JournalingSelf = <ThrowOnError extends boolean = false>(options?: Options<GetApiV1JournalingSelfData, ThrowOnError>) => (options?.client ?? client).get<GetApiV1JournalingSelfResponses, unknown, ThrowOnError>({
     responseType: 'json',
     url: '/api/v1/journaling/self',
@@ -150,12 +120,6 @@ export const getApiV1JournalingById = <ThrowOnError extends boolean = false>(opt
     ...options
 });
 
-export const postApiV1JournalingByIdUnpublish = <ThrowOnError extends boolean = false>(options: Options<PostApiV1JournalingByIdUnpublishData, ThrowOnError>) => (options.client ?? client).post<PostApiV1JournalingByIdUnpublishResponses, PostApiV1JournalingByIdUnpublishErrors, ThrowOnError>({
-    responseType: 'json',
-    url: '/api/v1/journaling/{id}/unpublish',
-    ...options
-});
-
 export const getApiV1Journeys = <ThrowOnError extends boolean = false>(options?: Options<GetApiV1JourneysData, ThrowOnError>) => (options?.client ?? client).get<GetApiV1JourneysResponses, unknown, ThrowOnError>({
     responseType: 'json',
     url: '/api/v1/journeys/',
@@ -165,12 +129,6 @@ export const getApiV1Journeys = <ThrowOnError extends boolean = false>(options?:
 export const getApiV1JourneysById = <ThrowOnError extends boolean = false>(options: Options<GetApiV1JourneysByIdData, ThrowOnError>) => (options.client ?? client).get<GetApiV1JourneysByIdResponses, GetApiV1JourneysByIdErrors, ThrowOnError>({
     responseType: 'json',
     url: '/api/v1/journeys/{id}',
-    ...options
-});
-
-export const postApiV1JourneysByIdUnpublish = <ThrowOnError extends boolean = false>(options: Options<PostApiV1JourneysByIdUnpublishData, ThrowOnError>) => (options.client ?? client).post<PostApiV1JourneysByIdUnpublishResponses, PostApiV1JourneysByIdUnpublishErrors, ThrowOnError>({
-    responseType: 'json',
-    url: '/api/v1/journeys/{id}/unpublish',
     ...options
 });
 

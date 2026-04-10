@@ -11,18 +11,16 @@ import { JourneyDiscoveryCard } from '@/components/journey/journey-discovery-car
 import { useAuth } from '@/hooks/use-auth';
 import type { ActiveJourney } from '@/components/journey/journey-card';
 import type { DiscoveryJourney } from '@/components/journey/journey-discovery-card';
+import { getApiV1Journeys } from '@/sdk/strapi';
+import type { JourneyItem, JourneysListResponse } from '@/types/journey';
+import { extractJourneyName } from '@/types/journey';
 
 const CATEGORIES = ['All', 'Anxiety', 'Sleep', 'Depression', 'Stress', 'Focus'];
 
-const STRAPI_BASE = 'https://mindtalkbuddy.com';
-
-async function fetchAllJourneys(): Promise<DiscoveryJourney[]> {
-  const res = await fetch(
-    `${STRAPI_BASE}/api/mindful-journeys?populate=icon&pagination[pageSize]=50&_t=${Date.now()}`
-  );
-  if (!res.ok) return [];
-  const data = await res.json() as { data?: DiscoveryJourney[] };
-  return data.data ?? [];
+async function fetchAllJourneys(): Promise<JourneyItem[]> {
+  const res = await getApiV1Journeys({ query: { limit: 50, status: 'PUBLISHED' } });
+  const data = res.data as JourneysListResponse | undefined;
+  return data?.data?.items ?? [];
 }
 
 export default function AuthJourneyPage() {
@@ -30,7 +28,7 @@ export default function AuthJourneyPage() {
   const { user } = useAuth();
 
   const [activeJourneys, setActiveJourneys] = useState<ActiveJourney[]>([]);
-  const [allJourneys, setAllJourneys] = useState<DiscoveryJourney[]>([]);
+  const [allJourneys, setAllJourneys] = useState<JourneyItem[]>([]);
   const [loadingActive, setLoadingActive] = useState(true);
   const [loadingAll, setLoadingAll] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
@@ -88,7 +86,8 @@ export default function AuthJourneyPage() {
       router.push('/login');
       return;
     }
-    const jId = journey.documentId ?? journey.id;
+    const jId = journey.id;
+    const jName = extractJourneyName(journey.name as JourneyItem['name']);
     try {
       setSubscribingId(jId);
       const cleanMobile = mobile.replace(/\D/g, '');
@@ -97,10 +96,10 @@ export default function AuthJourneyPage() {
       const journeyRef = ref(database, `userJourneysMobile/${cleanMobile}/journeys/${jId}`);
       await set(journeyRef, {
         journeyId: jId,
-        name: typeof journey.name === 'string' ? journey.name : '',
+        name: jName,
         startDate: new Date().toISOString(),
         currentDay: 1,
-        totalDays: (journey.journey?.length ?? journey.days?.length) ?? 30,
+        totalDays: (journey.steps?.length ?? journey.days?.length ?? journey.journey?.length) ?? 30,
         streak: 0,
         isPremium: journey.isPremium ?? false,
         progress: 0,
@@ -117,16 +116,15 @@ export default function AuthJourneyPage() {
   const subscribedIds = new Set(activeJourneys.map((j) => j.journeyId));
 
   const filteredJourneys = allJourneys.filter((j) => {
-    const name = typeof j.name === 'string' ? j.name.toLowerCase() : '';
+    const name = extractJourneyName(j.name).toLowerCase();
     const matchSearch = name.includes(searchQuery.toLowerCase());
     const matchCategory =
       activeCategory === 'All' ||
-      (typeof j.category === 'string' && j.category.includes(activeCategory)) ||
       name.includes(activeCategory.toLowerCase());
     return matchSearch && matchCategory;
   });
 
-  const featuredJourney = allJourneys.find((j) => j.isFeatured) ?? allJourneys[0];
+  const featuredJourney = allJourneys[0];
   const quickPicks = filteredJourneys
     .filter((j) => j.documentId !== featuredJourney?.documentId)
     .slice(0, 10);

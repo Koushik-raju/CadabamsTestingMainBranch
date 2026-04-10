@@ -3,25 +3,21 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { Play, ChevronRight } from 'lucide-react';
-import { BackButton } from '@/components/common/back-button';
-import { CategoryFilter } from '@/components/wellness/category-filter';
+import { BackButton } from '@/components/shared/navigation/back-button';
 import { AudioPlayer } from '@/components/wellness/audio-player';
 import { Skeleton } from '@/components/ui/skeleton';
-import type { MindfulMinute, MindfulMinuteAudio } from '@/types/wellness';
+import type { MindfulMinute, MindfulMinuteAudio, MindfulMinuteDetailResponse } from '@/types/wellness';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
-
-const DEFAULT_CATS = ['All', 'Sleep', 'Anxiety', 'Focus', 'Short'];
+import { getApiV1MindfulMinutesSlugBySlug } from '@/sdk/strapi';
 
 export default function MindfulMinuteDetailPage() {
   const params = useParams();
   const slug = typeof params?.slug === 'string' ? params.slug : '';
-  const router = useRouter();
 
   const [mindfulMinute, setMindfulMinute] = useState<MindfulMinute | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [selectedCategory, setSelectedCategory] = useState('All');
   const [searchQuery, setSearchQuery] = useState('');
   const [activeAudio, setActiveAudio] = useState<MindfulMinuteAudio | null>(null);
 
@@ -31,13 +27,10 @@ export default function MindfulMinuteDetailPage() {
       setIsLoading(true);
       setError(null);
       try {
-        const res = await fetch(
-          `https://mindtalkbuddy.com/api/mindful-minutes?filters[slug][$eq]=${slug}&populate=*`
-        );
-        if (!res.ok) throw new Error('Failed to fetch');
-        const { data } = await res.json();
-        if (data && data.length > 0) {
-          setMindfulMinute(data[0] as MindfulMinute);
+        const res = await getApiV1MindfulMinutesSlugBySlug({ path: { slug } });
+        const data = (res.data as MindfulMinuteDetailResponse)?.data;
+        if (data) {
+          setMindfulMinute(data);
         } else {
           setError('Mindful minute not found');
         }
@@ -52,29 +45,10 @@ export default function MindfulMinuteDetailPage() {
   }, [slug]);
 
   const audios = useMemo(() => {
-    let list = mindfulMinute?.audio ?? [];
-    if (searchQuery) {
-      list = list.filter((a) =>
-        a.title.toLowerCase().includes(searchQuery.toLowerCase())
-      );
-    }
-    if (selectedCategory !== 'All') {
-      list = list.filter((a) => {
-        const cats = Array.isArray(a.category) ? a.category : a.category ? [a.category] : [];
-        return cats.includes(selectedCategory);
-      });
-    }
-    return list;
-  }, [mindfulMinute, searchQuery, selectedCategory]);
-
-  const categories = useMemo(() => {
-    const cats = new Set<string>(DEFAULT_CATS);
-    (mindfulMinute?.audio ?? []).forEach((a) => {
-      if (Array.isArray(a.category)) a.category.forEach((c) => cats.add(c));
-      else if (a.category) cats.add(a.category as string);
-    });
-    return Array.from(cats);
-  }, [mindfulMinute]);
+    const list = mindfulMinute?.audios ?? [];
+    if (!searchQuery) return list;
+    return list.filter((a) => a.title.toLowerCase().includes(searchQuery.toLowerCase()));
+  }, [mindfulMinute, searchQuery]);
 
   if (isLoading) {
     return (
@@ -131,13 +105,6 @@ export default function MindfulMinuteDetailPage() {
       </div>
 
       <main className="flex-1 px-4 py-4 space-y-5 max-w-2xl mx-auto w-full pb-20">
-        {/* Category filter */}
-        <CategoryFilter
-          categories={categories}
-          selected={selectedCategory}
-          onSelect={setSelectedCategory}
-        />
-
         <div className="flex justify-between items-center">
           <h3 className="font-bold text-foreground text-[15px]">All Audio</h3>
           <button className="text-sm font-bold text-muted-foreground flex items-center gap-1">
@@ -166,7 +133,7 @@ export default function MindfulMinuteDetailPage() {
                     </h4>
                     <div className="flex items-center gap-2 mt-1.5">
                       <span className="text-[11px] bg-muted text-muted-foreground px-2.5 py-0.5 rounded-full font-bold">
-                        {audio.duration ?? (idx % 2 === 0 ? '3 min' : '5 min')}
+                        Audio
                       </span>
                       <span className="text-[11px] bg-muted text-muted-foreground px-2.5 py-0.5 rounded-full font-bold">
                         Audio
@@ -181,10 +148,10 @@ export default function MindfulMinuteDetailPage() {
               </div>
 
               {/* Inline audio player */}
-              {activeAudio?.documentId === audio.documentId && audio.audio?.url && (
+              {activeAudio?.documentId === audio.documentId && audio.audioUrl && (
                 <div className="mt-2">
                   <AudioPlayer
-                    src={audio.audio.url}
+                    src={audio.audioUrl}
                     title={audio.title}
                     autoPlay
                   />

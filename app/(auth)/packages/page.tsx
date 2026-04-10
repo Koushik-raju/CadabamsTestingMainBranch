@@ -6,7 +6,7 @@ import { Plus, Package } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
-import { BackButton } from '@/components/common/back-button';
+import { BackButton } from '@/components/shared/navigation/back-button';
 import { PackageListCard } from '@/components/package/package-list-card';
 import { getPackagesManaged } from '@/sdk/auth-and-crm';
 import type { BookedPackage } from '@/types/package';

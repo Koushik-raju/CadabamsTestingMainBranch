@@ -12,7 +12,7 @@ import { collection, query, orderBy, getDocs, addDoc, deleteDoc, doc } from 'fir
 import { ref as storageRef, uploadBytes, getDownloadURL, deleteObject } from 'firebase/storage';
 import { Capacitor } from '@capacitor/core';
 import { storage, firestore } from '@/lib/firebase';
-import { BackButton } from '@/components/common/back-button';
+import { BackButton } from '@/components/shared/navigation/back-button';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';

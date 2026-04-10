@@ -4,7 +4,7 @@ import { useState, useEffect, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { Search } from 'lucide-react';
 import { Input } from '@/components/ui/input';
-import { BackButton } from '@/components/common/back-button';
+import { BackButton } from '@/components/shared/navigation/back-button';
 import { CategoryFilter } from '@/components/wellness/category-filter';
 import { ResourceGrid } from '@/components/wellness/resource-grid';
 import { Skeleton } from '@/components/ui/skeleton';

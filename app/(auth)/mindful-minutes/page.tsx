@@ -4,22 +4,17 @@ import { useState, useEffect, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import { Play, Eye } from 'lucide-react';
-import { BackButton } from '@/components/common/back-button';
+import { BackButton } from '@/components/shared/navigation/back-button';
 import { CategoryFilter } from '@/components/wellness/category-filter';
 import { Skeleton } from '@/components/ui/skeleton';
 import { cn } from '@/lib/utils';
-import type { MindfulMinute } from '@/types/wellness';
+import type { MindfulMinute, MindfulMinutesListResponse } from '@/types/wellness';
+import { getApiV1MindfulMinutes } from '@/sdk/strapi';
 
-type CoverImage = {
-  webImage?: { url?: string };
-  mobileImage?: { url?: string };
-};
-
-function getImageUrl(coverImage?: CoverImage): string {
-  const url = coverImage?.webImage?.url || coverImage?.mobileImage?.url;
-  if (!url) return '/placeholder.png';
-  if (url.startsWith('http')) return url.split('?')[0];
-  return `https://admin.mindtalkbuddy.com${url}`.split('?')[0];
+function getImageUrl(coverImageUrl?: string): string {
+  if (!coverImageUrl) return '/placeholder.png';
+  if (coverImageUrl.startsWith('http')) return coverImageUrl.split('?')[0];
+  return `https://admin.mindtalkbuddy.com${coverImageUrl}`.split('?')[0];
 }
 
 const BROWSE_BY_NEED = [
@@ -29,7 +24,7 @@ const BROWSE_BY_NEED = [
   { title: 'After a tough moment', desc: 'Grounding resets to come back to now', icon: '🫂' },
 ];
 
-const DEFAULT_CATEGORIES = ['All', 'Audio', 'Visual', 'Breath only', 'Under 5 min'];
+const DEFAULT_CATEGORIES = ['All'];
 
 export default function MindfulMinutesPage() {
   const router = useRouter();
@@ -45,17 +40,14 @@ export default function MindfulMinutesPage() {
     setIsLoading(true);
     setError(null);
     try {
-      const response = await fetch(
-        'https://mindtalkbuddy.com/api/mindful-minutes?populate=*'
-      );
-      const { data } = await response.json();
-      if (!Array.isArray(data)) throw new Error('Invalid data format');
+      const res = await getApiV1MindfulMinutes();
+      const { items } = (res.data as MindfulMinutesListResponse).data;
+      if (!Array.isArray(items)) throw new Error('Invalid data format');
 
       const catSet = new Set<string>(DEFAULT_CATEGORIES);
-      const sanitized: MindfulMinute[] = data.map((v: MindfulMinute) => {
-        const cats = Array.isArray(v.category) ? v.category : [];
-        cats.forEach((c) => catSet.add(c));
-        return { ...v, category: cats };
+      const sanitized: MindfulMinute[] = items.map((v) => {
+        if (v.category) catSet.add(v.category);
+        return v;
       });
       setVideos(sanitized);
       const prioritized = [...DEFAULT_CATEGORIES];
@@ -73,8 +65,7 @@ export default function MindfulMinutesPage() {
 
   const filteredVideos = useMemo(() => {
     return videos.filter((v) => {
-      const cats = Array.isArray(v.category) ? v.category : [];
-      const matchCat = selectedCategory === 'All' || cats.includes(selectedCategory);
+      const matchCat = selectedCategory === 'All' || v.category === selectedCategory;
       const matchSearch = v.title.toLowerCase().includes(searchQuery.toLowerCase());
       return matchCat && matchSearch;
     });
@@ -170,7 +161,7 @@ export default function MindfulMinutesPage() {
             <div className="flex justify-between items-end">
               <h3 className="font-bold text-foreground text-[17px]">Featured reset</h3>
               <button
-                onClick={() => { setSelectedCategory('Audio'); setViewMode('list'); }}
+                onClick={() => { setViewMode('list'); setSelectedCategory('All'); }}
                 className="text-[13px] font-bold text-primary"
               >
                 View all audio
@@ -183,7 +174,7 @@ export default function MindfulMinutesPage() {
               <div className="p-4 flex gap-5">
                 <div className="relative w-32 h-28 rounded-xl overflow-hidden flex-shrink-0 bg-muted border border-border/50">
                   <Image
-                    src={getImageUrl(featuredVideo.coverImage)}
+                    src={getImageUrl(featuredVideo.coverImageUrl)}
                     alt={featuredVideo.title}
                     fill
                     className="object-cover"
@@ -196,7 +187,7 @@ export default function MindfulMinutesPage() {
                     </h4>
                     <div className="flex flex-wrap gap-2">
                       <span className="text-[11px] bg-muted text-muted-foreground px-2.5 py-1 rounded font-bold uppercase tracking-tight">
-                        {featuredVideo.duration ?? '1:30 min'}
+                        {'1:30 min'}
                       </span>
                       <span className="text-[11px] bg-muted text-muted-foreground px-2.5 py-1 rounded font-bold uppercase tracking-tight">
                         Audio · Guided
@@ -247,7 +238,7 @@ export default function MindfulMinutesPage() {
                     <div className="p-3 flex gap-4">
                       <div className="relative w-[72px] h-[72px] rounded-xl overflow-hidden flex-shrink-0 bg-muted border border-border/30">
                         <Image
-                          src={getImageUrl(video.coverImage)}
+                          src={getImageUrl(video.coverImageUrl)}
                           alt={video.title}
                           fill
                           className="object-cover"
@@ -259,10 +250,10 @@ export default function MindfulMinutesPage() {
                         </h4>
                         <div className="flex items-center gap-2 mt-1">
                           <span className="text-[11px] bg-muted text-muted-foreground px-2 py-0.5 rounded font-bold">
-                            {video.duration ?? '3 min'}
+                            {'3 min'}
                           </span>
                           <span className="text-[11px] bg-muted text-muted-foreground px-2 py-0.5 rounded font-bold">
-                            {Array.isArray(video.category) ? (video.category[0] ?? 'Audio') : 'Audio'}
+                            {video.category ?? 'Audio'}
                           </span>
                         </div>
                         <div className="flex items-center gap-1.5 text-primary font-extrabold text-[13px] mt-1.5">
@@ -288,7 +279,7 @@ export default function MindfulMinutesPage() {
               {BROWSE_BY_NEED.map((item) => (
                 <div
                   key={item.title}
-                  onClick={() => { setSelectedCategory(item.title); setViewMode('list'); }}
+                  onClick={() => { setViewMode('list'); setSelectedCategory('All'); }}
                   className="bg-card border border-border rounded-2xl p-4 flex flex-col gap-3 cursor-pointer active:scale-[0.98] transition-transform min-h-[136px]"
                 >
                   <div className="w-10 h-10 rounded-xl bg-muted flex items-center justify-center text-xl">
