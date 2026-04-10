@@ -253,7 +253,7 @@ function AssessmentAnalysisContent() {
 
             <Button
               className="w-full bg-orange-500 hover:bg-orange-600 text-white"
-              onClick={() => router.push('/appointments')}
+              onClick={() => router.push('/consult/appointments')}
             >
               Book appointment with a specialist
             </Button>

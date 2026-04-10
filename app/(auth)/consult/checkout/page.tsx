@@ -161,7 +161,7 @@ function CheckoutContent() {
   return (
     <div className="min-h-screen bg-background">
       <div className="flex items-center gap-3 px-4 pt-6 pb-4 border-b border-border">
-        <BackButton fallback="/find-therapist" />
+        <BackButton fallback="/consult/find-therapist" />
         <h1 className="text-base font-semibold text-foreground">
           Confirm &amp; Pay
         </h1>
