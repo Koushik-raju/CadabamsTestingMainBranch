@@ -1,16 +1,17 @@
 'use client';
 
-import { useState, useEffect, Suspense } from 'react';
+import { Suspense, useMemo } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
+import useSWR from 'swr';
 import { ref, get } from 'firebase/database';
 import { database } from '@/lib/firebase';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
-import { BackButton } from '@/components/common/back-button';
+import { BackButton } from '@/components/shared/navigation/back-button';
 import { useAuth } from '@/hooks/use-auth';
-import { Calendar, BarChart3, AlertCircle, ChevronRight } from 'lucide-react';
+import { Calendar, BarChart3, AlertCircle, ChevronRight, Sparkles } from 'lucide-react';
 
 interface SubmissionEntry {
   date?: string;
@@ -20,6 +21,25 @@ interface SubmissionEntry {
 interface Submission {
   date: string;
   data: SubmissionEntry;
+}
+
+interface SubmissionData {
+  submissions: Submission[];
+  isLoading: boolean;
+  error: string | null;
+}
+
+async function fetchSubmissions(leadId: string, assessmentId: string): Promise<Submission[]> {
+  const snap = await get(ref(database, `assessments/${leadId}/${assessmentId}`));
+  if (!snap.exists()) return [];
+  const data = snap.val() as Record<string, SubmissionEntry>;
+  return Object.values(data)
+    .filter(Boolean)
+    .map((entry) => ({
+      date: entry.date as string || new Date().toISOString(),
+      data: entry,
+    }))
+    .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 }
 
 function formatDate(dateStr: string): string {
@@ -34,6 +54,30 @@ function formatDate(dateStr: string): string {
   } catch {
     return dateStr;
   }
+}
+
+function deriveScoreSummary(submissions: Submission[]): { label: string; value: string } | null {
+  if (submissions.length === 0) return null;
+  const latest = submissions[0];
+  const entries = Object.entries(latest.data).filter(([key]) => key !== 'date' && !key.startsWith('_'));
+  const numericScores: number[] = [];
+  entries.forEach(([, value]) => {
+    const entryData = value as SubmissionEntry;
+    const selected = entryData?.selected;
+    if (typeof selected === 'number') {
+      numericScores.push(selected);
+    }
+  });
+  if (numericScores.length === 0) return null;
+  const avg = numericScores.reduce((a, b) => a + b, 0) / numericScores.length;
+  const maxPossible = 5;
+  const percentage = Math.round((avg / maxPossible) * 100);
+  let label = 'Low';
+  if (percentage >= 80) label = 'High';
+  else if (percentage >= 60) label = 'Moderate';
+  else if (percentage >= 40) label = 'Low';
+  else label = 'Very Low';
+  return { label, value: `${label} (${percentage}%)` };
 }
 
 function SubmissionCard({ submission, index }: { submission: Submission; index: number }) {
@@ -95,55 +139,26 @@ function AssessmentAnalysisContent() {
   const { user } = useAuth();
   const assessmentId = searchParams.get('id');
 
-  const [submissions, setSubmissions] = useState<Submission[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    if (!assessmentId) {
-      setError('No assessment ID provided.');
-      setLoading(false);
-      return;
-    }
-
-    async function fetch() {
-      try {
-        const leadId = String(user?.lead_id || JSON.parse(localStorage.getItem('user') || '{}').lead_id || '');
-        if (!leadId) {
-          setError('Please log in to view your assessment history.');
-          setLoading(false);
-          return;
-        }
-
-        const snap = await get(ref(database, `assessments/${leadId}/${assessmentId}`));
-        if (!snap.exists()) {
-          setSubmissions([]);
-          setLoading(false);
-          return;
-        }
-
-        const data = snap.val() as Record<string, SubmissionEntry>;
-        const list: Submission[] = Object.values(data)
-          .filter(Boolean)
-          .map((entry) => ({
-            date: entry.date as string || new Date().toISOString(),
-            data: entry,
-          }))
-          .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
-
-        setSubmissions(list);
-      } catch (err) {
-        console.error('Error loading analysis:', err);
-        setError('Failed to load assessment history.');
-      } finally {
-        setLoading(false);
+  const leadId = useMemo(() => {
+    if (user?.lead_id) return String(user.lead_id);
+    try {
+      const raw = localStorage.getItem('user');
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        return parsed.lead_id ? String(parsed.lead_id) : null;
       }
-    }
+    } catch {}
+    return null;
+  }, [user]);
 
-    fetch();
-  }, [assessmentId, user?.lead_id]);
+  const { data: submissions, isLoading, error } = useSWR<Submission[]>(
+    leadId && assessmentId ? ['assessment-submissions', leadId, assessmentId] : null,
+    () => fetchSubmissions(leadId!, assessmentId!)
+  );
 
-  if (loading) {
+  const scoreSummary = useMemo(() => deriveScoreSummary(submissions || []), [submissions]);
+
+  if (isLoading) {
     return (
       <div className="min-h-screen bg-background flex flex-col">
         <div className="flex items-center gap-2 px-3 py-3 border-b border-border">
@@ -157,11 +172,11 @@ function AssessmentAnalysisContent() {
     );
   }
 
-  if (error) {
+  if (error || !leadId) {
     return (
       <div className="min-h-screen bg-background flex flex-col items-center justify-center p-6">
         <AlertCircle className="w-12 h-12 text-destructive mb-4" />
-        <p className="text-destructive text-center">{error}</p>
+        <p className="text-destructive text-center">{error || 'Please log in to view your assessment history.'}</p>
         <Button className="mt-4" variant="outline" onClick={() => router.back()}>
           Go Back
         </Button>
@@ -171,14 +186,13 @@ function AssessmentAnalysisContent() {
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
-      {/* Header */}
       <div className="flex items-center gap-2 px-3 py-3 border-b border-border bg-card">
         <BackButton fallback="/assessments" />
-        <h1 className="text-base sm:text-lg font-semibold text-foreground">Assessment History</h1>
+        <h1 className="text-base sm:text-lg font-semibold text-foreground">Assessment Report</h1>
       </div>
 
       <div className="flex-1 overflow-y-auto p-4 space-y-3">
-        {submissions.length === 0 ? (
+        {(!submissions || submissions.length === 0) ? (
           <div className="flex flex-col items-center justify-center py-16 text-center">
             <div className="w-14 h-14 rounded-full bg-muted flex items-center justify-center mb-4">
               <BarChart3 className="w-6 h-6 text-muted-foreground" />
@@ -187,7 +201,7 @@ function AssessmentAnalysisContent() {
             <p className="text-sm text-muted-foreground mb-4">
               Complete the assessment to see your results here.
             </p>
-            <Button onClick={() => router.push(`/assessment/form?id=${assessmentId}`)}>
+            <Button onClick={() => router.push(`/assessment/${assessmentId}`)}>
               Take Assessment
               <ChevronRight className="w-4 h-4 ml-1" />
             </Button>
@@ -201,11 +215,49 @@ function AssessmentAnalysisContent() {
               <Button
                 size="sm"
                 variant="outline"
-                onClick={() => router.push(`/assessment/form?id=${assessmentId}`)}
+                onClick={() => router.push(`/assessment/${assessmentId}`)}
               >
                 Retake
               </Button>
             </div>
+
+            {scoreSummary && (
+              <Card className="bg-gradient-to-r from-orange-50 to-amber-50 border-orange-200">
+                <CardContent className="pt-4 pb-4">
+                  <div className="flex items-center gap-2 mb-2">
+                    <Sparkles className="w-4 h-4 text-orange-600" />
+                    <Badge className="bg-orange-100 text-orange-700 border-orange-200 text-xs">
+                      AI-generated summary
+                    </Badge>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm font-medium text-foreground">Overall Score</p>
+                      <p className="text-xs text-muted-foreground">Based on your latest submission</p>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-2xl font-bold text-orange-600">{scoreSummary.value}</p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+
+            <Card className="bg-blue-50 border-blue-200">
+              <CardContent className="pt-4 pb-4">
+                <p className="text-xs text-blue-800">
+                  This summary is generated by AI based on your answers. It is for informational purposes only and does not replace professional medical advice.
+                </p>
+              </CardContent>
+            </Card>
+
+            <Button
+              className="w-full bg-orange-500 hover:bg-orange-600 text-white"
+              onClick={() => router.push('/appointments')}
+            >
+              Book appointment with a specialist
+            </Button>
+
             {submissions.map((submission, index) => (
               <SubmissionCard
                 key={submission.date + index}
