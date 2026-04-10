@@ -9,7 +9,7 @@ export interface NavItem {
 
 export const navigationMenuItems: NavItem[] = [
   { key: 'home', label: 'Home', path: '/home', icon: HomeIcon },
-  { key: 'ai', label: 'AI', path: '/new-chat', icon: MessageSquareIcon },
+  { key: 'ai', label: 'AI', path: '/chat/new', icon: MessageSquareIcon },
   { key: 'appointments', label: 'Appts', path: '/doctors-list', icon: CalendarIcon },
   { key: 'profile', label: 'Profile', path: '/profile', icon: UserIcon },
 ];

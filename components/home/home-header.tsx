@@ -85,7 +85,7 @@ export function HomeHeader({ userName, profileImage, moodTracker, onMoodClick }:
         {/* AI search bar — overlaps the card section below */}
         <div className="mt-1 mb-[-24px] z-50">
           <button
-            onClick={() => router.push('/new-chat')}
+            onClick={() => router.push('/chat/new')}
             className="w-full bg-card rounded-xl shadow-lg px-4 py-2 flex items-center gap-4 border border-border hover:bg-muted/30 transition-all active:scale-[0.98]"
             aria-label="Chat with Dr. Riya"
           >

@@ -42,3 +42,101 @@ Fall back to Grep/Glob/Read **only** when the graph doesn't cover what you need.
 2. Use `detect_changes` for code review.
 3. Use `get_affected_flows` to understand impact.
 4. Use `query_graph` pattern="tests_for" to check coverage.
+
+### Component Co-location Conventions
+
+**Feature-based components**: Components are grouped by feature under `components/<feature>/`. For example:
+- `components/chat/` - chat feature with subdirectories:
+  - `components/chat/history/` - chat history components (thread-card, thread-list, loading-state, empty-state)
+  - `components/chat/chat-header.tsx` - chat page header
+  - `components/chat/message-bubble.tsx` - message bubble component
+  - `components/chat/message-list.tsx` - message list container
+  - `components/chat/chat-input.tsx` - chat input form
+  - `components/chat/history-drawer.tsx` - history drawer sheet
+
+**Shared components**: Components shared across multiple features are in `components/shared/`. For example:
+- `components/shared/navigation/back-button.tsx` - shared navigation components
+
+**Custom hooks**: Data fetching and stateful logic hooks go in `hooks/`. For example:
+- `hooks/use-threads.ts` - SWR hook for fetching thread data with cache key `['threads', resourceId]`
+
+## Component Conventions
+
+### Feature-based Components
+Components are grouped by feature under `components/<feature>/`. For example:
+
+```
+components/
+  find-therapist/
+    context.tsx            # Feature context
+    wizard-view.tsx        # Wizard component
+    list-view.tsx          # List view component
+    doctor-card.tsx        # Doctor card for this feature
+    filter-sheets.tsx      # Filter sheet components
+  booking/
+    date-strip.tsx         # Date strip and tile components
+    slot-section.tsx       # Time slot section component
+    campus-sheet.tsx       # Campus selection sheet
+  checkout/
+    booking-summary-card.tsx    # Booking details card
+    payment-summary-card.tsx     # Payment summary card
+  appointments/
+    appointment-card.tsx   # Appointment card for this feature
+  shared/
+    navigation/
+      back-button.tsx     # Shared back button component
+```
+
+### Data Fetching
+
+This project uses **SWR** for data fetching. Follow these conventions:
+
+#### SWR Hooks
+All data fetching hooks are in the `hooks/` directory and wrap SDK calls with SWR:
+
+| Hook | SDK Call | Returns |
+|------|----------|---------|
+| `useDoctor(id)` | `getDoctorsById` | `{ doctor, isLoading, error }` |
+| `useAppointments()` | `getAppointments` + `getAppointmentsPrevious` | `{ upcoming, past, isLoading, error }` |
+| `useSlots(doctorId, consultTypeId)` | `getAppointmentsSlots` | `{ slots, isLoading, error }` |
+| `useSlotPrice(slotId)` | `getAppointmentsSlotsBySlotIdPrice` | `{ price, isLoading, error }` |
+| `useCampuses()` | `getMastersCampuses` | `{ campuses, isLoading, error }` |
+| `useDoctorAvailability(id)` | `getDoctorsByIdAvailability` | `{ availability, isLoading, error }` |
+
+#### SWR Key Factory
+All SWR cache keys are defined in `lib/swr-keys.ts`:
+
+```typescript
+export function doctorKey(id: number | string): string {
+  return `/doctors/${id}`;
+}
+
+export function appointmentsKey(): string {
+  return '/appointments';
+}
+
+export function slotsKey(doctorId: number | string, consultTypeId: number): string {
+  return `/slots/${doctorId}/${consultTypeId}`;
+}
+
+export function slotPriceKey(slotId: number | string): string {
+  return `/slot-price/${slotId}`;
+}
+
+export function campusesKey(): string {
+  return '/campuses';
+}
+
+export function doctorAvailabilityKey(id: number | string): string {
+  return `/doctor-availability/${id}`;
+}
+```
+
+#### SWR Configuration
+Global SWR configuration is set in `app/(auth)/layout.tsx` with `revalidateOnFocus: false` to prevent spurious refetches in the Capacitor shell.
+
+#### Error Handling
+Each hook returns `{ data, isLoading, error }`. Pages should handle all three states:
+- Show loading skeleton while `isLoading` is true
+- Show error message with retry button if `error` exists
+- Render data normally once loaded

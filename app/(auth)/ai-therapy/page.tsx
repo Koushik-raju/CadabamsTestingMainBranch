@@ -4,7 +4,7 @@ import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import { Plus, History } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { BackButton } from '@/components/common/back-button';
+import { BackButton } from '@/components/shared/navigation/back-button';
 import { useAuth } from '@/hooks/use-auth';
 
 export default function AiTherapyPage() {
@@ -58,7 +58,7 @@ export default function AiTherapyPage() {
         <div className="w-full max-w-sm space-y-3 mt-8">
           <Button
             className="w-full h-14 rounded-full text-sm font-semibold gap-2"
-            onClick={() => router.push('/new-chat')}
+            onClick={() => router.push('/chat/new')}
             aria-label="Start a new conversation with Dr. Riya"
           >
             <Plus className="w-5 h-5" />
@@ -68,7 +68,7 @@ export default function AiTherapyPage() {
           <Button
             variant="outline"
             className="w-full h-14 rounded-full text-sm font-semibold gap-2"
-            onClick={() => router.push('/chat-history')}
+            onClick={() => router.push('/chat')}
             aria-label="View past chat sessions"
           >
             <History className="w-5 h-5" />
