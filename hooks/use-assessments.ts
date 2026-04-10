@@ -4,11 +4,17 @@ import { getApiV1Assessments, getApiV1AssessmentsById } from '@/sdk/strapi';
 import type { GetApiV1AssessmentsResponses } from '@/sdk/strapi';
 import { swrConfig } from '@/lib/swr-config';
 
-const assessmentFetcher = (query: { limit: number; offset: number; status?: 'ALL' | 'DRAFT' | 'PUBLISHED' }) =>
-  getApiV1Assessments({ query }).then((r) => r.data);
+const assessmentFetcher = async (query: { limit: number; offset: number; status?: 'ALL' | 'DRAFT' | 'PUBLISHED' }) => {
+  const response = await getApiV1Assessments({ query });
+  console.log('[use-assessments] Raw response:', JSON.stringify(response, null, 2).slice(0, 500));
+  return response.data;
+};
 
-const assessmentByIdFetcher = (id: string) =>
-  getApiV1AssessmentsById({ path: { id } }).then((r) => r.data);
+const assessmentByIdFetcher = async (id: string) => {
+  const response = await getApiV1AssessmentsById({ path: { id } });
+  console.log('[use-assessment-by-id] Raw response:', JSON.stringify(response, null, 2).slice(0, 500));
+  return response.data;
+};
 
 export interface AssessmentItem {
   id: string;
@@ -79,8 +85,8 @@ export function useAssessments(options?: { limit?: number; status?: 'ALL' | 'DRA
   const status = options?.status ?? 'PUBLISHED';
 
   return useSWRInfinite(
-    (pageIndex: number) => ['assessments', pageIndex, limit, status],
-    ([, , offset, status]) => assessmentFetcher({ limit, offset: offset * limit, status }),
+    (pageIndex: number) => ['assessments', pageIndex * limit, limit, status],
+    ([, offset, , status]) => assessmentFetcher({ limit, offset, status }),
     {
       ...swrConfig,
       revalidateFirstPage: false,
