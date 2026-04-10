@@ -202,7 +202,7 @@ function DetailContent() {
     <div className="min-h-screen bg-white flex flex-col">
       {/* Header */}
       <div className="flex items-center justify-between px-4 pt-6 pb-2">
-        <BackButton fallback="/appointments" />
+        <BackButton fallback="/consult/appointments" />
         <h1 className="text-[17px] font-bold">Session Details</h1>
         <button
           type="button"
@@ -321,7 +321,7 @@ function DetailContent() {
                 icon={<FileText className="h-5 w-5" />}
                 title="Previous Notes"
                 subtitle="Review notes from last session"
-                onClick={() => router.push('/appointments')}
+                onClick={() => router.push('/consult/appointments')}
               />
             </div>
           </div>
