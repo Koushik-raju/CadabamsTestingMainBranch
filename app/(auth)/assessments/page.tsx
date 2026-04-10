@@ -104,7 +104,11 @@ export default function AssessmentsPage() {
   const categories = useMemo(() => {
     const cats = new Set<string>(['All']);
     allAssessments.forEach((a) => {
-      (a.category || []).forEach((c: string) => cats.add(c.charAt(0).toUpperCase() + c.slice(1).toLowerCase()));
+      (a.category || []).forEach((c: string) => {
+        if (c && c.trim()) {
+          cats.add(c.charAt(0).toUpperCase() + c.slice(1).toLowerCase());
+        }
+      });
     });
     return Array.from(cats);
   }, [allAssessments]);
@@ -121,13 +125,14 @@ export default function AssessmentsPage() {
     });
     const growth = published.slice(1).filter((a) => {
       const cats = (a.category || []).map((c: string) => c.toLowerCase());
-      return !cats.includes('anxiety') && !cats.includes('depression') && !cats.includes('sleep');
+      return !cats.includes('anxiety') && !cats.includes('depression') && !cats.includes('sleep') && cats.length > 0;
     });
     return { recommendedAssessment: first, popularScreenings: popular, personalGrowth: growth };
   }, [allAssessments]);
 
   const filteredAssessments = useMemo(() => {
     const grouped = [...popularScreenings, ...personalGrowth];
+    const filterLower = activeFilter.toLowerCase();
     if (activeFilter === 'All') {
       return grouped.filter(
         (assessment) =>
@@ -137,7 +142,7 @@ export default function AssessmentsPage() {
     }
     return grouped.filter(
       (assessment) =>
-        ((assessment.category || [])?.map((c: string) => c.toLowerCase()).includes(activeFilter.toLowerCase())) &&
+        ((assessment.category || [])?.map((c: string) => c.toLowerCase()).includes(filterLower)) &&
         (assessment.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
           (assessment.description?.toLowerCase().includes(searchTerm.toLowerCase()) ?? false))
     );
