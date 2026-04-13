@@ -87,7 +87,7 @@ export interface JourneyItem {
   description: JourneyRichText[];
   icon: string;
   iconId?: unknown;
-  grade?: unknown[];
+  grade?: string[];
   isPremium: boolean;
   inDraft: boolean;
   status: string;

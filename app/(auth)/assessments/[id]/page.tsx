@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { BackButton } from '@/components/shared/navigation/back-button';
-import { QuestionRenderer, type Question, type AnswerValue } from '@/components/assessment/question-renderer';
+import { QuestionRenderer, type Question, type AnswerValue } from '@/components/shared/questions/question-renderer';
 import { ChevronLeft, CheckCircle2, AlertCircle, Sparkles } from 'lucide-react';
 import { useAssessmentById, mapStrapiAssessment, submitAssessment } from '@/hooks/use-assessments';
 import { useAuth } from '@/hooks/use-auth';

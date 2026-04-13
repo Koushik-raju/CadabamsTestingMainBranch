@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { Skeleton } from '@/components/ui/skeleton';
 import { BackButton } from '@/components/shared/navigation/back-button';
-import { QuestionRenderer, type Question, type AnswerValue } from '@/components/assessment/question-renderer';
+import { QuestionRenderer, type Question, type AnswerValue } from '@/components/shared/questions/question-renderer';
 import { ChevronRight, ChevronLeft, CheckCircle2, AlertCircle } from 'lucide-react';
 import { getApiV1WorksheetsById } from '@/sdk/strapi';
 

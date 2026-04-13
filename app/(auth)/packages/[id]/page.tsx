@@ -122,7 +122,7 @@ export default function PackageDetailPage({ params }: { params: Promise<{ id: st
   const handleViewJourney = () => {
     if (!pkg?.journey_id) return;
     const isPreview = pkg.package_stage === 'booked' ? '&isPreview=true' : '';
-    router.push(`/journey?id=${pkg.journey_id}${isPreview}`);
+    router.push(`/journeys/${pkg.journey_id}/details`);
   };
 
   if (loading) {

@@ -9,7 +9,6 @@ const PUBLIC_ROUTES = [
   "/term-and-condition",
   "/worksheet",
   "/assessment",
-  "/journey",   // covers /journey/[id]
 ];
 
 function isPublicRoute(pathname: string): boolean {
