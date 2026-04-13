@@ -5,7 +5,7 @@ import {
   BookOpen, Gift, Trophy, FileText, Star,
   Check, ChevronRight, Zap,
 } from 'lucide-react';
-import { Sheet, SheetContent } from '@/components/ui/sheet';
+import { Sheet, SheetContent, SheetTitle } from '@/components/ui/sheet';
 import { getTypeColor } from './path-node';
 import type { PathChainNode } from './path-chain';
 import type { JourneyTask, JourneyRichText } from '@/types/journey';
@@ -171,6 +171,7 @@ export function JourneyTaskActionSheet({
         className="rounded-t-3xl p-0 overflow-hidden"
         style={{ maxHeight: '85vh' }}
       >
+        <SheetTitle className="sr-only">{title}</SheetTitle>
         <div className="overflow-y-auto max-h-[85vh]">
 
           {/* ── Coloured header ── */}

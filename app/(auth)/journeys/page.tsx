@@ -37,7 +37,9 @@ function useLatestAssessmentCategory(mobile: string | null) {
 function JourneysInner() {
   const searchParams = useSearchParams();
   const { user } = useAuth();
-  const mobile = (user as Record<string, unknown>)?.caller_mobile as string | undefined;
+  const mobile = (user as Record<string, unknown>)?.caller_mobile as
+    | string
+    | undefined;
 
   const [search, setSearch] = useState('');
   const [activeCategory, setActiveCategory] = useState(
@@ -55,28 +57,35 @@ function JourneysInner() {
   }, [journeys]);
 
   // Filter: grade match (exact) + text search on name + description
-  const filtered = useMemo(() => journeys.filter((j) => {
-    const name = extractJourneyName(j.name).toLowerCase();
-    const desc = extractJourneyDescription(j.description).toLowerCase();
-    const haystack = `${name} ${desc}`;
+  const filtered = useMemo(
+    () =>
+      journeys.filter((j) => {
+        const name = extractJourneyName(j.name).toLowerCase();
+        const desc = extractJourneyDescription(j.description).toLowerCase();
+        const haystack = `${name} ${desc}`;
 
-    const matchSearch = !search || haystack.includes(search.toLowerCase());
-    const matchCat =
-      activeCategory === 'All' ||
-      (j.grade ?? []).includes(activeCategory) ||
-      haystack.includes(activeCategory.toLowerCase());
+        const matchSearch = !search || haystack.includes(search.toLowerCase());
+        const matchCat =
+          activeCategory === 'All' ||
+          (j.grade ?? []).includes(activeCategory) ||
+          haystack.includes(activeCategory.toLowerCase());
 
-    return matchSearch && matchCat;
-  }), [journeys, search, activeCategory]);
+        return matchSearch && matchCat;
+      }),
+    [journeys, search, activeCategory]
+  );
 
   const featuredJourney = filtered[0] ?? null;
   const quickPicks = filtered.slice(1, 11);
 
   const recommendedCount = useMemo(() => {
     if (!recommendedCategory) return 0;
-    return journeys.filter((j) =>
-      (j.grade ?? []).includes(recommendedCategory) ||
-      extractJourneyName(j.name).toLowerCase().includes(recommendedCategory.toLowerCase())
+    return journeys.filter(
+      (j) =>
+        (j.grade ?? []).includes(recommendedCategory) ||
+        extractJourneyName(j.name)
+          .toLowerCase()
+          .includes(recommendedCategory.toLowerCase())
     ).length;
   }, [journeys, recommendedCategory]);
 
@@ -85,7 +94,9 @@ function JourneysInner() {
       {/* Header */}
       <div className="flex items-center gap-2 px-4 pt-5 pb-3">
         <BackButton fallback="/" />
-        <h1 className="flex-1 text-lg font-bold text-foreground">Explore Journeys</h1>
+        <h1 className="flex-1 text-lg font-bold text-foreground">
+          Explore Journeys
+        </h1>
       </div>
 
       {/* Recommendation banner */}
@@ -106,14 +117,16 @@ function JourneysInner() {
             <Skeleton key={i} className="h-8 w-20 rounded-2xl flex-shrink-0" />
           ))}
         </div>
-      ) : categories.length > 1 && (
-        <div className="mb-4">
-          <CategoryChips
-            categories={categories}
-            active={activeCategory}
-            onChange={setActiveCategory}
-          />
-        </div>
+      ) : (
+        categories.length > 1 && (
+          <div className="mb-4">
+            <CategoryChips
+              categories={categories}
+              active={activeCategory}
+              onChange={setActiveCategory}
+            />
+          </div>
+        )
       )}
 
       {/* Search bar */}
@@ -132,13 +145,17 @@ function JourneysInner() {
       <div className="px-4">
         {/* Featured Journey */}
         <section className="mb-6">
-          <h2 className="text-base font-bold text-foreground mb-3">Featured Journey</h2>
+          <h2 className="text-base font-bold text-foreground mb-3">
+            Featured Journey
+          </h2>
           {isLoading ? (
             <Skeleton className="w-full h-[220px] rounded-2xl" />
           ) : featuredJourney ? (
             <FeaturedJourneyCard journey={featuredJourney} />
           ) : (
-            <p className="text-sm text-muted-foreground py-4 text-center">No journeys found.</p>
+            <p className="text-sm text-muted-foreground py-4 text-center">
+              No journeys found.
+            </p>
           )}
         </section>
 
@@ -158,10 +175,7 @@ function JourneysInner() {
             ) : (
               <div className="grid grid-cols-2 gap-3">
                 {quickPicks.map((journey) => (
-                  <JourneyDiscoveryCard
-                    key={journey.documentId ?? journey.id}
-                    journey={journey}
-                  />
+                  <JourneyDiscoveryCard key={journey.id} journey={journey} />
                 ))}
               </div>
             )}
