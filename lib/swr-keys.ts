@@ -54,8 +54,8 @@ export function mindfulMinutesKey(): string {
   return '/mindful-minutes';
 }
 
-export function mindfulMinuteDetailKey(slug: string): string {
-  return `/mindful-minutes/${slug}`;
+export function mindfulMinuteDetailKey(slugOrId: string): string {
+  return `/mindful-minutes/detail/${slugOrId}`;
 }
 
 export function videosKey(): string {

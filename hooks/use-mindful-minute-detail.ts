@@ -1,17 +1,30 @@
 'use client';
 
 import useSWR from 'swr';
-import { getApiV1MindfulMinutesSlugBySlug } from '@/sdk/strapi';
+import {
+  getApiV1MindfulMinutesById,
+  getApiV1MindfulMinutesSlugBySlug,
+} from '@/sdk/strapi';
 import { mindfulMinuteDetailKey } from '@/lib/swr-keys';
 import type { MindfulMinute, MindfulMinuteDetailResponse } from '@/types/wellness';
 
-export function useMindfulMinuteDetail(slug: string) {
+export function useMindfulMinuteDetail(slugOrId: string) {
   const { data, error, isLoading } = useSWR(
-    slug ? mindfulMinuteDetailKey(slug) : null,
+    slugOrId ? mindfulMinuteDetailKey(slugOrId) : null,
     async () => {
-      const res = await getApiV1MindfulMinutesSlugBySlug({ path: { slug } });
+      // Try slug first
+      try {
+        const res = await getApiV1MindfulMinutesSlugBySlug({ path: { slug: slugOrId } });
+        const detail = (res.data as MindfulMinuteDetailResponse)?.data;
+        if (detail) return detail as MindfulMinute;
+      } catch {
+        // slug lookup failed, fall through to id lookup
+      }
+
+      // Fall back to id lookup
+      const res = await getApiV1MindfulMinutesById({ path: { id: slugOrId } });
       const detail = (res.data as MindfulMinuteDetailResponse)?.data;
-      if (!detail) throw new Error('Mindful minute not found');
+      if (!detail) throw new Error('not_found');
       return detail as MindfulMinute;
     },
     { revalidateOnFocus: false }

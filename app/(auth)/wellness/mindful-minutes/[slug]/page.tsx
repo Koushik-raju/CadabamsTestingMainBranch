@@ -25,8 +25,8 @@ function formatDuration(duration?: string): string {
 
 export default function MindfulMinuteDetailPage() {
   const params = useParams();
-  const slug = typeof params?.slug === 'string' ? params.slug : '';
-  const { mindfulMinute, isLoading, error } = useMindfulMinuteDetail(slug);
+  const slugOrId = typeof params?.slug === 'string' ? params.slug : '';
+  const { mindfulMinute, isLoading, error } = useMindfulMinuteDetail(slugOrId);
 
   const [searchQuery, setSearchQuery] = useState('');
   const [sortOrder, setSortOrder] = useState<SortOrder>('asc');
@@ -77,9 +77,17 @@ export default function MindfulMinuteDetailPage() {
   }
 
   if (error || !mindfulMinute) {
+    const isNotFound = !mindfulMinute || error?.message === 'not_found';
     return (
       <div className="min-h-screen bg-background flex flex-col items-center justify-center p-6 gap-4 text-center">
-        <p className="text-muted-foreground">{error?.message ?? 'Not found'}</p>
+        <p className="font-bold text-foreground text-lg">
+          {isNotFound ? '404' : 'Something went wrong'}
+        </p>
+        <p className="text-muted-foreground">
+          {isNotFound
+            ? 'This mindful minute could not be found.'
+            : error?.message}
+        </p>
         <Button asChild variant="outline">
           <Link href="/wellness/mindful-minutes">Back to Mindful Minutes</Link>
         </Button>
