@@ -55,7 +55,7 @@ export default function HomePage() {
             router.push('/chat');
             break;
           case 'videos':
-            router.push('/wellness/videos');
+            router.push('/wellness/video');
             break;
           case 'documents':
             router.push('/documents');
