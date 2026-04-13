@@ -3,6 +3,7 @@
 import { useRouter } from 'next/navigation';
 import { IndianRupee, Calendar, Package, Clock, CheckCircle, PlayCircle } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
+import { Card, CardContent } from '@/components/ui/card';
 import type { BookedPackage } from '@/types/package';
 
 interface PackageListCardProps {
@@ -25,7 +26,7 @@ function getStageBadge(stage: string) {
 export function PackageListCard({ pkg }: PackageListCardProps) {
   const router = useRouter();
   const { label, className, Icon } = getStageBadge(pkg.package_stage);
-  const packageName = pkg.package_id[1] ?? 'Package';
+  const packageName = String(pkg.package_id[1] ?? 'Package');
 
   const initials = packageName
     .split(' ')
@@ -35,34 +36,35 @@ export function PackageListCard({ pkg }: PackageListCardProps) {
     .toUpperCase();
 
   return (
-    <button
-      type="button"
+    <Card
+      className="cursor-pointer active:scale-[0.98] transition-transform"
       onClick={() => router.push(`/packages/${pkg.booked_package_id}`)}
-      className="w-full text-left bg-white rounded-2xl border border-border shadow-sm p-4 flex items-center gap-3 active:scale-[0.98] transition-transform"
     >
-      <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
-        <span className="text-sm font-semibold text-primary">{initials || <Package className="h-5 w-5" />}</span>
-      </div>
+      <CardContent className="p-4 flex items-center gap-3">
+        <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
+          <span className="text-sm font-semibold text-primary">{initials || <Package className="h-5 w-5" />}</span>
+        </div>
 
-      <div className="flex-1 min-w-0">
-        <div className="flex items-start justify-between gap-2">
-          <p className="font-semibold text-sm text-foreground line-clamp-1">{packageName}</p>
-          <Badge variant="outline" className={`text-[10px] shrink-0 capitalize gap-0.5 ${className}`}>
-            <Icon className="h-2.5 w-2.5" />
-            {label}
-          </Badge>
+        <div className="flex-1 min-w-0">
+          <div className="flex items-start justify-between gap-2">
+            <p className="font-semibold text-sm text-foreground line-clamp-1">{packageName}</p>
+            <Badge variant="outline" className={`text-[10px] shrink-0 capitalize gap-0.5 ${className}`}>
+              <Icon className="h-2.5 w-2.5" />
+              {label}
+            </Badge>
+          </div>
+          <div className="flex items-center gap-3 mt-1.5">
+            <span className="flex items-center gap-1 text-xs text-muted-foreground">
+              <IndianRupee className="h-3 w-3" />
+              {pkg.package_cost.toLocaleString('en-IN')}
+            </span>
+            <span className="flex items-center gap-1 text-xs text-muted-foreground">
+              <Calendar className="h-3 w-3" />
+              {pkg.date}
+            </span>
+          </div>
         </div>
-        <div className="flex items-center gap-3 mt-1.5">
-          <span className="flex items-center gap-1 text-xs text-muted-foreground">
-            <IndianRupee className="h-3 w-3" />
-            {pkg.package_cost.toLocaleString('en-IN')}
-          </span>
-          <span className="flex items-center gap-1 text-xs text-muted-foreground">
-            <Calendar className="h-3 w-3" />
-            {pkg.date}
-          </span>
-        </div>
-      </div>
-    </button>
+      </CardContent>
+    </Card>
   );
 }
