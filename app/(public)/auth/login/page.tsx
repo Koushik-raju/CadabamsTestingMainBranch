@@ -8,15 +8,16 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { toast } from 'react-toastify';
 import useSWRMutation from 'swr/mutation';
-import { ArrowLeft, Heart, ShieldCheck } from 'lucide-react';
+import { ArrowLeft, Heart } from 'lucide-react';
 import { PhoneInput, type Country } from '@/components/common/phone-input';
 import { OTPInput } from '@/components/common/otp-input';
 import { Button } from '@/components/ui/button';
-import { Dialog, DialogContent, DialogTitle, DialogDescription } from '@/components/ui/dialog';
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { Separator } from '@/components/ui/separator';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Dialog, DialogContent, DialogDescription, DialogTitle } from '@/components/ui/dialog';
 import { useAuth } from '@/hooks/use-auth';
-
-// ── Fetcher ───────────────────────────────────────────────
+import { cn } from '@/lib/utils';
 
 async function postJson<T>(url: string, { arg }: { arg: T }) {
   const res = await fetch(url, {
@@ -29,39 +30,10 @@ async function postJson<T>(url: string, { arg }: { arg: T }) {
   return data;
 }
 
-// ── Schema ────────────────────────────────────────────────
-
 const phoneSchema = z.object({
   phone: z.string().min(6, 'Enter a valid phone number'),
 });
 type PhoneForm = z.infer<typeof phoneSchema>;
-
-// ── Brand hero shared across steps ───────────────────────
-
-function AuthHero({ subtitle }: { subtitle: string }) {
-  return (
-    <div className="home-header-gradient px-6 pt-14 pb-10 flex flex-col gap-4">
-      <div className="flex items-center gap-3">
-        <div className="w-10 h-10 rounded-2xl bg-white/20 backdrop-blur-sm flex items-center justify-center">
-          <Heart className="w-5 h-5 text-white fill-white" />
-        </div>
-        <span className="text-[13px] font-bold text-white/90 tracking-[0.15em] uppercase">
-          Cadabams
-        </span>
-      </div>
-      <div>
-        <h1 className="text-[26px] font-black text-white leading-tight">
-          {subtitle}
-        </h1>
-        <p className="text-white/70 text-[13px] mt-1 font-medium">
-          Mental health care, simplified.
-        </p>
-      </div>
-    </div>
-  );
-}
-
-// ── Page ──────────────────────────────────────────────────
 
 function LoginContent() {
   const router = useRouter();
@@ -125,120 +97,138 @@ function LoginContent() {
   }, [otp, handleVerifyOtp]);
 
   return (
-    <div className="min-h-screen flex flex-col bg-[#f6f4f2]">
-      {/* Hero */}
-      <AuthHero subtitle={step === 'phone' ? 'Welcome back.' : 'Verify your number.'} />
+    <div className="min-h-screen flex flex-col bg-background">
+
+      {/* Gradient hero */}
+      <div className="home-header-gradient px-6 pt-14 pb-12 flex flex-col gap-3">
+        <div className="flex items-center gap-3">
+          <div className="size-10 rounded-2xl bg-primary-foreground/20 flex items-center justify-center">
+            <Heart className="size-5 text-primary-foreground fill-primary-foreground" />
+          </div>
+          <span className="text-xs font-bold text-primary-foreground/80 tracking-widest uppercase">
+            Cadabams
+          </span>
+        </div>
+        <div>
+          <h1 className="text-2xl font-black text-primary-foreground leading-tight">
+            {step === 'phone' ? 'Welcome back.' : 'Verify your number.'}
+          </h1>
+          <p className="text-sm text-primary-foreground/70 mt-1">
+            Mental health care, simplified.
+          </p>
+        </div>
+      </div>
 
       {/* Card — overlaps hero */}
-      <div className="flex-1 bg-[#f6f4f2] rounded-t-3xl mt-[-20px] z-10 flex flex-col">
-        <div className="px-5 pt-7 pb-6 flex flex-col gap-6 flex-1">
+      <div className="flex-1 flex flex-col px-4 mt-[-16px] pb-8">
+        <Card className="w-full max-w-sm mx-auto">
+
+          {/* Step progress */}
+          <div className="flex gap-1 px-4 pt-4">
+            <div className="h-1 flex-1 rounded-full bg-primary" />
+            <div className={cn('h-1 flex-1 rounded-full transition-colors duration-300', step === 'otp' ? 'bg-primary' : 'bg-border')} />
+          </div>
 
           {step === 'phone' ? (
             <>
-              <div>
-                <h2 className="text-[20px] font-black text-foreground">Sign in</h2>
-                <p className="text-[13px] text-muted-foreground mt-1">
-                  Enter your registered phone number
+              <CardHeader>
+                <CardTitle>Sign in</CardTitle>
+                <CardDescription>Enter your registered phone number</CardDescription>
+              </CardHeader>
+
+              <CardContent>
+                <form onSubmit={handleSubmit(onSendOtp)} className="flex flex-col gap-4">
+                  <Controller
+                    name="phone"
+                    control={control}
+                    render={({ field, fieldState }) => (
+                      <div className="flex flex-col gap-1.5">
+                        <PhoneInput
+                          value={field.value}
+                          onChange={(e) => field.onChange(e.target.value)}
+                          selectedCountry={country}
+                          onCountryChange={setCountry}
+                        />
+                        {fieldState.error && (
+                          <p className="text-xs text-destructive">{fieldState.error.message}</p>
+                        )}
+                      </div>
+                    )}
+                  />
+                  <Button type="submit" size="lg" disabled={isSending} className="w-full">
+                    {isSending ? 'Sending…' : 'Send OTP'}
+                  </Button>
+                </form>
+              </CardContent>
+
+              <CardFooter className="flex-col gap-3 text-sm">
+                <p className="text-muted-foreground">
+                  Don&apos;t have an account?{' '}
+                  <Button variant="link" asChild className="p-0 h-auto text-sm">
+                    <Link href={`/auth/signup${returnUrl ? `?returnUrl=${returnUrl}` : ''}`}>
+                      Sign up
+                    </Link>
+                  </Button>
                 </p>
-              </div>
-
-              <form onSubmit={handleSubmit(onSendOtp)} className="flex flex-col gap-4">
-                <Controller
-                  name="phone"
-                  control={control}
-                  render={({ field, fieldState }) => (
-                    <div className="flex flex-col gap-1.5">
-                      <PhoneInput
-                        value={field.value}
-                        onChange={(e) => field.onChange(e.target.value)}
-                        selectedCountry={country}
-                        onCountryChange={setCountry}
-                      />
-                      {fieldState.error && (
-                        <p className="text-xs text-destructive">{fieldState.error.message}</p>
-                      )}
-                    </div>
-                  )}
-                />
-
-                <Button type="submit" disabled={isSending} className="w-full h-12 rounded-xl font-semibold">
-                  {isSending ? 'Sending…' : 'Send OTP'}
-                </Button>
-              </form>
-
-              <p className="text-center text-[13px] text-muted-foreground">
-                Don&apos;t have an account?{' '}
-                <Link
-                  href={`/auth/signup${returnUrl ? `?returnUrl=${returnUrl}` : ''}`}
-                  className="text-primary font-semibold"
-                >
-                  Sign up
-                </Link>
-              </p>
+                <Separator />
+                <div className="flex gap-4">
+                  <Button variant="link" asChild className="p-0 h-auto text-xs text-muted-foreground">
+                    <Link href="/privacy-policy">Privacy Policy</Link>
+                  </Button>
+                  <Button variant="link" asChild className="p-0 h-auto text-xs text-muted-foreground">
+                    <Link href="/term-and-condition">Terms &amp; Conditions</Link>
+                  </Button>
+                </div>
+              </CardFooter>
             </>
           ) : (
             <>
-              <div>
-                <button
-                  type="button"
+              <CardHeader>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="-ml-1 mb-1 w-fit text-muted-foreground"
                   onClick={() => { setStep('phone'); setOtp(''); }}
-                  className="flex items-center gap-1.5 text-[13px] font-semibold text-muted-foreground mb-4 hover:text-foreground transition-colors"
                 >
-                  <ArrowLeft className="w-4 h-4" />
+                  <ArrowLeft className="size-4" />
                   Change number
-                </button>
-                <h2 className="text-[20px] font-black text-foreground">Enter the code</h2>
-                <p className="text-[13px] text-muted-foreground mt-1">
+                </Button>
+                <CardTitle>Enter the code</CardTitle>
+                <CardDescription>
                   Sent to{' '}
-                  <span className="font-semibold text-foreground">
+                  <span className="font-medium text-foreground">
                     +{country?.callingCode ?? '91'} {getValues('phone')}
                   </span>
-                </p>
-              </div>
+                </CardDescription>
+              </CardHeader>
 
-              <OTPInput value={otp} onChange={setOtp} />
+              <CardContent className="flex flex-col gap-4">
+                <OTPInput value={otp} onChange={setOtp} />
+                <Button
+                  type="button"
+                  size="lg"
+                  className="w-full"
+                  onClick={() => handleVerifyOtp(otp)}
+                  disabled={isVerifying || otp.length < 4}
+                >
+                  {isVerifying ? 'Verifying…' : 'Verify & Sign In'}
+                </Button>
+              </CardContent>
 
-              <Button
-                type="button"
-                onClick={() => handleVerifyOtp(otp)}
-                disabled={isVerifying || otp.length < 4}
-                className="w-full h-12 rounded-xl font-semibold"
-              >
-                {isVerifying ? 'Verifying…' : 'Verify & Sign In'}
-              </Button>
-
-              <div className="flex justify-center text-[13px]">
+              <CardFooter className="justify-center">
                 {timer > 0 ? (
-                  <span className="text-muted-foreground">
-                    Resend in <span className="tabular-nums font-semibold">{timer}s</span>
-                  </span>
+                  <p className="text-sm text-muted-foreground">
+                    Resend in <span className="tabular-nums font-medium text-foreground">{timer}s</span>
+                  </p>
                 ) : (
-                  <button type="button" onClick={handleSubmit(onSendOtp)} className="text-primary font-semibold">
+                  <Button variant="link" className="p-0 h-auto text-sm" onClick={handleSubmit(onSendOtp)}>
                     Resend OTP
-                  </button>
+                  </Button>
                 )}
-              </div>
+              </CardFooter>
             </>
           )}
-
-        </div>
-
-        {/* Privacy note + links */}
-        <div className="px-5 pb-8 flex flex-col items-center gap-3 mt-auto">
-          <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
-            <ShieldCheck className="w-3.5 h-3.5 text-primary/60" />
-            <span>Your data is encrypted and never shared</span>
-          </div>
-          <div className="flex items-center gap-3 text-[12px] text-muted-foreground">
-            <Link href="/privacy-policy" className="hover:text-foreground transition-colors">
-              Privacy Policy
-            </Link>
-            <span>·</span>
-            <Link href="/term-and-condition" className="hover:text-foreground transition-colors">
-              Terms &amp; Conditions
-            </Link>
-          </div>
-        </div>
+        </Card>
       </div>
 
       {/* Redirect modal */}
@@ -249,13 +239,10 @@ function LoginContent() {
             We couldn&apos;t find an account with this number. Would you like to sign up?
           </DialogDescription>
           <div className="flex gap-3 mt-2">
-            <Button variant="outline" onClick={() => setRedirectModal(false)} className="flex-1">
+            <Button variant="outline" className="flex-1" onClick={() => setRedirectModal(false)}>
               Cancel
             </Button>
-            <Button
-              onClick={() => router.push(`/auth/signup?mobile=${getValues('phone')}`)}
-              className="flex-1"
-            >
+            <Button className="flex-1" onClick={() => router.push(`/auth/signup?mobile=${getValues('phone')}`)}>
               Sign Up
             </Button>
           </div>
@@ -268,8 +255,8 @@ function LoginContent() {
 export default function LoginPage() {
   return (
     <Suspense fallback={
-      <div className="min-h-screen bg-[#f6f4f2] flex items-center justify-center">
-        <Skeleton className="h-[420px] w-full rounded-3xl" />
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <Skeleton className="h-80 w-80 rounded-xl" />
       </div>
     }>
       <LoginContent />

@@ -58,7 +58,7 @@ export function PhoneInput({ value, onChange, selectedCountry, onCountryChange }
         </Button>
         <div className="relative flex-1">
           <Phone className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <Input id={id} type="tel" value={value} onChange={onChange} placeholder="Enter phone number" className="pl-9" />
+          <Input id={id} type="tel" value={value} onChange={onChange} placeholder="Enter phone number" className="pl-9 h-10" />
         </div>
       </div>
 
