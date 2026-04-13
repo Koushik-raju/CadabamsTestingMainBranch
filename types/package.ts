@@ -1,43 +1,32 @@
-export interface Package {
-  id: string | number;
-  name?: string;
-  price?: number;
-  sessions?: number;
-  [key: string]: unknown;
-}
+import type {
+  Package as SdkPackage,
+  ManagedPackage as SdkManagedPackage,
+  PackageProductLine as SdkPackageProductLine,
+  BookedPackageProductLine as SdkBookedPackageProductLine,
+} from '@/sdk/auth-and-crm';
 
-export interface PackageBooking {
-  package_id: string | number;
-  lead_id: string | number;
-  [key: string]: unknown;
-}
-
-// Available package (from book-package listing)
-export interface AvailablePackage {
-  id: number;
-  package_name: string;
-  amount_total: number;
-  package_product_ids: number[];
-  service_id?: number[];
+// Extends the SDK Package with fields present in the API response but not typed in the spec
+export type AvailablePackage = SdkPackage & {
   journey_id?: string | number | null;
   journey_document_id?: string | null;
   duration?: number;
   package_duration?: number;
-}
+};
 
-// Booked/managed package (user's own packages)
-export interface BookedPackage {
-  booked_package_id: number;
-  package_id: [number, string];
-  package_cost: number;
-  package_stage: 'booked' | 'confirm' | 'in_progress' | string;
-  date: string;
-  campus_id: [number, string];
-  lead_id: number;
+// Extends the SDK ManagedPackage with fields present in the API response but not typed in the spec
+export type BookedPackage = SdkManagedPackage & {
   journey_id?: string | number | null;
+};
+
+export type { SdkPackageProductLine as PackageProductLine };
+export type { SdkBookedPackageProductLine as BookedPackageProductLine };
+
+// Legacy types kept for compatibility
+export interface PackageBooking {
+  package_id: string | number;
+  lead_id: string | number;
 }
 
-// Prescription / medicine line item from hospital API
 export interface Prescription {
   id: number;
   display_name?: string;
@@ -60,9 +49,4 @@ export interface MedicineLineItem {
   duration?: string;
   note?: string;
   prescription_id?: [number, string];
-}
-
-export interface PackageProductLine {
-  id: number;
-  product_id: [number, string];
 }

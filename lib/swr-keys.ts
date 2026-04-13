@@ -65,3 +65,15 @@ export function videosKey(): string {
 export function videoDetailKey(slug: string): string {
   return `/videos/${slug}`;
 }
+
+export function availablePackagesKey(): string {
+  return '/packages/available';
+}
+
+export function managedPackagesKey(): string {
+  return '/packages/managed';
+}
+
+export function packageProductLinesKey(): string {
+  return '/packages/product-lines';
+}
