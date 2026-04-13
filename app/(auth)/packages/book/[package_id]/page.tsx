@@ -14,7 +14,7 @@ import {
   Loader2,
   BookOpen,
 } from 'lucide-react';
-import { postPackagesBook, postPaymentsPackage } from '@/sdk/auth-and-crm';
+import { bookPackage, initiatePackagePayment } from '@/hooks/use-packages';
 import { useAuth } from '@/hooks/use-auth';
 import type { AvailablePackage } from '@/types/package';
 
@@ -119,33 +119,24 @@ function BookPackageContent({ packageId }: { packageId: string }) {
     try {
       const patientName = String(user.name ?? user.first_name ?? '');
 
-      const bookRes = await postPackagesBook({
-        body: {
-          package_id:       pkg.id,
-          caller_name:      patientName,
-          patient_name:     patientName,
-          lead_id:          Number(user.lead_id),
-          campus_id:        1,
-          sequence_booking: false,
-          package_stage:    'booked',
-          payment_mode:     'online',
-          date:             new Date().toISOString().split('T')[0],
-        },
+      const { booking_id } = await bookPackage({
+        package_id:       pkg.id,
+        caller_name:      patientName,
+        patient_name:     patientName,
+        lead_id:          Number(user.lead_id),
+        campus_id:        1,
+        sequence_booking: false,
+        package_stage:    'booked',
+        payment_mode:     'online',
+        date:             new Date().toISOString().split('T')[0],
       });
-      if (bookRes.error) throw new Error(JSON.stringify(bookRes.error));
-      const bookingId = bookRes.data?.booking_id;
-      if (!bookingId) throw new Error('No booking ID returned.');
 
-      const payRes = await postPaymentsPackage({
-        body: {
-          booked_package_id: bookingId,
-          campus_id:         1,
-          lead_id:           Number(user.lead_id),
-        },
+      const url = await initiatePackagePayment({
+        booked_package_id: booking_id,
+        campus_id:         1,
+        lead_id:           Number(user.lead_id),
       });
-      if (payRes.error) throw new Error(JSON.stringify(payRes.error));
-      const url = payRes.data?.result?.short_url;
-      if (!url) throw new Error('No payment URL received.');
+
       window.location.href = url;
     } catch (err: unknown) {
       setError((err as { message?: string })?.message ?? 'Failed to process payment');
