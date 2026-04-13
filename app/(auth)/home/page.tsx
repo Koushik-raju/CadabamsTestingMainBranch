@@ -41,13 +41,13 @@ export default function HomePage() {
             router.push('/assessments');
             break;
           case 'journey':
-            router.push('/journey');
+            router.push('/journeys');
             break;
           case 'journal':
             router.push('/self-journaling');
             break;
           case 'breathe':
-            router.push('/wellness-resources');
+            router.push('/wellness/resources');
             break;
           case 'packages':
             router.push('/packages');
@@ -55,7 +55,7 @@ export default function HomePage() {
         }
         break;
       case 'recommendation':
-        router.push(`/wellness-resources/${subtype}`);
+        router.push(`/wellness/resources/${subtype}`);
         break;
       case 'join_session':
         router.push('/consult/appointments');

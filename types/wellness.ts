@@ -34,6 +34,22 @@ export interface MindfulMinuteAudio {
   title: string;
   audioUrl?: string;
   backgroundVisualUrl?: string;
+  duration?: string;
+  category?: string;
+}
+
+export interface VideoItem {
+  id: number;
+  documentId?: string;
+  slug: string;
+  title: string;
+  category?: string[];
+  coverImage?: {
+    webImage?: { url?: string };
+    mobileImage?: { url?: string };
+  };
+  videoUrl?: string;
+  text?: unknown[];
 }
 
 export interface MindfulMinute {
