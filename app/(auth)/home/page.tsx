@@ -2,12 +2,9 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { Bell } from 'lucide-react';
-import { Button } from '@/components/ui/button';
 import { HomeHeader } from '@/components/home/home-header';
 import { SupportSection } from '@/components/home/support-section';
 import { QuickActions } from '@/components/home/quick-actions';
-import { Recommendations } from '@/components/home/recommendations';
 import { UpcomingSession } from '@/components/home/upcoming-session';
 import { JourneySection } from '@/components/home/journey-section';
 import { useAuth } from '@/hooks/use-auth';
@@ -17,7 +14,6 @@ import type { AppointmentDetail } from '@/sdk/auth-and-crm';
 export default function HomePage() {
   const router = useRouter();
   const { user } = useAuth();
-  const profileImage = user?.profile_image as string | undefined;
   const [appointments, setAppointments] = useState<AppointmentDetail[]>([]);
 
   useEffect(() => {
@@ -52,10 +48,19 @@ export default function HomePage() {
           case 'packages':
             router.push('/packages');
             break;
+          case 'mindful-minutes':
+            router.push('/wellness/mindful-minutes');
+            break;
+          case 'chat':
+            router.push('/chat');
+            break;
+          case 'videos':
+            router.push('/wellness/videos');
+            break;
+          case 'documents':
+            router.push('/documents');
+            break;
         }
-        break;
-      case 'recommendation':
-        router.push(`/wellness/resources/${subtype}`);
         break;
       case 'join_session':
         router.push('/consult/appointments');
@@ -65,25 +70,8 @@ export default function HomePage() {
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Notification bell — top-right overlay */}
-      <div className="absolute top-4 right-16 z-30">
-        <Button
-          variant="ghost"
-          size="icon"
-          className="text-white hover:bg-white/20"
-          onClick={() => router.push('/notifications')}
-          aria-label="View notifications"
-        >
-          <Bell className="w-5 h-5" />
-        </Button>
-      </div>
-
       <HomeHeader
-        userName={(user?.caller_name as string | undefined) ?? 'There'}
-        profileImage={profileImage}
-        onMoodClick={() =>
-          router.push('/assessment/avym73d4x6258t3ligurl56r')
-        }
+        onMoodClick={() => router.push('/assessment/avym73d4x6258t3ligurl56r')}
       />
 
       {/* Main content — overlaps header by pulling up with negative margin */}
@@ -103,10 +91,6 @@ export default function HomePage() {
         />
 
         <JourneySection />
-
-        <Recommendations
-          onRecommendClick={(id) => handleAction('recommendation', id)}
-        />
       </div>
     </div>
   );

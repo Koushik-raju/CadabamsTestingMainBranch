@@ -2,52 +2,67 @@
 
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
-import { Sparkles, Mic } from 'lucide-react';
+import { Sparkles, Mic, Bell } from 'lucide-react';
+import { useAuth } from '@/hooks/use-auth';
 
 interface Props {
-  userName: string;
-  profileImage?: string;
   moodTracker?: Array<{ simily?: { id: number } }>;
   onMoodClick?: () => void;
 }
 
 const MOODS = ['😟', '😐', '😊', '😄', '🤩'];
 
-export function HomeHeader({ userName, profileImage, moodTracker, onMoodClick }: Props) {
+export function HomeHeader({ moodTracker, onMoodClick }: Props) {
   const router = useRouter();
+  const { user } = useAuth();
+
+  const name = (user?.name as string | undefined) ?? 'There';
+  const firstName = name.split(' ')[0];
+  const profileImage = user?.profile_image as string | undefined;
   const currentMoodId = moodTracker?.[0]?.simily?.id;
 
   return (
     <div className="home-header-gradient relative w-full rounded-b-2xl px-4 pt-5 pb-8 text-white z-[16]">
       <div className="relative z-20 flex flex-col gap-4">
-        {/* Top bar — greeting + profile avatar */}
+        {/* Top bar — greeting + actions */}
         <div className="flex justify-between items-center h-12">
           <div className="flex flex-col leading-tight">
             <span className="text-[13px] font-medium text-white/80">Good Morning,</span>
-            <span className="text-[20px] font-black text-white leading-tight">{userName.split(' ')[0]}</span>
+            <span className="text-[20px] font-black text-white leading-tight">{firstName}</span>
           </div>
-          <button
-            onClick={() => router.push('/profile')}
-            className="w-10 h-10 rounded-full overflow-hidden border border-white/30 transition-all hover:scale-105 active:scale-95 bg-white/10"
-            aria-label="Go to profile"
-          >
-            {profileImage && profileImage !== '/profile.png' ? (
-              <Image src={profileImage} alt={userName} width={40} height={40} className="object-cover h-full w-full" />
-            ) : (
-              <div className="w-full h-full flex items-center justify-center bg-white/20">
-                <span className="text-base font-bold text-white select-none">
-                  {userName?.[0]?.toUpperCase()}
-                </span>
-              </div>
-            )}
-          </button>
+
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => router.push('/notifications')}
+              className="w-9 h-9 rounded-full flex items-center justify-center hover:bg-white/20 transition-all active:scale-95"
+              aria-label="View notifications"
+            >
+              <Bell className="w-5 h-5 text-white" />
+            </button>
+
+            <button
+              onClick={() => router.push('/profile')}
+              className="w-10 h-10 rounded-full overflow-hidden border border-white/30 transition-all hover:scale-105 active:scale-95 bg-white/10"
+              aria-label="Go to profile"
+            >
+              {profileImage && profileImage !== '/profile.png' ? (
+                <Image src={profileImage} alt={firstName} width={40} height={40} className="object-cover h-full w-full" />
+              ) : (
+                <div className="w-full h-full flex items-center justify-center bg-white/20">
+                  <span className="text-base font-bold text-white select-none">
+                    {firstName?.[0]?.toUpperCase()}
+                  </span>
+                </div>
+              )}
+            </button>
+          </div>
         </div>
 
         {/* Greeting + mood selector */}
         <div className="flex flex-col gap-4 w-full">
           <div className="flex flex-col gap-1.5 max-w-[280px]">
             <h2 className="text-[22px] font-bold leading-[1.15] tracking-tight">
-              Hi <span className="font-black">{userName.split(' ')[0]}</span>, how are you feeling today?
+              Hi <span className="font-black">{firstName}</span>, how are you feeling today?
             </h2>
             <p className="text-white/80 text-[13px] font-medium leading-relaxed">
               Your check-in helps us shape your home, guidance, and support.
