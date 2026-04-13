@@ -19,7 +19,7 @@ export function JourneySection({
     <div className="px-4 mb-8">
       <div className="flex items-center justify-between mb-4">
         <h3 className="text-lg font-bold">Your Journey</h3>
-        <Link href="/journey" className="text-sm font-semibold text-primary">
+        <Link href="/journeys" className="text-sm font-semibold text-primary">
           View Path
         </Link>
       </div>
@@ -27,9 +27,9 @@ export function JourneySection({
       <Card>
         <CardContent className="pt-5 pb-5 px-4 flex flex-col gap-3">
           <div className="flex items-center gap-2">
-            <div className="flex items-center gap-1.5 bg-orange-50 rounded-full px-3 py-1">
-              <Flame className="w-3.5 h-3.5 text-orange-500" />
-              <span className="text-[11px] font-extrabold text-orange-600 uppercase tracking-wider">
+            <div className="flex items-center gap-1.5 bg-primary/10 rounded-full px-3 py-1">
+              <Flame className="w-3.5 h-3.5 text-primary" />
+              <span className="text-[11px] font-extrabold text-primary uppercase tracking-wider">
                 Daily Streak: {streakDays} Days
               </span>
             </div>

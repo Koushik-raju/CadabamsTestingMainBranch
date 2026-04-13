@@ -31,7 +31,7 @@ export function JourneyCard({ journey, className }: JourneyCardProps) {
     journey.progress ?? Math.round((journey.currentDay / Math.max(journey.totalDays, 1)) * 100);
 
   const handleClick = () => {
-    router.push(`/journey/${journey.journeyId}`);
+    router.push(`/journeys/${journey.journeyId}/details`);
   };
 
   return (
