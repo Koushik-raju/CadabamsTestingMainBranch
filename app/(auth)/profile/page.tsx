@@ -132,7 +132,7 @@ export default function ProfilePage() {
 
   const handleLogout = async () => {
     await logout();
-    router.replace("/login");
+    router.replace("/auth/login");
   };
 
   const displayName = profile?.contact_name || profile?.partner_name || "—";

@@ -15,7 +15,7 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
     if (!hasToken) {
       const path = window.location.pathname + window.location.search;
       localStorage.setItem('redirectPath', path);
-      router.replace('/login');
+      router.replace('/auth/login');
     } else {
       // eslint-disable-next-line react-hooks/set-state-in-effect
       setReady(true);

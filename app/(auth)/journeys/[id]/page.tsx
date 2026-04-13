@@ -89,7 +89,7 @@ function JourneyLandingContent({ params }: PageProps) {
       return;
     }
     if (!mobile) {
-      router.push('/login');
+      router.push('/auth/login');
       return;
     }
     setSubscribing(true);

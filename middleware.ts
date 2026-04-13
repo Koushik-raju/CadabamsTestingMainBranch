@@ -5,6 +5,8 @@ import type { NextRequest } from "next/server";
 const PUBLIC_ROUTES = [
   "/login",
   "/signup",
+  "/auth/login",
+  "/auth/signup",
   "/privacy-policy",
   "/term-and-condition",
   "/worksheet",
@@ -31,7 +33,7 @@ export function middleware(request: NextRequest) {
 
   // Logged-in users are redirected away from login/signup
   if (isLoggedIn) {
-    if (pathname === "/login" || pathname === "/signup") {
+    if (pathname === "/login" || pathname === "/signup" || pathname === "/auth/login" || pathname === "/auth/signup") {
       console.log(`[middleware] → redirect to /home (already authenticated)`);
       return NextResponse.redirect(new URL("/home", request.url));
     }
@@ -42,7 +44,7 @@ export function middleware(request: NextRequest) {
   // Unauthenticated users can only access public routes
   if (!isPublicRoute(pathname)) {
     console.log(`[middleware] → redirect to /login`);
-    const url = new URL("/login", request.url);
+    const url = new URL("/auth/login", request.url);
     url.searchParams.set("from", pathname);
     return NextResponse.redirect(url);
   }

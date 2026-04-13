@@ -232,7 +232,7 @@ export function JourneyPathView({ journey, progress, mobile, journeyId }: Journe
   }
 
   async function handleSubscribe() {
-    if (!mobile) { router.push('/login'); return; }
+    if (!mobile) { router.push('/auth/login'); return; }
     setSubscribing(true);
     try {
       await subscribeToJourney(mobile, journey);

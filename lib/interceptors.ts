@@ -20,7 +20,7 @@ export function attachRefreshInterceptor(axiosInstance: AxiosInstance) {
         } catch {
           // Refresh failed — send user to login
           if (typeof window !== 'undefined') {
-            window.location.href = '/login';
+            window.location.href = '/auth/login';
           }
           return Promise.reject(error);
         }
