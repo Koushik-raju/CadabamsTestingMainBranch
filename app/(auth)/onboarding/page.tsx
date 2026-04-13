@@ -236,6 +236,7 @@ function OnboardingContent() {
                   </Label>
                   <Input
                     id="pFirst"
+                    autoComplete="given-name"
                     value={data.patientFirstName}
                     onChange={(e) => set('patientFirstName', e.target.value)}
                     placeholder="First"
@@ -248,6 +249,7 @@ function OnboardingContent() {
                   </Label>
                   <Input
                     id="pLast"
+                    autoComplete="family-name"
                     value={data.patientLastName}
                     onChange={(e) => set('patientLastName', e.target.value)}
                     placeholder="Last"
@@ -303,6 +305,7 @@ function OnboardingContent() {
                 <Input
                   id="dob"
                   type="date"
+                  autoComplete="bday"
                   value={data.dob}
                   onChange={(e) => set('dob', e.target.value)}
                   className="pl-9 h-12 text-base"

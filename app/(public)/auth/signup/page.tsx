@@ -164,6 +164,7 @@ function SignupContent() {
                       <Input
                         id="firstName"
                         placeholder="First"
+                        autoComplete="given-name"
                         {...register('firstName')}
                         aria-invalid={!!errors.firstName}
                       />
@@ -173,7 +174,7 @@ function SignupContent() {
                     </div>
                     <div className="flex flex-col gap-1.5">
                       <Label htmlFor="lastName">Last name</Label>
-                      <Input id="lastName" placeholder="Last" {...register('lastName')} />
+                      <Input id="lastName" placeholder="Last" autoComplete="family-name" {...register('lastName')} />
                     </div>
                   </div>
 
@@ -186,6 +187,7 @@ function SignupContent() {
                       id="email"
                       type="email"
                       placeholder="you@example.com"
+                      autoComplete="email"
                       {...register('email')}
                       aria-invalid={!!errors.email}
                     />
