@@ -1,4 +1,5 @@
 import { useState, useCallback, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import type { UIMessage } from 'ai';
 import { createMastraClient } from '@/lib/mastra-client';
 
@@ -8,6 +9,7 @@ interface UseThreadMessagesProps {
 }
 
 export function useThreadMessages({ threadId, agentId }: UseThreadMessagesProps) {
+  const router = useRouter();
   const [historicalMessages, setHistoricalMessages] = useState<UIMessage[]>([]);
   const [hasMore, setHasMore] = useState(true);
   const [isLoading, setIsLoading] = useState(false);
@@ -68,11 +70,15 @@ export function useThreadMessages({ threadId, agentId }: UseThreadMessagesProps)
         hasMore: result?.hasMore ?? false,
         page,
       };
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error loading messages:', error);
+      const message = error?.message ?? '';
+      if (message.includes('404') || message.includes('Thread not found')) {
+        router.replace('/chat/new');
+      }
       return { messages: [], hasMore: false, page };
     }
-  }, [threadId, agentId]);
+  }, [threadId, agentId, router]);
 
   useEffect(() => {
     async function loadInitialMessages() {
