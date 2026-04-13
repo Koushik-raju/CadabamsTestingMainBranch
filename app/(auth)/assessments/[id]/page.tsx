@@ -2,21 +2,18 @@
 
 import { useState, use, useMemo, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { ref, push } from 'firebase/database';
-import { database } from '@/lib/firebase';
 import { Button } from '@/components/ui/button';
-import { Progress } from '@/components/ui/progress';
 import { Skeleton } from '@/components/ui/skeleton';
 import { BackButton } from '@/components/shared/navigation/back-button';
 import { QuestionRenderer, type Question, type AnswerValue } from '@/components/assessment/question-renderer';
-import { backendClient } from '@/lib/api-client';
-import { endpoints } from '@/config/api-endpoints';
-import { ChevronRight, ChevronLeft, CheckCircle2, AlertCircle } from 'lucide-react';
-import { useAssessmentById, mapStrapiAssessment } from '@/hooks/use-assessments';
+import { ChevronLeft, CheckCircle2, AlertCircle, Sparkles } from 'lucide-react';
+import { useAssessmentById, mapStrapiAssessment, submitAssessment } from '@/hooks/use-assessments';
+import { useAuth } from '@/hooks/use-auth';
 
 export default function AssessmentFormPage({ params }: { params: Promise<{ id: string }> }) {
   const { id: assessmentId } = use(params);
   const router = useRouter();
+  const { user } = useAuth();
 
   const [answers, setAnswers] = useState<Record<string, AnswerValue>>({});
   const [currentStep, setCurrentStep] = useState(0);
@@ -28,8 +25,9 @@ export default function AssessmentFormPage({ params }: { params: Promise<{ id: s
   const { data: assessmentData, isLoading, error: fetchError } = useAssessmentById(assessmentId);
 
   const assessment = useMemo(() => {
-    if (!assessmentData?.data) return null;
-    return mapStrapiAssessment(assessmentData.data);
+    if (!assessmentData) return null;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    return mapStrapiAssessment(assessmentData as any);
   }, [assessmentData]);
 
   const questions = useMemo(() => {
@@ -108,37 +106,32 @@ export default function AssessmentFormPage({ params }: { params: Promise<{ id: s
   };
 
   const handleBack = () => {
-    if (currentStep > 0) {
-      setCurrentStep((s) => s - 1);
-    }
+    if (currentStep > 0) setCurrentStep((s) => s - 1);
   };
 
   const handleSubmit = async () => {
     setSubmitting(true);
     try {
-      const user = JSON.parse(localStorage.getItem('user') || '{}');
-      const leadId = String(user.lead_id || '');
+      const leadId = user?.lead_id
+        ? String(user.lead_id)
+        : (() => {
+            try {
+              const raw = localStorage.getItem('user');
+              if (raw) return JSON.parse(raw).lead_id ? String(JSON.parse(raw).lead_id) : '';
+            } catch {}
+            return '';
+          })();
 
-      const payload: Record<string, unknown> = { date: new Date().toISOString() };
+      const formattedAnswers: Record<string, unknown> = {};
       questions.forEach((q, index) => {
         const key = `q_${q.id}_step_${index}`;
-        payload[key] = {
+        formattedAnswers[key] = {
           ...answers[key],
           questionText: q.title || q.label || 'Unknown Question',
         };
       });
 
-      if (leadId && assessmentId) {
-        const dbRef = ref(database, `assessments/${leadId}/${assessmentId}`);
-        await push(dbRef, payload);
-      }
-
-      await backendClient.post(endpoints.saveAssessment, {
-        lead_id: leadId,
-        assessment_id: assessmentId,
-        answers: payload,
-      });
-
+      await submitAssessment(leadId, assessmentId, formattedAnswers);
       setSubmitted(true);
     } catch (err) {
       console.error('Error submitting assessment:', err);
@@ -155,11 +148,13 @@ export default function AssessmentFormPage({ params }: { params: Promise<{ id: s
           <Skeleton className="h-9 w-9 rounded-full" />
           <Skeleton className="h-5 w-48" />
         </div>
+        <div className="px-4 pt-3">
+          <Skeleton className="h-2 w-full rounded-full" />
+        </div>
         <div className="flex-1 flex flex-col items-center justify-center p-6 gap-4">
-          <Skeleton className="h-3 w-full max-w-sm rounded-full" />
           <Skeleton className="h-8 w-3/4 max-w-sm" />
           <div className="flex flex-col gap-3 w-full max-w-md mt-4">
-            {[1, 2, 3, 4].map((i) => <Skeleton key={i} className="h-12 w-full rounded-full" />)}
+            {[1, 2, 3, 4].map((i) => <Skeleton key={i} className="h-14 w-full rounded-2xl" />)}
           </div>
         </div>
       </div>
@@ -170,7 +165,9 @@ export default function AssessmentFormPage({ params }: { params: Promise<{ id: s
     return (
       <div className="min-h-screen bg-background flex flex-col items-center justify-center p-6">
         <AlertCircle className="w-12 h-12 text-destructive mb-4" />
-        <p className="text-destructive text-center font-medium">{error || 'Failed to load assessment.'}</p>
+        <p className="text-destructive text-center font-medium">
+          {error || 'Failed to load assessment.'}
+        </p>
         <Button className="mt-4" variant="outline" onClick={() => router.back()}>
           Go Back
         </Button>
@@ -181,25 +178,39 @@ export default function AssessmentFormPage({ params }: { params: Promise<{ id: s
   if (submitted) {
     return (
       <div className="min-h-screen bg-background flex flex-col">
-        <div className="h-2 w-full bg-orange-500" />
+        {/* Full orange progress bar */}
+        <div className="h-1.5 w-full bg-orange-500" />
+
+        <div className="flex items-center px-3 py-3">
+          <button
+            onClick={() => router.push('/assessments')}
+            className="w-9 h-9 flex items-center justify-center rounded-full hover:bg-muted transition-colors"
+          >
+            <span className="text-xl text-foreground leading-none">×</span>
+          </button>
+        </div>
+
         <div className="flex-1 flex flex-col items-center justify-center p-6 text-center">
           <div className="w-20 h-20 rounded-full bg-orange-100 flex items-center justify-center mb-6">
-            <CheckCircle2 className="w-10 h-10 text-orange-600" />
+            <CheckCircle2 className="w-10 h-10 text-orange-500" />
           </div>
-          <h2 className="text-2xl font-bold text-foreground mb-2">Assessment Complete</h2>
-          <p className="text-muted-foreground text-sm mb-6 max-w-xs">
-            Your responses have been recorded.
+          <h2 className="text-2xl font-bold text-foreground mb-3">Assessment Complete</h2>
+          <p className="text-sm text-muted-foreground mb-8 max-w-xs">
+            You&apos;ve answered all questions. We&apos;re ready to compile your personalized insights.
           </p>
-          <div className="bg-orange-50 border border-orange-200 rounded-xl p-4 mb-6 max-w-sm">
-            <p className="text-xs text-orange-800">
-              AI-generated summary based on your responses. This is for informational purposes only and does not replace professional medical advice.
+          <div className="bg-muted rounded-2xl p-4 mb-8 max-w-sm w-full flex items-start gap-3">
+            <Sparkles className="w-4 h-4 text-orange-500 flex-shrink-0 mt-0.5" />
+            <p className="text-xs text-muted-foreground text-left leading-relaxed">
+              AI-Generated Report — This report is generated using artificial intelligence based on
+              your responses. It is for informational purposes only and does not replace professional
+              medical advice.
             </p>
           </div>
           <Button
-            className="bg-orange-500 hover:bg-orange-600 text-white"
-            onClick={() => router.push(`/assessment/analysis?id=${assessmentId}`)}
+            className="w-full max-w-sm bg-orange-500 hover:bg-orange-600 text-white font-semibold h-14 rounded-2xl text-base"
+            onClick={() => router.push(`/assessments/${assessmentId}/analysis`)}
           >
-            Generate Report
+            GENERATE REPORT →
           </Button>
         </div>
       </div>
@@ -218,31 +229,39 @@ export default function AssessmentFormPage({ params }: { params: Promise<{ id: s
   }
 
   const progress = Math.round(((currentStep + 1) / questions.length) * 100);
-  const currentQuestion = questions[currentStep];
+  const currentQuestion = questions[currentStep] as Question;
   const isLastStep = currentStep === questions.length - 1;
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
+      {/* Header with progress */}
       <div className="flex items-center gap-2 px-3 py-3 border-b border-border bg-card">
         {currentStep === 0 ? (
-          <BackButton fallback={`/assessment/details?id=${assessmentId}`} />
+          <BackButton fallback={`/assessments/${assessmentId}/details`} />
         ) : (
-          <Button variant="ghost" size="icon" onClick={handleBack}>
+          <button
+            onClick={handleBack}
+            className="w-9 h-9 flex items-center justify-center rounded-full hover:bg-muted transition-colors"
+          >
             <ChevronLeft className="w-5 h-5" />
-          </Button>
+          </button>
         )}
         <div className="flex-1 min-w-0">
-          <p className="text-xs text-muted-foreground truncate">{assessment?.title}</p>
-          <p className="text-xs font-medium text-foreground">
+          <p className="text-xs text-muted-foreground">
             Step {currentStep + 1} of {questions.length}
           </p>
         </div>
       </div>
 
-      <div className="px-4 pt-3">
-        <Progress value={progress} className="h-2 bg-slate-200 [&>div]:bg-orange-500" />
+      {/* Orange progress bar */}
+      <div className="w-full bg-muted h-1.5">
+        <div
+          className="h-1.5 bg-orange-500 transition-all duration-300"
+          style={{ width: `${progress}%` }}
+        />
       </div>
 
+      {/* Question */}
       <div className="flex-1 overflow-y-auto">
         <QuestionRenderer
           question={currentQuestion}
@@ -252,22 +271,14 @@ export default function AssessmentFormPage({ params }: { params: Promise<{ id: s
         />
       </div>
 
-      <div className="px-4 pb-6 pt-3 border-t border-border bg-card">
+      {/* Continue button */}
+      <div className="px-5 pb-8 pt-3 border-t border-border bg-card">
         <Button
-          className="w-full bg-orange-500 hover:bg-orange-600 text-white"
+          className="w-full bg-orange-500 hover:bg-orange-600 text-white font-semibold h-14 rounded-2xl text-base disabled:opacity-40"
           disabled={!isStepComplete || submitting}
           onClick={handleNext}
         >
-          {submitting ? (
-            'Submitting...'
-          ) : isLastStep ? (
-            'Submit Assessment'
-          ) : (
-            <>
-              Continue
-              <ChevronRight className="w-4 h-4 ml-1" />
-            </>
-          )}
+          {submitting ? 'Submitting...' : isLastStep ? 'Submit Assessment' : 'Continue →'}
         </Button>
       </div>
     </div>

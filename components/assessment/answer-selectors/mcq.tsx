@@ -1,6 +1,6 @@
 'use client';
 
-import { CheckCircle2, Circle } from 'lucide-react';
+import { CheckCircle2 } from 'lucide-react';
 
 export interface McqOption {
   id?: string | number;
@@ -19,18 +19,18 @@ interface McqSelectorProps {
 
 export function McqSelector({ title, subTitle, questions, selected, onSelect }: McqSelectorProps) {
   return (
-    <div className="flex flex-col items-center px-4 pt-4 pb-4 w-full">
-      {title && (
-        <h2 className="text-xl sm:text-2xl font-bold text-foreground text-center mb-2 leading-tight">
-          {title}
-        </h2>
-      )}
+    <div className="flex flex-col px-5 pt-6 pb-4 w-full">
       {subTitle && (
-        <p className="text-sm text-muted-foreground text-center mb-6 max-w-md">
+        <p className="text-xs font-semibold text-orange-500 uppercase tracking-wide mb-2">
           {subTitle}
         </p>
       )}
-      <div className="flex flex-col gap-3 w-full max-w-md">
+      {title && (
+        <h2 className="text-xl font-bold text-foreground mb-6 leading-snug">
+          {title}
+        </h2>
+      )}
+      <div className="flex flex-col gap-3 w-full">
         {questions.map((q, index) => {
           const label = q.question || q.option || q.value || String(index + 1);
           const isSelected = selected === label;
@@ -38,20 +38,26 @@ export function McqSelector({ title, subTitle, questions, selected, onSelect }: 
             <button
               key={q.id ?? index}
               onClick={() => onSelect(label)}
-              className={`flex items-center gap-3 p-4 rounded-full border-2 w-full text-left transition-all duration-200 active:scale-95 ${
+              className={`flex items-center justify-between gap-3 px-4 py-4 rounded-2xl border-2 w-full text-left transition-all duration-150 active:scale-[0.98] ${
                 isSelected
-                  ? 'bg-primary text-primary-foreground border-primary'
-                  : 'bg-card text-foreground border-border hover:border-primary/50'
+                  ? 'border-orange-500 bg-orange-50'
+                  : 'border-border bg-card hover:border-orange-200'
               }`}
             >
+              <span
+                className={`text-sm font-medium leading-snug ${
+                  isSelected ? 'text-orange-700' : 'text-foreground'
+                }`}
+              >
+                {label}
+              </span>
               <span className="flex-shrink-0">
                 {isSelected ? (
-                  <CheckCircle2 className="w-5 h-5" />
+                  <CheckCircle2 className="w-5 h-5 text-orange-500" />
                 ) : (
-                  <Circle className="w-5 h-5 text-muted-foreground" />
+                  <span className="w-5 h-5 rounded-full border-2 border-muted-foreground/40 block" />
                 )}
               </span>
-              <span className="text-sm sm:text-base font-medium">{label}</span>
             </button>
           );
         })}
