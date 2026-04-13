@@ -165,7 +165,20 @@ interface AuthorData {
   linkForAppointment?: string;
 }
 
+/** Extract the doctor ID from the linkForAppointment URL's `id` query param */
+function extractDoctorId(linkForAppointment?: string): string | null {
+  if (!linkForAppointment) return null;
+  try {
+    const url = new URL(linkForAppointment);
+    return url.searchParams.get('id');
+  } catch {
+    return null;
+  }
+}
+
 function AuthorCard({ author }: { author: AuthorData }) {
+  const doctorId = extractDoctorId(author.linkForAppointment);
+
   return (
     <div className="bg-card border border-border rounded-2xl p-4 flex gap-4 items-start">
       <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
@@ -192,15 +205,13 @@ function AuthorCard({ author }: { author: AuthorData }) {
             </div>
           )}
         </div>
-        {author.linkForAppointment && (
-          <a
-            href={author.linkForAppointment}
-            target="_blank"
-            rel="noopener noreferrer"
+        {doctorId && (
+          <Link
+            href={`/consult/booking/${doctorId}`}
             className="inline-flex items-center gap-1 mt-3 text-xs font-semibold text-primary bg-primary/10 px-3 py-1.5 rounded-full hover:bg-primary/20 transition-colors"
           >
             Book appointment <ChevronRight className="h-3 w-3" />
-          </a>
+          </Link>
         )}
       </div>
     </div>
