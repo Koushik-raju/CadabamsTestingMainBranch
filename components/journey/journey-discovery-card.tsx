@@ -69,7 +69,7 @@ export function JourneyDiscoveryCard({
   const mediaType = getMediaType(journey);
 
   const handleClick = () => {
-    router.push(`/journeys/${journeyId}/details`);
+    router.push(`/journeys/${journeyId}`);
   };
 
   return (

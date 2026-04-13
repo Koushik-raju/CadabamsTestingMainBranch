@@ -7,6 +7,7 @@ interface SubscribeFooterProps {
   isPremium?: boolean;
   isSubscribed?: boolean;
   isLoading?: boolean;
+  label?: string;
   onPress: () => void;
 }
 
@@ -15,13 +16,14 @@ export function SubscribeFooter({
   isPremium = false,
   isSubscribed = false,
   isLoading = false,
+  label: labelOverride,
   onPress,
 }: SubscribeFooterProps) {
-  const label = isSubscribed
+  const label = labelOverride ?? (isSubscribed
     ? 'Continue Journey →'
     : isPremium
     ? 'Unlock Premium Journey'
-    : 'Subscribe to Journey →';
+    : 'Subscribe to Journey →');
 
   return (
     <div className="fixed bottom-0 left-0 right-0 bg-card border-t border-border px-4 pt-3 pb-6 z-20">

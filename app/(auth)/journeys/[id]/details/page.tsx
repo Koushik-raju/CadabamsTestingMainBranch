@@ -1,12 +1,12 @@
 'use client';
 
-import { use } from 'react';
+import { use, useEffect } from 'react';
 import { Suspense } from 'react';
 import { MoreVertical } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { BackButton } from '@/components/shared/navigation/back-button';
 import { JourneyPathView } from '@/components/journey/journey-path-view';
-import { useJourneyDetail, useJourneyProgress } from '@/hooks/use-journey';
+import { useJourneyDetail, useJourneyProgress, subscribeToJourney } from '@/hooks/use-journey';
 import { useAuth } from '@/hooks/use-auth';
 import { extractJourneyName } from '@/types/journey';
 
@@ -15,11 +15,19 @@ interface PageProps { params: Promise<{ id: string }> }
 function DetailsContent({ params }: PageProps) {
   const { id }    = use(params);
   const { user }  = useAuth();
-  const mobile    = ((user as Record<string, unknown>)?.caller_mobile as string | undefined)
-    ?.replace(/\D/g, '') ?? null;
+  const mobile = (
+    ((user as Record<string, unknown>)?.caller_mobile as string | undefined) ??
+    ((user as Record<string, unknown>)?.phone_number as string | undefined)
+  )?.replace(/\D/g, '') ?? null;
 
   const { journey,  isLoading }           = useJourneyDetail(id);
   const { progress, isLoading: progLoad } = useJourneyProgress(id);
+
+  // Auto-subscribe free journeys on first visit
+  useEffect(() => {
+    if (!journey || journey.isPremium || progress || !mobile) return;
+    subscribeToJourney(mobile, journey).catch(console.error);
+  }, [journey, progress, mobile]);
 
   if (isLoading || progLoad) {
     return (

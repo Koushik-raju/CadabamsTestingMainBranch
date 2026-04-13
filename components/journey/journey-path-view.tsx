@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import {
   Flame, Zap, Lock, Clock, BarChart2, Timer,
@@ -16,7 +16,7 @@ import {
   Sheet, SheetContent, SheetHeader, SheetTitle,
 } from '@/components/ui/sheet';
 import {
-  useJourneyProgress, subscribeToJourney, updateNodeProgress,
+  useJourneyProgress, subscribeToJourney, updateNodeProgress, advanceCurrentDay,
 } from '@/hooks/use-journey';
 import type { JourneyProgress } from '@/hooks/use-journey';
 import { hapticLight, hapticMedium, hapticSuccess, hapticWarning } from '@/lib/haptics';
@@ -104,35 +104,73 @@ export function JourneyPathView({ journey, progress, mobile, journeyId }: Journe
 
   const xpTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  // Flat list of all nodes across all steps for active detection
-  const allNodes = steps.flatMap((step, si) =>
+  // Flat list of all nodes across all steps
+  const allNodes = useMemo(() => steps.flatMap((step, si) =>
     (step.tasks ?? []).map((task, ti) => ({ nodeId: `${step.id}-${task.id}`, stepIdx: si, taskIdx: ti, task }))
-  );
-  const totalNodes         = allNodes.length;
-  const firstIncompleteIdx = allNodes.findIndex(n => !completedIds.has(n.nodeId));
-  const activeNodeId       = isSubscribed && firstIncompleteIdx >= 0 ? allNodes[firstIncompleteIdx].nodeId : null;
-  const allComplete        = isSubscribed && firstIncompleteIdx === -1 && totalNodes > 0;
+  ), [steps]);
 
-  // Active day for Today banner
-  const activeDayIdx    = isSubscribed ? (allNodes.find(n => n.nodeId === activeNodeId)?.stepIdx ?? 0) : 0;
-  const activeStep      = steps[activeDayIdx];
-  const activeStepTitle = activeStep ? (typeof activeStep.title === 'string' ? activeStep.title : extractJourneyName(activeStep.title as never)) : '';
-  const todayDone       = activeStep ? (activeStep.tasks ?? []).filter(t => completedIds.has(`${activeStep.id}-${t.id}`)).length : 0;
-  const todayTotal      = activeStep?.tasks?.length ?? 0;
+  const totalNodes = allNodes.length;
+
+  // Current day index (0-based) gated by progress.currentDay — never advances past last step
+  const currentDayIdx = isSubscribed
+    ? Math.min((progress!.currentDay ?? 1) - 1, steps.length - 1)
+    : 0;
+
+  // Nodes belonging to the current day
+  const currentDayNodes = useMemo(
+    () => allNodes.filter(n => n.stepIdx === currentDayIdx),
+    [allNodes, currentDayIdx]
+  );
+
+  // First incomplete node within the current day only
+  const activeNodeId = isSubscribed
+    ? (currentDayNodes.find(n => !completedIds.has(n.nodeId))?.nodeId ?? null)
+    : null;
+
+  const allComplete = isSubscribed && totalNodes > 0 &&
+    allNodes.every(n => completedIds.has(n.nodeId));
+
+  const currentDayAllDone = currentDayNodes.length > 0 &&
+    currentDayNodes.every(n => completedIds.has(n.nodeId));
+
+  // Today banner uses currentDayIdx
+  const activeStep      = steps[currentDayIdx];
+  const activeStepTitle = activeStep
+    ? (typeof activeStep.title === 'string' ? activeStep.title : extractJourneyName(activeStep.title as never))
+    : '';
+  const todayDone  = currentDayNodes.filter(n => completedIds.has(n.nodeId)).length;
+  const todayTotal = currentDayNodes.length;
+
+  // Advance to next day when current day is fully done AND it's a new calendar day
+  useEffect(() => {
+    if (!isSubscribed || !mobile || !currentDayAllDone) return;
+    if (currentDayIdx >= steps.length - 1) return; // already on last step
+    const todayStr       = new Date().toISOString().split('T')[0];
+    const lastUpdatedStr = progress?.lastUpdated
+      ? new Date(progress.lastUpdated).toISOString().split('T')[0]
+      : todayStr;
+    if (todayStr <= lastUpdatedStr) return; // same day — don't advance yet
+    advanceCurrentDay(mobile, journeyId).catch(console.error);
+  }, [isSubscribed, mobile, currentDayAllDone, currentDayIdx, steps.length, journeyId, progress?.lastUpdated]);
 
   function getVariant(nodeId: string, stepIdx: number, taskIdx: number): NodeVariant {
-    if (stepIdx === 0) {
-      if (!isSubscribed) return taskIdx === 0 ? 'active' : 'default';
-      if (completedIds.has(nodeId)) return 'completed';
-      if (nodeId === activeNodeId) return 'active';
-      const first = allNodes.find(n => n.stepIdx === 0 && !completedIds.has(n.nodeId));
-      return first?.nodeId === nodeId ? 'default' : 'locked';
+    // Unsubscribed: only Day 1 preview
+    if (!isSubscribed) {
+      if (stepIdx === 0) return taskIdx === 0 ? 'active' : 'default';
+      return 'locked';
     }
-    if (!isSubscribed) return 'locked';
+
+    // Previous days — always completed (or locked if somehow missed)
+    if (stepIdx < currentDayIdx) return completedIds.has(nodeId) ? 'completed' : 'locked';
+
+    // Future days — always locked regardless of completion
+    if (stepIdx > currentDayIdx) return 'locked';
+
+    // Current day: sequential unlock within the day
     if (completedIds.has(nodeId)) return 'completed';
     if (nodeId === activeNodeId) return 'active';
-    const firstIn = allNodes.find(n => n.stepIdx === stepIdx && !completedIds.has(n.nodeId));
-    return firstIn?.nodeId === nodeId ? 'default' : 'locked';
+    const firstIncomplete = currentDayNodes.find(n => !completedIds.has(n.nodeId));
+    return firstIncomplete?.nodeId === nodeId ? 'default' : 'locked';
   }
 
   function getIsMandatory(task: JourneyTask): boolean {
@@ -325,40 +363,25 @@ export function JourneyPathView({ journey, progress, mobile, journeyId }: Journe
         )}
       </div>
 
-      {/* Footer */}
-      <div className="fixed bottom-0 left-0 right-0 bg-card/80 backdrop-blur-sm border-t border-border px-4 pt-3 pb-6 z-20">
-        {isSubscribed ? (
-          allComplete ? (
-            <div className="w-full h-14 rounded-2xl bg-primary/10 flex items-center justify-center">
-              <span className="text-base font-bold text-primary">Journey Complete 🎉</span>
-            </div>
-          ) : (
-            <button
-              onClick={handleContinue}
-              className="w-full h-14 rounded-2xl bg-primary text-primary-foreground font-extrabold text-sm tracking-widest uppercase active:scale-[0.98] transition-transform shadow-md shadow-primary/30"
-            >
-              Continue
-            </button>
-          )
-        ) : (
-          <>
-            <p className="text-xs text-muted-foreground mb-3 text-center">
-              {months} {months === 1 ? 'Month' : 'Months'} · {steps.length} Days · {dayCount} Tasks
-            </p>
-            <button
-              onClick={journey.isPremium ? () => setPremiumSheetOpen(true) : handleSubscribe}
-              disabled={subscribing}
-              className={cn(
-                'w-full h-14 rounded-2xl font-bold text-base active:scale-[0.98] transition-transform',
-                subscribing && 'opacity-60 cursor-not-allowed',
-                journey.isPremium ? 'bg-foreground text-background' : 'bg-primary text-primary-foreground shadow-md shadow-primary/30',
-              )}
-            >
-              {ctaLabel}
-            </button>
-          </>
-        )}
-      </div>
+      {/* Footer — only shown when NOT subscribed */}
+      {!isSubscribed && (
+        <div className="fixed bottom-0 left-0 right-0 bg-card/80 backdrop-blur-sm border-t border-border px-4 pt-3 pb-6 z-20">
+          <p className="text-xs text-muted-foreground mb-3 text-center">
+            {months} {months === 1 ? 'Month' : 'Months'} · {steps.length} Days · {dayCount} Tasks
+          </p>
+          <button
+            onClick={journey.isPremium ? () => setPremiumSheetOpen(true) : handleSubscribe}
+            disabled={subscribing}
+            className={cn(
+              'w-full h-14 rounded-2xl font-bold text-base active:scale-[0.98] transition-transform',
+              subscribing && 'opacity-60 cursor-not-allowed',
+              journey.isPremium ? 'bg-foreground text-background' : 'bg-primary text-primary-foreground shadow-md shadow-primary/30',
+            )}
+          >
+            {ctaLabel}
+          </button>
+        </div>
+      )}
 
       {/* Task action sheet */}
       <JourneyTaskActionSheet
@@ -392,6 +415,7 @@ export function JourneyPathView({ journey, progress, mobile, journeyId }: Journe
       {/* Premium / subscribe sheet */}
       <Sheet open={premiumSheetOpen} onOpenChange={setPremiumSheetOpen}>
         <SheetContent side="bottom" className="rounded-t-2xl px-5 pb-8">
+          <SheetTitle className="sr-only">Journey details</SheetTitle>
           <div className="mx-auto w-10 h-1 bg-border rounded-full mb-5" />
           {!isSubscribed ? (
             <>
@@ -424,9 +448,7 @@ export function JourneyPathView({ journey, progress, mobile, journeyId }: Journe
             </>
           ) : (
             <>
-              <SheetHeader className="mb-4">
-                <SheetTitle className="text-lg font-bold">Unlock with a plan</SheetTitle>
-              </SheetHeader>
+              <p className="text-lg font-bold text-foreground mb-2">Unlock with a plan</p>
               <p className="text-sm text-muted-foreground mb-6">Upgrade to unlock all units and track your progress.</p>
               <button
                 onClick={() => { setPremiumSheetOpen(false); router.push('/packages'); }}

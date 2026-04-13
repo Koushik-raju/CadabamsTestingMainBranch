@@ -31,7 +31,7 @@ export interface JourneyProgress {
 
 function getMobileFromUser(user: Record<string, unknown> | null | undefined): string | null {
   if (!user) return null;
-  const mobile = user.caller_mobile as string | undefined;
+  const mobile = (user.caller_mobile ?? user.phone_number) as string | undefined;
   if (!mobile) return null;
   return mobile.replace(/\D/g, '');
 }
@@ -152,7 +152,7 @@ export async function subscribeToJourney(
   const { database } = await import('@/lib/firebase');
   const { ref, set } = await import('firebase/database');
 
-  const journeyId = journey.documentId ?? journey.id;
+  const journeyId = journey.id;
   const name = extractJourneyName(journey.name);
   const totalDays = journey.steps?.length ?? 30;
 
@@ -164,7 +164,7 @@ export async function subscribeToJourney(
     totalDays,
     streak: 0,
     gems: 0,
-    isPremium: journey.isPremium ?? false,
+    isPremium: false,
     progress: 0,
     completedNodeIds: [],
     startDate: new Date().toISOString(),
@@ -174,6 +174,26 @@ export async function subscribeToJourney(
   await set(ref(database, `userJourneysMobile/${mobile}/journeys/${journeyId}`), record);
 
   // Revalidate progress cache
+  await globalMutate(journeyProgressKey(mobile, journeyId));
+}
+
+export async function advanceCurrentDay(
+  mobile: string,
+  journeyId: string
+): Promise<void> {
+  const { database } = await import('@/lib/firebase');
+  const { ref, get, set } = await import('firebase/database');
+
+  const snap = await get(ref(database, `userJourneysMobile/${mobile}/journeys/${journeyId}`));
+  if (!snap.exists()) return;
+
+  const current = snap.val() as JourneyProgress;
+  await set(ref(database, `userJourneysMobile/${mobile}/journeys/${journeyId}`), {
+    ...current,
+    currentDay: (current.currentDay ?? 1) + 1,
+    lastUpdated: new Date().toISOString(),
+  });
+
   await globalMutate(journeyProgressKey(mobile, journeyId));
 }
 

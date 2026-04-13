@@ -22,7 +22,7 @@ export function FeaturedJourneyCard({ journey }: FeaturedJourneyCardProps) {
     <div
       className="relative w-full rounded-2xl overflow-hidden cursor-pointer active:scale-[0.98] transition-all"
       style={{ minHeight: 220 }}
-      onClick={() => router.push(`/journeys/${id}/details`)}
+      onClick={() => router.push(`/journeys/${id}`)}
     >
       {/* Background image */}
       {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -65,7 +65,7 @@ export function FeaturedJourneyCard({ journey }: FeaturedJourneyCardProps) {
         <button
           onClick={(e) => {
             e.stopPropagation();
-            router.push(`/journeys/${id}/details`);
+            router.push(`/journeys/${id}`);
           }}
           className="flex items-center gap-1.5 bg-primary text-primary-foreground text-xs font-bold px-4 py-2 rounded-full transition-all active:scale-95"
         >
