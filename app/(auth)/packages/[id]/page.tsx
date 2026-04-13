@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback, use } from 'react';
+import { useState, use } from 'react';
 import { useRouter } from 'next/navigation';
 import {
   IndianRupee,
@@ -18,48 +18,55 @@ import {
   MapPin,
   ListOrdered,
   Stethoscope,
+  CheckCircle2,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
+import { Skeleton } from '@/components/ui/skeleton';
+import { Card, CardContent } from '@/components/ui/card';
 import { BackButton } from '@/components/shared/navigation/back-button';
-import { getPackagesManaged, postPaymentsPackage } from '@/sdk/auth-and-crm';
+import { useManagedPackages, initiatePackagePayment } from '@/hooks/use-packages';
 import { useAuth } from '@/hooks/use-auth';
-import type { BookedPackage } from '@/types/package';
-import type { BookedPackageProductLine } from '@/sdk/auth-and-crm';
+import { getPackagePalette } from '@/lib/package-colors';
+import type { BookedPackage, BookedPackageProductLine } from '@/types/package';
 
-function getStageBadge(stage: string) {
+function getStageMeta(stage: string): { label: string; Icon: React.ElementType } {
   switch (stage) {
-    case 'in_progress':
-      return { label: 'Active', className: 'bg-green-100 text-green-700 border-green-200', Icon: PlayCircle };
-    case 'confirm':
-      return { label: 'Confirmed', className: 'bg-primary/10 text-primary border-primary/20', Icon: CheckCircle };
-    case 'booked':
-      return { label: 'Pending Payment', className: 'bg-amber-100 text-amber-700 border-amber-200', Icon: Clock };
-    case 'done':
-      return { label: 'Completed', className: 'bg-muted text-muted-foreground border-border', Icon: CheckCircle };
-    default:
-      return { label: stage, className: 'bg-muted text-muted-foreground border-border', Icon: Package };
+    case 'in_progress': return { label: 'Active',           Icon: PlayCircle };
+    case 'confirm':     return { label: 'Confirmed',        Icon: CheckCircle };
+    case 'booked':      return { label: 'Pending Payment',  Icon: Clock };
+    case 'done':        return { label: 'Completed',        Icon: CheckCircle2 };
+    default:            return { label: stage,              Icon: Package };
   }
 }
 
 function getLineStatusBadge(status: string) {
   switch (status) {
     case 'done':
-      return <Badge variant="outline" className="text-[10px] bg-green-50 text-green-700 border-green-200">Done</Badge>;
+      return (
+        <Badge variant="outline" className="text-[10px] bg-green-50 text-green-700 border-green-200">
+          Done
+        </Badge>
+      );
     case 'scheduled':
-      return <Badge variant="outline" className="text-[10px] bg-primary/10 text-primary border-primary/20">Scheduled</Badge>;
+      return (
+        <Badge variant="outline" className="text-[10px] bg-violet-50 text-violet-700 border-violet-200">
+          Scheduled
+        </Badge>
+      );
     case 'cancelled':
-      return <Badge variant="outline" className="text-[10px] bg-destructive/10 text-destructive border-destructive/20">Cancelled</Badge>;
+      return (
+        <Badge variant="outline" className="text-[10px] bg-destructive/10 text-destructive border-destructive/20">
+          Cancelled
+        </Badge>
+      );
     default:
       return <Badge variant="outline" className="text-[10px]">Open</Badge>;
   }
 }
 
 type ManagedPkg = BookedPackage & {
-  caller_name?: string;
-  patient_name?: string;
-  sequence_booking?: boolean;
   lines?: BookedPackageProductLine[];
 };
 
@@ -68,50 +75,22 @@ export default function PackageDetailPage({ params }: { params: Promise<{ id: st
   const router = useRouter();
   const { user } = useAuth();
 
-  const [pkg, setPkg]               = useState<ManagedPkg | null>(null);
-  const [loading, setLoading]       = useState(true);
-  const [notFound, setNotFound]     = useState(false);
+  const { packages, isLoading } = useManagedPackages();
   const [payLoading, setPayLoading] = useState(false);
-  const [payError, setPayError]     = useState<string | null>(null);
+  const [payError, setPayError] = useState<string | null>(null);
 
-  const loadPackage = useCallback(async () => {
-    setLoading(true);
-    try {
-      const res = await getPackagesManaged();
-      const list = (res.data ?? []) as unknown as ManagedPkg[];
-      const found = list.find(p => String(p.booked_package_id) === id);
-      if (!found) {
-        setNotFound(true);
-      } else {
-        setPkg(found);
-      }
-    } catch (err) {
-      console.error('Failed to load package:', err);
-      setNotFound(true);
-    } finally {
-      setLoading(false);
-    }
-  }, [id]);
-
-  useEffect(() => {
-    loadPackage();
-  }, [loadPackage]);
+  const pkg = packages.find((p) => String(p.booked_package_id) === id) as ManagedPkg | undefined;
 
   const handlePayNow = async () => {
     if (!pkg || !user?.lead_id) return;
     setPayLoading(true);
     setPayError(null);
     try {
-      const res = await postPaymentsPackage({
-        body: {
-          booked_package_id: Number(pkg.booked_package_id),
-          campus_id: Number(pkg.campus_id[0]),
-          lead_id: Number(user.lead_id),
-        },
+      const url = await initiatePackagePayment({
+        booked_package_id: Number(pkg.booked_package_id),
+        campus_id: Number(pkg.campus_id[0]),
+        lead_id: Number(user.lead_id),
       });
-      if (res.error) throw new Error(JSON.stringify(res.error));
-      const url = res.data?.result?.short_url;
-      if (!url) throw new Error('No payment URL received.');
       window.location.href = url;
     } catch (err: unknown) {
       setPayError((err as { message?: string })?.message ?? 'Failed to process payment');
@@ -121,19 +100,23 @@ export default function PackageDetailPage({ params }: { params: Promise<{ id: st
 
   const handleViewJourney = () => {
     if (!pkg?.journey_id) return;
-    const isPreview = pkg.package_stage === 'booked' ? '&isPreview=true' : '';
     router.push(`/journeys/${pkg.journey_id}/details`);
   };
 
-  if (loading) {
+  if (isLoading) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      <div className="min-h-screen bg-background">
+        <Skeleton className="h-52 w-full" />
+        <div className="px-4 pt-4 space-y-3">
+          {[0, 1, 2].map((i) => (
+            <Skeleton key={i} className="h-24 w-full rounded-2xl" />
+          ))}
+        </div>
       </div>
     );
   }
 
-  if (notFound || !pkg) {
+  if (!pkg) {
     return (
       <div className="min-h-screen bg-background">
         <div className="flex items-center gap-3 px-4 pt-6 pb-4">
@@ -141,7 +124,7 @@ export default function PackageDetailPage({ params }: { params: Promise<{ id: st
           <h1 className="text-xl font-bold text-foreground">Package Details</h1>
         </div>
         <div className="flex flex-col items-center justify-center px-6 py-16 text-center gap-4">
-          <Package className="h-16 w-16 text-muted-foreground/50" />
+          <AlertCircle className="h-16 w-16 text-muted-foreground/50" />
           <p className="text-lg font-semibold text-foreground">Package not found</p>
           <Button variant="outline" onClick={() => router.push('/packages')}>
             Back to Packages
@@ -151,143 +134,204 @@ export default function PackageDetailPage({ params }: { params: Promise<{ id: st
     );
   }
 
-  const { label, className, Icon } = getStageBadge(pkg.package_stage);
-  const packageName = pkg.package_id[1] ?? 'Package';
-  const campusName  = pkg.campus_id[1] ?? '';
+  const palette = getPackagePalette(pkg.booked_package_id);
+  const { label, Icon } = getStageMeta(pkg.package_stage);
+  const packageName = String(pkg.package_id[1] ?? 'Package');
+  const campusName = String(pkg.campus_id[1] ?? '');
   const lines = pkg.lines ?? [];
-  const doneCount = lines.filter(l => l.status === 'done').length;
+  const doneCount = lines.filter((l) => l.status === 'done').length;
+
+  const initials = packageName
+    .split(' ')
+    .slice(0, 2)
+    .map((w) => w[0] ?? '')
+    .join('')
+    .toUpperCase();
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Header */}
-      <div className="bg-card border-b border-border px-4 pt-6 pb-4">
-        <div className="flex items-center gap-3 mb-3">
-          <BackButton fallback="/packages" />
-          <span className="text-sm font-medium text-muted-foreground">Package Details</span>
+      {/* Hero header */}
+      <div className={`relative bg-gradient-to-br ${palette.gradient} pt-safe-top overflow-hidden`}>
+        {/* Decorative circles */}
+        <div className="absolute -top-8 -right-8 w-40 h-40 rounded-full bg-white/10" />
+        <div className="absolute -bottom-10 -left-6 w-48 h-48 rounded-full bg-white/5" />
+
+        {/* Back button row */}
+        <div className="relative flex items-center px-4 pt-4 pb-2">
+          <BackButton fallback="/packages" className="text-white/80 hover:text-white" />
         </div>
-        <div className="flex items-start justify-between gap-2">
-          <h1 className="text-lg font-bold text-foreground leading-snug flex-1">{packageName}</h1>
-          <Badge variant="outline" className={`text-[10px] shrink-0 gap-1 ${className}`}>
-            <Icon className="h-2.5 w-2.5" />
-            {label}
-          </Badge>
+
+        {/* Package identity */}
+        <div className="relative px-5 pb-6 pt-2">
+          <div className="flex items-center gap-3 mb-3">
+            <div className="w-12 h-12 rounded-2xl bg-white/20 backdrop-blur-sm flex items-center justify-center font-bold text-lg text-white shrink-0">
+              {initials}
+            </div>
+            <Badge className={`${palette.badgeBg} backdrop-blur-sm text-white border-0 hover:opacity-100 gap-1 text-xs font-semibold`}>
+              <Icon className="w-3.5 h-3.5" />
+              {label}
+            </Badge>
+          </div>
+          <h1 className="text-white font-bold text-xl leading-snug mb-1">{packageName}</h1>
+          <p className="text-white/60 text-xs">Booking #{pkg.booked_package_id}</p>
         </div>
-        <p className="text-xs text-muted-foreground mt-1">Booking #{pkg.booked_package_id}</p>
+
+        {/* Stats strip */}
+        <div className="relative grid grid-cols-2 bg-black/10 border-t border-white/10 divide-x divide-white/10">
+          <div className="flex items-center gap-2 px-5 py-3">
+            <IndianRupee className="w-4 h-4 text-white/70 shrink-0" />
+            <div>
+              <p className="text-white font-bold text-base leading-tight">
+                ₹{pkg.package_cost.toLocaleString('en-IN')}
+              </p>
+              <p className="text-white/60 text-[10px]">Package cost</p>
+            </div>
+          </div>
+          <div className="flex items-center gap-2 px-5 py-3">
+            <Calendar className="w-4 h-4 text-white/70 shrink-0" />
+            <div>
+              <p className="text-white font-bold text-sm leading-tight">{pkg.date}</p>
+              <p className="text-white/60 text-[10px]">Booked on</p>
+            </div>
+          </div>
+        </div>
       </div>
 
-      <div className="px-4 py-4 pb-36 space-y-3">
+      {/* Scrollable body */}
+      <div className="px-4 pt-4 pb-36 space-y-3">
 
-        {/* Key details */}
-        <div className="bg-card border border-border rounded-2xl p-4 space-y-3">
-          <div className="grid grid-cols-2 gap-3">
-            <div className="space-y-0.5">
-              <p className="text-[10px] text-muted-foreground uppercase tracking-wide">Amount</p>
-              <p className="text-base font-bold text-primary">₹{pkg.package_cost.toLocaleString('en-IN')}</p>
-            </div>
-            <div className="space-y-0.5">
-              <p className="text-[10px] text-muted-foreground uppercase tracking-wide">Date</p>
-              <p className="text-sm font-semibold text-foreground">{pkg.date}</p>
-            </div>
-          </div>
-
-          {(campusName || pkg.patient_name || pkg.caller_name) && (
-            <>
-              <Separator />
-              <div className="space-y-2.5">
-                {campusName && (
-                  <div className="flex items-center gap-2.5">
-                    <MapPin className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
-                    <div>
-                      <p className="text-[10px] text-muted-foreground uppercase tracking-wide">Campus</p>
-                      <p className="text-sm font-medium text-foreground">{campusName}</p>
-                    </div>
+        {/* Patient / Campus details */}
+        {(campusName || pkg.patient_name || pkg.caller_name) && (
+          <Card>
+            <CardContent className="p-4 space-y-2.5">
+              {campusName && (
+                <div className="flex items-center gap-3">
+                  <div className="w-8 h-8 rounded-xl bg-sky-100 flex items-center justify-center shrink-0">
+                    <MapPin className="w-4 h-4 text-sky-600" />
                   </div>
-                )}
-                {pkg.patient_name && (
-                  <div className="flex items-center gap-2.5">
-                    <User className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
-                    <div>
-                      <p className="text-[10px] text-muted-foreground uppercase tracking-wide">Patient</p>
-                      <p className="text-sm font-medium text-foreground">{pkg.patient_name}</p>
-                    </div>
+                  <div>
+                    <p className="text-[10px] text-muted-foreground uppercase tracking-wide">Campus</p>
+                    <p className="text-sm font-semibold text-foreground">{campusName}</p>
                   </div>
-                )}
-                {pkg.caller_name && pkg.caller_name !== pkg.patient_name && (
-                  <div className="flex items-center gap-2.5">
-                    <User className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
+                </div>
+              )}
+              {(campusName && (pkg.patient_name || pkg.caller_name)) && (
+                <Separator />
+              )}
+              {pkg.patient_name && (
+                <div className="flex items-center gap-3">
+                  <div className="w-8 h-8 rounded-xl bg-violet-100 flex items-center justify-center shrink-0">
+                    <User className="w-4 h-4 text-violet-600" />
+                  </div>
+                  <div>
+                    <p className="text-[10px] text-muted-foreground uppercase tracking-wide">Patient</p>
+                    <p className="text-sm font-semibold text-foreground">{pkg.patient_name}</p>
+                  </div>
+                </div>
+              )}
+              {pkg.caller_name && pkg.caller_name !== pkg.patient_name && (
+                <>
+                  <Separator />
+                  <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 rounded-xl bg-orange-100 flex items-center justify-center shrink-0">
+                      <User className="w-4 h-4 text-orange-600" />
+                    </div>
                     <div>
                       <p className="text-[10px] text-muted-foreground uppercase tracking-wide">Booked by</p>
-                      <p className="text-sm font-medium text-foreground">{pkg.caller_name}</p>
+                      <p className="text-sm font-semibold text-foreground">{pkg.caller_name}</p>
                     </div>
                   </div>
-                )}
-              </div>
-            </>
-          )}
+                </>
+              )}
+              {pkg.sequence_booking !== undefined && (
+                <>
+                  <Separator />
+                  <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 rounded-xl bg-teal-100 flex items-center justify-center shrink-0">
+                      <ListOrdered className="w-4 h-4 text-teal-600" />
+                    </div>
+                    <p className="text-sm text-foreground">
+                      {pkg.sequence_booking ? 'Sequential booking enabled' : 'Flexible booking order'}
+                    </p>
+                  </div>
+                </>
+              )}
+            </CardContent>
+          </Card>
+        )}
 
-          {pkg.sequence_booking !== undefined && (
-            <>
-              <Separator />
-              <div className="flex items-center gap-2.5">
-                <ListOrdered className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
-                <p className="text-sm text-foreground">
-                  {pkg.sequence_booking ? 'Sequential booking enabled' : 'Flexible booking order'}
-                </p>
-              </div>
-            </>
-          )}
-        </div>
-
-        {/* Journey */}
+        {/* Care Journey */}
         {pkg.journey_id && (
-          <div className="bg-card border border-border rounded-2xl p-4 flex items-center justify-between gap-3">
-            <div className="flex items-center gap-2.5">
-              <BookOpen className="w-4 h-4 text-primary shrink-0" />
-              <div>
-                <p className="text-sm font-semibold text-foreground">Care Journey</p>
-                <p className="text-xs text-muted-foreground">Your personalised care plan</p>
+          <Card className="border-violet-200 bg-violet-50/50">
+            <CardContent className="p-4 flex items-center justify-between gap-3">
+              <div className="flex items-center gap-3">
+                <div className="w-9 h-9 rounded-xl bg-violet-100 flex items-center justify-center shrink-0">
+                  <BookOpen className="w-4 h-4 text-violet-600" />
+                </div>
+                <div>
+                  <p className="text-sm font-semibold text-foreground">Care Journey</p>
+                  <p className="text-xs text-muted-foreground">Your personalised care plan</p>
+                </div>
               </div>
-            </div>
-            <Button size="sm" variant="outline" className="shrink-0 rounded-full" onClick={handleViewJourney}>
-              View
-            </Button>
-          </div>
+              <Button
+                size="sm"
+                variant="outline"
+                className="shrink-0 rounded-full border-violet-200 text-violet-700 hover:bg-violet-100"
+                onClick={handleViewJourney}
+              >
+                View
+              </Button>
+            </CardContent>
+          </Card>
         )}
 
         {/* Sessions */}
         {lines.length > 0 && (
-          <div className="bg-card border border-border rounded-2xl p-4 space-y-3">
-            <div className="flex items-center justify-between">
-              <p className="text-sm font-semibold text-foreground">Sessions</p>
-              <span className="text-xs text-muted-foreground">{doneCount}/{lines.length} completed</span>
-            </div>
-            <div className="space-y-2">
-              {lines.map((line, i) => (
-                <div key={line.id ?? i} className="flex items-center gap-3 py-2 border-b border-border last:border-0">
-                  <div className="w-6 h-6 rounded-full bg-muted flex items-center justify-center shrink-0 text-[10px] font-bold text-muted-foreground">
-                    {line.sequence_no ?? i + 1}
+          <Card>
+            <CardContent className="p-4 space-y-3">
+              <div className="flex items-center justify-between">
+                <p className="text-sm font-semibold text-foreground">Sessions</p>
+                <Badge variant="secondary" className="text-xs font-medium">
+                  {doneCount}/{lines.length} done
+                </Badge>
+              </div>
+              <div className="h-1.5 bg-muted rounded-full overflow-hidden">
+                <div
+                  className="h-full bg-gradient-to-r from-emerald-500 to-teal-500 rounded-full transition-all"
+                  style={{ width: `${Math.round((doneCount / lines.length) * 100)}%` }}
+                />
+              </div>
+              <div className="space-y-1">
+                {lines.map((line, i) => (
+                  <div key={line.id ?? i} className="flex items-center gap-3 py-2.5 border-b border-border last:border-0">
+                    <div className="w-7 h-7 rounded-full bg-muted flex items-center justify-center shrink-0 text-[11px] font-bold text-muted-foreground">
+                      {line.sequence_no ?? i + 1}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium text-foreground truncate">
+                        {String(line.product_id[1])}
+                      </p>
+                      {line.speciality_id && (
+                        <div className="flex items-center gap-1 mt-0.5">
+                          <Stethoscope className="w-3 h-3 text-muted-foreground" />
+                          <p className="text-xs text-muted-foreground">{String(line.speciality_id[1])}</p>
+                        </div>
+                      )}
+                    </div>
+                    <div className="flex flex-col items-end gap-1 shrink-0">
+                      {getLineStatusBadge(line.status)}
+                      {line.price_subtotal > 0 && (
+                        <span className="text-[10px] text-muted-foreground flex items-center gap-0.5">
+                          <IndianRupee className="w-2.5 h-2.5" />
+                          {line.price_subtotal.toLocaleString('en-IN')}
+                        </span>
+                      )}
+                    </div>
                   </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-foreground truncate">{String(line.product_id[1])}</p>
-                    {line.speciality_id && (
-                      <div className="flex items-center gap-1 mt-0.5">
-                        <Stethoscope className="w-3 h-3 text-muted-foreground" />
-                        <p className="text-xs text-muted-foreground">{String(line.speciality_id[1])}</p>
-                      </div>
-                    )}
-                  </div>
-                  <div className="flex flex-col items-end gap-1 shrink-0">
-                    {getLineStatusBadge(line.status)}
-                    {line.price_subtotal > 0 && (
-                      <span className="text-[10px] text-muted-foreground">
-                        ₹{line.price_subtotal.toLocaleString('en-IN')}
-                      </span>
-                    )}
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
         )}
 
         {/* Error */}
@@ -303,18 +347,24 @@ export default function PackageDetailPage({ params }: { params: Promise<{ id: st
       <div className="fixed bottom-0 left-0 right-0 px-4 pb-6 pt-3 bg-background/95 backdrop-blur border-t border-border space-y-2">
         {pkg.package_stage === 'booked' && (
           <Button
-            className="w-full rounded-full h-12 text-base font-semibold gap-2"
+            className={`w-full rounded-full h-12 text-base font-semibold gap-2 bg-gradient-to-r ${palette.ctaGradient} border-0 text-white`}
             onClick={handlePayNow}
             disabled={payLoading}
           >
-            {payLoading ? <Loader2 className="h-5 w-5 animate-spin" /> : <CreditCard className="h-5 w-5" />}
-            {payLoading ? 'Redirecting to Razorpay…' : `Pay ₹${pkg.package_cost.toLocaleString('en-IN')}`}
+            {payLoading ? (
+              <Loader2 className="h-5 w-5 animate-spin" />
+            ) : (
+              <CreditCard className="h-5 w-5" />
+            )}
+            {payLoading
+              ? 'Redirecting to Razorpay…'
+              : `Pay ₹${pkg.package_cost.toLocaleString('en-IN')}`}
           </Button>
         )}
 
         {(pkg.package_stage === 'confirm' || pkg.package_stage === 'in_progress') && (
           <Button
-            className="w-full rounded-full h-12 text-base font-semibold gap-2"
+            className={`w-full rounded-full h-12 text-base font-semibold gap-2 bg-gradient-to-r ${palette.ctaGradient} border-0 text-white`}
             onClick={() => router.push('/consult/find-therapist')}
           >
             <CalendarPlus className="h-5 w-5" />
@@ -324,7 +374,7 @@ export default function PackageDetailPage({ params }: { params: Promise<{ id: st
 
         {pkg.package_stage === 'done' && pkg.journey_id && (
           <Button
-            className="w-full rounded-full h-12 text-base font-semibold gap-2"
+            className={`w-full rounded-full h-12 text-base font-semibold gap-2 bg-gradient-to-r ${palette.ctaGradient} border-0 text-white`}
             onClick={handleViewJourney}
           >
             <BookOpen className="h-5 w-5" />
