@@ -135,3 +135,6 @@ Each hook returns `{ data, isLoading, error }`. Pages should handle all three st
 - Show loading skeleton while `isLoading` is true
 - Show error message with retry button if `error` exists
 - Render data normally once loaded
+
+# Notes
+use ast-grep for search.
