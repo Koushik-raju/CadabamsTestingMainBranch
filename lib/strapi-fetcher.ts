@@ -33,8 +33,11 @@ export interface StrapiPagination {
   pageCount?: number;
 }
 
+type WellnessResource = import('@/hooks/wellness/use-wellness-resources').WellnessResource;
+type VideoItem = import('@/hooks/wellness/use-videos').VideoItem;
+
 export interface StrapiWellnessListResponse {
-  data: import('@/types/wellness').WellnessResource[];
+  data: WellnessResource[];
   meta?: { pagination?: StrapiPagination };
 }
 
@@ -49,7 +52,7 @@ export interface WellnessResourcesParams {
 
 /** Fetch paginated wellness resources from the /blogs endpoint */
 export async function fetchWellnessResourcesList(params: WellnessResourcesParams = {}): Promise<{
-  resources: import('@/types/wellness').WellnessResource[];
+  resources: WellnessResource[];
   pagination: StrapiPagination;
 }> {
   const { page = 1, pageSize = 12, search = '', category = '' } = params;
@@ -76,7 +79,7 @@ export async function fetchWellnessResourcesList(params: WellnessResourcesParams
 /** Fetch a single wellness resource by slug */
 export async function fetchWellnessResourceBySlug(
   slug: string
-): Promise<import('@/types/wellness').WellnessResource | null> {
+): Promise<WellnessResource | null> {
   const json = await strapiGet<StrapiWellnessListResponse>(
     `/blogs?filters[slug][$eq][0]=${encodeURIComponent(slug)}&pLevel=5`
   );
@@ -86,7 +89,7 @@ export async function fetchWellnessResourceBySlug(
 // ─── Videos ──────────────────────────────────────────────────────────────────
 
 export interface StrapiVideoListResponse {
-  data: import('@/types/wellness').VideoItem[];
+  data: VideoItem[];
 }
 
 /** Strip markdown headings/formatting from a string */
@@ -101,7 +104,7 @@ export function stripMarkdown(text: string): string {
 }
 
 /** Fetch collection videos */
-export async function fetchVideos(): Promise<import('@/types/wellness').VideoItem[]> {
+export async function fetchVideos(): Promise<VideoItem[]> {
   const json = await strapiGet<StrapiVideoListResponse>(
     '/videos?pLevel&filters[type][$eq]=Collection%20Video'
   );
@@ -112,7 +115,7 @@ export async function fetchVideos(): Promise<import('@/types/wellness').VideoIte
 /** Fetch a single video by slug */
 export async function fetchVideoBySlug(
   slug: string
-): Promise<import('@/types/wellness').VideoItem | null> {
+): Promise<VideoItem | null> {
   const json = await strapiGet<StrapiVideoListResponse>(
     `/videos?filters[slug][$eq]=${encodeURIComponent(slug)}&pLevel=5`
   );

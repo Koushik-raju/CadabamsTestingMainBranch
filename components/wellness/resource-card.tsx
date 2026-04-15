@@ -2,7 +2,7 @@ import Image from 'next/image';
 import { ChevronRight, Play } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Card } from '@/components/ui/card';
-import { WellnessResource } from '@/types/wellness';
+import type { WellnessResource } from '@/hooks/wellness/use-wellness-resources';
 import { cn } from '@/lib/utils';
 
 function getStrapiImageUrl(coverImage?: WellnessResource['coverImage']): string | null {

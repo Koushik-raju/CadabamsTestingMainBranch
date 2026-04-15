@@ -17,7 +17,7 @@ import {
 import { Slider } from '@/components/ui/slider';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
-import type { MindfulMinuteAudio } from '@/types/wellness';
+import type { MindfulMinuteAudio } from '@/hooks/wellness/use-mindful-minutes';
 
 interface FullscreenAudioPlayerProps {
   audios: MindfulMinuteAudio[];

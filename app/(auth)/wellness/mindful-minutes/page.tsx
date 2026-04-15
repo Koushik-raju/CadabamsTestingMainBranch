@@ -9,7 +9,7 @@ import { CategoryFilter } from '@/components/wellness/category-filter';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { useMindfulMinutes } from '@/hooks/use-mindful-minutes';
+import { useMindfulMinutes } from '@/hooks/wellness/use-mindful-minutes';
 import { getStrapiImageUrl } from '@/lib/strapi-fetcher';
 import { cn } from '@/lib/utils';
 

@@ -8,13 +8,13 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Search } from 'lucide-react';
-import { useMindfulMinuteDetail } from '@/hooks/use-mindful-minute-detail';
+import { useMindfulMinuteDetail } from '@/hooks/wellness/use-mindful-minute-detail';
 import {
   FullscreenAudioPlayer,
   EqualizerBars,
 } from '@/components/wellness/fullscreen-audio-player';
 import Link from 'next/link';
-import type { MindfulMinuteAudio } from '@/types/wellness';
+import type { MindfulMinuteAudio } from '@/hooks/wellness/use-mindful-minutes';
 
 type SortOrder = 'asc' | 'desc';
 

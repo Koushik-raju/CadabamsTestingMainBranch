@@ -7,7 +7,7 @@ import { BackButton } from '@/components/shared/navigation/back-button';
 import { VideoPlayer } from '@/components/wellness/video-player';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
-import { useVideoDetail } from '@/hooks/use-video-detail';
+import { useVideoDetail } from '@/hooks/wellness/use-video-detail';
 import { getStrapiImageUrl } from '@/lib/strapi-fetcher';
 
 export default function VideoDetailPage() {

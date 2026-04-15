@@ -58,12 +58,12 @@
 
 ## 7. Wellness Content Migration
 
-- [ ] 7.1 Create `hooks/wellness/use-mindful-minutes.ts` using `cmsMindfulMinutesControllerFindAll`; replace `getApiV1MindfulMinutes` from `@/sdk/strapi`
-- [ ] 7.2 Create `hooks/wellness/use-mindful-minute-detail.ts` using `cmsMindfulMinutesControllerFindBySlug`
-- [ ] 7.3 Create `hooks/wellness/use-videos.ts` and `use-video-detail.ts` using equivalent CMS video controllers from `@/sdk/backend-v2`
-- [ ] 7.4 Create `hooks/wellness/use-wellness-resources.ts` and `use-wellness-resource-detail.ts` using backend-v2 CMS endpoints
-- [ ] 7.5 Update `app/(auth)/wellness/mindful-minutes/*`, `wellness/video/*`, `wellness/resources/*` pages to use new hooks
-- [ ] 7.6 Delete `types/wellness.ts` once no references remain
+- [x] 7.1 Create `hooks/wellness/use-mindful-minutes.ts` using `cmsMindfulMinutesControllerFindAll`; replace `getApiV1MindfulMinutes` from `@/sdk/strapi`
+- [x] 7.2 Create `hooks/wellness/use-mindful-minute-detail.ts` using `cmsMindfulMinutesControllerFindBySlug`
+- [x] 7.3 Create `hooks/wellness/use-videos.ts` and `use-video-detail.ts` using equivalent CMS video controllers from `@/sdk/backend-v2`
+- [x] 7.4 Create `hooks/wellness/use-wellness-resources.ts` and `use-wellness-resource-detail.ts` using backend-v2 CMS endpoints
+- [x] 7.5 Update `app/(auth)/wellness/mindful-minutes/*`, `wellness/video/*`, `wellness/resources/*` pages to use new hooks
+- [x] 7.6 Delete `types/wellness.ts` once no references remain
 
 ## 8. Documents, Notifications, Prescriptions, Leaderboard
 

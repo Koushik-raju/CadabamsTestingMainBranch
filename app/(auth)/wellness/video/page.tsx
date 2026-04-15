@@ -9,9 +9,9 @@ import { CategoryFilter } from '@/components/wellness/category-filter';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { useVideos } from '@/hooks/use-videos';
+import { useVideos } from '@/hooks/wellness/use-videos';
 import { getStrapiImageUrl } from '@/lib/strapi-fetcher';
-import type { VideoItem } from '@/types/wellness';
+import type { VideoItem } from '@/hooks/wellness/use-videos';
 
 // ─── Video card ───────────────────────────────────────────────────────────────
 function VideoCard({
