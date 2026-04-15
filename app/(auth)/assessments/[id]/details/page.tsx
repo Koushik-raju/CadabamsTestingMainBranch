@@ -106,14 +106,14 @@ export default function AssessmentDetailsPage({
         <div className="px-5 pt-5 space-y-5">
           {/* Badge */}
           {badgeText && (
-            <p className="text-xs font-semibold text-orange-500 tracking-wide uppercase">
+            <p className="text-xs font-semibold text-primary tracking-wide uppercase">
               {badgeText}
             </p>
           )}
           {!badgeText && (
             <div className="flex items-center gap-1.5">
-              <ShieldCheck className="w-3.5 h-3.5 text-orange-500" />
-              <p className="text-xs font-semibold text-orange-500 tracking-wide">
+              <ShieldCheck className="w-3.5 h-3.5 text-primary" />
+              <p className="text-xs font-semibold text-primary tracking-wide">
                 Clinically Validated
               </p>
             </div>
@@ -134,14 +134,14 @@ export default function AssessmentDetailsPage({
           {/* Stats row */}
           <div className="flex gap-6 py-3 border-y border-border">
             <div className="flex items-center gap-2 text-sm">
-              <Clock className="w-4 h-4 text-orange-500" />
+              <Clock className="w-4 h-4 text-primary" />
               <div>
                 <p className="font-semibold text-foreground">{durationMins} min</p>
                 <p className="text-[11px] text-muted-foreground">Duration</p>
               </div>
             </div>
             <div className="flex items-center gap-2 text-sm">
-              <ListChecks className="w-4 h-4 text-orange-500" />
+              <ListChecks className="w-4 h-4 text-primary" />
               <div>
                 <p className="font-semibold text-foreground">{questionCount} Questions</p>
                 <p className="text-[11px] text-muted-foreground">Length</p>
@@ -154,7 +154,7 @@ export default function AssessmentDetailsPage({
             <ul className="space-y-4">
               {points.map((point) => (
                 <li key={point.id} className="flex items-start gap-3">
-                  <CheckCircle2 className="w-5 h-5 text-orange-500 flex-shrink-0 mt-0.5" />
+                  <CheckCircle2 className="w-5 h-5 text-primary flex-shrink-0 mt-0.5" />
                   <div>
                     <p className="text-sm font-medium text-foreground">{point.item}</p>
                   </div>
@@ -174,7 +174,7 @@ export default function AssessmentDetailsPage({
       {/* CTA */}
       <div className="fixed bottom-0 left-0 right-0 px-5 pb-8 pt-3 bg-background border-t border-border">
         <Button
-          className="w-full bg-orange-500 hover:bg-orange-600 text-white font-semibold text-base h-14 rounded-2xl"
+          className="w-full bg-primary hover:bg-primary/90 text-white font-semibold text-base h-14 rounded-2xl"
           onClick={() => router.push(`/assessments/${assessmentId}`)}
         >
           Start Assessment

@@ -21,7 +21,7 @@ export function McqSelector({ title, subTitle, questions, selected, onSelect }: 
   return (
     <div className="flex flex-col px-5 pt-6 pb-4 w-full">
       {subTitle && (
-        <p className="text-xs font-semibold text-orange-500 uppercase tracking-wide mb-2">
+        <p className="text-xs font-semibold text-primary uppercase tracking-wide mb-2">
           {subTitle}
         </p>
       )}
@@ -40,20 +40,20 @@ export function McqSelector({ title, subTitle, questions, selected, onSelect }: 
               onClick={() => onSelect(label)}
               className={`flex items-center justify-between gap-3 px-4 py-4 rounded-2xl border-2 w-full text-left transition-all duration-150 active:scale-[0.98] ${
                 isSelected
-                  ? 'border-orange-500 bg-orange-50'
-                  : 'border-border bg-card hover:border-orange-200'
+                  ? 'border-primary bg-primary/5'
+                  : 'border-border bg-card hover:border-primary/30'
               }`}
             >
               <span
                 className={`text-sm font-medium leading-snug ${
-                  isSelected ? 'text-orange-700' : 'text-foreground'
+                  isSelected ? 'text-primary' : 'text-foreground'
                 }`}
               >
                 {label}
               </span>
               <span className="flex-shrink-0">
                 {isSelected ? (
-                  <CheckCircle2 className="w-5 h-5 text-orange-500" />
+                  <CheckCircle2 className="w-5 h-5 text-primary" />
                 ) : (
                   <span className="w-5 h-5 rounded-full border-2 border-muted-foreground/40 block" />
                 )}

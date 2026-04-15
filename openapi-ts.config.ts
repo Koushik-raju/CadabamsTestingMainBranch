@@ -1,28 +1,15 @@
 import { defineConfig } from '@hey-api/openapi-ts';
 
-const OPENAPI_URL = 'https://auth.cadabams.com/api/v1/openapi';
-const STRAPI_BACKEND_URL = `https://console.mindtalkbuddy.com/docs/json`;
-// const STRAPI_BACKEND_URL = `http://127.0.0.1:4010/docs/json`;
+const BACKEND_V2_URL = 'http://backend-v2.cadabams.com/docs-json';
 
 export default defineConfig([
   {
-    input: OPENAPI_URL,
-    output: 'sdk/auth-and-crm',
+    input: BACKEND_V2_URL,
+    output: 'sdk/backend-v2',
     plugins: [
       {
         name: '@hey-api/client-axios',
-        runtimeConfigPath: '@/api/hey-api.auth-and-crm.ts',
-      },
-      '@hey-api/sdk',
-    ],
-  },
-  {
-    input: STRAPI_BACKEND_URL,
-    output: 'sdk/strapi',
-    plugins: [
-      {
-        name: '@hey-api/client-axios',
-        runtimeConfigPath: '@/api/strapi.ts',
+        runtimeConfigPath: '@/api/backend-v2.ts',
       },
       '@hey-api/sdk',
     ],

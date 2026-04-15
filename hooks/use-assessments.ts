@@ -1,13 +1,35 @@
+import qs from 'qs';
 import useSWR, { SWRConfiguration } from 'swr';
 import useSWRInfinite from 'swr/infinite';
 import { doc, getDoc } from 'firebase/firestore';
 import { ref, get, push } from 'firebase/database';
 import { firestore, database } from '@/lib/firebase';
-import { getApiV1Assessments, getApiV1AssessmentsById } from '@/sdk/strapi';
+import { getApiV1AssessmentsById } from '@/sdk/strapi';
 import type { GetApiV1AssessmentsResponses } from '@/sdk/strapi';
+import { client } from '@/sdk/strapi/client.gen';
 import { swrConfig } from '@/lib/swr-config';
 import { backendClient } from '@/lib/api-client';
 import { endpoints } from '@/config/api-endpoints';
+
+// Base $and filter clauses — grouped for Strapi v5 compatibility
+const BASE_FILTER_CLAUSES = [
+  { status: { $eq: 'PUBLISHED' } },
+  { citationText: { $notNull: true } },
+] as const;
+
+async function strapiGetAssessments(params: Record<string, unknown>) {
+  // Separate `populate` to prevent qs encoding `*` → `%2A` which Strapi won't recognise
+  const { populate, ...rest } = params as Record<string, unknown> & { populate?: unknown };
+  const queryString = qs.stringify(rest, { encodeValuesOnly: true });
+  const populatePart = populate !== undefined ? `&populate=${populate}` : '';
+  const fullUrl = `/api/v1/assessments/?${queryString}${populatePart}`;
+  console.log('[ASSESS:1] URL', fullUrl);
+  const response = await client.get({ url: fullUrl });
+  console.log('[ASSESS:2] response.data keys', response.data ? Object.keys(response.data as object) : response.data);
+  const payload = (response.data as { data?: GetApiV1AssessmentsResponses[200]['data'] })?.data;
+  console.log('[ASSESS:3] payload', payload ? `items=${payload.items?.length} pagination=${JSON.stringify(payload.pagination)}` : payload);
+  return payload;
+}
 
 // ---------------------------------------------------------------------------
 // Types
@@ -21,6 +43,7 @@ export interface AssessmentItem {
   label: string | null;
   hint: string | null;
   image: string | null;
+  citationText: string | null;
   status: 'DRAFT' | 'PUBLISHED';
   visibleToAll: boolean;
   forJourney: boolean;
@@ -86,11 +109,13 @@ export function mapStrapiAssessment(
   return {
     id: item.id,
     title: item.landingTitle?.title || item.label || item.title,
-    description: item.description || item.landingTitle?.landingDescription || null,
+    description:
+      item.description || item.landingTitle?.landingDescription || null,
     category: item.category,
     label: item.label,
     hint: item.hint,
     image: item.image,
+    citationText: item.citationText ?? null,
     status: item.status,
     visibleToAll: item.visibleToAll ?? false,
     forJourney: item.forJourney ?? false,
@@ -109,75 +134,120 @@ export function mapStrapiAssessment(
   };
 }
 
-export function categorizeAssessments(items: AssessmentItem[]): AssessmentCategories {
+// Clinical screening tools — standardised, validated instruments used by clinicians
+// to detect and measure severity of a specific condition.
+const CLINICAL_SCREENING_CATS = new Set([
+  'depression',
+  'anxiety',
+  'stress',
+  'sleep',
+  'mood-disorder',
+  'bipolar-disorder',
+  'ptsd',
+  'trauma',
+  'ocd',
+  'adhd',
+  'schizophrenia',
+  'psychosis',
+  'dementia',
+  'alzheimers',
+  'dual-diagnosis',
+  'personality-disorder',
+  'conduct-disorder',
+  'cerebral-palsy',
+  'intellectual-disability',
+  'developmental-delay',
+  'autism',
+  'learning-disability',
+  'perinatal-mental-health',
+  'drug-addiction',
+  'alcohol-addiction',
+  'addiction',
+  'eating-disorder',
+  'gender-identity-disorder',
+]);
+
+// Self-discovery / personal-growth tools — reflective exercises, habit awareness,
+// relationship patterns, and lifestyle wellbeing (not purely clinical diagnosis).
+const PERSONAL_GROWTH_CATS = new Set([
+  'self-love',
+  'love',
+  'relationship-issues',
+  'family-issues',
+  'Relationship Beliefs',
+  'Rewiring Patterns',
+  'Self-Care Planning',
+  'Gaming Disorder',
+  'Addiction',
+  'general',
+  'Healthcare',
+  'Medical',
+  'AI',
+  'Dna',
+  'Sun',
+]);
+
+export function categorizeAssessments(
+  items: AssessmentItem[]
+): AssessmentCategories {
   if (items.length === 0) {
-    return { recommendedAssessment: null, popularScreenings: [], personalGrowth: [] };
+    return {
+      recommendedAssessment: null,
+      popularScreenings: [],
+      personalGrowth: [],
+    };
   }
 
-  const first = items[0];
-  const remaining = items.slice(1);
+  const recommended = items[0];
+  const rest = items.slice(1);
 
-  const hasCategories = remaining.some((a) => (a.category || []).length > 0);
+  const popular: AssessmentItem[] = [];
+  const growth: AssessmentItem[] = [];
+  const unmatched: AssessmentItem[] = [];
 
-  let popular: AssessmentItem[] = [];
-  let growth: AssessmentItem[] = [];
+  for (const a of rest) {
+    const cats = a.category ?? [];
+    // Check exact match first, then lowercase match
+    const isClinical = cats.some(
+      (c) =>
+        CLINICAL_SCREENING_CATS.has(c) ||
+        CLINICAL_SCREENING_CATS.has(c.toLowerCase())
+    );
+    const isGrowth = cats.some(
+      (c) =>
+        PERSONAL_GROWTH_CATS.has(c) || PERSONAL_GROWTH_CATS.has(c.toLowerCase())
+    );
 
-  if (hasCategories) {
-    popular = remaining.filter((a) => {
-      const cats = (a.category || []).map((c) => String(c).toLowerCase());
-      return cats.some(
-        (c) =>
-          c.includes('anxiety') ||
-          c.includes('depression') ||
-          c.includes('stress') ||
-          c.includes('sleep') ||
-          c.includes('mental')
-      );
-    });
-
-    growth = remaining.filter((a) => {
-      const cats = (a.category || []).map((c) => String(c).toLowerCase());
-      return (
-        cats.length > 0 &&
-        !cats.some(
-          (c) =>
-            c.includes('anxiety') ||
-            c.includes('depression') ||
-            c.includes('stress') ||
-            c.includes('sleep') ||
-            c.includes('mental')
-        )
-      );
-    });
-
-    const uncategorized = remaining.filter((a) => !(a.category || []).length);
-
-    if (popular.length === 0 && growth.length === 0) {
-      const halfIndex = Math.ceil(uncategorized.length / 2);
-      popular = uncategorized.slice(0, halfIndex);
-      growth = uncategorized.slice(halfIndex);
-    } else if (popular.length === 0) {
-      popular = uncategorized;
-    } else if (growth.length === 0) {
-      growth = uncategorized;
+    if (isClinical) {
+      popular.push(a);
+    } else if (isGrowth) {
+      growth.push(a);
+    } else {
+      unmatched.push(a);
     }
-  } else {
-    const halfIndex = Math.ceil(remaining.length / 2);
-    popular = remaining.slice(0, halfIndex);
-    growth = remaining.slice(halfIndex);
   }
+
+  // Distribute unmatched items to keep sections balanced
+  unmatched.forEach((a, i) => {
+    if (i % 2 === 0) popular.push(a);
+    else growth.push(a);
+  });
 
   return {
-    recommendedAssessment: first,
+    recommendedAssessment: recommended,
     popularScreenings: popular,
     personalGrowth: growth,
   };
 }
 
-function deriveScoreSummary(submissions: AssessmentSubmission[]): { label: string; value: string } | null {
+function deriveScoreSummary(
+  submissions: AssessmentSubmission[]
+): { label: string; value: string } | null {
   if (submissions.length === 0) return null;
   const latest = submissions[0];
-  const entries = Object.entries(latest.data).filter(([key]) => key !== 'date' && !key.startsWith('_'));
+  const entries = Object.entries(latest.data).filter(
+    ([key]) => key !== 'date' && !key.startsWith('_')
+  );
   const numericScores: number[] = [];
   entries.forEach(([, value]) => {
     const entryData = value as Record<string, unknown>;
@@ -199,20 +269,31 @@ function deriveScoreSummary(submissions: AssessmentSubmission[]): { label: strin
 // Firebase helpers (internal)
 // ---------------------------------------------------------------------------
 
-async function checkAssessmentCompletion(leadId: string, assessmentId: string): Promise<string | null> {
+async function checkAssessmentCompletion(
+  leadId: string,
+  assessmentId: string
+): Promise<string | null> {
   try {
-    const snap = await get(ref(database, `assessments/${leadId}/${assessmentId}`));
+    const snap = await get(
+      ref(database, `assessments/${leadId}/${assessmentId}`)
+    );
     if (!snap.exists()) return null;
-    const values = Object.values(snap.val() as Record<string, { date?: string }>);
+    const values = Object.values(
+      snap.val() as Record<string, { date?: string }>
+    );
     const dates = values.map((v) => v.date).filter(Boolean) as string[];
     if (!dates.length) return null;
-    return dates.sort((a, b) => new Date(b).getTime() - new Date(a).getTime())[0];
+    return dates.sort(
+      (a, b) => new Date(b).getTime() - new Date(a).getTime()
+    )[0];
   } catch {
     return null;
   }
 }
 
-async function fetchAssignedAssessmentsFromFirestore(leadId: string): Promise<AssignedAssessmentItem[]> {
+async function fetchAssignedAssessmentsFromFirestore(
+  leadId: string
+): Promise<AssignedAssessmentItem[]> {
   const docRef = doc(firestore, 'patient_assignments', leadId);
   const docSnap = await getDoc(docRef);
   if (!docSnap.exists()) return [];
@@ -232,7 +313,9 @@ async function fetchAssignedAssessmentsFromFirestore(leadId: string): Promise<As
   return Promise.all(
     assignments.map(async (assigned) => {
       const documentId = String(assigned.id || assigned.documentId || '');
-      const lastCompletion = documentId ? await checkAssessmentCompletion(leadId, documentId) : null;
+      const lastCompletion = documentId
+        ? await checkAssessmentCompletion(leadId, documentId)
+        : null;
       return {
         documentId,
         id: assigned.id,
@@ -253,10 +336,18 @@ async function fetchAssignedAssessmentsFromFirestore(leadId: string): Promise<As
   );
 }
 
-async function fetchSubmissionsFromRTDB(leadId: string, assessmentId: string): Promise<AssessmentSubmission[]> {
-  const snap = await get(ref(database, `assessments/${leadId}/${assessmentId}`));
+async function fetchSubmissionsFromRTDB(
+  leadId: string,
+  assessmentId: string
+): Promise<AssessmentSubmission[]> {
+  const snap = await get(
+    ref(database, `assessments/${leadId}/${assessmentId}`)
+  );
   if (!snap.exists()) return [];
-  const data = snap.val() as Record<string, { date?: string; [key: string]: unknown }>;
+  const data = snap.val() as Record<
+    string,
+    { date?: string; [key: string]: unknown }
+  >;
   return Object.values(data)
     .filter(Boolean)
     .map((entry) => ({
@@ -270,67 +361,84 @@ async function fetchSubmissionsFromRTDB(leadId: string, assessmentId: string): P
 // SWR fetchers
 // ---------------------------------------------------------------------------
 
-const assessmentFetcher = async (query: {
-  limit: number;
-  offset: number;
-  status?: 'ALL' | 'DRAFT' | 'PUBLISHED';
-  search?: string;
-  visibleToAll?: boolean;
-  forJourney?: boolean;
-}) => {
-  const response = await getApiV1Assessments({ query: query as never });
-  return response.data?.data;
-};
+const PAGE_SIZE = 100;
+
+export interface StrapiPage {
+  items: AssessmentItem[];
+  pagination: { total: number; limit: number; offset: number };
+}
+
+async function fetchAssessmentPage(offset: number): Promise<StrapiPage> {
+  const data = await strapiGetAssessments({
+    pagination: { limit: PAGE_SIZE, start: offset },
+    filters: { $and: BASE_FILTER_CLAUSES },
+    populate: '*',
+  });
+  const raw = data?.items ?? [];
+  console.log('[ASSESS:4] raw items from API', raw.length);
+  const items = raw
+    .filter((item: { citationText?: string | null }) => item.citationText != null)
+    .map(mapStrapiAssessment);
+  console.log('[ASSESS:5] mapped items', items.length);
+  return {
+    items,
+    pagination: data?.pagination ?? { total: 0, limit: PAGE_SIZE, offset },
+  };
+}
 
 const assessmentByIdFetcher = async (id: string) => {
   const response = await getApiV1AssessmentsById({ path: { id } });
   return response.data?.data;
 };
 
-const filteredAssessmentFetcher = async (search: string): Promise<AssessmentItem[]> => {
-  const response = await getApiV1Assessments({
-    query: {
-      limit: 50,
-      offset: 0,
-      status: 'PUBLISHED',
-      search,
-      visibleToAll: true,
-      forJourney: false,
-    } as never,
+async function fetchFilteredAssessments({
+  search,
+  category,
+}: {
+  search?: string;
+  category?: string;
+}): Promise<AssessmentItem[]> {
+  const data = await strapiGetAssessments({
+    pagination: { limit: PAGE_SIZE, start: 0 },
+    ...(search ? { search } : {}),
+    filters: {
+      $and: [
+        ...BASE_FILTER_CLAUSES,
+        ...(category ? [{ category: { $containsi: category } }] : []),
+      ],
+    },
+    populate: '*',
   });
-  return (
-    response.data?.data?.items
-      ?.filter((item: { status?: string }) => item.status === 'PUBLISHED')
-      .map(mapStrapiAssessment) || []
-  );
-};
+  return (data?.items ?? [])
+    .filter((item: { citationText?: string | null }) => item.citationText != null)
+    .map(mapStrapiAssessment);
+}
 
 // ---------------------------------------------------------------------------
 // Hooks
 // ---------------------------------------------------------------------------
 
-export function useAssessments(options?: {
-  limit?: number;
-  status?: 'ALL' | 'DRAFT' | 'PUBLISHED';
-  search?: string;
-}) {
-  const limit = options?.limit ?? 10;
-  const status = options?.status ?? 'PUBLISHED';
-  const search = options?.search;
-
+export function useAssessments(_options?: unknown) {
   return useSWRInfinite(
-    (pageIndex: number) => ['assessments', pageIndex * limit, limit, status, search],
-    ([, offset, , status, search]) =>
-      assessmentFetcher({ limit, offset, status, search, visibleToAll: true, forJourney: false }),
+    (pageIndex: number) => ['assessments', pageIndex * PAGE_SIZE, PAGE_SIZE],
+    ([, offset]) => fetchAssessmentPage(offset as number),
     {
       ...swrConfig,
+      dedupingInterval: 600_000, // 10 min — one fetch per key per session
       revalidateFirstPage: false,
+      revalidateIfStale: false,
+      revalidateOnFocus: false,
+      revalidateOnReconnect: false,
+      errorRetryCount: 1, // don't hammer on 429
       persistSize: true,
     }
   );
 }
 
-export function useAssessmentById(id: string | null, config?: SWRConfiguration) {
+export function useAssessmentById(
+  id: string | null,
+  config?: SWRConfiguration
+) {
   return useSWR(
     id ? ['assessment', id] : null,
     () => assessmentByIdFetcher(id!),
@@ -338,11 +446,34 @@ export function useAssessmentById(id: string | null, config?: SWRConfiguration) 
   );
 }
 
-export function useFilteredAssessments(query: string | null) {
+export function useFilteredAssessments({
+  search,
+  category,
+}: {
+  search?: string | null;
+  category?: string | null;
+}) {
+  const isActive = !!(search || category);
+  // Both params included in key so search+category combos cache independently
+  const key = isActive
+    ? ['assessments-filtered', search ?? '', category ?? '']
+    : null;
+
   return useSWR(
-    query ? ['assessments-filtered', query] : null,
-    () => filteredAssessmentFetcher(query!),
-    { revalidateOnFocus: false, revalidateOnReconnect: false }
+    key,
+    () =>
+      fetchFilteredAssessments({
+        search: search ?? undefined,
+        category: category ?? undefined,
+      }),
+    {
+      revalidateOnFocus: false,
+      revalidateOnReconnect: false,
+      revalidateIfStale: false,
+      dedupingInterval: 600_000,
+      keepPreviousData: true,
+      errorRetryCount: 1,
+    }
   );
 }
 
@@ -354,17 +485,58 @@ export function useAssignedAssessments(leadId: string | null) {
   );
 }
 
-export function useAssessmentSubmissions(leadId: string | null, assessmentId: string | null) {
+export function useAssessmentSubmissions(
+  leadId: string | null,
+  assessmentId: string | null
+) {
   return useSWR(
-    leadId && assessmentId ? ['assessment-submissions', leadId, assessmentId] : null,
+    leadId && assessmentId
+      ? ['assessment-submissions', leadId, assessmentId]
+      : null,
     () => fetchSubmissionsFromRTDB(leadId!, assessmentId!),
     swrConfig
   );
 }
 
-export function useAssessmentScoreSummary(leadId: string | null, assessmentId: string | null) {
-  const { data: submissions, ...rest } = useAssessmentSubmissions(leadId, assessmentId);
-  return { scoreSummary: deriveScoreSummary(submissions || []), submissions, ...rest };
+export function useAssessmentScoreSummary(
+  leadId: string | null,
+  assessmentId: string | null
+) {
+  const { data: submissions, ...rest } = useAssessmentSubmissions(
+    leadId,
+    assessmentId
+  );
+  return {
+    scoreSummary: deriveScoreSummary(submissions || []),
+    submissions,
+    ...rest,
+  };
+}
+
+// ---------------------------------------------------------------------------
+// Dynamic category derivation
+// ---------------------------------------------------------------------------
+
+import { ASSESSMENT_CATEGORIES } from '@/components/assessment/assessment-category';
+
+/**
+ * Derives the ordered category list from loaded assessments.
+ * - Preserves the canonical order from ASSESSMENT_CATEGORIES
+ * - Appends any categories from the API not in the static list
+ * - Returns ["All", ...rest] — always starts with "All"
+ */
+export function getDynamicCategories(assessments: AssessmentItem[]): string[] {
+  const seen = new Set<string>();
+  for (const a of assessments) {
+    for (const cat of a.category ?? []) {
+      if (cat) seen.add(cat);
+    }
+  }
+  const inCanonicalOrder = ASSESSMENT_CATEGORIES.filter(
+    (c) => c !== 'All' && seen.has(c)
+  );
+  const extras = [...seen].filter((c) => !ASSESSMENT_CATEGORIES.includes(c));
+  return ['All', ...inCanonicalOrder, ...extras];
 }
 
 // ---------------------------------------------------------------------------
@@ -376,7 +548,10 @@ export async function submitAssessment(
   assessmentId: string,
   answers: Record<string, unknown>
 ): Promise<void> {
-  const payload: Record<string, unknown> = { date: new Date().toISOString(), ...answers };
+  const payload: Record<string, unknown> = {
+    date: new Date().toISOString(),
+    ...answers,
+  };
 
   if (leadId && assessmentId) {
     const dbRef = ref(database, `assessments/${leadId}/${assessmentId}`);

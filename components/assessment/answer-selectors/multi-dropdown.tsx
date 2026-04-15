@@ -37,7 +37,7 @@ export function MultiDropdownSelector({
   return (
     <div className="flex flex-col px-5 pt-6 pb-4 w-full">
       {subTitle && (
-        <p className="text-xs font-semibold text-orange-500 uppercase tracking-wide mb-2">
+        <p className="text-xs font-semibold text-primary uppercase tracking-wide mb-2">
           {subTitle}
         </p>
       )}
@@ -62,7 +62,7 @@ export function MultiDropdownSelector({
                 onClick={() => setOpenSheetFor(sq.id)}
                 className={`flex items-center justify-between w-full px-4 py-3 rounded-xl border transition-colors ${
                   selectedLabel
-                    ? 'border-orange-400 bg-orange-50 text-orange-700'
+                    ? 'border-primary bg-primary/5 text-primary'
                     : 'border-border bg-card text-muted-foreground'
                 }`}
               >
@@ -102,19 +102,19 @@ export function MultiDropdownSelector({
                     }}
                     className={`flex items-center justify-between px-4 py-3.5 rounded-xl border transition-colors ${
                       isSelected
-                        ? 'border-orange-400 bg-orange-50'
+                        ? 'border-primary bg-primary/5'
                         : 'border-border bg-card hover:bg-muted/50'
                     }`}
                   >
                     <span
                       className={`text-sm font-medium ${
-                        isSelected ? 'text-orange-700' : 'text-foreground'
+                        isSelected ? 'text-primary' : 'text-foreground'
                       }`}
                     >
                       {opt.label}
                     </span>
                     {isSelected ? (
-                      <CheckCircle2 className="w-5 h-5 text-orange-500" />
+                      <CheckCircle2 className="w-5 h-5 text-primary" />
                     ) : (
                       <span className="w-5 h-5 rounded-full border-2 border-muted-foreground/40 block" />
                     )}

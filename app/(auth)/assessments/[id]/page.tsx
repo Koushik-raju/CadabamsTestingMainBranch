@@ -179,7 +179,7 @@ export default function AssessmentFormPage({ params }: { params: Promise<{ id: s
     return (
       <div className="min-h-screen bg-background flex flex-col">
         {/* Full orange progress bar */}
-        <div className="h-1.5 w-full bg-orange-500" />
+        <div className="h-1.5 w-full bg-primary" />
 
         <div className="flex items-center px-3 py-3">
           <button
@@ -191,15 +191,15 @@ export default function AssessmentFormPage({ params }: { params: Promise<{ id: s
         </div>
 
         <div className="flex-1 flex flex-col items-center justify-center p-6 text-center">
-          <div className="w-20 h-20 rounded-full bg-orange-100 flex items-center justify-center mb-6">
-            <CheckCircle2 className="w-10 h-10 text-orange-500" />
+          <div className="w-20 h-20 rounded-full bg-primary/10 flex items-center justify-center mb-6">
+            <CheckCircle2 className="w-10 h-10 text-primary" />
           </div>
           <h2 className="text-2xl font-bold text-foreground mb-3">Assessment Complete</h2>
           <p className="text-sm text-muted-foreground mb-8 max-w-xs">
             You&apos;ve answered all questions. We&apos;re ready to compile your personalized insights.
           </p>
           <div className="bg-muted rounded-2xl p-4 mb-8 max-w-sm w-full flex items-start gap-3">
-            <Sparkles className="w-4 h-4 text-orange-500 flex-shrink-0 mt-0.5" />
+            <Sparkles className="w-4 h-4 text-primary flex-shrink-0 mt-0.5" />
             <p className="text-xs text-muted-foreground text-left leading-relaxed">
               AI-Generated Report — This report is generated using artificial intelligence based on
               your responses. It is for informational purposes only and does not replace professional
@@ -207,7 +207,7 @@ export default function AssessmentFormPage({ params }: { params: Promise<{ id: s
             </p>
           </div>
           <Button
-            className="w-full max-w-sm bg-orange-500 hover:bg-orange-600 text-white font-semibold h-14 rounded-2xl text-base"
+            className="w-full max-w-sm bg-primary hover:bg-primary/90 text-white font-semibold h-14 rounded-2xl text-base"
             onClick={() => router.push(`/assessments/${assessmentId}/analysis`)}
           >
             GENERATE REPORT →
@@ -256,7 +256,7 @@ export default function AssessmentFormPage({ params }: { params: Promise<{ id: s
       {/* Orange progress bar */}
       <div className="w-full bg-muted h-1.5">
         <div
-          className="h-1.5 bg-orange-500 transition-all duration-300"
+          className="h-1.5 bg-primary transition-all duration-300"
           style={{ width: `${progress}%` }}
         />
       </div>
@@ -274,7 +274,7 @@ export default function AssessmentFormPage({ params }: { params: Promise<{ id: s
       {/* Continue button */}
       <div className="px-5 pb-8 pt-3 border-t border-border bg-card">
         <Button
-          className="w-full bg-orange-500 hover:bg-orange-600 text-white font-semibold h-14 rounded-2xl text-base disabled:opacity-40"
+          className="w-full bg-primary hover:bg-primary/90 text-white font-semibold h-14 rounded-2xl text-base disabled:opacity-40"
           disabled={!isStepComplete || submitting}
           onClick={handleNext}
         >

@@ -2,12 +2,7 @@
 
 import { useRef, useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
-import {
-  Calendar,
-  Upload,
-  FileText,
-  AlertCircle,
-} from 'lucide-react';
+import { Upload, FileText, AlertCircle, FolderOpen } from 'lucide-react';
 import { collection, query, orderBy, getDocs, addDoc, deleteDoc, doc } from 'firebase/firestore';
 import { ref as storageRef, uploadBytes, getDownloadURL, deleteObject } from 'firebase/storage';
 import { Capacitor } from '@capacitor/core';
@@ -16,16 +11,8 @@ import { BackButton } from '@/components/shared/navigation/back-button';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Separator } from '@/components/ui/separator';
 import { DocumentCard, type DocumentData } from '@/components/documents/document-card';
-
-function todayLabel(): string {
-  return new Date().toLocaleDateString('en-IN', {
-    weekday: 'short',
-    day: '2-digit',
-    month: 'short',
-    year: 'numeric',
-  });
-}
 
 async function downloadDocument(docObj: DocumentData): Promise<void> {
   let downloadUrl = docObj.url;
@@ -45,7 +32,6 @@ async function downloadDocument(docObj: DocumentData): Promise<void> {
     return;
   }
 
-  // Web: open in new tab (avoids file-saver dependency requirement)
   window.open(downloadUrl, '_blank', 'noopener,noreferrer');
 }
 
@@ -62,7 +48,6 @@ export default function DocumentsPage() {
   const [downloadingId, setDownloadingId] = useState<string | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
 
-  // Read leadId from localStorage
   useEffect(() => {
     try {
       const raw = localStorage.getItem('user');
@@ -78,7 +63,6 @@ export default function DocumentsPage() {
     }
   }, []);
 
-  // Fetch documents from Firestore
   const fetchDocs = useCallback(async (id: string) => {
     setLoading(true);
     setError(null);
@@ -100,7 +84,6 @@ export default function DocumentsPage() {
     if (leadId) fetchDocs(leadId);
   }, [leadId, fetchDocs]);
 
-  // Upload
   const handleUploadClick = () => fileInputRef.current?.click();
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -126,39 +109,29 @@ export default function DocumentsPage() {
         createdAt: new Date().toISOString(),
       });
 
-      const newDoc: DocumentData = {
-        id: docRef.id,
-        name: file.name,
-        path,
-        size: file.size,
-        type: file.type,
-        url,
-        createdAt: new Date().toISOString(),
-      };
-      setDocuments((prev) => [newDoc, ...prev]);
+      setDocuments((prev) => [
+        { id: docRef.id, name: file.name, path, size: file.size, type: file.type, url, createdAt: new Date().toISOString() },
+        ...prev,
+      ]);
     } catch {
       setError('Failed to upload document. Please try again.');
     } finally {
       setUploading(false);
-      // reset input so same file can be re-selected
       if (fileInputRef.current) fileInputRef.current.value = '';
     }
   };
 
-  // Download
   const handleDownload = async (docObj: DocumentData) => {
     setDownloadingId(docObj.id);
     try {
       await downloadDocument(docObj);
     } catch (err) {
-      const msg = err instanceof Error ? err.message : 'Unable to download file.';
-      setError(msg);
+      setError(err instanceof Error ? err.message : 'Unable to download file.');
     } finally {
       setDownloadingId(null);
     }
   };
 
-  // Delete
   const handleDelete = async (docObj: DocumentData) => {
     if (!leadId) return;
     const confirmed = window.confirm(`Delete "${docObj.name}"?`);
@@ -167,9 +140,7 @@ export default function DocumentsPage() {
     setDeletingId(docObj.id);
     setError(null);
     try {
-      if (docObj.path) {
-        await deleteObject(storageRef(storage, docObj.path));
-      }
+      if (docObj.path) await deleteObject(storageRef(storage, docObj.path));
       await deleteDoc(doc(firestore, `crmLeads/${leadId}/documents/${docObj.id}`));
       setDocuments((prev) => prev.filter((d) => d.id !== docObj.id));
     } catch {
@@ -180,102 +151,111 @@ export default function DocumentsPage() {
   };
 
   return (
-    <main className="min-h-screen bg-background" role="main" aria-label="My documents">
+    <main className="min-h-screen bg-background pb-24" role="main" aria-label="My documents">
       {/* Header */}
-      <header className="bg-primary pb-4 px-4 rounded-b-[2.5rem] shadow-md">
-        <div className="flex items-center justify-between pt-4">
-          <div className="flex items-center gap-3">
-            <BackButton
-              fallback="/"
-              className="text-white hover:bg-white/20"
-            />
-            <div>
-              <h1 className="text-white text-xl font-bold">My Documents</h1>
-              <div className="flex items-center gap-1 text-white/70 text-xs">
-                <Calendar className="w-3 h-3" aria-hidden="true" />
-                <span>{todayLabel()}</span>
-              </div>
-            </div>
-          </div>
+      <div className="flex items-center gap-2 px-4 pt-5 pb-3">
+        <BackButton fallback="/" />
+        <h1 className="flex-1 text-lg font-bold text-foreground">My Documents</h1>
+        <Button
+          size="sm"
+          variant="outline"
+          className="rounded-xl gap-1.5"
+          onClick={handleUploadClick}
+          disabled={uploading || !leadId}
+          aria-label="Upload a document"
+        >
+          <Upload className="w-3.5 h-3.5" />
+          {uploading ? 'Uploading…' : 'Upload'}
+        </Button>
+      </div>
 
-          <Button
-            size="sm"
-            variant="secondary"
-            className="bg-white/20 hover:bg-white/30 text-white border-0"
-            onClick={handleUploadClick}
-            disabled={uploading || !leadId}
-            aria-label="Upload a document"
-          >
-            <Upload className="w-4 h-4 mr-1" aria-hidden="true" />
-            {uploading ? 'Uploading…' : 'Upload'}
-          </Button>
-        </div>
+      <input
+        ref={fileInputRef}
+        type="file"
+        className="hidden"
+        onChange={handleFileChange}
+        accept=".pdf,.jpg,.jpeg,.png,.doc,.docx,.txt"
+        aria-hidden="true"
+      />
 
-        <input
-          ref={fileInputRef}
-          type="file"
-          className="hidden"
-          onChange={handleFileChange}
-          accept=".pdf,.jpg,.jpeg,.png,.doc,.docx,.txt"
-          aria-hidden="true"
-        />
-      </header>
-
-      <div className="p-4 max-w-2xl mx-auto space-y-3">
+      <div className="px-4 space-y-4">
         {/* Error banner */}
         {error && (
           <Card className="border-destructive bg-destructive/5">
             <CardContent className="py-3 flex items-center gap-2">
-              <AlertCircle className="w-4 h-4 text-destructive flex-shrink-0" aria-hidden="true" />
+              <AlertCircle className="w-4 h-4 text-destructive flex-shrink-0" />
               <p className="text-sm text-destructive" role="alert">{error}</p>
             </CardContent>
           </Card>
         )}
 
+        {/* User error */}
         {userError ? (
-          <Card>
-            <CardContent className="py-10 text-center space-y-3">
-              <AlertCircle className="w-10 h-10 text-destructive mx-auto" aria-hidden="true" />
-              <p className="text-muted-foreground" role="alert">{userError}</p>
-              <Button onClick={() => router.push('/')}>Go Home</Button>
-            </CardContent>
-          </Card>
+          <div className="flex flex-col items-center justify-center py-24 gap-4 text-center">
+            <div className="w-16 h-16 rounded-full bg-muted flex items-center justify-center">
+              <AlertCircle className="w-8 h-8 text-destructive" />
+            </div>
+            <div>
+              <p className="font-semibold text-foreground">Something went wrong</p>
+              <p className="text-sm text-muted-foreground mt-1">{userError}</p>
+            </div>
+            <Button variant="outline" onClick={() => router.push('/')}>Go Home</Button>
+          </div>
         ) : loading ? (
-          <div className="space-y-3" role="status" aria-busy="true" aria-label="Loading documents">
-            {Array.from({ length: 4 }).map((_, i) => (
-              <Skeleton key={i} className="h-20 w-full rounded-xl" />
-            ))}
-          </div>
-        ) : documents.length === 0 ? (
           <Card>
-            <CardContent className="py-12 text-center space-y-3">
-              <FileText className="w-12 h-12 text-muted-foreground mx-auto" aria-hidden="true" />
-              <div>
-                <p className="font-semibold text-foreground">No documents yet</p>
-                <p className="text-sm text-muted-foreground mt-1">
-                  Upload consultation reports, prescriptions, or other files to keep them organised.
-                </p>
-              </div>
-              <Button onClick={handleUploadClick} disabled={uploading}>
-                <Upload className="w-4 h-4 mr-2" aria-hidden="true" />
-                Upload Document
-              </Button>
+            <CardContent className="py-2 divide-y">
+              {Array.from({ length: 5 }).map((_, i) => (
+                <div key={i} className="flex items-center gap-3 py-3">
+                  <Skeleton className="w-12 h-12 rounded-2xl flex-shrink-0" />
+                  <div className="flex-1 space-y-1.5">
+                    <Skeleton className="h-3.5 w-3/4 rounded" />
+                    <Skeleton className="h-3 w-1/3 rounded" />
+                  </div>
+                  <Skeleton className="w-16 h-8 rounded-lg flex-shrink-0" />
+                </div>
+              ))}
             </CardContent>
           </Card>
-        ) : (
-          <div role="list" className="space-y-3" aria-label="Your documents">
-            {documents.map((d, i) => (
-              <DocumentCard
-                key={d.id}
-                doc={d}
-                index={i}
-                onDownload={handleDownload}
-                onDelete={handleDelete}
-                downloading={downloadingId === d.id}
-                deleting={deletingId === d.id}
-              />
-            ))}
+        ) : documents.length === 0 ? (
+          <div className="flex flex-col items-center justify-center py-24 gap-4 text-center">
+            <div className="w-16 h-16 rounded-full bg-muted flex items-center justify-center">
+              <FolderOpen className="w-8 h-8 text-muted-foreground" />
+            </div>
+            <div>
+              <p className="font-semibold text-foreground">No documents yet</p>
+              <p className="text-sm text-muted-foreground mt-1 max-w-xs">
+                Upload reports, prescriptions, or any other files to keep them organised.
+              </p>
+            </div>
+            <Button onClick={handleUploadClick} disabled={uploading} className="gap-2">
+              <Upload className="w-4 h-4" />
+              Upload Document
+            </Button>
           </div>
+        ) : (
+          <section>
+            <div className="flex items-center justify-between mb-3">
+              <h2 className="text-base font-bold text-foreground">All Files</h2>
+              <span className="text-xs text-muted-foreground">{documents.length} file{documents.length !== 1 ? 's' : ''}</span>
+            </div>
+            <Card>
+              <CardContent className="py-0 px-3" role="list" aria-label="Your documents">
+                {documents.map((d, i) => (
+                  <div key={d.id}>
+                    <DocumentCard
+                      doc={d}
+                      index={i}
+                      onDownload={handleDownload}
+                      onDelete={handleDelete}
+                      downloading={downloadingId === d.id}
+                      deleting={deletingId === d.id}
+                    />
+                    {i < documents.length - 1 && <Separator />}
+                  </div>
+                ))}
+              </CardContent>
+            </Card>
+          </section>
         )}
       </div>
     </main>

@@ -138,3 +138,4 @@ Each hook returns `{ data, isLoading, error }`. Pages should handle all three st
 
 # Notes
 use ast-grep for search.
+follow @docs/DESIGN_GUIDELINES.md when creating / editing UI.

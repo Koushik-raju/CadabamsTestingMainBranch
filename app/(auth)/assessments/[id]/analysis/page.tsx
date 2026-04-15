@@ -94,7 +94,7 @@ export default function AssessmentAnalysisPage({
               Complete the assessment to generate your personalized report.
             </p>
             <Button
-              className="bg-orange-500 hover:bg-orange-600 text-white"
+              className="bg-primary hover:bg-primary/90 text-white"
               onClick={() => router.push(`/assessments/${assessmentId}`)}
             >
               Take Assessment
@@ -105,8 +105,8 @@ export default function AssessmentAnalysisPage({
           <div className="pt-5 space-y-5">
             {/* AI badge */}
             <div className="flex items-center gap-1.5">
-              <Sparkles className="w-3.5 h-3.5 text-orange-500" />
-              <span className="text-xs font-semibold text-orange-500">AI-generated summary</span>
+              <Sparkles className="w-3.5 h-3.5 text-primary" />
+              <span className="text-xs font-semibold text-primary">AI-generated summary</span>
             </div>
 
             {/* Score heading */}
@@ -158,7 +158,7 @@ export default function AssessmentAnalysisPage({
       {hasSubmissions && (
         <div className="fixed bottom-0 left-0 right-0 px-5 pb-8 pt-3 bg-background border-t border-border space-y-2">
           <Button
-            className="w-full bg-orange-500 hover:bg-orange-600 text-white font-semibold h-14 rounded-2xl text-base"
+            className="w-full bg-primary hover:bg-primary/90 text-white font-semibold h-14 rounded-2xl text-base"
             onClick={() => router.push('/consult/appointments')}
           >
             Book appointment with a specialist
