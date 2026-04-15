@@ -4,7 +4,7 @@ import { useRouter } from 'next/navigation';
 import { Calendar, Clock, Video, Building2 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import type { AppointmentDetail } from '@/sdk/auth-and-crm';
+import type { AppointmentDetail } from '@/hooks/appointments/use-appointments-page';
 
 interface AppointmentCardProps {
   appointment: AppointmentDetail;

@@ -1,7 +1,7 @@
 'use client';
 
 import { cn } from '@/lib/utils';
-import type { TimeSlot } from '@/sdk/auth-and-crm';
+import type { SlotResponseDto as TimeSlot } from '@/sdk/backend-v2';
 
 export function formatTime(isoStr: string): string {
   return new Date(isoStr).toLocaleTimeString('en-US', {

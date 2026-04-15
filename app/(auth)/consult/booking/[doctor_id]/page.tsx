@@ -12,26 +12,34 @@ import { DateStrip, toDateKey } from '@/components/booking/date-strip';
 import { CampusSheet } from '@/components/booking/campus-sheet';
 import { useBooking } from '@/contexts/booking-context';
 import {
-  getAppointmentsSlots,
-  getAppointmentsSlotsBySlotIdPrice,
-  getDoctorsById,
-  getMastersCampuses,
-  getDoctorsByIdAvailability,
-} from '@/sdk/auth-and-crm';
-import type { TimeSlot, DoctorDetail, CampusMaster, DoctorAvailabilityResponse } from '@/sdk/auth-and-crm';
+  crmControllerGetDoctorById,
+  crmControllerGetSlots,
+  crmControllerGetSlotPrice,
+  mastersControllerGetCampuses,
+} from '@/sdk/backend-v2';
+import type { DoctorResponseDto, SlotResponseDto } from '@/sdk/backend-v2';
+
+type CampusItem = {
+  id: number;
+  name: string;
+  display_name?: string;
+  book_appointment?: boolean;
+  area?: Array<[string | number, string | number]>;
+  [key: string]: unknown;
+};
 
 // ── helpers ────────────────────────────────────────────────────────────────────
-function displayName(doctor: DoctorDetail | null): string {
+function displayName(doctor: DoctorResponseDto | null): string {
   if (!doctor) return 'Doctor';
-  const full = (doctor.display_name || doctor.name || '').trim();
-  const raw = full.includes(',') ? full.split(',').pop()!.trim() : full;
-  if (!raw) return 'Doctor';
-  return /^Dr\.?\s/i.test(raw) ? raw : `Dr. ${raw}`;
+  const raw = (doctor.name || '').trim();
+  const name = raw.includes(',') ? raw.split(',').pop()!.trim() : raw;
+  if (!name) return 'Doctor';
+  return /^Dr\.?\s/i.test(name) ? name : `Dr. ${name}`;
 }
 
-function specialityName(doctor: DoctorDetail | null): string {
+function specialityName(doctor: DoctorResponseDto | null): string {
   if (!doctor) return '';
-  return String(doctor.speciality_id?.[1] ?? '');
+  return doctor.doctor_type || '';
 }
 
 // ── BookingContent ─────────────────────────────────────────────────────────────
@@ -44,13 +52,12 @@ function BookingContent() {
   const initMode = searchParams.get('mode') ?? 'online';
 
   // ── doctor ──────────────────────────────────────────────────────────────────
-  const [doctor,       setDoctor]       = useState<DoctorDetail | null>(null);
+  const [doctor,       setDoctor]       = useState<DoctorResponseDto | null>(null);
   const [loadingDoc,   setLoadingDoc]   = useState(true);
   const [docError,     setDocError]     = useState<string | null>(null);
 
-  // ── all campuses + doctor availability ──────────────────────────────────────
-  const [campuses,      setCampuses]      = useState<CampusMaster[]>([]);
-  const [availability,  setAvailability]  = useState<DoctorAvailabilityResponse | null>(null);
+  // ── all campuses ─────────────────────────────────────────────────────────────
+  const [campuses,      setCampuses]      = useState<CampusItem[]>([]);
   const [loadingMeta,   setLoadingMeta]   = useState(true);
 
   // ── slots ───────────────────────────────────────────────────────────────────
@@ -67,7 +74,7 @@ function BookingContent() {
   const [isOnline,      setIsOnline]      = useState(initMode !== 'offline');
   const [datePage,      setDatePage]      = useState(0);
   const [selectedDate,  setSelectedDate]  = useState<Date>(dates[0]);
-  const [slots,         setSlots]         = useState<TimeSlot[]>([]);
+  const [slots,         setSlots]         = useState<SlotResponseDto[]>([]);
   const [selectedSlot,  setSelectedSlot]  = useState<number | null>(null);
   const [slotPrice,     setSlotPrice]     = useState<number | null>(null);
   const [loadingSlots,  setLoadingSlots]  = useState(false);
@@ -84,27 +91,27 @@ function BookingContent() {
   useEffect(() => {
     if (!doctor_id) return;
     setLoadingDoc(true);
-    getDoctorsById({ path: { id: Number(doctor_id) } })
+    crmControllerGetDoctorById({ path: { id: Number(doctor_id) } })
       .then(r => {
-        if (r.error || !r.data) throw new Error('Not found');
-        setDoctor(r.data);
+        const d = r.data as DoctorResponseDto | undefined;
+        if (!d) throw new Error('Not found');
+        setDoctor(d);
       })
       .catch(() => setDocError('Failed to load doctor details.'))
       .finally(() => setLoadingDoc(false));
   }, [doctor_id]);
 
-  // ── fetch campuses + doctor availability in parallel ─────────────────────────
+  // ── fetch campuses ───────────────────────────────────────────────────────────
   useEffect(() => {
-    if (!doctor_id) return;
     setLoadingMeta(true);
-    Promise.all([
-      getMastersCampuses(),
-      getDoctorsByIdAvailability({ path: { id: Number(doctor_id) } }),
-    ]).then(([campusRes, availRes]) => {
-      setCampuses((Array.isArray(campusRes.data) ? campusRes.data : []).filter(c => c.book_appointment));
-      setAvailability(availRes.data ?? null);
-    }).catch(() => {}).finally(() => setLoadingMeta(false));
-  }, [doctor_id]);
+    mastersControllerGetCampuses({ path: { campus: 'cadabams' } })
+      .then(r => {
+        const raw = Array.isArray(r.data) ? r.data : (r.data ? [r.data] : []);
+        setCampuses((raw as CampusItem[]).filter(c => c.book_appointment));
+      })
+      .catch(() => {})
+      .finally(() => setLoadingMeta(false));
+  }, []);
 
   // ── fetch slots ───────────────────────────────────────────────────────────────
   const fetchSlots = useCallback(async (consultTypeId: number) => {
@@ -118,16 +125,13 @@ function BookingContent() {
       const start = new Date(dates[0]);
       const end   = new Date(dates[dates.length - 1]);
       end.setHours(23, 59, 59, 999);
-      const res = await getAppointmentsSlots({
+      const res = await crmControllerGetSlots({
         query: {
-          doctor_id:             Number(doctor_id),
-          availability:          'open',
-          start_datetime:        start.toISOString(),
-          stop_datetime:         end.toISOString(),
-          consultation_type_ids: consultTypeId,
+          doctor_id:    Number(doctor_id),
+          availability: 'open',
         },
       });
-      setSlots(Array.isArray(res.data) ? res.data : []);
+      setSlots(Array.isArray(res.data) ? (res.data as SlotResponseDto[]) : []);
     } catch (err) {
       console.error(err);
       setError('Failed to load time slots. Please try again.');
@@ -143,8 +147,11 @@ function BookingContent() {
 
   useEffect(() => {
     if (selectedSlot === null) { setSlotPrice(null); return; }
-    getAppointmentsSlotsBySlotIdPrice({ path: { slotId: selectedSlot } })
-      .then(r => setSlotPrice(r.data?.price ?? null))
+    crmControllerGetSlotPrice({ path: { id: selectedSlot } })
+      .then(r => {
+        const d = r.data as { price?: number } | undefined;
+        setSlotPrice(d?.price ?? null);
+      })
       .catch(() => setSlotPrice(null));
   }, [selectedSlot]);
 
@@ -165,15 +172,11 @@ function BookingContent() {
     fetchSlots(online ? 2 : 1);
   };
 
-  // ── derived availability sets ─────────────────────────────────────────────────
+  // ── derived sub-campus options (from campus master data) ─────────────────────
   const getSubCampusOptions = useCallback((campusId: number) => {
-    const fromAvailability = (availability?.campuses ?? [])
-      .filter(c => c.campus_id === campusId && c.sub_campus_id !== false)
-      .map(c => ({ id: c.sub_campus_id as number, name: c.name }));
-    if (fromAvailability.length > 0) return fromAvailability;
     const master = campuses.find(c => c.id === campusId);
     return (master?.area ?? []).map(([id, name]) => ({ id: Number(id), name: String(name) }));
-  }, [availability, campuses]);
+  }, [campuses]);
 
   // ── derived display values ───────────────────────────────────────────────────
   const slotsByDate = useMemo(() => {
@@ -262,7 +265,7 @@ function BookingContent() {
         <div className="rounded-2xl border border-border bg-background p-3 flex items-center justify-between gap-3">
           <div className="flex items-center gap-3 min-w-0">
             <Avatar className="h-11 w-11 shrink-0 rounded-xl">
-              {doctor?.image && <AvatarImage src={doctor.image} alt={displayName(doctor)} />}
+              {doctor?.profile_image && <AvatarImage src={doctor.profile_image} alt={displayName(doctor)} />}
               <AvatarFallback className="bg-primary/10 text-primary font-semibold text-sm rounded-xl">
                 {initials || 'DR'}
               </AvatarFallback>
@@ -414,7 +417,6 @@ function BookingContent() {
         confirmedSubId={confirmedSubId}
         onConfirmedSubChange={setConfirmedSubId}
         campuses={campuses}
-        availability={availability}
         isOnline={isOnline}
         loading={loadingMeta}
       />

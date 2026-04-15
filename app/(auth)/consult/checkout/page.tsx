@@ -14,21 +14,21 @@ import { Card, CardContent } from '@/components/ui/card';
 import { BackButton } from '@/components/shared/navigation/back-button';
 import { BookingSummaryCard } from '@/components/checkout/booking-summary-card';
 import { PaymentSummaryCard } from '@/components/checkout/payment-summary-card';
-import { useAuth } from '@/hooks/use-auth';
+import { useAuth } from '@/hooks/shared/auth/use-auth';
 import { useBooking } from '@/contexts/booking-context';
 import {
-  getDoctorsById,
-  getAppointmentsSlotsBySlotIdPrice,
-  putAppointmentsBookBySlotId,
-  postPaymentsAppointment,
-} from '@/sdk/auth-and-crm';
-import type { DoctorDetail } from '@/sdk/auth-and-crm';
+  crmControllerGetDoctorById,
+  crmControllerGetSlotPrice,
+  appointmentsControllerBookIndividual,
+  crmControllerRazorpayPayment,
+} from '@/sdk/backend-v2';
+import type { DoctorResponseDto } from '@/sdk/backend-v2';
 
-function displayName(doctor: DoctorDetail | null): string {
+function displayName(doctor: DoctorResponseDto | null): string {
   if (!doctor) return 'Doctor';
-  const full = (doctor.display_name || doctor.name || '').trim();
-  const raw = full.includes(',') ? full.split(',').pop()!.trim() : full;
-  return /^Dr\.?\s/i.test(raw) ? raw : `Dr. ${raw}`;
+  const raw = (doctor.name || '').trim();
+  const name = raw.includes(',') ? raw.split(',').pop()!.trim() : raw;
+  return /^Dr\.?\s/i.test(name) ? name : `Dr. ${name}`;
 }
 
 function CheckoutContent() {
@@ -43,7 +43,7 @@ function CheckoutContent() {
     startDatetime,
   } = useBooking();
 
-  const [doctor, setDoctor] = useState<DoctorDetail | null>(null);
+  const [doctor, setDoctor] = useState<DoctorResponseDto | null>(null);
   const [price, setPrice] = useState<number | null>(null);
   const [loading, setLoading] = useState(true);
   const [processing, setProcessing] = useState(false);
@@ -58,12 +58,13 @@ function CheckoutContent() {
       return;
     }
     Promise.all([
-      getDoctorsById({ path: { id: doctorId } }),
-      getAppointmentsSlotsBySlotIdPrice({ path: { slotId } }),
+      crmControllerGetDoctorById({ path: { id: doctorId } }),
+      crmControllerGetSlotPrice({ path: { id: slotId } }),
     ])
       .then(([docRes, priceRes]) => {
-        setDoctor(docRes.data ?? null);
-        setPrice(priceRes.data?.price ?? null);
+        setDoctor((docRes.data as DoctorResponseDto | undefined) ?? null);
+        const pd = priceRes.data as { price?: number } | undefined;
+        setPrice(pd?.price ?? null);
       })
       .catch(console.error)
       .finally(() => setLoading(false));
@@ -77,43 +78,46 @@ function CheckoutContent() {
       // Step 1: book the slot
       const isVirtual = consultationTypeId === 2;
       const resolvedCampusId = isVirtual ? 1 : (campusId ?? 1);
+      const leadId = user?.lead_id ? Number(user.lead_id) : 0;
+      const uid = (user as Record<string, unknown>)?.sub as string ?? '';
 
-      const patientName = String(user?.name ?? user?.first_name ?? '');
-
-      const bookRes = await putAppointmentsBookBySlotId({
-        path: { slotId },
+      await appointmentsControllerBookIndividual({
+        path: { campus: 'cadabams', id: slotId },
         body: {
-          consultation_type_id: consultationTypeId as 1 | 2 | 3,
+          slotId,
+          lead_id: leadId,
           campus_id: resolvedCampusId,
           sub_campus_id: isVirtual ? undefined : (subCampusId ?? undefined),
-          lead_id: user?.lead_id ? Number(user.lead_id) : undefined,
-          appointment_type: 'individual_appointment',
-          availability: 'booked',
-          caller_name: patientName,
-          patient_name: patientName,
-          payment_mode: 'online',
+          consultation_type_id: consultationTypeId ?? undefined,
+          payment_method: 'online',
         },
       });
 
-      if (bookRes.error) throw new Error(JSON.stringify(bookRes.error));
-      if (!bookRes.data) throw new Error('Failed to book appointment.');
-
-      // Step 2: initiate payment
-      const payRes = await postPaymentsAppointment({
+      // Step 2: initiate Razorpay payment
+      const payRes = await crmControllerRazorpayPayment({
         body: {
           slot_id: slotId,
           campus_id: resolvedCampusId,
-          lead_id: user?.lead_id ? Number(user.lead_id) : undefined,
-          uid: user?.sub ?? '',
+          lead_id: leadId,
+          uid,
         },
       });
 
-      if (payRes.error) throw new Error(JSON.stringify(payRes.error));
+      const payData = payRes.data as { razorpay_order_id?: string; amount?: number; key_id?: string } | undefined;
+      if (!payData?.razorpay_order_id) throw new Error('Payment initiation failed — no order ID received.');
 
-      const url = payRes.data?.result?.short_url;
-      if (!url) throw new Error('No payment URL received from server.');
-
-      window.location.href = url;
+      // Razorpay inline checkout
+      const options = {
+        key: payData.key_id,
+        amount: payData.amount,
+        currency: 'INR',
+        order_id: payData.razorpay_order_id,
+        handler: () => { router.push('/consult/appointments'); },
+      };
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const Razorpay = (window as unknown as Record<string, unknown>).Razorpay as (new (opts: unknown) => { open(): void }) | undefined;
+      if (!Razorpay) throw new Error('Razorpay SDK not loaded.');
+      new Razorpay(options).open();
     } catch (err) {
       console.error(err);
       setError(
@@ -150,7 +154,7 @@ function CheckoutContent() {
     );
   }
 
-  const initials = (doctor?.display_name || doctor?.name || '')
+  const initials = (doctor?.name || '')
     .replace(/^Dr\.?\s*/i, '')
     .split(' ')
     .map((w) => w[0])

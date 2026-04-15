@@ -39,14 +39,14 @@
 
 ## 5. Appointments & Consult Flow Migration
 
-- [ ] 5.1 Create `hooks/appointments/use-appointments-page.ts` — fetch upcoming + past via `crmControllerGetAppointmentDashboard` or `crmControllerFetchAppointmentDetails`; replace `getAppointments` + `getAppointmentsPrevious` from `@/sdk/auth-and-crm`
-- [ ] 5.2 Create `hooks/appointments/use-appointment-detail.ts` — fetch detail by ID via `crmControllerFetchAppointmentDetails`
-- [ ] 5.3 Create `hooks/consult/use-booking.ts` — orchestrates slots, slot-price, campuses, and booking mutation (`appointmentsControllerBookIndividual`)
-- [ ] 5.4 Create `hooks/consult/use-checkout.ts` — orchestrates payment + confirmation (`appointmentsControllerConfirm`, `crmControllerRazorpayPayment`)
-- [ ] 5.5 Update `app/(auth)/consult/appointments/page.tsx` and `[appointment_id]/page.tsx` to use new hooks
-- [ ] 5.6 Update `app/(auth)/consult/booking/[doctor_id]/page.tsx` and `consult/checkout/page.tsx` to use new hooks; ensure `doctor_id` is read from `params`, not context
-- [ ] 5.7 Remove `AppointmentDetail` custom type; import from `@/sdk/backend-v2`; delete `types/appointment.ts`
-- [ ] 5.8 Update `components/booking/*`, `components/checkout/*`, `components/appointments/*` to remove `@/sdk/auth-and-crm` imports
+- [x] 5.1 Create `hooks/appointments/use-appointments-page.ts` — fetch upcoming + past via `crmControllerGetAppointmentDashboard` or `crmControllerFetchAppointmentDetails`; replace `getAppointments` + `getAppointmentsPrevious` from `@/sdk/auth-and-crm`
+- [x] 5.2 Create `hooks/appointments/use-appointment-detail.ts` — fetch detail by ID via `crmControllerFetchAppointmentDetails`
+- [x] 5.3 Create `hooks/consult/use-booking.ts` — orchestrates slots, slot-price, campuses, and booking mutation (`appointmentsControllerBookIndividual`)
+- [x] 5.4 Create `hooks/consult/use-checkout.ts` — orchestrates payment + confirmation (`appointmentsControllerConfirm`, `crmControllerRazorpayPayment`)
+- [x] 5.5 Update `app/(auth)/consult/appointments/page.tsx` and `[appointment_id]/page.tsx` to use new hooks
+- [x] 5.6 Update `app/(auth)/consult/booking/[doctor_id]/page.tsx` and `consult/checkout/page.tsx` to use new hooks; ensure `doctor_id` is read from `params`, not context
+- [x] 5.7 Remove `AppointmentDetail` custom type; import from `@/sdk/backend-v2`; delete `types/appointment.ts`
+- [x] 5.8 Update `components/booking/*`, `components/checkout/*`, `components/appointments/*` to remove `@/sdk/auth-and-crm` imports
 
 ## 6. Packages Migration
 

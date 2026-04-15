@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { BackButton } from '@/components/shared/navigation/back-button';
 import { AppointmentCard } from '@/components/appointments/appointment-card';
-import { useAppointments } from '@/hooks/use-appointments';
+import { useAppointments } from '@/hooks/appointments/use-appointments-page';
 
 export default function AppointmentsPage() {
   const { upcoming, past, isLoading, error } = useAppointments();

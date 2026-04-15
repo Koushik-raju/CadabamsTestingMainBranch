@@ -9,7 +9,14 @@ import {
   SheetHeader,
   SheetTitle,
 } from '@/components/ui/sheet';
-import type { CampusMaster, DoctorAvailabilityResponse } from '@/sdk/auth-and-crm';
+type CampusItem = {
+  id: number;
+  name: string;
+  display_name?: string;
+  book_appointment?: boolean;
+  area?: Array<[string | number, string | number]>;
+  [key: string]: unknown;
+};
 
 function CheckDot() {
   return (
@@ -32,8 +39,7 @@ export interface CampusSheetProps {
   onConfirmedCampusChange: (id: number | null) => void;
   confirmedSubId: number | null;
   onConfirmedSubChange: (id: number | null) => void;
-  campuses: CampusMaster[];
-  availability: DoctorAvailabilityResponse | null;
+  campuses: CampusItem[];
   isOnline: boolean;
   loading: boolean;
 }
@@ -50,18 +56,11 @@ export function CampusSheet({
   confirmedSubId,
   onConfirmedSubChange,
   campuses,
-  availability,
   isOnline,
   loading,
 }: CampusSheetProps) {
 
-  const availableCampusIds = new Set((availability?.campuses ?? []).map(c => c.campus_id));
-
   const getSubCampusOptions = (campusId: number) => {
-    const fromAvailability = (availability?.campuses ?? [])
-      .filter(c => c.campus_id === campusId && c.sub_campus_id !== false)
-      .map(c => ({ id: c.sub_campus_id as number, name: c.name }));
-    if (fromAvailability.length > 0) return fromAvailability;
     const master = campuses.find(c => c.id === campusId);
     return (master?.area ?? []).map(([id, name]) => ({ id: Number(id), name: String(name) }));
   };
@@ -114,7 +113,7 @@ export function CampusSheet({
             ) : (
               <div className="flex flex-col gap-2 px-4 pt-2">
                 {campuses.map(campus => {
-                  const doctorAvailable = availableCampusIds.size === 0 || availableCampusIds.has(campus.id);
+                  const doctorAvailable = true;
                   const isSelected = pendingCampusId === campus.id;
                   return (
                     <button

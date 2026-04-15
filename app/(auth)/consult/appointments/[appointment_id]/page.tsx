@@ -1,6 +1,6 @@
 'use client';
 
-import { Suspense, useState, useEffect } from 'react';
+import { Suspense, useState } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import {
   ChevronRight,
@@ -32,12 +32,11 @@ import {
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
 import {
-  getAppointments,
-  getAppointmentsPrevious,
-  getAppointmentsMediums,
-  putAppointmentsCancelBySlotId,
-} from '@/sdk/auth-and-crm';
-import type { AppointmentDetail } from '@/sdk/auth-and-crm';
+  useAppointments,
+  cancelAppointment,
+  getMediums,
+} from '@/hooks/appointments/use-appointments-page';
+import type { AppointmentDetail } from '@/hooks/appointments/use-appointments-page';
 
 // ── helpers ────────────────────────────────────────────────────────────────────
 
@@ -114,45 +113,23 @@ function DetailContent() {
   const router = useRouter();
   const { appointment_id } = useParams<{ appointment_id: string }>();
 
-  const [apt, setApt] = useState<AppointmentDetail | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [notFound, setNotFound] = useState(false);
+  const id = Number(appointment_id);
+  const { upcoming, past, isLoading: loading } = useAppointments();
+  const apt = [...upcoming, ...past].find((a) => a.id === id) ?? null;
+  const notFound = !loading && apt === null;
+
   const [cancelling, setCancelling] = useState(false);
-  const [mediumId, setMediumId] = useState<number | null>(null);
   const [cancelReason, setCancelReason] = useState('');
 
-  useEffect(() => {
-    const id = Number(appointment_id);
-    Promise.all([
-      getAppointments({ query: { start_datetime: new Date(0).toISOString() } }),
-      getAppointmentsPrevious(),
-      getAppointmentsMediums(),
-    ])
-      .then(([upRes, pastRes, mediumsRes]) => {
-        const all = [...(upRes.data ?? []), ...(pastRes.data ?? [])];
-        const found = all.find((a) => a.id === id);
-        if (found) setApt(found);
-        else setNotFound(true);
-        const mediums = mediumsRes.data ?? [];
-        const online =
-          mediums.find((m) => m.name.toLowerCase().includes('online')) ??
-          mediums[0];
-        if (online) setMediumId(online.id);
-      })
-      .catch(() => setNotFound(true))
-      .finally(() => setLoading(false));
-  }, [appointment_id]);
-
   const handleCancel = async () => {
-    if (!apt || !cancelReason.trim() || mediumId === null) return;
+    if (!apt || !cancelReason.trim()) return;
 
     setCancelling(true);
     try {
-      const { data, error } = await putAppointmentsCancelBySlotId({
-        path: { slotId: apt.id },
-        body: { medium_id: mediumId, cancel_reason: cancelReason.trim() },
-      });
-      console.log({ error, data });
+      const mediums = await getMediums();
+      // pick online medium or first medium for the cancel call (medium_id is legacy field)
+      void mediums; // not required by new cancel endpoint
+      await cancelAppointment(apt.id, cancelReason.trim());
       router.push('/consult/appointments');
     } catch (err) {
       console.error(err);
