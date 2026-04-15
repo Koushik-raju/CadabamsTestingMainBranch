@@ -83,10 +83,10 @@
 
 ## 10. Component Shared Audit
 
-- [ ] 10.1 Update `components/worksheet/worksheet-card.tsx` — remove `@/services/` import; use `worksheetSubmissionsControllerGetOne` or equivalent directly or via a hook
-- [ ] 10.2 Update `components/analytics-initializer.tsx` — replace `@/services/analytics.service.ts` usage with backend-v2 analytics endpoint or remove if covered by hook side-effects
-- [ ] 10.3 Audit all components under `components/booking/`, `components/checkout/`, `components/appointments/` for remaining `@/sdk/auth-and-crm` imports and replace with hook-provided props or backend-v2 calls
-- [ ] 10.4 Delete `services/analytics.service.ts` and `services/assessment.service.ts` once unused
+- [x] 10.1 Update `components/worksheet/worksheet-card.tsx` — remove `@/services/` import; use `worksheetSubmissionsControllerGetOne` or equivalent directly or via a hook
+- [x] 10.2 Update `components/analytics-initializer.tsx` — replace `@/services/analytics.service.ts` usage with backend-v2 analytics endpoint or remove if covered by hook side-effects
+- [x] 10.3 Audit all components under `components/booking/`, `components/checkout/`, `components/appointments/` for remaining `@/sdk/auth-and-crm` imports and replace with hook-provided props or backend-v2 calls
+- [x] 10.4 Delete `services/analytics.service.ts` and `services/assessment.service.ts` once unused
 
 ## 11. Cleanup & Deletion
 
