@@ -1,5 +1,63 @@
+export function authMeKey(): string {
+  return '/auth/me';
+}
+
 export function doctorKey(id: number | string): string {
   return `/doctors/${id}`;
+}
+
+export function assessmentsKey(): string {
+  return '/assessments';
+}
+
+export function assessmentByIdKey(id: number | string): string {
+  return `/assessments/${id}`;
+}
+
+export function assignedAssessmentsKey(leadId: number | string): string {
+  return `/assigned-assessments/${leadId}`;
+}
+
+export function assessmentSubmissionsKey(leadId: number | string, assessmentId?: number | string): string {
+  return assessmentId !== undefined
+    ? `/assessment-submissions/${leadId}/${assessmentId}`
+    : `/assessment-submissions/${leadId}`;
+}
+
+export function journeyEnrollmentKey(journeyId: number | string): string {
+  return `/journey-enrollment/${journeyId}`;
+}
+
+export function packagesKey(): string {
+  return '/packages';
+}
+
+export function packageByIdKey(id: number | string): string {
+  return `/packages/${id}`;
+}
+
+export function documentsKey(): string {
+  return '/documents';
+}
+
+export function notificationsKey(): string {
+  return '/notifications';
+}
+
+export function prescriptionsKey(): string {
+  return '/prescriptions';
+}
+
+export function leaderboardKey(): string {
+  return '/leaderboard';
+}
+
+export function selfJournalingKey(): string {
+  return '/self-journaling';
+}
+
+export function selfJournalingEntryKey(entryId: number | string): string {
+  return `/self-journaling/${entryId}`;
 }
 
 export function appointmentsKey(): string {

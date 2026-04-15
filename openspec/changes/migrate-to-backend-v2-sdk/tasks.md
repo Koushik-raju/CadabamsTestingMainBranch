@@ -1,11 +1,11 @@
 ## 1. Foundation — SWR Key Registry & Shared Infrastructure
 
-- [ ] 1.1 Audit `lib/swr-keys.ts` and add key factory functions for all resources: assessments, assessment-by-id, assigned-assessments, assessment-submissions, journeys, journey-detail, journey-enrollment, appointments, slots, slot-price, campuses, packages, package-by-id, documents, notifications, prescriptions, leaderboard, mindful-minutes, mindful-minute-detail, wellness-resources, wellness-resource-detail, videos, video-detail, self-journaling, self-journaling-entry, auth-me
-- [ ] 1.2 Create `hooks/shared/auth/use-auth.ts` using `authControllerMe` from `@/sdk/backend-v2` + SWR; replace `hooks/use-auth.ts` import of `getPatientsMe` from `@/sdk/auth-and-crm/sdk.gen`
-- [ ] 1.3 Create `hooks/shared/campuses/use-campuses.ts` using `mastersControllerGetCampuses` from `@/sdk/backend-v2`; replace `hooks/use-campuses.ts`
-- [ ] 1.4 Create `hooks/shared/slots/use-slots.ts` using `crmControllerGetSlots` from `@/sdk/backend-v2`; replace `hooks/use-slots.ts`
-- [ ] 1.5 Create `hooks/shared/slots/use-slot-price.ts` using `crmControllerGetSlotPrice` from `@/sdk/backend-v2`; replace `hooks/use-slot-price.ts`
-- [ ] 1.6 Update all pages/components importing from the old flat hook paths to import from the new shared hook paths; delete old flat hook files once unused
+- [x] 1.1 Audit `lib/swr-keys.ts` and add key factory functions for all resources: assessments, assessment-by-id, assigned-assessments, assessment-submissions, journeys, journey-detail, journey-enrollment, appointments, slots, slot-price, campuses, packages, package-by-id, documents, notifications, prescriptions, leaderboard, mindful-minutes, mindful-minute-detail, wellness-resources, wellness-resource-detail, videos, video-detail, self-journaling, self-journaling-entry, auth-me
+- [x] 1.2 Create `hooks/shared/auth/use-auth.ts` using `authControllerMe` from `@/sdk/backend-v2` + SWR; replace `hooks/use-auth.ts` import of `getPatientsMe` from `@/sdk/auth-and-crm/sdk.gen`
+- [x] 1.3 Create `hooks/shared/campuses/use-campuses.ts` using `mastersControllerGetCampuses` from `@/sdk/backend-v2`; replace `hooks/use-campuses.ts`
+- [x] 1.4 Create `hooks/shared/slots/use-slots.ts` using `crmControllerGetSlots` from `@/sdk/backend-v2`; replace `hooks/use-slots.ts`
+- [x] 1.5 Create `hooks/shared/slots/use-slot-price.ts` using `crmControllerGetSlotPrice` from `@/sdk/backend-v2`; replace `hooks/use-slot-price.ts`
+- [x] 1.6 Update all pages/components importing from the old flat hook paths to import from the new shared hook paths; delete old flat hook files once unused
 
 ## 2. Assessments Migration
 
