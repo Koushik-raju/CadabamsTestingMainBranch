@@ -1,21 +1,14 @@
-import { crmClient } from '@/lib/api-client';
-import { endpoints } from '@/config/api-endpoints';
+'use client';
 
-export const notificationService = {
-  async getNotifications(leadId: string | number) {
-    const res = await crmClient.get(endpoints.GET_NOTIFICATION_DETAILS, {
-      params: { lead_id: leadId },
-    });
-    return res.data;
-  },
+import useSWR from 'swr';
+import {
+  crmControllerGetNotificationSettings,
+  crmControllerEnableNotifications,
+} from '@/sdk/backend-v2';
+import type { NotificationSettingsResponseDto } from '@/sdk/backend-v2';
+import { useAuth } from '@/hooks/shared/auth/use-auth';
 
-  async updateNotificationPreference(data: Record<string, unknown>) {
-    const res = await crmClient.put(endpoints.PUT_NOTIFICATION_DETAILS, data);
-    return res.data;
-  },
-};
-
-// ── Local notification storage (push notifications wired in Phase 11) ──
+// ─── Local notification storage (push notifications) ─────────────────────────
 
 const LOCAL_KEY = 'local_notifications';
 
@@ -68,4 +61,29 @@ export function clearAllNotifications(): void {
 
 export function getUnreadCount(): number {
   return getStoredNotifications().filter((n) => !n.read).length;
+}
+
+// ─── Notification settings hook ──────────────────────────────────────────────
+
+export function useNotificationSettings() {
+  const { user } = useAuth();
+  const leadId = user?.lead_id ? String(user.lead_id) : null;
+
+  const { data, isLoading, error, mutate } = useSWR(
+    leadId ? `/notification-settings/${leadId}` : null,
+    async () => {
+      const res = await crmControllerGetNotificationSettings({
+        query: { lead_id: leadId! },
+      });
+      return (res.data as NotificationSettingsResponseDto) ?? null;
+    },
+    { revalidateOnFocus: false }
+  );
+
+  async function enableNotifications(params: Record<string, unknown>) {
+    await crmControllerEnableNotifications({ body: params as never });
+    await mutate();
+  }
+
+  return { settings: data ?? null, isLoading, error, enableNotifications };
 }

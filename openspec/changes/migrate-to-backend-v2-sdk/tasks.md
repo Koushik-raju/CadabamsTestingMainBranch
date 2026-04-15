@@ -67,12 +67,12 @@
 
 ## 8. Documents, Notifications, Prescriptions, Leaderboard
 
-- [ ] 8.1 Create `hooks/documents/use-documents.ts` using `userDocumentsControllerList`, `userDocumentsControllerPresignUpload`, `userDocumentsControllerUploadComplete`, `userDocumentsControllerDelete`; update `app/(auth)/documents/page.tsx`
-- [ ] 8.2 Create `hooks/notifications/use-notifications.ts` using `crmControllerGetNotificationSettings` and `crmControllerEnableNotifications`; replace `notificationService`; update `app/(auth)/notifications/page.tsx`
-- [ ] 8.3 Create `hooks/prescriptions/use-prescriptions.ts` using `evaluationsControllerGetPrescriptions`; replace `prescriptionService`; update `app/(auth)/prescriptions/page.tsx`
-- [ ] 8.4 Create `hooks/leaderboard/use-leaderboard.ts` using the relevant backend-v2 endpoint (investigate `leaderboard.service.ts` for current endpoint); update `app/(auth)/leaderboard/page.tsx`
-- [ ] 8.5 Delete `services/notification.service.ts`, `services/prescription.service.ts`, `services/leaderboard.service.ts` once hooks are in place
-- [ ] 8.6 Delete `types/notification.ts`; delete `config/api-endpoints.ts` entries that are now unused
+- [x] 8.1 Create `hooks/documents/use-documents.ts` using `userDocumentsControllerList`, `userDocumentsControllerPresignUpload`, `userDocumentsControllerUploadComplete`, `userDocumentsControllerDelete`; update `app/(auth)/documents/page.tsx`
+- [x] 8.2 Create `hooks/notifications/use-notifications.ts` using `crmControllerGetNotificationSettings` and `crmControllerEnableNotifications`; replace `notificationService`; update `app/(auth)/notifications/page.tsx`
+- [x] 8.3 Create `hooks/prescriptions/use-prescriptions.ts` using `evaluationsControllerGetPrescriptions`; replace `prescriptionService`; update `app/(auth)/prescriptions/page.tsx`
+- [x] 8.4 Create `hooks/leaderboard/use-leaderboard.ts` using the relevant backend-v2 endpoint (investigate `leaderboard.service.ts` for current endpoint); update `app/(auth)/leaderboard/page.tsx`
+- [x] 8.5 Delete `services/notification.service.ts`, `services/prescription.service.ts`, `services/leaderboard.service.ts` once hooks are in place
+- [x] 8.6 Delete `types/notification.ts`; delete `config/api-endpoints.ts` entries that are now unused
 
 ## 9. Home Page & Onboarding
 

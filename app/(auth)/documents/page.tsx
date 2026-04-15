@@ -1,118 +1,46 @@
 'use client';
 
-import { useRef, useState, useEffect, useCallback } from 'react';
+import { useRef, useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
-import { Upload, FileText, AlertCircle, FolderOpen } from 'lucide-react';
-import { collection, query, orderBy, getDocs, addDoc, deleteDoc, doc } from 'firebase/firestore';
-import { ref as storageRef, uploadBytes, getDownloadURL, deleteObject } from 'firebase/storage';
+import { Upload, AlertCircle, FolderOpen } from 'lucide-react';
 import { Capacitor } from '@capacitor/core';
-import { storage, firestore } from '@/lib/firebase';
 import { BackButton } from '@/components/shared/navigation/back-button';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Separator } from '@/components/ui/separator';
 import { DocumentCard, type DocumentData } from '@/components/documents/document-card';
+import { useDocuments } from '@/hooks/documents/use-documents';
 
-async function downloadDocument(docObj: DocumentData): Promise<void> {
-  let downloadUrl = docObj.url;
-
-  if (docObj.path) {
-    try {
-      const fileRef = storageRef(storage, docObj.path);
-      downloadUrl = await getDownloadURL(fileRef);
-    } catch {
-      // fall through — use stored URL
-    }
-  }
-
+async function openDownloadUrl(url: string): Promise<void> {
   if (Capacitor.isNativePlatform()) {
     const { Browser } = await import('@capacitor/browser');
-    await Browser.open({ url: downloadUrl });
+    await Browser.open({ url });
     return;
   }
-
-  window.open(downloadUrl, '_blank', 'noopener,noreferrer');
+  window.open(url, '_blank', 'noopener,noreferrer');
 }
 
 export default function DocumentsPage() {
   const router = useRouter();
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const { documents, isLoading, error: loadError, leadId, uploadDocument, deleteDocument } = useDocuments();
 
-  const [leadId, setLeadId] = useState<string | null>(null);
-  const [documents, setDocuments] = useState<DocumentData[]>([]);
-  const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [userError, setUserError] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
   const [downloadingId, setDownloadingId] = useState<string | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
-
-  useEffect(() => {
-    try {
-      const raw = localStorage.getItem('user');
-      if (!raw) { setUserError('User information not found'); return; }
-      const parsed = JSON.parse(raw) as { lead_id?: string | number };
-      if (parsed?.lead_id) {
-        setLeadId(String(parsed.lead_id));
-      } else {
-        setUserError('User information not found');
-      }
-    } catch {
-      setUserError('Authentication error. Please log in again.');
-    }
-  }, []);
-
-  const fetchDocs = useCallback(async (id: string) => {
-    setLoading(true);
-    setError(null);
-    try {
-      const colRef = collection(firestore, `crmLeads/${id}/documents`);
-      const q = query(colRef, orderBy('createdAt', 'desc'));
-      const snap = await getDocs(q);
-      setDocuments(
-        snap.docs.map((d) => ({ ...(d.data() as Omit<DocumentData, 'id'>), id: d.id })),
-      );
-    } catch {
-      setError('Failed to load documents. Please try again.');
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  useEffect(() => {
-    if (leadId) fetchDocs(leadId);
-  }, [leadId, fetchDocs]);
 
   const handleUploadClick = () => fileInputRef.current?.click();
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (!file || !leadId) return;
+    if (!file) return;
 
     setUploading(true);
     setError(null);
-
     try {
-      const timestamp = Date.now();
-      const path = `crmLeads/${leadId}/${timestamp}_${file.name}`;
-      const sRef = storageRef(storage, path);
-      await uploadBytes(sRef, file);
-      const url = await getDownloadURL(sRef);
-
-      const docRef = await addDoc(collection(firestore, `crmLeads/${leadId}/documents`), {
-        name: file.name,
-        path,
-        size: file.size,
-        type: file.type,
-        url,
-        createdAt: new Date().toISOString(),
-      });
-
-      setDocuments((prev) => [
-        { id: docRef.id, name: file.name, path, size: file.size, type: file.type, url, createdAt: new Date().toISOString() },
-        ...prev,
-      ]);
+      await uploadDocument(file);
     } catch {
       setError('Failed to upload document. Please try again.');
     } finally {
@@ -121,34 +49,33 @@ export default function DocumentsPage() {
     }
   };
 
-  const handleDownload = async (docObj: DocumentData) => {
+  const handleDownload = useCallback(async (docObj: DocumentData) => {
     setDownloadingId(docObj.id);
     try {
-      await downloadDocument(docObj);
+      await openDownloadUrl(docObj.url);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Unable to download file.');
     } finally {
       setDownloadingId(null);
     }
-  };
+  }, []);
 
-  const handleDelete = async (docObj: DocumentData) => {
-    if (!leadId) return;
+  const handleDelete = useCallback(async (docObj: DocumentData) => {
     const confirmed = window.confirm(`Delete "${docObj.name}"?`);
     if (!confirmed) return;
 
     setDeletingId(docObj.id);
     setError(null);
     try {
-      if (docObj.path) await deleteObject(storageRef(storage, docObj.path));
-      await deleteDoc(doc(firestore, `crmLeads/${leadId}/documents/${docObj.id}`));
-      setDocuments((prev) => prev.filter((d) => d.id !== docObj.id));
+      await deleteDocument(docObj.id);
     } catch {
       setError('Failed to delete document. Please try again.');
     } finally {
       setDeletingId(null);
     }
-  };
+  }, [deleteDocument]);
+
+  const userError = !leadId && !isLoading ? 'User information not found' : null;
 
   return (
     <main className="min-h-screen bg-background pb-24" role="main" aria-label="My documents">
@@ -180,11 +107,13 @@ export default function DocumentsPage() {
 
       <div className="px-4 space-y-4">
         {/* Error banner */}
-        {error && (
+        {(error || loadError) && (
           <Card className="border-destructive bg-destructive/5">
             <CardContent className="py-3 flex items-center gap-2">
               <AlertCircle className="w-4 h-4 text-destructive flex-shrink-0" />
-              <p className="text-sm text-destructive" role="alert">{error}</p>
+              <p className="text-sm text-destructive" role="alert">
+                {error ?? 'Failed to load documents. Please try again.'}
+              </p>
             </CardContent>
           </Card>
         )}
@@ -201,7 +130,7 @@ export default function DocumentsPage() {
             </div>
             <Button variant="outline" onClick={() => router.push('/')}>Go Home</Button>
           </div>
-        ) : loading ? (
+        ) : isLoading ? (
           <Card>
             <CardContent className="py-2 divide-y">
               {Array.from({ length: 5 }).map((_, i) => (
@@ -236,7 +165,9 @@ export default function DocumentsPage() {
           <section>
             <div className="flex items-center justify-between mb-3">
               <h2 className="text-base font-bold text-foreground">All Files</h2>
-              <span className="text-xs text-muted-foreground">{documents.length} file{documents.length !== 1 ? 's' : ''}</span>
+              <span className="text-xs text-muted-foreground">
+                {documents.length} file{documents.length !== 1 ? 's' : ''}
+              </span>
             </div>
             <Card>
               <CardContent className="py-0 px-3" role="list" aria-label="Your documents">

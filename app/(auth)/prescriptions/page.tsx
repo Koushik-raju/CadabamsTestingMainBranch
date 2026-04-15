@@ -1,44 +1,23 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { BackButton } from '@/components/shared/navigation/back-button';
 import { PrescriptionCard } from '@/components/prescription/prescription-card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import { ClipboardList, AlertCircle } from 'lucide-react';
-import { prescriptionService } from '@/services/prescription.service';
-import { useAuth } from '@/hooks/use-auth';
+import { usePrescriptions } from '@/hooks/prescriptions/use-prescriptions';
+import { BASE_URL_HOS } from '@/config/env';
 import dayjs from 'dayjs';
 import type { Prescription } from '@/types/package';
 
 export default function PrescriptionsPage() {
   const router = useRouter();
-  const { user } = useAuth();
+  const { prescriptions, isLoading, error, mutate } = usePrescriptions();
 
-  const [prescriptions, setPrescriptions] = useState<Prescription[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
   const [downloadingId, setDownloadingId] = useState<number | null>(null);
   const [downloadError, setDownloadError] = useState<string | null>(null);
-
-  const loadPrescriptions = useCallback(async () => {
-    if (!user?.lead_id) return;
-    try {
-      setLoading(true);
-      setError(null);
-      const data = await prescriptionService.fetchPrescriptions(user.lead_id);
-      setPrescriptions(data);
-    } catch {
-      setError('Failed to load prescriptions. Please try again.');
-    } finally {
-      setLoading(false);
-    }
-  }, [user?.lead_id]);
-
-  useEffect(() => {
-    loadPrescriptions();
-  }, [loadPrescriptions]);
 
   const handleView = (prescription: Prescription) => {
     if (prescription.prescription_line && prescription.prescription_line.length > 0) {
@@ -54,7 +33,10 @@ export default function PrescriptionsPage() {
     try {
       setDownloadingId(prescription.id);
       setDownloadError(null);
-      await prescriptionService.downloadPrescription(prescription.id);
+      const url = `${BASE_URL_HOS}/download/prescription/form/${prescription.id}`;
+      if (typeof window !== 'undefined') {
+        window.open(url, '_blank', 'noopener,noreferrer');
+      }
     } catch {
       setDownloadError('Failed to download prescription. Please try again.');
       setTimeout(() => setDownloadError(null), 5000);
@@ -66,7 +48,7 @@ export default function PrescriptionsPage() {
   return (
     <div className="min-h-screen bg-background pb-24">
       {/* Header */}
-      <div className="px-4 pt-safe-top pt-4 pb-4">
+      <div className="px-4 pt-5 pb-4">
         <div className="flex items-center gap-3 mb-1">
           <BackButton fallback="/home" />
           <div>
@@ -86,7 +68,7 @@ export default function PrescriptionsPage() {
         )}
 
         {/* Loading */}
-        {loading && (
+        {isLoading && (
           <div className="flex flex-col items-center justify-center py-16 gap-3">
             <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin" />
             <p className="text-sm text-muted-foreground">Loading prescriptions...</p>
@@ -94,12 +76,12 @@ export default function PrescriptionsPage() {
         )}
 
         {/* Error */}
-        {!loading && error && (
+        {!isLoading && error && (
           <Alert variant="destructive">
             <AlertCircle className="h-4 w-4" />
             <AlertDescription className="flex items-center justify-between">
-              {error}
-              <Button size="sm" variant="outline" onClick={loadPrescriptions} className="ml-2">
+              Failed to load prescriptions. Please try again.
+              <Button size="sm" variant="outline" onClick={() => mutate()} className="ml-2">
                 Retry
               </Button>
             </AlertDescription>
@@ -107,7 +89,7 @@ export default function PrescriptionsPage() {
         )}
 
         {/* Empty */}
-        {!loading && !error && prescriptions.length === 0 && (
+        {!isLoading && !error && prescriptions.length === 0 && (
           <div className="flex flex-col items-center justify-center py-16 gap-4 text-center">
             <div className="w-16 h-16 rounded-full bg-muted flex items-center justify-center">
               <ClipboardList className="w-8 h-8 text-muted-foreground" />
@@ -125,7 +107,7 @@ export default function PrescriptionsPage() {
         )}
 
         {/* Prescription list */}
-        {!loading && !error && prescriptions.length > 0 && (
+        {!isLoading && !error && prescriptions.length > 0 && (
           <div className="space-y-3">
             {prescriptions.map((prescription, index) => (
               <PrescriptionCard

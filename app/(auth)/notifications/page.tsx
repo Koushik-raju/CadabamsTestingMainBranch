@@ -25,7 +25,7 @@ import {
   markNotificationAsRead,
   clearAllNotifications,
   type LocalNotification,
-} from '@/services/notification.service';
+} from '@/hooks/notifications/use-notifications';
 
 function formatTime(iso: string) {
   const date = new Date(iso);
