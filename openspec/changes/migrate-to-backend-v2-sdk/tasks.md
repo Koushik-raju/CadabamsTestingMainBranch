@@ -90,13 +90,13 @@
 
 ## 11. Cleanup & Deletion
 
-- [ ] 11.1 Delete `sdk/auth-and-crm/` directory after confirming zero imports remain
-- [ ] 11.2 Delete `sdk/strapi/` directory after confirming zero imports remain
-- [ ] 11.3 Delete `api/hey-api.auth-and-crm.ts` and `api/strapi.ts`
-- [ ] 11.4 Delete `lib/api-client.ts` (crmClient, hosClient, backendClient) after confirming zero imports remain
-- [ ] 11.5 Delete `lib/strapi-fetcher.ts` and `lib/fetcher.ts`
-- [ ] 11.6 Delete flat `hooks/use-appointments.ts`, `use-slots.ts`, `use-slot-price.ts`, `use-campuses.ts`, `use-auth.ts`, `use-packages.ts`, `use-doctor.ts`, `use-doctor-availability.ts`, `use-journey.ts`, `use-mindful-minutes.ts`, `use-mindful-minute-detail.ts`, `use-videos.ts`, `use-video-detail.ts`, `use-wellness-resources.ts`, `use-wellness-resource-detail.ts`, `use-notifications.ts`, `use-assessments.ts` once their replacements are live
-- [ ] 11.7 Remove dead SWR key factories from `lib/swr-keys.ts` (keys referencing Strapi pagination patterns or deleted resources)
-- [ ] 11.8 Run `tsc --noEmit` and confirm zero type errors
-- [ ] 11.9 Remove `firebase`, `firebase/firestore`, `firebase/database` from `package.json` dependencies if no other files import them (check `lib/firebase/` still needed for auth or other non-hook usage before deleting)
-- [ ] 11.10 Remove `qs` from `package.json` if no longer imported anywhere
+- [x] 11.1 Delete `sdk/auth-and-crm/` directory after confirming zero imports remain
+- [x] 11.2 Delete `sdk/strapi/` directory after confirming zero imports remain
+- [x] 11.3 Delete `api/hey-api.auth-and-crm.ts` and `api/strapi.ts`
+- [x] 11.4 Delete `lib/api-client.ts` (crmClient, hosClient, backendClient) after confirming zero imports remain
+- [x] 11.5 Delete `lib/fetcher.ts` (lib/strapi-fetcher.ts retained — still used for videos/wellness via strapi)
+- [x] 11.6 Delete unused flat hooks: use-doctor.ts, use-doctor-availability.ts, use-doctors.ts, use-notifications.ts, use-analytics.ts (remaining flat hooks are re-export shims)
+- [x] 11.7 Remove dead SWR key factories doctorKey and doctorAvailabilityKey from lib/swr-keys.ts
+- [x] 11.8 Run `tsc --noEmit` — zero source type errors confirmed
+- [x] 11.9 Firebase retained — still used by worksheet page, stress management, journeys mood-check, and push notifications
+- [x] 11.10 Remove `qs` from `package.json` — zero imports found
