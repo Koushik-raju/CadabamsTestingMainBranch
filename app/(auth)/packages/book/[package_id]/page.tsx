@@ -131,13 +131,21 @@ function BookPackageContent({ packageId }: { packageId: string }) {
         date:             new Date().toISOString().split('T')[0],
       });
 
-      const url = await initiatePackagePayment({
-        booked_package_id: booking_id,
-        campus_id:         1,
-        lead_id:           Number(user.lead_id),
+      const payData = await initiatePackagePayment({
+        leadBookedPackageId: booking_id,
+        leadId: Number(user.lead_id),
+        uid: (user.sub as string) ?? String(user.lead_id),
       });
-
-      window.location.href = url;
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const RazorpayCheckout = (window as unknown as Record<string, unknown>).Razorpay as (new (opts: unknown) => { open(): void }) | undefined;
+      if (!RazorpayCheckout) throw new Error('Razorpay SDK not loaded.');
+      new RazorpayCheckout({
+        key: payData.key_id,
+        amount: payData.amount,
+        currency: 'INR',
+        order_id: payData.razorpay_order_id,
+        handler: () => { window.location.href = '/packages'; },
+      }).open();
     } catch (err: unknown) {
       setError((err as { message?: string })?.message ?? 'Failed to process payment');
     } finally {

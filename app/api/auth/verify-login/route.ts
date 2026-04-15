@@ -1,17 +1,18 @@
 import { NextRequest, NextResponse } from "next/server";
-import { postAuthPatientVerifyLogin } from "@/sdk/auth-and-crm/sdk.gen";
+import { authControllerVerifyPatientLogin } from "@/sdk/backend-v2";
 
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-    const { data, error } = await postAuthPatientVerifyLogin({ body });
+    const { data, error } = await authControllerVerifyPatientLogin({ body });
 
     if (error || !data) {
       const status = (error as { status?: number })?.status ?? 401;
       return NextResponse.json({ error: "OTP verification failed" }, { status });
     }
 
-    const { accessToken, refreshToken, expiresIn, ...userInfo } = data;
+    const tokenData = data as unknown as { accessToken: string; refreshToken: string; expiresIn: number; [key: string]: unknown };
+    const { accessToken, refreshToken, expiresIn, ...userInfo } = tokenData;
 
     const res = NextResponse.json(userInfo);
     res.cookies.set("access_token", accessToken, { path: "/", maxAge: expiresIn });

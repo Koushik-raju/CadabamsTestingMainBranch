@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { postAuthRefresh } from "@/sdk/auth-and-crm/sdk.gen";
+import { authControllerRefresh } from "@/sdk/backend-v2";
 
 export async function POST(req: NextRequest) {
   try {
@@ -9,7 +9,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "No refresh token" }, { status: 401 });
     }
 
-    const { data, error } = await postAuthRefresh({ body: { refreshToken } });
+    const { data, error } = await authControllerRefresh({ body: { refreshToken } });
 
     if (error || !data) {
       return NextResponse.json({ error: "Token refresh failed" }, { status: 401 });

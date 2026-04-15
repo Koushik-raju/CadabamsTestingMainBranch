@@ -86,12 +86,21 @@ export default function PackageDetailPage({ params }: { params: Promise<{ id: st
     setPayLoading(true);
     setPayError(null);
     try {
-      const url = await initiatePackagePayment({
-        booked_package_id: Number(pkg.booked_package_id),
-        campus_id: Number(pkg.campus_id[0]),
-        lead_id: Number(user.lead_id),
+      const payData = await initiatePackagePayment({
+        leadBookedPackageId: Number(pkg.booked_package_id),
+        leadId: Number(user.lead_id),
+        uid: (user.sub as string) ?? String(user.lead_id),
       });
-      window.location.href = url;
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const RazorpayCheckout = (window as unknown as Record<string, unknown>).Razorpay as (new (opts: unknown) => { open(): void }) | undefined;
+      if (!RazorpayCheckout) throw new Error('Razorpay SDK not loaded.');
+      new RazorpayCheckout({
+        key: payData.key_id,
+        amount: payData.amount,
+        currency: 'INR',
+        order_id: payData.razorpay_order_id,
+        handler: () => { window.location.href = '/packages'; },
+      }).open();
     } catch (err: unknown) {
       setPayError((err as { message?: string })?.message ?? 'Failed to process payment');
       setPayLoading(false);
@@ -137,8 +146,8 @@ export default function PackageDetailPage({ params }: { params: Promise<{ id: st
   const palette = getPackagePalette(pkg.booked_package_id);
   const { label, Icon } = getStageMeta(pkg.package_stage);
   const packageName = String(pkg.package_id[1] ?? 'Package');
-  const campusName = String(pkg.campus_id[1] ?? '');
-  const lines = pkg.lines ?? [];
+  const campusName = pkg.campus_id ? String(pkg.campus_id[1] ?? '') : '';
+  const lines = (pkg.lines ?? []) as BookedPackageProductLine[];
   const doneCount = lines.filter((l) => l.status === 'done').length;
 
   const initials = packageName

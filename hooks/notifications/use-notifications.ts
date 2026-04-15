@@ -73,7 +73,7 @@ export function useNotificationSettings() {
     leadId ? `/notification-settings/${leadId}` : null,
     async () => {
       const res = await crmControllerGetNotificationSettings({
-        query: { lead_id: leadId! },
+        query: { leadId: Number(leadId!) },
       });
       return (res.data as NotificationSettingsResponseDto) ?? null;
     },

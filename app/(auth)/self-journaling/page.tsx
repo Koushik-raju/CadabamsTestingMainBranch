@@ -15,14 +15,6 @@ interface JournalPrompt {
   text: string;
 }
 
-interface JournalEntry {
-  id: string;
-  entry?: string;
-  prompts?: JournalPrompt[];
-  createdAt: string;
-  timestamp?: number;
-}
-
 const GUIDED_REFLECTIONS = [
   {
     id: 'gratitude',

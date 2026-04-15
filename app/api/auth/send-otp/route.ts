@@ -1,10 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { postAuthPatientSendOtp } from '@/sdk/auth-and-crm/sdk.gen';
+import { authControllerSendPatientOtp } from '@/sdk/backend-v2';
 
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-    const { data, error } = await postAuthPatientSendOtp({ body });
+    const { data, error } = await authControllerSendPatientOtp({ body });
 
     if (error) {
       console.error('[send-otp] backend error:', error);

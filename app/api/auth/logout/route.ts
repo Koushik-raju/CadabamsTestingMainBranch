@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { postAuthLogout } from "@/sdk/auth-and-crm/sdk.gen";
+import { authControllerLogout } from "@/sdk/backend-v2";
 import { getRefreshToken, clearTokens } from "@/lib/cookies";
 
 export async function POST() {
@@ -8,7 +8,7 @@ export async function POST() {
 
     if (refreshToken) {
       // Best-effort — clear cookies regardless of backend response
-      await postAuthLogout({ body: { refreshToken } });
+      await authControllerLogout({ body: { refreshToken } });
     }
 
     await clearTokens();

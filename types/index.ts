@@ -4,7 +4,5 @@ export * from './appointment';
 export * from './worksheet';
 export * from './journey';
 export * from './package';
-export * from './notification';
-export * from './wellness';
 export * from './payment';
 export * from './capacitor';

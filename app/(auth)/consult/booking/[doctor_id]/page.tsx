@@ -180,7 +180,7 @@ function BookingContent() {
 
   // ── derived display values ───────────────────────────────────────────────────
   const slotsByDate = useMemo(() => {
-    const map: Record<string, TimeSlot[]> = {};
+    const map: Record<string, SlotResponseDto[]> = {};
     for (const s of slots) {
       const key = s.start_datetime.slice(0, 10);
       (map[key] ??= []).push(s);
@@ -199,7 +199,7 @@ function BookingContent() {
   const slotHeading    = selectedDate.toLocaleDateString('en-US', { weekday: 'short', day: 'numeric', month: 'short' });
   const sessionDuration = slots[0]?.duration ?? null;
 
-  const initials = (doctor?.display_name || doctor?.name || '')
+  const initials = (doctor?.name || '')
     .replace(/^Dr\.?\s*/i, '')
     .split(' ').map((w: string) => w[0]).slice(0, 2).join('').toUpperCase();
 

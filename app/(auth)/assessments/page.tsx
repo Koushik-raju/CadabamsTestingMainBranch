@@ -71,7 +71,7 @@ function applyDuration(items: AssessmentItem[], duration: Duration): AssessmentI
   if (duration === 'all') return items;
   return items.filter((a) => {
     const m = a.landingTitle?.minutes ?? null;
-    if (m === null) return duration === 'all';
+    if (m === null) return false;
     if (duration === 'short')  return m < 5;
     if (duration === 'medium') return m >= 5 && m <= 10;
     if (duration === 'long')   return m > 10;

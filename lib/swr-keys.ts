@@ -2,10 +2,6 @@ export function authMeKey(): string {
   return '/auth/me';
 }
 
-export function doctorKey(id: number | string): string {
-  return `/doctors/${id}`;
-}
-
 export function assessmentsKey(): string {
   return '/assessments';
 }
@@ -74,10 +70,6 @@ export function slotPriceKey(slotId: number | string): string {
 
 export function campusesKey(): string {
   return '/campuses';
-}
-
-export function doctorAvailabilityKey(id: number | string): string {
-  return `/doctor-availability/${id}`;
 }
 
 export function journeysKey(category?: string, search?: string): string {

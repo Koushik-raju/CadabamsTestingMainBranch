@@ -1,10 +1,10 @@
 import {
-  postAuthPatientSendOtp,
-  postAuthPatientVerifyLogin,
-  postAuthPatientSignupVerify,
-  postAuthRefresh,
-  postAuthLogout,
-} from "@/sdk/auth-and-crm/sdk.gen";
+  authControllerSendPatientOtp,
+  authControllerVerifyPatientLogin,
+  authControllerPatientSignupVerify,
+  authControllerRefresh,
+  authControllerLogout,
+} from "@/sdk/backend-v2";
 import { setTokens, clearTokens, getRefreshToken } from "./cookies";
 
 // ── Send OTP ──────────────────────────────────────────────────────────────────
@@ -14,7 +14,7 @@ export async function sendPatientOtp(
   type: "login" | "signup" = "login",
   email?: string,
 ) {
-  const { data, error } = await postAuthPatientSendOtp({
+  const { data, error } = await authControllerSendPatientOtp({
     body: { phone, type, email },
   });
   if (error || !data) throw error;
@@ -24,18 +24,19 @@ export async function sendPatientOtp(
 // ── Verify login OTP ──────────────────────────────────────────────────────────
 
 export async function verifyPatientLogin(phone: string, otp: string) {
-  const { data, error } = await postAuthPatientVerifyLogin({
+  const { data, error } = await authControllerVerifyPatientLogin({
     body: { phone, otp },
   });
   if (error || !data) throw error;
 
+  const tokenData = data as unknown as { accessToken: string; refreshToken: string; expiresIn: number };
   await setTokens(
     {
-      accessToken: data.accessToken,
-      refreshToken: data.refreshToken,
+      accessToken: tokenData.accessToken,
+      refreshToken: tokenData.refreshToken,
     },
     {
-      accessTokenOptions: { maxAge: data.expiresIn },
+      accessTokenOptions: { maxAge: tokenData.expiresIn },
     },
   );
 
@@ -53,16 +54,17 @@ export async function verifyPatientSignup(params: {
   countryCode?: number;
   dob?: string;
 }) {
-  const { data, error } = await postAuthPatientSignupVerify({ body: params });
+  const { data, error } = await authControllerPatientSignupVerify({ body: params });
   if (error || !data) throw error;
 
+  const tokenData = data as unknown as { accessToken: string; refreshToken: string; expiresIn: number };
   await setTokens(
     {
-      accessToken: data.accessToken,
-      refreshToken: data.refreshToken,
+      accessToken: tokenData.accessToken,
+      refreshToken: tokenData.refreshToken,
     },
     {
-      accessTokenOptions: { maxAge: data.expiresIn },
+      accessTokenOptions: { maxAge: tokenData.expiresIn },
     },
   );
 
@@ -75,7 +77,7 @@ export async function refreshPatientToken() {
   const refreshToken = await getRefreshToken();
   if (!refreshToken) throw new Error("No refresh token");
 
-  const { data, error } = await postAuthRefresh({ body: { refreshToken } });
+  const { data, error } = await authControllerRefresh({ body: { refreshToken } });
   if (error || !data) throw error ?? new Error("Token refresh failed");
 
   await setTokens(
@@ -97,7 +99,7 @@ export async function logoutPatient() {
   const refreshToken = await getRefreshToken();
 
   if (refreshToken) {
-    const { error } = await postAuthLogout({ body: { refreshToken } });
+    const { error } = await authControllerLogout({ body: { refreshToken } });
     if (error) throw error;
   }
 

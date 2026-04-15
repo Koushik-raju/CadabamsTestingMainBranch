@@ -81,11 +81,11 @@ export function PackageCard({ pkg, productLines, onBook }: PackageCardProps) {
         </div>
 
         {/* Services preview */}
-        {productLines && pkg.package_product_ids?.length > 0 && (
+        {productLines && (pkg.package_product_ids?.length ?? 0) > 0 && (
           <div className="rounded-lg bg-muted p-3 space-y-1.5">
             <p className="text-xs font-medium text-muted-foreground">Package includes:</p>
             <ul className="space-y-1">
-              {pkg.package_product_ids.slice(0, 3).map((sid) => {
+              {(pkg.package_product_ids ?? []).slice(0, 3).map((sid) => {
                 const line = productLines.find((l) => l.id === sid);
                 return (
                   <li key={sid} className="flex items-center gap-2">
@@ -96,9 +96,9 @@ export function PackageCard({ pkg, productLines, onBook }: PackageCardProps) {
                   </li>
                 );
               })}
-              {pkg.package_product_ids.length > 3 && (
+              {(pkg.package_product_ids?.length ?? 0) > 3 && (
                 <li className="text-xs text-primary font-medium pl-5">
-                  +{pkg.package_product_ids.length - 3} more services
+                  +{(pkg.package_product_ids?.length ?? 0) - 3} more services
                 </li>
               )}
             </ul>

@@ -1,9 +1,9 @@
 import { NextResponse } from 'next/server';
-import { getPatientsMe } from '@/sdk/auth-and-crm/sdk.gen';
+import { authControllerMe } from '@/sdk/backend-v2';
 
 export async function GET() {
   try {
-    const { data, error } = await getPatientsMe();
+    const { data, error } = await authControllerMe();
 
     if (error) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });

@@ -20,7 +20,7 @@ export function usePrescriptions() {
         query: { domain },
       });
       const items = res.data?.items ?? [];
-      return items as Prescription[];
+      return (items as unknown) as Prescription[];
     },
     { revalidateOnFocus: false }
   );

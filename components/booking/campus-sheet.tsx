@@ -14,6 +14,7 @@ type CampusItem = {
   name: string;
   display_name?: string;
   book_appointment?: boolean;
+  city?: [string | number, string | number];
   area?: Array<[string | number, string | number]>;
   [key: string]: unknown;
 };
