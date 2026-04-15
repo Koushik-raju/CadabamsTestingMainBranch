@@ -21,9 +21,9 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { crmClient } from '@/lib/api-client';
-import { endpoints } from '@/config/api-endpoints';
-import { getMastersRelationships } from '@/sdk/auth-and-crm';
+
+
+import { crmControllerGetRelationships, crmControllerCreateLead } from '@/sdk/backend-v2';
 import { useAuth } from '@/hooks/use-auth';
 import { cn } from '@/lib/utils';
 
@@ -83,8 +83,8 @@ function OnboardingContent() {
   });
 
   useEffect(() => {
-    getMastersRelationships()
-      .then((r) => setRelationships(r.data ?? []))
+    crmControllerGetRelationships()
+      .then((r) => setRelationships((r.data as Array<{ id: number; name: string }> | undefined) ?? []))
       .catch(() => {});
   }, []);
 
@@ -110,18 +110,25 @@ function OnboardingContent() {
   const handleDone = async () => {
     setLoading(true);
     try {
-      await crmClient.post(endpoints.SEND_SIGN_UP_QUESTIONS, {
-        lead_id: user?.lead_id,
-        dob: data.dob,
-        tags: data.tags.join(','),
-        notifPhone: data.notifPhone,
-        notifEmail: data.notifEmail,
-        notifWhatsapp: data.notifWhatsapp,
-        patientFirstName: data.patientFirstName,
-        patientLastName: data.patientLastName,
-        locationPermission: data.locationPermission,
-        bluetoothPermission: data.bluetoothPermission,
-        trackingPermission: data.trackingPermission,
+      await crmControllerCreateLead({
+        body: {
+          caller_mobile: user?.phone_number ?? '',
+          partner_name: `${data.patientFirstName} ${data.patientLastName}`.trim() || (user?.name ?? ''),
+          contact_name: user?.name ?? '',
+          additionalFields: {
+            lead_id: user?.lead_id,
+            dob: data.dob,
+            tags: data.tags.join(','),
+            notifPhone: data.notifPhone,
+            notifEmail: data.notifEmail,
+            notifWhatsapp: data.notifWhatsapp,
+            patientFirstName: data.patientFirstName,
+            patientLastName: data.patientLastName,
+            locationPermission: data.locationPermission,
+            bluetoothPermission: data.bluetoothPermission,
+            trackingPermission: data.trackingPermission,
+          },
+        },
       });
     } catch {
       // Non-critical — continue anyway

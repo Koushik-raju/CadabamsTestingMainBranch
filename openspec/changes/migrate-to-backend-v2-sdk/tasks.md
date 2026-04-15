@@ -76,10 +76,10 @@
 
 ## 9. Home Page & Onboarding
 
-- [ ] 9.1 Create `hooks/home/use-home-page.ts` — orchestrates appointments, packages, journeys for the home screen using new shared hooks
-- [ ] 9.2 Update `app/(auth)/home/page.tsx` to import from `hooks/home/use-home-page.ts`; remove direct `@/sdk/auth-and-crm` imports
-- [ ] 9.3 Migrate `app/(auth)/onboarding/page.tsx` — replace `crmClient.post(endpoints.SEND_SIGN_UP_QUESTIONS, ...)` with the equivalent `crmControllerCreateLead` or onboarding endpoint from `@/sdk/backend-v2`
-- [ ] 9.4 Update `components/home/upcoming-session.tsx` and `components/home/home-header.tsx` to remove any legacy SDK imports
+- [x] 9.1 Create `hooks/home/use-home-page.ts` — orchestrates appointments, packages, journeys for the home screen using new shared hooks
+- [x] 9.2 Update `app/(auth)/home/page.tsx` to import from `hooks/home/use-home-page.ts`; remove direct `@/sdk/auth-and-crm` imports
+- [x] 9.3 Migrate `app/(auth)/onboarding/page.tsx` — replace `crmClient.post(endpoints.SEND_SIGN_UP_QUESTIONS, ...)` with the equivalent `crmControllerCreateLead` or onboarding endpoint from `@/sdk/backend-v2`
+- [x] 9.4 Update `components/home/upcoming-session.tsx` and `components/home/home-header.tsx` to remove any legacy SDK imports
 
 ## 10. Component Shared Audit
 

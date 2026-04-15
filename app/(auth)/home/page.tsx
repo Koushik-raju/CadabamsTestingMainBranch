@@ -1,27 +1,16 @@
 'use client';
 
-import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { HomeHeader } from '@/components/home/home-header';
 import { SupportSection } from '@/components/home/support-section';
 import { QuickActions } from '@/components/home/quick-actions';
 import { UpcomingSession } from '@/components/home/upcoming-session';
 import { JourneySection } from '@/components/home/journey-section';
-import { useAuth } from '@/hooks/use-auth';
-import { getAppointments } from '@/sdk/auth-and-crm';
-import type { AppointmentDetail } from '@/sdk/auth-and-crm';
+import { useHomePage } from '@/hooks/home/use-home-page';
 
 export default function HomePage() {
   const router = useRouter();
-  const { user } = useAuth();
-  const [appointments, setAppointments] = useState<AppointmentDetail[]>([]);
-
-  useEffect(() => {
-    if (!user) return;
-    getAppointments({ query: { start_datetime: new Date().toISOString() } })
-      .then((res) => setAppointments(res.data ?? []))
-      .catch(console.error);
-  }, [user]);
+  const { upcoming: appointments } = useHomePage();
 
   const handleAction = (type: string, subtype?: string) => {
     switch (type) {

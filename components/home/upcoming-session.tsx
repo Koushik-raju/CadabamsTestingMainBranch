@@ -2,7 +2,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { Video } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import type { AppointmentDetail } from '@/sdk/auth-and-crm';
+import type { AppointmentDetail } from '@/hooks/appointments/use-appointments-page';
 
 interface Props {
   appointments?: AppointmentDetail[];
