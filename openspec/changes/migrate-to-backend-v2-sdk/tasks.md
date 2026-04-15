@@ -31,11 +31,11 @@
 
 ## 4. Self-Journaling Migration
 
-- [ ] 4.1 Create `hooks/self-journaling/use-self-journaling.ts` — list entries via `journalingControllerListMine`; replace any Firebase reads
-- [ ] 4.2 Create `hooks/self-journaling/use-self-journaling-entry.ts` — fetch single entry via `journalingControllerGetEntry`
-- [ ] 4.3 Add mutation functions: `createEntry` → `journalingControllerCreateEntry`, `updateEntry` → `journalingControllerUpdateEntry`, `deleteEntry` → `journalingControllerDeleteEntry`
-- [ ] 4.4 Update `app/(auth)/self-journaling/page.tsx`, `[date]/page.tsx`, `new/page.tsx` to use new hooks
-- [ ] 4.5 Remove any remaining Firebase imports from self-journaling hooks/pages
+- [x] 4.1 Create `hooks/self-journaling/use-self-journaling.ts` — list entries via `journalingControllerListMine`; replace any Firebase reads
+- [x] 4.2 Create `hooks/self-journaling/use-self-journaling-entry.ts` — fetch single entry via `journalingControllerGetEntry`
+- [x] 4.3 Add mutation functions: `createEntry` → `journalingControllerCreateEntry`, `updateEntry` → `journalingControllerUpdateEntry`, `deleteEntry` → `journalingControllerDeleteEntry`
+- [x] 4.4 Update `app/(auth)/self-journaling/page.tsx`, `[date]/page.tsx`, `new/page.tsx` to use new hooks
+- [x] 4.5 Remove any remaining Firebase imports from self-journaling hooks/pages
 
 ## 5. Appointments & Consult Flow Migration
 

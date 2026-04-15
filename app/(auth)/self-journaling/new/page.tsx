@@ -4,8 +4,9 @@ import { useState, useEffect, useCallback, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { ChevronLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { useAuth } from '@/hooks/use-auth';
 import { JournalEditor } from '@/components/journal/journal-editor';
+import { createEntry } from '@/hooks/self-journaling/use-self-journaling';
+import { useAuth } from '@/hooks/shared/auth/use-auth';
 
 interface JournalPrompt {
   heading: string;
@@ -120,9 +121,6 @@ function NewJournalContent() {
   );
 
   const handleSave = useCallback(async () => {
-    const leadId = getLeadId();
-    if (!leadId) return;
-
     const allPrompts = [...savedPrompts];
     if (content.trim()) {
       allPrompts.push({ heading: currentHeading || "What's on your mind...", text: content });
@@ -131,27 +129,18 @@ function NewJournalContent() {
 
     setIsSaving(true);
     try {
-      const { database } = await import('@/lib/firebase');
-      const { ref, push, set } = await import('firebase/database');
-
-      const journalData = {
-        entry: allPrompts.map((p) => `${p.heading}\n${p.text}`).join('\n\n'),
-        prompts: allPrompts,
-        createdAt: new Date().toISOString(),
-        timestamp: Date.now(),
-        leadId,
-      };
-
-      const journalsRef = ref(database, `self-journalings/${leadId}`);
-      const newRef = push(journalsRef);
-      await set(newRef, journalData);
+      await createEntry({
+        entryText: allPrompts.map((p) => `${p.heading}\n${p.text}`).join('\n\n'),
+        prompts: allPrompts.map((p, i) => ({ heading: p.heading, text: p.text, order: i })),
+        journaledAt: new Date().toISOString(),
+      });
       router.push('/self-journaling');
     } catch (err) {
       console.error('Error saving journal:', err);
     } finally {
       setIsSaving(false);
     }
-  }, [content, currentHeading, savedPrompts, getLeadId, router]);
+  }, [content, currentHeading, savedPrompts, router]);
 
   const handlePromptMe = useCallback(async () => {
     setIsPrompting(true);

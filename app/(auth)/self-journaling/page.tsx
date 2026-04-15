@@ -1,13 +1,14 @@
 'use client';
 
-import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { ChevronLeft, Pencil, Sun, Moon, Sparkles, Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
-import { useAuth } from '@/hooks/use-auth';
 import { JournalEntryCard } from '@/components/journal/journal-entry-card';
+import { useSelfJournaling } from '@/hooks/self-journaling/use-self-journaling';
+import type { JournalEntry } from '@/hooks/self-journaling/use-self-journaling';
 
 interface JournalPrompt {
   heading: string;
@@ -88,41 +89,7 @@ function calculateStreak(entries: JournalEntry[]): number {
 
 export default function JournalHomePage() {
   const router = useRouter();
-  const { user } = useAuth();
-  const [journals, setJournals] = useState<JournalEntry[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-
-  const getUserId = useCallback(() => {
-    if (!user) return null;
-    return user.lead_id ? String(user.lead_id) : null;
-  }, [user]);
-
-  const fetchJournals = useCallback(async () => {
-    const userId = getUserId();
-    if (!userId) { setIsLoading(false); return; }
-
-    try {
-      const { database } = await import('@/lib/firebase');
-      const { ref, get } = await import('firebase/database');
-      const snap = await get(ref(database, `self-journalings/${userId}`));
-      if (snap.exists()) {
-        const arr: JournalEntry[] = [];
-        snap.forEach((child) => {
-          arr.push({ id: child.key ?? '', ...(child.val() as Omit<JournalEntry, 'id'>) });
-        });
-        arr.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
-        setJournals(arr);
-      }
-    } catch (err) {
-      console.error('Error fetching journals:', err);
-    } finally {
-      setIsLoading(false);
-    }
-  }, [getUserId]);
-
-  useEffect(() => {
-    fetchJournals();
-  }, [fetchJournals]);
+  const { entries: journals, isLoading } = useSelfJournaling();
 
   const streak = useMemo(() => calculateStreak(journals), [journals]);
 

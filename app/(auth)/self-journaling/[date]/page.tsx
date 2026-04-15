@@ -1,71 +1,30 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useMemo } from 'react';
 import { useRouter, useParams } from 'next/navigation';
-import { ChevronLeft, Calendar, Loader2 } from 'lucide-react';
+import { Calendar } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
-import { useAuth } from '@/hooks/use-auth';
-
-interface JournalPrompt {
-  heading: string;
-  text: string;
-}
-
-interface JournalEntry {
-  id: string;
-  entry?: string;
-  prompts?: JournalPrompt[];
-  createdAt: string;
-}
+import { BackButton } from '@/components/shared/navigation/back-button';
+import { useSelfJournaling } from '@/hooks/self-journaling/use-self-journaling';
 
 export default function JournalDatePage() {
   const router = useRouter();
   const params = useParams();
   const date = params.date as string;
-  const { user } = useAuth();
 
-  const [entries, setEntries] = useState<JournalEntry[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const { entries: allEntries, isLoading } = useSelfJournaling();
 
-  const getUserId = useCallback(() => {
-    if (!user) return null;
-    return user.lead_id ? String(user.lead_id) : null;
-  }, [user]);
-
-  const fetchEntries = useCallback(async () => {
-    const userId = getUserId();
-    if (!userId) { setIsLoading(false); return; }
-
-    try {
-      const { database } = await import('@/lib/firebase');
-      const { ref, get } = await import('firebase/database');
-      const snap = await get(ref(database, `self-journalings/${userId}`));
-
-      if (snap.exists()) {
-        const arr: JournalEntry[] = [];
-        snap.forEach((child) => {
-          arr.push({ id: child.key ?? '', ...(child.val() as Omit<JournalEntry, 'id'>) });
-        });
-
-        const filtered = arr.filter((e) => {
+  const entries = useMemo(
+    () =>
+      allEntries
+        .filter((e) => {
           const d = new Date(e.createdAt);
           return !isNaN(d.getTime()) && d.toISOString().split('T')[0] === date;
-        });
-
-        filtered.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
-        setEntries(filtered);
-      }
-    } catch (err) {
-      console.error('Error fetching entries:', err);
-    } finally {
-      setIsLoading(false);
-    }
-  }, [getUserId, date]);
-
-  useEffect(() => {
-    fetchEntries();
-  }, [fetchEntries]);
+        })
+        .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()),
+    [allEntries, date]
+  );
 
   const formattedDate = (() => {
     try {
@@ -80,10 +39,8 @@ export default function JournalDatePage() {
   return (
     <div className="flex flex-col min-h-screen bg-background pb-28">
       {/* Header */}
-      <div className="flex items-center gap-2 px-4 pt-12 pb-4 border-b border-border">
-        <Button variant="ghost" size="icon" onClick={() => router.back()}>
-          <ChevronLeft className="w-5 h-5" />
-        </Button>
+      <div className="flex items-center gap-2 px-4 pt-5 pb-4 border-b border-border">
+        <BackButton fallback="/self-journaling" />
         <div className="flex-1">
           <div className="flex items-center gap-1.5">
             <Calendar className="w-4 h-4 text-muted-foreground" />
