@@ -7,8 +7,8 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { BackButton } from '@/components/shared/navigation/back-button';
 import { QuestionRenderer, type Question, type AnswerValue } from '@/components/shared/questions/question-renderer';
 import { ChevronLeft, CheckCircle2, AlertCircle, Sparkles } from 'lucide-react';
-import { useAssessmentById, mapStrapiAssessment, submitAssessment } from '@/hooks/use-assessments';
-import { useAuth } from '@/hooks/use-auth';
+import { useAssessmentById, submitAssessment } from '@/hooks/assessments/use-assessment-detail';
+import { useAuth } from '@/hooks/shared/auth/use-auth';
 
 export default function AssessmentFormPage({ params }: { params: Promise<{ id: string }> }) {
   const { id: assessmentId } = use(params);
@@ -24,11 +24,7 @@ export default function AssessmentFormPage({ params }: { params: Promise<{ id: s
 
   const { data: assessmentData, isLoading, error: fetchError } = useAssessmentById(assessmentId);
 
-  const assessment = useMemo(() => {
-    if (!assessmentData) return null;
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    return mapStrapiAssessment(assessmentData as any);
-  }, [assessmentData]);
+  const assessment = assessmentData;
 
   const questions = useMemo(() => {
     return (assessment?.Questions || []).map((q) => ({

@@ -4,8 +4,18 @@ import { Clock, ShieldCheck, Sparkles, ChevronRight, ArrowLeft } from 'lucide-re
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
-import type { AssessmentItem } from '@/types/assessment';
-import { extractTextFromRich } from '@/types/assessment';
+import type { AssessmentItem } from '@/hooks/assessments/use-assessments-page';
+
+function extractTextFromRich(val: unknown): string {
+  if (!val) return '';
+  if (typeof val === 'string') return val;
+  if (typeof val === 'object') {
+    const obj = val as Record<string, unknown>;
+    if (obj.text && typeof obj.text === 'string') return obj.text;
+    if (obj.en && typeof obj.en === 'string') return obj.en;
+  }
+  return '';
+}
 
 interface AssessmentLandingProps {
   assessment: AssessmentItem;

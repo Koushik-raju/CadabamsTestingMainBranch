@@ -9,7 +9,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
-import { useAuth } from '@/hooks/use-auth';
+import { useAuth } from '@/hooks/shared/auth/use-auth';
 import {
   useAssessments,
   useAssignedAssessments,
@@ -17,7 +17,7 @@ import {
   getDynamicCategories,
   type AssessmentItem,
   type AssignedAssessmentItem,
-} from '@/hooks/use-assessments';
+} from '@/hooks/assessments/use-assessments-page';
 import {
   AssessmentGridCard,
   RecommendedAssessmentCard,

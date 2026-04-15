@@ -4,8 +4,8 @@ import { use, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
-import { useAuth } from '@/hooks/use-auth';
-import { useAssessmentScoreSummary } from '@/hooks/use-assessments';
+import { useAuth } from '@/hooks/shared/auth/use-auth';
+import { useAssessmentScoreSummary } from '@/hooks/assessments/use-assessment-detail';
 import { Sparkles, AlertCircle, ChevronRight, X } from 'lucide-react';
 
 export default function AssessmentAnalysisPage({

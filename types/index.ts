@@ -1,7 +1,6 @@
 export * from './api';
 export * from './user';
 export * from './appointment';
-export * from './assessment';
 export * from './worksheet';
 export * from './journey';
 export * from './package';

@@ -1,6 +1,6 @@
 'use client';
 
-import { use, useMemo } from 'react';
+import { use } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -13,7 +13,7 @@ import {
   ShieldCheck,
   AlertCircle,
 } from 'lucide-react';
-import { useAssessmentById, mapStrapiAssessment } from '@/hooks/use-assessments';
+import { useAssessmentById } from '@/hooks/assessments/use-assessment-detail';
 
 export default function AssessmentDetailsPage({
   params,
@@ -25,10 +25,7 @@ export default function AssessmentDetailsPage({
 
   const { data: assessmentData, isLoading, error } = useAssessmentById(assessmentId);
 
-  const assessment = useMemo(() => {
-    if (!assessmentData) return null;
-    return mapStrapiAssessment(assessmentData as Parameters<typeof mapStrapiAssessment>[0]);
-  }, [assessmentData]);
+  const assessment = assessmentData;
 
   const imageUrl = useMemo(() => {
     if (!assessment?.image) return null;

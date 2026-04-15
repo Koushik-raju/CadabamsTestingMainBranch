@@ -9,14 +9,14 @@
 
 ## 2. Assessments Migration
 
-- [ ] 2.1 Create `hooks/assessments/use-assessments-page.ts` — fetch assessment list via `cmsAssessmentsControllerFindAll`; remove Strapi client, `qs`, and `strapiGetAssessments` helper; keep `categorizeAssessments` and `getDynamicCategories` logic
-- [ ] 2.2 Create `hooks/assessments/use-assessment-detail.ts` — fetch single assessment via `cmsAssessmentsControllerFindOne`; replace `getApiV1AssessmentsById` from `@/sdk/strapi`
-- [ ] 2.3 Migrate `useAssignedAssessments` — replace Firestore fetch with `patientsControllerGetAssessments` from `@/sdk/backend-v2`
-- [ ] 2.4 Migrate `useAssessmentSubmissions` — replace Firebase RTDB fetch with `patientAssessmentsControllerListMine`; update `submitAssessment` to use only `patientAssessmentsControllerCreateCompletion` (remove Firebase RTDB write and `backendClient.post`)
-- [ ] 2.5 Update `app/(auth)/assessments/page.tsx` to import from `hooks/assessments/use-assessments-page.ts`; ensure it reads `params.id` from URL, not context
-- [ ] 2.6 Update `app/(auth)/assessments/[id]/page.tsx`, `[id]/details/page.tsx`, `[id]/analysis/page.tsx` to use new hooks; use `params.id` as resource identifier
-- [ ] 2.7 Remove all `AssessmentItem`, `AssignedAssessmentItem`, `AssessmentSubmission`, `AssessmentCategories` custom type definitions; import equivalent types from `@/sdk/backend-v2`
-- [ ] 2.8 Delete `types/assessment.ts` once no references remain
+- [x] 2.1 Create `hooks/assessments/use-assessments-page.ts` — fetch assessment list via `cmsAssessmentsControllerFindAll`; remove Strapi client, `qs`, and `strapiGetAssessments` helper; keep `categorizeAssessments` and `getDynamicCategories` logic
+- [x] 2.2 Create `hooks/assessments/use-assessment-detail.ts` — fetch single assessment via `cmsAssessmentsControllerFindOne`; replace `getApiV1AssessmentsById` from `@/sdk/strapi`
+- [x] 2.3 Migrate `useAssignedAssessments` — replace Firestore fetch with `patientsControllerGetAssessments` from `@/sdk/backend-v2`
+- [x] 2.4 Migrate `useAssessmentSubmissions` — replace Firebase RTDB fetch with `patientAssessmentsControllerListMine`; update `submitAssessment` to use only `patientAssessmentsControllerCreateCompletion` (remove Firebase RTDB write and `backendClient.post`)
+- [x] 2.5 Update `app/(auth)/assessments/page.tsx` to import from `hooks/assessments/use-assessments-page.ts`; ensure it reads `params.id` from URL, not context
+- [x] 2.6 Update `app/(auth)/assessments/[id]/page.tsx`, `[id]/details/page.tsx`, `[id]/analysis/page.tsx` to use new hooks; use `params.id` as resource identifier
+- [x] 2.7 Remove all `AssessmentItem`, `AssignedAssessmentItem`, `AssessmentSubmission`, `AssessmentCategories` custom type definitions; import equivalent types from `@/sdk/backend-v2`
+- [x] 2.8 Delete `types/assessment.ts` once no references remain
 
 ## 3. Journeys Migration
 
