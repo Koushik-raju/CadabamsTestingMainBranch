@@ -14,8 +14,8 @@ import {
   Loader2,
   BookOpen,
 } from 'lucide-react';
-import { postPackagesBook, postPaymentsPackage } from '@/sdk/auth-and-crm';
-import { useAuth } from '@/hooks/use-auth';
+import { bookPackage, initiatePackagePayment } from '@/hooks/packages/use-packages';
+import { useAuth } from '@/hooks/shared/auth/use-auth';
 import type { AvailablePackage } from '@/types/package';
 
 const JOURNEY_BASE_URL = 'https://mindtalkbuddy.com/api/mindful-journeys';
@@ -118,36 +118,39 @@ function SelectedPackageContent() {
     setError(null);
 
     try {
-      const patientName = String(user.name ?? user.first_name ?? '');
+      const patientName = String(user.name ?? (user as Record<string, unknown>).first_name ?? '');
+      const leadId = Number(user.lead_id);
+      const uid = (user as Record<string, unknown>).sub as string ?? '';
 
-      const bookRes = await postPackagesBook({
-        body: {
-          package_id:       pkg.id,
-          caller_name:      patientName,
-          patient_name:     patientName,
-          lead_id:          Number(user.lead_id),
-          campus_id:        1,
-          sequence_booking: false,
-          package_stage:    'booked',
-          payment_mode:     'online',
-          date:             new Date().toISOString().split('T')[0],
-        },
+      const { booking_id } = await bookPackage({
+        package_id:       pkg.id,
+        caller_name:      patientName,
+        patient_name:     patientName,
+        lead_id:          leadId,
+        campus_id:        1,
+        sequence_booking: false,
+        package_stage:    'booked',
+        payment_mode:     'online',
+        date:             new Date().toISOString().split('T')[0],
       });
-      if (bookRes.error) throw new Error(JSON.stringify(bookRes.error));
-      const bookingId = bookRes.data?.booking_id;
-      if (!bookingId) throw new Error('No booking ID returned.');
 
-      const payRes = await postPaymentsPackage({
-        body: {
-          booked_package_id: bookingId,
-          campus_id:         1,
-          lead_id:           Number(user.lead_id),
-        },
+      const payData = await initiatePackagePayment({
+        leadBookedPackageId: booking_id,
+        leadId,
+        uid,
       });
-      if (payRes.error) throw new Error(JSON.stringify(payRes.error));
-      const url = payRes.data?.result?.short_url;
-      if (!url) throw new Error('No payment URL received.');
-      window.location.href = url;
+
+      // Razorpay inline checkout
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const Razorpay = (window as unknown as Record<string, unknown>).Razorpay as (new (opts: unknown) => { open(): void }) | undefined;
+      if (!Razorpay) throw new Error('Razorpay SDK not loaded.');
+      new Razorpay({
+        key: payData.key_id,
+        amount: payData.amount,
+        currency: 'INR',
+        order_id: payData.razorpay_order_id,
+        handler: () => { window.location.href = '/packages'; },
+      }).open();
     } catch (err: unknown) {
       setError((err as { message?: string })?.message ?? 'Failed to process payment');
     } finally {

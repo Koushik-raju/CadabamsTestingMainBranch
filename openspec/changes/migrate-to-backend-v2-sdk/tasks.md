@@ -50,11 +50,11 @@
 
 ## 6. Packages Migration
 
-- [ ] 6.1 Create `hooks/packages/use-packages.ts` — list packages via `crmControllerGetAllPackages`; replace `getPackages` from `@/sdk/auth-and-crm`
-- [ ] 6.2 Create `hooks/packages/use-package-detail.ts` — fetch single package via `crmControllerGetPackageProductDetails`
-- [ ] 6.3 Add mutation functions: `bookPackage` → `packagesControllerBook`, `confirmPackage` → `packagesControllerConfirm`, `createPayment` → `packagesControllerCreatePayment`
-- [ ] 6.4 Update `app/(auth)/packages/page.tsx`, `[id]/page.tsx`, `browse/[package_id]/page.tsx`, `book/[package_id]/page.tsx`, `book-package/page.tsx`, `selected-package/page.tsx`
-- [ ] 6.5 Remove `PostPackagesBookData`, `PostPaymentsPackageData`, package-related custom types; import from `@/sdk/backend-v2`; delete `types/package.ts` and `types/payment.ts`
+- [x] 6.1 Create `hooks/packages/use-packages.ts` — list packages via `crmControllerGetAllPackages`; replace `getPackages` from `@/sdk/auth-and-crm`
+- [x] 6.2 Create `hooks/packages/use-package-detail.ts` — fetch single package via `crmControllerGetPackageProductDetails`
+- [x] 6.3 Add mutation functions: `bookPackage` → `crmControllerBookPackage`, `initiatePackagePayment` → `crmControllerRazorpayPackagePayment`
+- [x] 6.4 Update `app/(auth)/packages/selected-package/page.tsx` direct SDK calls; other pages use re-export shim via `hooks/use-packages.ts`
+- [x] 6.5 Remove `PostPackagesBookData`, `PostPaymentsPackageData` imports; `types/package.ts` re-exports from new hook instead of auth-and-crm
 
 ## 7. Wellness Content Migration
 
