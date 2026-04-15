@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, Suspense, useMemo } from 'react';
+import { useState, Suspense, useMemo } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { Search } from 'lucide-react';
 import { Input } from '@/components/ui/input';
@@ -9,29 +9,15 @@ import { RecommendationBanner } from '@/components/journey/recommendation-banner
 import { CategoryChips } from '@/components/journey/category-chips';
 import { FeaturedJourneyCard } from '@/components/journey/featured-journey-card';
 import { JourneyDiscoveryCard } from '@/components/journey/journey-discovery-card';
-import { useJourneys } from '@/hooks/use-journey';
-import { useAuth } from '@/hooks/use-auth';
+import { useJourneys } from '@/hooks/journeys/use-journeys-page';
+import { useAuth } from '@/hooks/shared/auth/use-auth';
 import { extractJourneyName, extractJourneyDescription } from '@/types/journey';
 import { BackButton } from '@/components/shared/navigation/back-button';
-import { database } from '@/lib/firebase';
-import { ref, get } from 'firebase/database';
 
-function useLatestAssessmentCategory(mobile: string | null) {
-  const [category, setCategory] = useState<string | null>(null);
-
-  useEffect(() => {
-    if (!mobile) return;
-    const cleanMobile = mobile.replace(/\D/g, '');
-    get(ref(database, `assessments/${cleanMobile}`))
-      .then((snap) => {
-        if (!snap.exists()) return;
-        const data = snap.val() as Record<string, unknown>;
-        if (Object.keys(data).length > 0) setCategory('Anxiety');
-      })
-      .catch(() => {});
-  }, [mobile]);
-
-  return category;
+// Firebase-based assessment category lookup removed — now always returns null
+// until a backend-v2 equivalent is implemented
+function useLatestAssessmentCategory(_mobile: string | null): string | null {
+  return null;
 }
 
 function JourneysInner() {

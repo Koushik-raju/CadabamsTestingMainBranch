@@ -17,8 +17,8 @@ import {
 } from '@/components/ui/sheet';
 import {
   useJourneyProgress, subscribeToJourney, updateNodeProgress, advanceCurrentDay,
-} from '@/hooks/use-journey';
-import type { JourneyProgress } from '@/hooks/use-journey';
+} from '@/hooks/journeys/use-journey-detail';
+import type { JourneyProgress } from '@/hooks/journeys/use-journey-detail';
 import { hapticLight, hapticMedium, hapticSuccess, hapticWarning } from '@/lib/haptics';
 import { extractJourneyName, extractJourneyDescription } from '@/types/journey';
 import type { JourneyItem, JourneyTask, JourneyAudio, JourneyRichText } from '@/types/journey';

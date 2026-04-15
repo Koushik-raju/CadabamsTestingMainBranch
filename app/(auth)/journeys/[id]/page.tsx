@@ -10,8 +10,8 @@ import {
   useJourneyDetail,
   useJourneyProgress,
   subscribeToJourney,
-} from '@/hooks/use-journey';
-import { useAuth } from '@/hooks/use-auth';
+} from '@/hooks/journeys/use-journey-detail';
+import { useAuth } from '@/hooks/shared/auth/use-auth';
 import { extractJourneyName, extractJourneyDescription } from '@/types/journey';
 import { fixImageUrl } from '@/lib/utils';
 import { hapticMedium } from '@/lib/haptics';

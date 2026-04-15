@@ -20,13 +20,13 @@
 
 ## 3. Journeys Migration
 
-- [ ] 3.1 Create `hooks/journeys/use-journeys-page.ts` — fetch journey list via `cmsJourneysControllerList`; replace `getApiV1Journeys` from `@/sdk/strapi`
-- [ ] 3.2 Create `hooks/journeys/use-journey-detail.ts` — fetch single journey via `cmsJourneysControllerGetById`
-- [ ] 3.3 Migrate `useJourneyProgress` — replace Firebase RTDB read with `journeysControllerGetEnrollment` from `@/sdk/backend-v2`
-- [ ] 3.4 Migrate `subscribeToJourney` — replace Firebase RTDB write with `journeysControllerGetByJourneyId` or equivalent enrollment endpoint
-- [ ] 3.5 Migrate `advanceCurrentDay` — replace Firebase RTDB write with `journeysControllerCompleteDay`
-- [ ] 3.6 Migrate `updateNodeProgress` — replace Firebase RTDB write with `journeysControllerCompleteTask`
-- [ ] 3.7 Update `app/(auth)/journeys/page.tsx`, `[id]/page.tsx`, `[id]/details/page.tsx`, `mood-check/page.tsx` to use new hooks
+- [x] 3.1 Create `hooks/journeys/use-journeys-page.ts` — fetch journey list via `cmsJourneysControllerList`; replace `getApiV1Journeys` from `@/sdk/strapi`
+- [x] 3.2 Create `hooks/journeys/use-journey-detail.ts` — fetch single journey via `cmsJourneysControllerGetById`
+- [x] 3.3 Migrate `useJourneyProgress` — replace Firebase RTDB read with `journeysControllerGetEnrollment` from `@/sdk/backend-v2`
+- [x] 3.4 Migrate `subscribeToJourney` — replace Firebase RTDB write with `journeysControllerGetByJourneyId` or equivalent enrollment endpoint
+- [x] 3.5 Migrate `advanceCurrentDay` — replace Firebase RTDB write with `journeysControllerCompleteDay`
+- [x] 3.6 Migrate `updateNodeProgress` — replace Firebase RTDB write with `journeysControllerCompleteTask`
+- [x] 3.7 Update `app/(auth)/journeys/page.tsx`, `[id]/page.tsx`, `[id]/details/page.tsx`, `mood-check/page.tsx` to use new hooks
 - [ ] 3.8 Remove `JourneyProgress`, `JourneyItem` custom types; import from `@/sdk/backend-v2`; delete `types/journey.ts`
 
 ## 4. Self-Journaling Migration

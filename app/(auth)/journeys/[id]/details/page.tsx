@@ -6,8 +6,8 @@ import { MoreVertical } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { BackButton } from '@/components/shared/navigation/back-button';
 import { JourneyPathView } from '@/components/journey/journey-path-view';
-import { useJourneyDetail, useJourneyProgress, subscribeToJourney } from '@/hooks/use-journey';
-import { useAuth } from '@/hooks/use-auth';
+import { useJourneyDetail, useJourneyProgress, subscribeToJourney } from '@/hooks/journeys/use-journey-detail';
+import { useAuth } from '@/hooks/shared/auth/use-auth';
 import { extractJourneyName } from '@/types/journey';
 
 interface PageProps { params: Promise<{ id: string }> }
