@@ -1,3 +1,27 @@
+/**
+ * FILE: lib/swr-keys.ts
+ *
+ * PURPOSE:
+ *   Centralised factory for all SWR cache keys used across the app.
+ *   Keeping keys in one place prevents typo-driven cache mismatches and
+ *   makes it easy to grep for every consumer of a given endpoint.
+ *
+ * LOGIC OVERVIEW:
+ *   Each exported function returns a stable string (or tuple) that SWR uses
+ *   as the deduplication/cache key for a given resource. Parameterised keys
+ *   embed IDs so separate resources get separate cache slots.
+ *
+ * KEY VARIABLES / PROPS / EXPORTS:
+ *   enrolledJourneysKey()    — key for the current user's journey enrollments list
+ *   availablePackagesKey()   — key for the browsable package catalogue
+ *   managedPackagesKey()     — key for the user's purchased packages
+ *   (all other keys)         — see individual function names
+ *
+ * DEPENDENCIES:
+ *   None — pure string-returning functions, no imports.
+ *
+ * LAST UPDATED: 2026-04-16 — added enrolledJourneysKey for My Journeys section
+ */
 export function authMeKey(): string {
   return '/auth/me';
 }
@@ -130,4 +154,8 @@ export function packageProductLinesKey(packageId?: number): string {
 
 export function packageProductDetailsKey(packageId: number): string {
   return `/packages/${packageId}/details`;
+}
+
+export function enrolledJourneysKey(): string {
+  return '/journeys/enrolled';
 }

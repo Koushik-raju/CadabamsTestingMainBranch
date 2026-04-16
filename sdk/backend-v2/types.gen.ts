@@ -2629,6 +2629,8 @@ export type PatientJourneyResponseDto = {
 export type PatientJourneyListResponseDto = {
     items: Array<PatientJourneyResponseDto>;
     total: number;
+    page?: number;
+    pageSize?: number;
 };
 
 export type CompleteTaskDto = {
@@ -4560,7 +4562,7 @@ export type CrmControllerFetchAppointmentDetailsData = {
 
 export type CrmControllerFetchAppointmentDetailsResponses = {
     /**
-     * List of slot details
+     * List of slot details; empty array when no records found
      */
     200: Array<SlotDetailDto>;
 };
@@ -4579,7 +4581,7 @@ export type CrmControllerFetchFollowupDetailsData = {
 
 export type CrmControllerFetchFollowupDetailsResponses = {
     /**
-     * List of followup slot details
+     * List of followup slot details; empty array when no records found
      */
     200: Array<SlotDetailDto>;
 };
@@ -9454,8 +9456,15 @@ export type JourneysControllerGetStatsData = {
 };
 
 export type JourneysControllerGetStatsResponses = {
-    200: unknown;
+    /**
+     * Aggregate engagement stats
+     */
+    200: {
+        [key: string]: unknown;
+    };
 };
+
+export type JourneysControllerGetStatsResponse = JourneysControllerGetStatsResponses[keyof JourneysControllerGetStatsResponses];
 
 export type JourneysControllerGetMigrationStatusData = {
     body?: never;
@@ -9470,8 +9479,15 @@ export type JourneysControllerGetMigrationStatusData = {
 };
 
 export type JourneysControllerGetMigrationStatusResponses = {
-    200: unknown;
+    /**
+     * Migration run summary
+     */
+    200: {
+        [key: string]: unknown;
+    };
 };
+
+export type JourneysControllerGetMigrationStatusResponse = JourneysControllerGetMigrationStatusResponses[keyof JourneysControllerGetMigrationStatusResponses];
 
 export type JourneysControllerGetFailuresData = {
     body?: never;
@@ -9488,8 +9504,15 @@ export type JourneysControllerGetFailuresData = {
 };
 
 export type JourneysControllerGetFailuresResponses = {
-    200: unknown;
+    /**
+     * Failed migration log entries
+     */
+    200: Array<{
+        [key: string]: unknown;
+    }>;
 };
+
+export type JourneysControllerGetFailuresResponse = JourneysControllerGetFailuresResponses[keyof JourneysControllerGetFailuresResponses];
 
 export type CmsAssessmentsControllerFindAllData = {
     body?: never;

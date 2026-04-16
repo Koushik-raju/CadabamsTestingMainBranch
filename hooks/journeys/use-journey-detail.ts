@@ -1,11 +1,46 @@
+/**
+ * FILE: hooks/journeys/use-journey-detail.ts
+ *
+ * PURPOSE:
+ *   SWR hooks and action helpers for individual journey data and enrollment state.
+ *   Provides per-journey detail, the user's enrollment/progress record, the full
+ *   list of the user's enrolled journeys, and mutation helpers (enroll, advance
+ *   day, mark task complete).
+ *
+ * LOGIC OVERVIEW:
+ *   useJourneyDetail(id)     — fetches CMS journey structure via cmsJourneysControllerGetById
+ *   useJourneyProgress(id)   — fetches a single enrollment record; 404 → null (not enrolled)
+ *   useEnrolledJourneys()    — fetches ALL enrollments for the current user via journeysControllerListMine
+ *   subscribeToJourney()     — enrolls the user and invalidates the enrollment cache
+ *   advanceCurrentDay()      — marks the current day complete and moves to the next
+ *   updateNodeProgress()     — marks a single task node as complete
+ *
+ * KEY VARIABLES / PROPS / EXPORTS:
+ *   JourneyProgress          — mapped enrollment shape consumed by UI components
+ *   mapEnrollment(dto)       — converts PatientJourneyResponseDto → JourneyProgress
+ *   useEnrolledJourneys()    — returns { enrollments: JourneyProgress[], isLoading, error }
+ *
+ * DEPENDENCIES:
+ *   cmsJourneysControllerGetById    — CMS journey content fetch
+ *   journeysControllerListMine      — lists all user enrollments
+ *   journeysControllerGetByJourneyId — single enrollment lookup
+ *   journeysControllerEnroll        — enroll action
+ *   journeysControllerCompleteTask  — mark task done
+ *   journeysControllerCompleteDay   — advance to next day
+ *   SWR (useSWR, globalMutate)
+ *
+ * LAST UPDATED: 2026-04-16 — added useEnrolledJourneys for My Journeys section on list page
+ */
 import useSWR, { mutate as globalMutate } from 'swr';
 import {
   cmsJourneysControllerGetById,
+  journeysControllerEnroll,
   journeysControllerGetByJourneyId,
   journeysControllerCompleteTask,
   journeysControllerCompleteDay,
+  journeysControllerListMine,
 } from '@/sdk/backend-v2';
-import { journeyDetailKey, journeyEnrollmentKey } from '@/lib/swr-keys';
+import { journeyDetailKey, journeyEnrollmentKey, enrolledJourneysKey } from '@/lib/swr-keys';
 import { mapV2Journey } from './use-journeys-page';
 import type { JourneyItem } from '@/types/journey';
 import type { PatientJourneyResponseDto } from '@/sdk/backend-v2';
@@ -98,25 +133,36 @@ export function useJourneyProgress(journeyId: string | null) {
   return { progress: data ?? null, isLoading, error, mobile: null as string | null };
 }
 
+export function useEnrolledJourneys() {
+  const { data, isLoading, error } = useSWR(
+    enrolledJourneysKey(),
+    async () => {
+      const res = await journeysControllerListMine({ path: { campus: 'cadabams' } });
+      if (res.error) throw new Error(JSON.stringify(res.error));
+      return (res.data?.items ?? []).map(mapEnrollment);
+    },
+    { revalidateOnFocus: false }
+  );
+  return { enrollments: data ?? [], isLoading, error };
+}
+
 // ---------------------------------------------------------------------------
 // Actions
 // ---------------------------------------------------------------------------
 
 /**
- * Subscribe / enroll user in a journey.
- * NOTE: There is no create-enrollment endpoint in backend-v2 SDK as of this migration.
- * This function completes day 1 to trigger implicit enrollment on the backend.
- * Until a dedicated enroll endpoint is available, this is a best-effort approach.
+ * Enroll the authenticated user in a journey.
  */
 export async function subscribeToJourney(
   _mobile: string,
   journey: JourneyItem
 ): Promise<void> {
-  // Trigger completeDay for day 1 — backend will create enrollment on first completion
-  await journeysControllerCompleteDay({
-    path: { campus: 'cadabams', id: journey.id },
-    body: { dayNumber: 1, completedAt: new Date().toISOString() },
+  const res = await journeysControllerEnroll({
+    path: { campus: 'cadabams' },
+    body: { journeyId: journey.id },
   });
+
+  if (res.error) throw new Error(JSON.stringify(res.error));
 
   await globalMutate(journeyEnrollmentKey(journey.id));
 }

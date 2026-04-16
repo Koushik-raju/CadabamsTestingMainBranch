@@ -2017,6 +2017,7 @@ export const journeysControllerListAll = <ThrowOnError extends boolean = false>(
  * [Admin/Staff] Journey engagement stats
  */
 export const journeysControllerGetStats = <ThrowOnError extends boolean = false>(options: Options<JourneysControllerGetStatsData, ThrowOnError>) => (options.client ?? client).get<JourneysControllerGetStatsResponses, unknown, ThrowOnError>({
+    responseType: 'json',
     security: [{ scheme: 'bearer', type: 'http' }],
     url: '/api/v1/{campus}/journeys/admin/stats',
     ...options
@@ -2026,6 +2027,7 @@ export const journeysControllerGetStats = <ThrowOnError extends boolean = false>
  * [Admin/Staff] RTDB journey migration summary
  */
 export const journeysControllerGetMigrationStatus = <ThrowOnError extends boolean = false>(options: Options<JourneysControllerGetMigrationStatusData, ThrowOnError>) => (options.client ?? client).get<JourneysControllerGetMigrationStatusResponses, unknown, ThrowOnError>({
+    responseType: 'json',
     security: [{ scheme: 'bearer', type: 'http' }],
     url: '/api/v1/{campus}/journeys/admin/migration-status',
     ...options
@@ -2035,6 +2037,7 @@ export const journeysControllerGetMigrationStatus = <ThrowOnError extends boolea
  * [Admin/Staff] Last N FAILED journey migration logs
  */
 export const journeysControllerGetFailures = <ThrowOnError extends boolean = false>(options: Options<JourneysControllerGetFailuresData, ThrowOnError>) => (options.client ?? client).get<JourneysControllerGetFailuresResponses, unknown, ThrowOnError>({
+    responseType: 'json',
     security: [{ scheme: 'bearer', type: 'http' }],
     url: '/api/v1/{campus}/journeys/admin/migration-failures',
     ...options
