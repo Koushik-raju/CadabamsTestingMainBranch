@@ -1,3 +1,26 @@
+/**
+ * FILE: hooks/journeys/use-journeys-page.ts
+ *
+ * PURPOSE:
+ *   SWR hook and mapping helper for the journeys list page.
+ *   Fetches all published journeys from the CMS and maps SDK DTOs to JourneyItem.
+ *
+ * LOGIC OVERVIEW:
+ *   mapV2Journey(dto) — converts JourneyResponseDto → JourneyItem.
+ *     - description is passed through as-is (Strapi blocks array) for BlocksRenderer.
+ *     - icon/documentId are extracted via extractStringFromObj.
+ *   useJourneys(options) — SWR hook that calls cmsJourneysControllerList and maps results.
+ *
+ * KEY VARIABLES / PROPS / EXPORTS:
+ *   mapV2Journey     — exported so useJourneyDetail can reuse it for single-item fetch
+ *   useJourneys      — hook returning { journeys, isLoading, error }
+ *
+ * DEPENDENCIES:
+ *   cmsJourneysControllerList   — SDK call
+ *   SWR
+ *
+ * LAST UPDATED: 2026-04-16 — pass description as raw Strapi blocks array instead of string
+ */
 import useSWR from 'swr';
 import { cmsJourneysControllerList } from '@/sdk/backend-v2';
 import type { JourneyResponseDto } from '@/sdk/backend-v2';
@@ -26,7 +49,7 @@ export function mapV2Journey(dto: JourneyResponseDto): JourneyItem {
     id: dto.id,
     documentId: extractStringFromObj(dto.documentId),
     name: dto.name, // V2 name is already a plain string
-    description: extractStringFromObj(dto.description) as never, // components use extractJourneyDescription
+    description: (dto.description ?? []) as never,
     icon: extractStringFromObj(dto.icon),
     iconId: dto.iconId,
     grade: dto.grade ?? [],
