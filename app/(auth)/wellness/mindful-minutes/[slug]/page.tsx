@@ -1,8 +1,36 @@
+/**
+ * FILE: app/(auth)/wellness/mindful-minutes/[slug]/page.tsx
+ *
+ * PURPOSE:
+ *   Detail page for a single mindful minute collection. Lists all audio tracks
+ *   and allows playback via a fullscreen audio player overlay.
+ *
+ * LOGIC OVERVIEW:
+ *   1. Reads slug from URL params, fetches collection via useMindfulMinuteDetail().
+ *   2. Sorts audios by createdAt (oldest/newest first toggle).
+ *   3. Filters audios by search query.
+ *   4. Tapping a card or "Play all" opens FullscreenAudioPlayer at the selected index.
+ *   5. Player auto-advances to the next track on completion.
+ *
+ * KEY VARIABLES / PROPS / EXPORTS:
+ *   sortOrder        — 'asc' (oldest first) | 'desc' (newest first)
+ *   activeIndex      — index of the currently playing/selected audio
+ *   playerOpen       — whether the fullscreen player is visible
+ *   filteredAudios   — audios after sort + search filter
+ *
+ * DEPENDENCIES:
+ *   useMindfulMinuteDetail(slug) — SWR hook for single collection
+ *   FullscreenAudioPlayer        — fullscreen player overlay component
+ *
+ * LAST UPDATED: 2026-04-16 — fixed sort (now uses createdAt, was broken duration),
+ *               added Play all button, replaced broken duration/category badges with track numbers
+ */
+
 'use client';
 
 import { useState, useMemo } from 'react';
 import { useParams } from 'next/navigation';
-import { Play, ChevronDown, ChevronUp, RefreshCw } from 'lucide-react';
+import { Play, ChevronDown, ChevronUp } from 'lucide-react';
 import { BackButton } from '@/components/shared/navigation/back-button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
@@ -18,10 +46,6 @@ import type { MindfulMinuteAudio } from '@/hooks/wellness/use-mindful-minutes';
 
 type SortOrder = 'asc' | 'desc';
 
-function formatDuration(duration?: string): string {
-  if (!duration) return '–';
-  return duration;
-}
 
 export default function MindfulMinuteDetailPage() {
   const params = useParams();
@@ -36,8 +60,8 @@ export default function MindfulMinuteDetailPage() {
   const sortedAudios = useMemo((): MindfulMinuteAudio[] => {
     const list = mindfulMinute?.audios ?? [];
     return [...list].sort((a, b) => {
-      const da = parseFloat(a.duration ?? '0') || 0;
-      const db = parseFloat(b.duration ?? '0') || 0;
+      const da = Date.parse(a.createdAt);
+      const db = Date.parse(b.createdAt);
       return sortOrder === 'asc' ? da - db : db - da;
     });
   }, [mindfulMinute, sortOrder]);
@@ -129,20 +153,30 @@ export default function MindfulMinuteDetailPage() {
       </div>
 
       <main className="flex-1 px-4 py-4 space-y-5 max-w-2xl mx-auto w-full pb-20">
-        {/* Sort control */}
+        {/* Sort control + Play all */}
         <div className="flex justify-between items-center">
-          <h3 className="font-bold text-foreground text-[15px]">All Audio</h3>
           <button
             onClick={() => setSortOrder((o) => (o === 'asc' ? 'desc' : 'asc'))}
             className="text-sm font-bold text-muted-foreground flex items-center gap-1 active:opacity-70"
           >
-            {sortOrder === 'asc' ? 'Shortest first' : 'Longest first'}
+            {sortOrder === 'asc' ? 'Oldest first' : 'Newest first'}
             {sortOrder === 'asc' ? (
               <ChevronDown className="w-4 h-4" />
             ) : (
               <ChevronUp className="w-4 h-4" />
             )}
           </button>
+          {filteredAudios.length > 0 && (
+            <Button
+              size="sm"
+              variant="outline"
+              className="rounded-xl gap-1.5 h-8 text-xs font-bold"
+              onClick={() => { setActiveIndex(0); setPlayerOpen(true); }}
+            >
+              <Play className="w-3 h-3 fill-current" />
+              Play all
+            </Button>
+          )}
         </div>
 
         {/* Audio list */}
@@ -170,21 +204,9 @@ export default function MindfulMinuteDetailPage() {
                       {audio.title}
                     </h4>
                     <div className="flex items-center gap-2 mt-1.5">
-                      {audio.duration && (
-                        <span className="text-[11px] bg-muted text-muted-foreground px-2.5 py-0.5 rounded-full font-bold">
-                          {formatDuration(audio.duration)}
-                        </span>
-                      )}
-                      {audio.category && (
-                        <span className="text-[11px] bg-muted text-muted-foreground px-2.5 py-0.5 rounded-full font-bold">
-                          {audio.category}
-                        </span>
-                      )}
-                      {!audio.duration && !audio.category && (
-                        <span className="text-[11px] bg-muted text-muted-foreground px-2.5 py-0.5 rounded-full font-bold">
-                          Audio
-                        </span>
-                      )}
+                      <span className="text-[11px] bg-muted text-muted-foreground px-2.5 py-0.5 rounded-full font-bold">
+                        Track {idx + 1}
+                      </span>
                     </div>
                     <div className="flex items-center gap-1.5 text-primary font-bold text-[13px] mt-2">
                       <Play className="w-3.5 h-3.5 fill-current" />

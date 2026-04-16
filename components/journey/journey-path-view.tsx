@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import {
-  Flame, Zap, Lock, Clock, BarChart2, Timer,
+  Flame, Zap, Lock, Clock, BarChart2, Timer, Sparkles,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { PathChain, getTaskType, type PathChainNode, type ChainItem } from './path-chain';
@@ -153,11 +153,28 @@ export function JourneyPathView({ journey, progress, mobile, journeyId }: Journe
     advanceCurrentDay(mobile, journeyId).catch(console.error);
   }, [isSubscribed, mobile, currentDayAllDone, currentDayIdx, steps.length, journeyId, progress?.lastUpdated]);
 
-  function getVariant(nodeId: string, stepIdx: number, taskIdx: number): NodeVariant {
-    // Unsubscribed: only Day 1 preview
+  const isPaidFreePreview = isSubscribed && (journey.isPremium ?? false) && !progress?.isPremium;
+
+  function isAppointmentTask(task: JourneyTask): boolean {
+    return !!(task.showAppointments || task.showFirstBooking);
+  }
+
+  function getVariant(nodeId: string, stepIdx: number, taskIdx: number, task: JourneyTask): NodeVariant {
+    // Unsubscribed: only Day 1 static preview (no interactivity)
     if (!isSubscribed) {
       if (stepIdx === 0) return taskIdx === 0 ? 'active' : 'default';
       return 'locked';
+    }
+
+    // Enrolled in paid journey but no premium package — Day 1 digital assets only
+    if (isPaidFreePreview) {
+      if (stepIdx > 0) return 'locked';
+      // Day 1: appointment tasks are locked, digital tasks follow normal sequence
+      if (isAppointmentTask(task)) return 'locked';
+      if (completedIds.has(nodeId)) return 'completed';
+      if (nodeId === activeNodeId) return 'active';
+      const firstIncomplete = currentDayNodes.find(n => !completedIds.has(n.nodeId) && !isAppointmentTask(n.task));
+      return firstIncomplete?.nodeId === nodeId ? 'default' : 'locked';
     }
 
     // Previous days — always completed (or locked if somehow missed)
@@ -217,7 +234,11 @@ export function JourneyPathView({ journey, progress, mobile, journeyId }: Journe
   function handleNodeTap(node: PathChainNode) {
     if (node.variant === 'locked') {
       hapticWarning();
-      if (node.isPremiumStep && isSubscribed) setPremiumSheetOpen(true);
+      // Show upsell sheet for any locked node when in paid free preview,
+      // or for locked premium steps on fully enrolled users
+      if (isPaidFreePreview || (node.isPremiumStep && isSubscribed)) {
+        setPremiumSheetOpen(true);
+      }
       return;
     }
     hapticLight();
@@ -249,8 +270,8 @@ export function JourneyPathView({ journey, progress, mobile, journeyId }: Journe
     const tasks: UnitTask[] = (step.tasks ?? []).map((task, ti) => ({
       title: getTaskTitle(task),
       type: getTaskType(task),
-      isLocked: getVariant(`${step.id}-${task.id}`, stepIdx, ti) === 'locked',
-      isCompleted: getVariant(`${step.id}-${task.id}`, stepIdx, ti) === 'completed',
+      isLocked: getVariant(`${step.id}-${task.id}`, stepIdx, ti, task) === 'locked',
+      isCompleted: getVariant(`${step.id}-${task.id}`, stepIdx, ti, task) === 'completed',
       task,
     }));
     setUnitTasksData({ title: `Day ${stepIdx + 1}: ${title}`, tasks });
@@ -282,7 +303,7 @@ export function JourneyPathView({ journey, progress, mobile, journeyId }: Journe
         kind: 'node',
         node: {
           task,
-          variant: getVariant(nodeId, stepIdx, ti),
+          variant: getVariant(nodeId, stepIdx, ti, task),
           taskType: getTaskType(task),
           nodeId,
           taskTitle: getTaskTitle(task),
@@ -304,6 +325,33 @@ export function JourneyPathView({ journey, progress, mobile, journeyId }: Journe
     <>
       {/* Stats */}
       {isSubscribed && progress && <StatsBar progress={progress} />}
+
+      {/* Paid free-preview banner */}
+      {isPaidFreePreview && (
+        <div className="mx-4 mt-3 rounded-2xl overflow-hidden border border-violet-200">
+          <div className="bg-gradient-to-br from-violet-500 to-purple-600 px-4 py-3 flex items-start gap-3">
+            <div className="relative w-11 h-11 rounded-2xl bg-gradient-to-br from-violet-400 to-purple-500 flex-shrink-0 flex items-center justify-center shadow-sm">
+              <div className="absolute -top-2 -right-2 w-7 h-7 rounded-full bg-white/10" />
+              <Sparkles className="w-5 h-5 text-white" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-bold text-white">Premium Journey</p>
+              <p className="text-xs text-white/80 mt-0.5 leading-snug">
+                Day 1 is free — digital tasks only. Appointments are not included.
+              </p>
+            </div>
+          </div>
+          <div className="bg-card px-4 py-2.5 flex items-center justify-between">
+            <p className="text-xs text-muted-foreground">Unlock all days &amp; appointments</p>
+            <button
+              onClick={() => router.push('/packages')}
+              className="text-xs font-bold text-primary"
+            >
+              View Plans →
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Today banner */}
       {isSubscribed && activeStep && !allComplete && (
@@ -444,6 +492,42 @@ export function JourneyPathView({ journey, progress, mobile, journeyId }: Journe
                 className="w-full h-14 rounded-2xl bg-foreground text-background font-bold text-base"
               >
                 View Plans →
+              </button>
+            </>
+          ) : isPaidFreePreview ? (
+            <>
+              <div className="flex items-center gap-3 mb-4">
+                <div className="relative w-11 h-11 rounded-2xl bg-gradient-to-br from-violet-500 to-purple-600 flex-shrink-0 flex items-center justify-center shadow-sm">
+                  <div className="absolute -top-2 -right-2 w-7 h-7 rounded-full bg-white/10" />
+                  <Sparkles className="w-5 h-5 text-white" />
+                </div>
+                <div>
+                  <p className="text-base font-bold text-foreground">Premium Journey</p>
+                  <p className="text-xs text-muted-foreground">Day 1 free · full access requires a plan</p>
+                </div>
+              </div>
+              <p className="text-sm text-muted-foreground mb-2 leading-relaxed">
+                You're experiencing <span className="font-semibold text-foreground">Day 1 for free</span>. Digital tasks like audio, assessments, and journaling are available.
+              </p>
+              <p className="text-sm text-muted-foreground mb-6 leading-relaxed">
+                Appointments and all remaining days are included with a package.
+              </p>
+              <div className="flex gap-2 mb-5 flex-wrap">
+                {[
+                  { icon: <Clock className="w-3 h-3" />, text: `${dayCount} Tasks` },
+                  { icon: <BarChart2 className="w-3 h-3" />, text: `${steps.length} Days` },
+                  { icon: <Timer className="w-3 h-3" />, text: `${months}M Duration` },
+                ].map(({ icon, text }) => (
+                  <span key={text} className="flex items-center gap-1.5 bg-muted text-muted-foreground text-xs font-semibold px-3 py-1 rounded-full">
+                    {icon}{text}
+                  </span>
+                ))}
+              </div>
+              <button
+                onClick={() => { setPremiumSheetOpen(false); router.push('/packages'); }}
+                className="w-full h-14 rounded-2xl bg-gradient-to-r from-violet-500 to-purple-600 text-white font-bold text-base"
+              >
+                Get Full Access →
               </button>
             </>
           ) : (
