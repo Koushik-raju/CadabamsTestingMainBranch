@@ -19,7 +19,7 @@
  *   cmsJourneysControllerList   — SDK call
  *   SWR
  *
- * LAST UPDATED: 2026-04-16 — pass description as raw Strapi blocks array instead of string
+ * LAST UPDATED: 2026-04-16 — map extraTaskDescription and explicit ID arrays (audioIds, assessmentIds, worksheetIds, videoIds, subJournalingIds)
  */
 import useSWR from 'swr';
 import { cmsJourneysControllerList } from '@/sdk/backend-v2';
@@ -79,11 +79,13 @@ export function mapV2Journey(dto: JourneyResponseDto): JourneyItem {
         showFirstBooking: task.showFirstBooking,
         moodCheckIn: task.moodCheckIn,
         extraTaskTitle: extractStringFromObj(task.extraTaskTitle),
+        extraTaskDescription: (task.extraTaskDescription ?? []) as never,
         audioIdsOrder: task.audioIds,
-        assessmentIds: task.assessmentIds,
-        worksheetIds: task.worksheetIds,
-        videoIds: task.videoIds,
-        subJournalingIds: task.subJournalingIds,
+        audioIds: task.audioIds ?? [],
+        assessmentIds: task.assessmentIds ?? [],
+        worksheetIds: task.worksheetIds ?? [],
+        videoIds: task.videoIds ?? [],
+        subJournalingIds: task.subJournalingIds ?? [],
         assessments: [],
         worksheets: [],
         audios: [],

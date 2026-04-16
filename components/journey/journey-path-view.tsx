@@ -1,3 +1,32 @@
+/**
+ * FILE: components/journey/journey-path-view.tsx
+ *
+ * PURPOSE:
+ *   Main orchestrator component for the enrolled-journey path view.
+ *   Renders the StatsBar, premium banners, today-progress banner, the zigzag
+ *   PathChain, and various bottom sheets (task action, unit tasks, premium upsell).
+ *
+ * LOGIC OVERVIEW:
+ *   1. Flattens all steps into allNodes to track completion and active state.
+ *   2. getVariant() determines each node's state: completed / active / locked / default.
+ *   3. navigateToTask() routes based on task ID arrays and boolean flags, with
+ *      a redirectTo query param pointing back to this page.
+ *   4. handleNodeTap() opens the action sheet; handleContinue() navigates to active task.
+ *   5. markNodeDone() calls updateNodeProgress() and triggers XP animation.
+ *   6. Auto-advances to next day via advanceCurrentDay() when current day is done.
+ *
+ * KEY VARIABLES / PROPS / EXPORTS:
+ *   journey        — JourneyItem with steps and task data
+ *   progress       — JourneyProgress enrollment record (null if not subscribed)
+ *   mobile         — user's mobile number for API calls
+ *   journeyId      — string ID of the journey (from URL params)
+ *
+ * DEPENDENCIES:
+ *   useJourneyProgress, subscribeToJourney, updateNodeProgress, advanceCurrentDay
+ *   PathChain, JourneyTaskActionSheet, JourneyUnitTasksSheet
+ *
+ * LAST UPDATED: 2026-04-16 — fix navigateToTask/getTaskTitle/getIsMandatory to use ID arrays; add redirectTo param; route book tasks to /consult/find-therapist
+ */
 'use client';
 
 import { useEffect, useMemo, useRef, useState } from 'react';
@@ -191,30 +220,93 @@ export function JourneyPathView({ journey, progress, mobile, journeyId }: Journe
   }
 
   function getIsMandatory(task: JourneyTask): boolean {
-    return (task.assessments?.length ?? 0) > 0 || (task.audios?.length ?? 0) > 0 || task.fillSelfJournal === true;
+    return (task.assessmentIds?.length ?? task.assessments?.length ?? 0) > 0
+      || (task.audioIds?.length ?? task.audios?.length ?? 0) > 0
+      || task.fillSelfJournal === true;
   }
 
   function getTaskTitle(task: JourneyTask): string {
     if (task.extraTaskTitle) return task.extraTaskTitle;
     if (task.assessments?.length) return task.assessments[0].title ?? '';
     if (task.audios?.length) return task.audios[0].title ?? '';
-    return '';
+    const type = getTaskType(task);
+    const labels: Record<string, string> = {
+      assessment: 'Assessment',
+      audio: 'Audio Session',
+      video: 'Video',
+      journal: 'Journal Entry',
+      book: 'Book a Session',
+      gift: 'Mood Check-in',
+      read: 'Reading',
+    };
+    return labels[type] ?? '';
   }
 
   function navigateToTask(task: JourneyTask) {
-    if (task.assessments?.length) {
-      router.push(`/assessments/${task.assessments[0].id}?journey=${journeyId}`);
-    } else if (task.audios?.length) {
-      const audio = task.audios[0] as JourneyAudio;
-      router.push(`/wellness/mindful-minutes/${audio.mindfulMinuteId || audio.documentId || audio.id}`);
-    } else if (task.moodCheckIn) {
-      router.push(`/journeys/mood-check?journey=${journeyId}`);
-    } else if (task.showAppointments || task.showFirstBooking) {
-      router.push('/consult/appointments');
-    } else if (task.fillSelfJournal || (task.worksheets && (task.worksheets as unknown[]).length > 0)) {
-      const ws = task.worksheets as Array<{ id: string }> | undefined;
-      router.push(ws?.length ? `/worksheet/${ws[0].id}` : '/self-journaling/new');
+    const redirectTo = encodeURIComponent(`/journeys/${journeyId}/details`);
+
+    // 1. Read task — content shown in-sheet, no page navigation
+    if (task.extraTaskTitle && task.extraTaskDescription?.length) return;
+
+    // 2. Assessments
+    if (task.assessmentIds?.length) {
+      router.push(`/assessments/${task.assessmentIds[0]}?journey=${journeyId}&redirectTo=${redirectTo}`);
+      return;
     }
+    if (task.assessments?.length) {
+      router.push(`/assessments/${task.assessments[0].id}?journey=${journeyId}&redirectTo=${redirectTo}`);
+      return;
+    }
+
+    // 3. Worksheets
+    if (task.worksheetIds?.length) {
+      router.push(`/worksheet/${task.worksheetIds[0]}?redirectTo=${redirectTo}`);
+      return;
+    }
+    if (task.worksheets?.length) {
+      router.push(`/worksheet/${(task.worksheets[0] as { id: string }).id}?redirectTo=${redirectTo}`);
+      return;
+    }
+
+    // 4. Sub-journalings
+    if (task.subJournalingIds?.length) {
+      router.push(`/self-journaling/new?redirectTo=${redirectTo}`);
+      return;
+    }
+
+    // 5. Audios
+    if (task.audioIds?.length) {
+      router.push(`/wellness/mindful-minutes/${task.audioIds[0]}?redirectTo=${redirectTo}`);
+      return;
+    }
+    if (task.audios?.length) {
+      const audio = task.audios[0] as JourneyAudio;
+      router.push(`/wellness/mindful-minutes/${audio.mindfulMinuteId || audio.documentId || audio.id}?redirectTo=${redirectTo}`);
+      return;
+    }
+
+    // 6. Videos
+    if (task.videoIds?.length) {
+      router.push(`/wellness/videos/${task.videoIds[0]}?redirectTo=${redirectTo}`);
+      return;
+    }
+
+    // 7. Boolean-flag tasks
+    if (task.moodCheckIn) {
+      router.push(`/journeys/mood-check?journey=${journeyId}&redirectTo=${redirectTo}`);
+      return;
+    }
+    if (task.showAppointments || task.showFirstBooking) {
+      router.push(`/consult/find-therapist?redirectTo=${redirectTo}`);
+      return;
+    }
+    if (task.fillSelfJournal) {
+      router.push(`/self-journaling/new?redirectTo=${redirectTo}`);
+      return;
+    }
+
+    // 8. Fallback read — content shown in-sheet only
+    if (task.extraTaskDescription?.length) return;
   }
 
   async function markNodeDone(node: PathChainNode) {

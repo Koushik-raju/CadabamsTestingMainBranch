@@ -1,3 +1,28 @@
+/**
+ * FILE: components/journey/journey-task-action-sheet.tsx
+ *
+ * PURPOSE:
+ *   Bottom sheet shown when a user taps a task node on the journey path.
+ *   Displays task type, title, description, and primary/secondary CTAs.
+ *
+ * LOGIC OVERVIEW:
+ *   1. Derives color and meta (emoji, CTA label, canNavigate, canMarkDone) from taskType.
+ *   2. For 'read' tasks with extraTaskDescription: renders rich content using BlocksRenderer
+ *      with prose styles instead of plain text.
+ *   3. Primary CTA: navigates to the task page (canNavigate=true) or marks as read (read type).
+ *   4. Secondary CTA: "Mark as Done" shown for audio/video when active and incomplete.
+ *
+ * KEY VARIABLES / PROPS / EXPORTS:
+ *   TaskActionSheetData  — { node: PathChainNode; isActive: boolean }
+ *   onOpen               — callback to navigate to the task page
+ *   onMarkDone           — callback to mark task complete without navigation
+ *
+ * DEPENDENCIES:
+ *   @strapi/blocks-react-renderer (BlocksRenderer)
+ *   path-node (getTypeColor)
+ *
+ * LAST UPDATED: 2026-04-16 — render extraTaskDescription with BlocksRenderer for read tasks
+ */
 'use client';
 
 import {
@@ -5,6 +30,7 @@ import {
   BookOpen, Gift, Trophy, FileText, Star,
   Check, ChevronRight, Zap,
 } from 'lucide-react';
+import { BlocksRenderer, type BlocksContent } from '@strapi/blocks-react-renderer';
 import { Sheet, SheetContent, SheetTitle } from '@/components/ui/sheet';
 import { getTypeColor } from './path-node';
 import type { PathChainNode } from './path-chain';
@@ -252,8 +278,8 @@ export function JourneyTaskActionSheet({
             </span>
           </div>
 
-          {/* ── Task description — full text, no clamp ── */}
-          {descText && (
+          {/* ── Task description — BlocksRenderer for read tasks, plain text otherwise ── */}
+          {taskType === 'read' && task.extraTaskDescription?.length ? (
             <div
               className="mx-5 mb-4 rounded-2xl px-4 py-4"
               style={{ backgroundColor: `${color.bg}0d`, border: `1px solid ${color.bg}22` }}
@@ -262,11 +288,26 @@ export function JourneyTaskActionSheet({
                 className="text-[10px] font-bold uppercase tracking-widest mb-2"
                 style={{ color: color.bg }}
               >
-                {taskType === 'read' ? 'Reading material' : 'About this task'}
+                Reading material
+              </p>
+              <div className="prose prose-sm max-w-none text-foreground">
+                <BlocksRenderer content={task.extraTaskDescription as unknown as BlocksContent} />
+              </div>
+            </div>
+          ) : descText ? (
+            <div
+              className="mx-5 mb-4 rounded-2xl px-4 py-4"
+              style={{ backgroundColor: `${color.bg}0d`, border: `1px solid ${color.bg}22` }}
+            >
+              <p
+                className="text-[10px] font-bold uppercase tracking-widest mb-2"
+                style={{ color: color.bg }}
+              >
+                About this task
               </p>
               <p className="text-sm text-foreground leading-relaxed whitespace-pre-line">{descText}</p>
             </div>
-          )}
+          ) : null}
 
           {/* ── Assessment info ── */}
           {task.assessments && task.assessments.length > 0 && task.assessments[0].description && (
