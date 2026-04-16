@@ -1,13 +1,12 @@
 'use client';
 
-import { Suspense, useState, useEffect, useCallback } from 'react';
+import { Suspense, useState, useEffect, useCallback, useRef } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { toast } from 'react-toastify';
-import useSWRMutation from 'swr/mutation';
 import { ArrowLeft, Heart } from 'lucide-react';
 import { PhoneInput, type Country } from '@/components/common/phone-input';
 import { OTPInput } from '@/components/common/otp-input';
@@ -18,18 +17,8 @@ import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useAuth } from '@/hooks/use-auth';
+import { useAuthActions } from '@/hooks/use-auth-actions';
 import { cn } from '@/lib/utils';
-
-async function postJson<T>(url: string, { arg }: { arg: T }) {
-  const res = await fetch(url, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(arg),
-  });
-  const data = await res.json().catch(() => ({}));
-  if (!res.ok) throw { status: res.status, ...data };
-  return data;
-}
 
 const signupSchema = z.object({
   firstName: z.string().min(1, 'First name is required'),
@@ -46,11 +35,13 @@ function SignupContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { login } = useAuth();
+  const { sendOtp, verifySignup, isSendingOtp, isVerifying } = useAuthActions();
 
   const [country, setCountry] = useState<Country | null>(null);
   const [step, setStep] = useState<'form' | 'otp'>('form');
   const [otp, setOtp] = useState('');
   const [timer, setTimer] = useState(0);
+  const verifyingRef = useRef(false);
 
   const mobileParam = searchParams.get('mobile') ?? '';
 
@@ -58,9 +49,6 @@ function SignupContent() {
     resolver: zodResolver(signupSchema),
     defaultValues: { firstName: '', lastName: '', email: '', phone: mobileParam },
   });
-
-  const { trigger: sendOtp, isMutating: isSending } = useSWRMutation('/api/auth/send-otp', postJson);
-  const { trigger: verifySignup, isMutating: isVerifying } = useSWRMutation('/api/auth/signup/verify', postJson);
 
   useEffect(() => {
     if (mobileParam) setValue('phone', mobileParam);
@@ -74,7 +62,7 @@ function SignupContent() {
 
   const onSendOtp = async (data: SignupForm) => {
     try {
-      await sendOtp({ phone: data.phone, type: 'signup' });
+      await sendOtp(data.phone, 'signup');
       toast.success('OTP sent successfully');
       setStep('otp');
       setTimer(30);
@@ -84,7 +72,8 @@ function SignupContent() {
   };
 
   const handleSignup = useCallback(async (code: string) => {
-    if (code.length < 4) return;
+    if (code.length < 4 || verifyingRef.current) return;
+    verifyingRef.current = true;
     const { phone, firstName, lastName, email } = getValues();
     try {
       await verifySignup({
@@ -107,12 +96,14 @@ function SignupContent() {
       }
       toast.error(e.error ?? 'Signup failed. Try again.');
       setOtp('');
+    } finally {
+      verifyingRef.current = false;
     }
   }, [verifySignup, getValues, country, login, router]);
 
   useEffect(() => {
     if (otp.length === 4) handleSignup(otp);
-  }, [otp, handleSignup]);
+  }, [otp]); // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
     <div className="min-h-screen flex flex-col bg-background">
@@ -214,8 +205,8 @@ function SignupContent() {
                     )}
                   />
 
-                  <Button type="submit" size="lg" disabled={isSending} className="w-full">
-                    {isSending ? 'Sending…' : 'Continue'}
+                  <Button type="submit" size="lg" disabled={isSendingOtp} className="w-full">
+                    {isSendingOtp ? 'Sending…' : 'Continue'}
                   </Button>
                 </form>
               </CardContent>

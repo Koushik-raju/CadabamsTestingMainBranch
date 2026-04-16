@@ -108,15 +108,7 @@ export default function AssessmentFormPage({ params }: { params: Promise<{ id: s
   const handleSubmit = async () => {
     setSubmitting(true);
     try {
-      const leadId = user?.lead_id
-        ? String(user.lead_id)
-        : (() => {
-            try {
-              const raw = localStorage.getItem('user');
-              if (raw) return JSON.parse(raw).lead_id ? String(JSON.parse(raw).lead_id) : '';
-            } catch {}
-            return '';
-          })();
+      const leadId = user?.lead_id ? String(user.lead_id) : '';
 
       const formattedAnswers: Record<string, unknown> = {};
       questions.forEach((q, index) => {

@@ -13,6 +13,7 @@ export {
   DEFAULT_COOKIE_OPTIONS,
   ACCESS_TOKEN_OPTIONS,
   REFRESH_TOKEN_OPTIONS,
+  USER_COOKIE_OPTIONS,
 } from './constants';
 
 export {
@@ -38,6 +39,13 @@ export {
   setTokens,
   clearTokens,
   isAuthenticated,
+  getUser,
+  setUser,
+  removeUser,
+  getRedirectPath,
+  setRedirectPath,
+  removeRedirectPath,
+  clearAuthState,
 } from './auth-cookies';
 export type { TokenPair } from './auth-cookies';
 

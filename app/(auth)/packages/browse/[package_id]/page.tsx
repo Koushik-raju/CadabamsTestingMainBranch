@@ -18,17 +18,9 @@ import {
 import { useAvailablePackages, usePackageProductLines } from '@/hooks/use-packages';
 import { getPackagePalette } from '@/lib/package-colors';
 import { cn } from '@/lib/utils';
-import type { AvailablePackage } from '@/types/package';
+import type { PackageResponseDto } from '@/sdk/backend-v2';
 
-function getDisplayDuration(pkg: AvailablePackage): number {
-  const duration = pkg.duration ?? pkg.package_duration;
-  if (duration === 90) return 90;
-  const name = (pkg.package_name ?? '').toLowerCase();
-  if (/90[\s-]?day|^90\s/.test(name)) return 90;
-  return duration ?? 30;
-}
-
-function storeSelectedPackage(pkg: AvailablePackage) {
+function storeSelectedPackage(pkg: PackageResponseDto) {
   if (typeof sessionStorage !== 'undefined') {
     sessionStorage.setItem('selected_package', JSON.stringify(pkg));
   }
@@ -59,7 +51,7 @@ function PackageDetailContent({ packageId }: { packageId: string }) {
   const router = useRouter();
   const { packages, isLoading: pkgLoading } = useAvailablePackages();
   const { lines, isLoading: linesLoading } = usePackageProductLines();
-  const [pkg, setPkg] = useState<AvailablePackage | null>(null);
+  const [pkg, setPkg] = useState<PackageResponseDto | null>(null);
 
   useEffect(() => {
     if (!pkgLoading && packages.length > 0) {
@@ -67,12 +59,11 @@ function PackageDetailContent({ packageId }: { packageId: string }) {
       if (found) {
         setPkg(found);
       } else {
-        // Fallback to sessionStorage
         if (typeof sessionStorage !== 'undefined') {
           const stored = sessionStorage.getItem('selected_package');
           if (stored) {
             try {
-              const parsed = JSON.parse(stored) as AvailablePackage;
+              const parsed = JSON.parse(stored) as PackageResponseDto;
               if (String(parsed.id) === packageId) setPkg(parsed);
             } catch {
               // ignore
@@ -107,19 +98,15 @@ function PackageDetailContent({ packageId }: { packageId: string }) {
     router.push(`/packages/book/${pkg.id}`);
   };
 
-  const duration = getDisplayDuration(pkg);
-  const serviceCount = pkg.package_product_ids?.length ?? 0;
-  const sheetLines = lines.filter((l) => pkg.package_product_ids?.includes(l.id));
+  const duration = pkg.duration_days ?? 30;
   const palette = getPackagePalette(pkg.id);
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
-      {/* Sticky header */}
       <div className="flex items-center px-2 py-2 border-b border-border bg-background">
         <BackButton fallback="/packages" />
       </div>
 
-      {/* Scrollable content */}
       <div className="flex-1 overflow-y-auto pb-32">
         {/* Hero banner */}
         <div className={cn('w-full h-52 bg-gradient-to-br relative overflow-hidden flex items-end', palette.gradient)}>
@@ -132,16 +119,15 @@ function PackageDetailContent({ packageId }: { packageId: string }) {
           </div>
           <div className="relative p-5 w-full">
             <p className="text-white/70 text-sm font-semibold mb-1">
-              ₹{pkg.amount_total.toLocaleString('en-IN')}
+              ₹{(pkg.price ?? 0).toLocaleString('en-IN')}
             </p>
             <h1 className="text-white font-bold text-xl leading-tight line-clamp-2">
-              {pkg.package_name}
+              {pkg.name}
             </h1>
           </div>
         </div>
 
         <div className="px-5 pt-5 space-y-5">
-          {/* Badge */}
           <div className="flex items-center gap-1.5">
             <Package className="w-3.5 h-3.5 text-primary" />
             <p className="text-xs font-semibold text-primary tracking-wide">Healthcare Package</p>
@@ -153,7 +139,7 @@ function PackageDetailContent({ packageId }: { packageId: string }) {
               <IndianRupee className="w-4 h-4 text-primary" />
               <div>
                 <p className="text-sm font-semibold text-foreground">
-                  ₹{pkg.amount_total.toLocaleString('en-IN')}
+                  ₹{(pkg.price ?? 0).toLocaleString('en-IN')}
                 </p>
                 <p className="text-[11px] text-muted-foreground">Total Cost</p>
               </div>
@@ -168,16 +154,15 @@ function PackageDetailContent({ packageId }: { packageId: string }) {
             <div className="flex items-center gap-2">
               <Layers className="w-4 h-4 text-primary" />
               <div>
-                <p className="text-sm font-semibold text-foreground">{serviceCount}</p>
+                <p className="text-sm font-semibold text-foreground">{lines.length}</p>
                 <p className="text-[11px] text-muted-foreground">Services</p>
               </div>
             </div>
           </div>
 
-          {/* What's included — grouped by service name */}
-          {sheetLines.length > 0 && (() => {
-            // Group by product name, preserve insertion order
-            const groups = sheetLines.reduce<{ name: string; count: number }[]>((acc, line) => {
+          {/* What's included */}
+          {lines.length > 0 && (() => {
+            const groups = lines.reduce<{ name: string; count: number }[]>((acc, line) => {
               const name = String(line.product_id[1]);
               const existing = acc.find((g) => g.name === name);
               if (existing) { existing.count++; } else { acc.push({ name, count: 1 }); }
@@ -201,18 +186,9 @@ function PackageDetailContent({ packageId }: { packageId: string }) {
             );
           })()}
 
-          {sheetLines.length === 0 && serviceCount > 0 && (
-            <ul className="space-y-3">
-              <li className="flex items-center gap-3">
-                <CheckCircle2 className="w-5 h-5 text-primary flex-shrink-0" />
-                <p className="text-sm font-medium text-foreground flex-1">Consultation sessions</p>
-                <Badge variant="secondary" className="text-xs font-semibold shrink-0">
-                  ×{serviceCount}
-                </Badge>
-              </li>
-            </ul>
+          {pkg.description && (
+            <p className="text-sm text-muted-foreground leading-relaxed">{pkg.description}</p>
           )}
-
         </div>
       </div>
 
@@ -222,7 +198,7 @@ function PackageDetailContent({ packageId }: { packageId: string }) {
           className="w-full bg-primary hover:bg-primary/90 text-primary-foreground font-semibold text-base h-14 rounded-2xl"
           onClick={handleProceed}
         >
-          Book for ₹{pkg.amount_total.toLocaleString('en-IN')}
+          Book for ₹{(pkg.price ?? 0).toLocaleString('en-IN')}
           <ChevronRight className="w-5 h-5 ml-1" />
         </Button>
       </div>

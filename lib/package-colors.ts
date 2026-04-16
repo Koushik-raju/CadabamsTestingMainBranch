@@ -54,7 +54,8 @@ const PALETTES: PackagePalette[] = [
   },
 ];
 
-export function getPackagePalette(id: number | string): PackagePalette {
-  const index = Math.abs(Number(id)) % PALETTES.length;
+export function getPackagePalette(id: number | string | undefined | null): PackagePalette {
+  const n = Number(id);
+  const index = isNaN(n) ? 0 : Math.abs(n) % PALETTES.length;
   return PALETTES[index];
 }

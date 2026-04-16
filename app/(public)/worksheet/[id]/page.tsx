@@ -11,6 +11,7 @@ import { BackButton } from '@/components/shared/navigation/back-button';
 import { QuestionRenderer, type Question, type AnswerValue } from '@/components/shared/questions/question-renderer';
 import { ChevronRight, ChevronLeft, CheckCircle2, AlertCircle } from 'lucide-react';
 import { cmsWorksheetsControllerFindOne } from '@/sdk/backend-v2';
+import { getUser } from '@/lib/cookies';
 
 interface WorksheetData {
   title?: string;
@@ -116,8 +117,8 @@ export default function WorksheetFormPage({ params }: { params: Promise<{ id: st
   const handleSubmit = async () => {
     setSubmitting(true);
     try {
-      const user = JSON.parse(localStorage.getItem('user') || '{}');
-      const leadId = String(user.lead_id || '');
+      const user = await getUser();
+      const leadId = String(user?.lead_id || '');
 
       // Build payload
       const payload: Record<string, unknown> = { date: new Date().toISOString() };

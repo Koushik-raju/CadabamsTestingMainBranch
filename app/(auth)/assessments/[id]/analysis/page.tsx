@@ -18,15 +18,7 @@ export default function AssessmentAnalysisPage({
   const { user } = useAuth();
 
   const leadId = useMemo(() => {
-    if (user?.lead_id) return String(user.lead_id);
-    try {
-      const raw = localStorage.getItem('user');
-      if (raw) {
-        const parsed = JSON.parse(raw);
-        return parsed.lead_id ? String(parsed.lead_id) : null;
-      }
-    } catch {}
-    return null;
+    return user?.lead_id ? String(user.lead_id) : null;
   }, [user]);
 
   const { scoreSummary, submissions, isLoading, error } = useAssessmentScoreSummary(

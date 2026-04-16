@@ -21,7 +21,11 @@ export type Options<TData extends TDataShape = TDataShape, ThrowOnError extends 
 /**
  * Health check
  */
-export const appControllerGetRoot = <ThrowOnError extends boolean = false>(options?: Options<AppControllerGetRootData, ThrowOnError>) => (options?.client ?? client).get<AppControllerGetRootResponses, unknown, ThrowOnError>({ url: '/', ...options });
+export const appControllerGetRoot = <ThrowOnError extends boolean = false>(options?: Options<AppControllerGetRootData, ThrowOnError>) => (options?.client ?? client).get<AppControllerGetRootResponses, unknown, ThrowOnError>({
+    responseType: 'json',
+    url: '/',
+    ...options
+});
 
 /**
  * Liveness and dependency checks (public)
@@ -35,7 +39,7 @@ export const healthControllerCheck = <ThrowOnError extends boolean = false>(opti
 /**
  * Send OTP to a patient for login or signup
  *
- * Sets an HttpOnly `otp_uid` cookie that must be present for the subsequent verify call.
+ * Returns a `uid` in the response body that must be passed in the subsequent verify call.
  */
 export const authControllerSendPatientOtp = <ThrowOnError extends boolean = false>(options: Options<AuthControllerSendPatientOtpData, ThrowOnError>) => (options.client ?? client).post<AuthControllerSendPatientOtpResponses, unknown, ThrowOnError>({
     responseType: 'json',
@@ -50,7 +54,7 @@ export const authControllerSendPatientOtp = <ThrowOnError extends boolean = fals
 /**
  * Verify login OTP for an existing patient
  *
- * Reads the `otp_uid` cookie. Sets `access_token` and `refresh_token` HttpOnly cookies. Returns patient profile in body.
+ * Accepts `uid` from the send-otp response in the request body. Sets `access_token` and `refresh_token` HttpOnly cookies. Returns patient profile in body.
  */
 export const authControllerVerifyPatientLogin = <ThrowOnError extends boolean = false>(options: Options<AuthControllerVerifyPatientLoginData, ThrowOnError>) => (options.client ?? client).post<AuthControllerVerifyPatientLoginResponses, AuthControllerVerifyPatientLoginErrors, ThrowOnError>({
     responseType: 'json',
@@ -65,7 +69,7 @@ export const authControllerVerifyPatientLogin = <ThrowOnError extends boolean = 
 /**
  * Verify signup OTP and create a new patient lead in the CRM
  *
- * Reads the `otp_uid` cookie. Sets `access_token` and `refresh_token` HttpOnly cookies. Returns patient profile in body.
+ * Accepts `uid` from the send-otp response in the request body. Sets `access_token` and `refresh_token` HttpOnly cookies. Returns patient profile in body.
  */
 export const authControllerPatientSignupVerify = <ThrowOnError extends boolean = false>(options: Options<AuthControllerPatientSignupVerifyData, ThrowOnError>) => (options.client ?? client).post<AuthControllerPatientSignupVerifyResponses, AuthControllerPatientSignupVerifyErrors, ThrowOnError>({
     responseType: 'json',
@@ -135,6 +139,8 @@ export const authControllerLogout = <ThrowOnError extends boolean = false>(optio
 
 /**
  * Get the profile of the current authenticated user
+ *
+ * Returns DoctorDataDto for DOCTOR role, LeadResponseDto for PATIENT role, or null for ADMIN/STAFF.
  */
 export const authControllerMe = <ThrowOnError extends boolean = false>(options?: Options<AuthControllerMeData, ThrowOnError>) => (options?.client ?? client).get<AuthControllerMeResponses, unknown, ThrowOnError>({
     responseType: 'json',
@@ -184,7 +190,7 @@ export const crmControllerCreateLead = <ThrowOnError extends boolean = false>(op
 });
 
 /**
- * List doctors
+ * List doctors (basic info)
  */
 export const crmControllerListDoctors = <ThrowOnError extends boolean = false>(options?: Options<CrmControllerListDoctorsData, ThrowOnError>) => (options?.client ?? client).get<CrmControllerListDoctorsResponses, unknown, ThrowOnError>({
     responseType: 'json',
@@ -193,7 +199,7 @@ export const crmControllerListDoctors = <ThrowOnError extends boolean = false>(o
 });
 
 /**
- * List doctors with their available slots
+ * List doctors with rich profiles and slot availability
  */
 export const crmControllerListDoctorsWithSlots = <ThrowOnError extends boolean = false>(options?: Options<CrmControllerListDoctorsWithSlotsData, ThrowOnError>) => (options?.client ?? client).get<CrmControllerListDoctorsWithSlotsResponses, unknown, ThrowOnError>({
     responseType: 'json',
@@ -202,7 +208,7 @@ export const crmControllerListDoctorsWithSlots = <ThrowOnError extends boolean =
 });
 
 /**
- * Get doctor by ID
+ * Get doctor by ID (rich profile)
  */
 export const crmControllerGetDoctorById = <ThrowOnError extends boolean = false>(options: Options<CrmControllerGetDoctorByIdData, ThrowOnError>) => (options.client ?? client).get<CrmControllerGetDoctorByIdResponses, unknown, ThrowOnError>({
     responseType: 'json',
@@ -211,9 +217,9 @@ export const crmControllerGetDoctorById = <ThrowOnError extends boolean = false>
 });
 
 /**
- * Get doctors by filter
+ * Get doctor by ID with optional field selection
  */
-export const crmControllerGetDoctorsByFilter = <ThrowOnError extends boolean = false>(options?: Options<CrmControllerGetDoctorsByFilterData, ThrowOnError>) => (options?.client ?? client).get<CrmControllerGetDoctorsByFilterResponses, unknown, ThrowOnError>({
+export const crmControllerGetDoctorsByFilter = <ThrowOnError extends boolean = false>(options: Options<CrmControllerGetDoctorsByFilterData, ThrowOnError>) => (options.client ?? client).get<CrmControllerGetDoctorsByFilterResponses, unknown, ThrowOnError>({
     responseType: 'json',
     url: '/api/v1/crm/doctors/filter',
     ...options
@@ -242,7 +248,7 @@ export const crmControllerBookAppointment = <ThrowOnError extends boolean = fals
 });
 
 /**
- * Reschedule an appointment
+ * Reschedule an appointment to a new slot
  */
 export const crmControllerRescheduleAppointment = <ThrowOnError extends boolean = false>(options: Options<CrmControllerRescheduleAppointmentData, ThrowOnError>) => (options.client ?? client).post<CrmControllerRescheduleAppointmentResponses, unknown, ThrowOnError>({
     responseType: 'json',
@@ -268,7 +274,7 @@ export const crmControllerCancelAppointment = <ThrowOnError extends boolean = fa
 });
 
 /**
- * Fetch appointment details
+ * Fetch slot details for a patient from a given start date
  */
 export const crmControllerFetchAppointmentDetails = <ThrowOnError extends boolean = false>(options: Options<CrmControllerFetchAppointmentDetailsData, ThrowOnError>) => (options.client ?? client).get<CrmControllerFetchAppointmentDetailsResponses, unknown, ThrowOnError>({
     responseType: 'json',
@@ -277,7 +283,7 @@ export const crmControllerFetchAppointmentDetails = <ThrowOnError extends boolea
 });
 
 /**
- * Fetch followup details for an appointment
+ * Fetch previous / follow-up appointments for a patient
  */
 export const crmControllerFetchFollowupDetails = <ThrowOnError extends boolean = false>(options: Options<CrmControllerFetchFollowupDetailsData, ThrowOnError>) => (options.client ?? client).get<CrmControllerFetchFollowupDetailsResponses, unknown, ThrowOnError>({
     responseType: 'json',
@@ -286,7 +292,7 @@ export const crmControllerFetchFollowupDetails = <ThrowOnError extends boolean =
 });
 
 /**
- * Get all packages
+ * Get all available packages
  */
 export const crmControllerGetAllPackages = <ThrowOnError extends boolean = false>(options?: Options<CrmControllerGetAllPackagesData, ThrowOnError>) => (options?.client ?? client).get<CrmControllerGetAllPackagesResponses, unknown, ThrowOnError>({
     responseType: 'json',
@@ -295,7 +301,7 @@ export const crmControllerGetAllPackages = <ThrowOnError extends boolean = false
 });
 
 /**
- * Get package product lines
+ * Get package product lines (optionally filtered by package ID)
  */
 export const crmControllerGetPackageProductLines = <ThrowOnError extends boolean = false>(options?: Options<CrmControllerGetPackageProductLinesData, ThrowOnError>) => (options?.client ?? client).get<CrmControllerGetPackageProductLinesResponses, unknown, ThrowOnError>({
     responseType: 'json',
@@ -304,7 +310,7 @@ export const crmControllerGetPackageProductLines = <ThrowOnError extends boolean
 });
 
 /**
- * Get booked packages for a user
+ * Get all booked packages for a user
  */
 export const crmControllerGetUserPackages = <ThrowOnError extends boolean = false>(options: Options<CrmControllerGetUserPackagesData, ThrowOnError>) => (options.client ?? client).get<CrmControllerGetUserPackagesResponses, unknown, ThrowOnError>({
     responseType: 'json',
@@ -322,7 +328,7 @@ export const crmControllerGetProducts = <ThrowOnError extends boolean = false>(o
 });
 
 /**
- * Get package product details
+ * Get product line details for a specific package
  */
 export const crmControllerGetPackageProductDetails = <ThrowOnError extends boolean = false>(options: Options<CrmControllerGetPackageProductDetailsData, ThrowOnError>) => (options.client ?? client).get<CrmControllerGetPackageProductDetailsResponses, unknown, ThrowOnError>({
     responseType: 'json',
@@ -331,7 +337,7 @@ export const crmControllerGetPackageProductDetails = <ThrowOnError extends boole
 });
 
 /**
- * Book a package
+ * Book a package for a patient
  */
 export const crmControllerBookPackage = <ThrowOnError extends boolean = false>(options: Options<CrmControllerBookPackageData, ThrowOnError>) => (options.client ?? client).post<CrmControllerBookPackageResponses, unknown, ThrowOnError>({
     responseType: 'json',
@@ -344,7 +350,7 @@ export const crmControllerBookPackage = <ThrowOnError extends boolean = false>(o
 });
 
 /**
- * Get booked package product lines
+ * Get product lines from a booked package
  */
 export const crmControllerGetBookedLines = <ThrowOnError extends boolean = false>(options: Options<CrmControllerGetBookedLinesData, ThrowOnError>) => (options.client ?? client).get<CrmControllerGetBookedLinesResponses, unknown, ThrowOnError>({
     responseType: 'json',
@@ -353,7 +359,7 @@ export const crmControllerGetBookedLines = <ThrowOnError extends boolean = false
 });
 
 /**
- * Get all service/condition tags
+ * Get all service/condition tags (e.g. Anxiety, ADHD)
  */
 export const crmControllerGetServiceTags = <ThrowOnError extends boolean = false>(options?: Options<CrmControllerGetServiceTagsData, ThrowOnError>) => (options?.client ?? client).get<CrmControllerGetServiceTagsResponses, unknown, ThrowOnError>({
     responseType: 'json',
@@ -362,7 +368,7 @@ export const crmControllerGetServiceTags = <ThrowOnError extends boolean = false
 });
 
 /**
- * Get all relationship types
+ * Get all relationship types (Self, Parent, Spouse...)
  */
 export const crmControllerGetRelationships = <ThrowOnError extends boolean = false>(options?: Options<CrmControllerGetRelationshipsData, ThrowOnError>) => (options?.client ?? client).get<CrmControllerGetRelationshipsResponses, unknown, ThrowOnError>({
     responseType: 'json',
@@ -371,7 +377,7 @@ export const crmControllerGetRelationships = <ThrowOnError extends boolean = fal
 });
 
 /**
- * Get all medium types
+ * Get all contact medium types (Phone, Online, SMS...)
  */
 export const crmControllerGetMediums = <ThrowOnError extends boolean = false>(options?: Options<CrmControllerGetMediumsData, ThrowOnError>) => (options?.client ?? client).get<CrmControllerGetMediumsResponses, unknown, ThrowOnError>({
     responseType: 'json',
@@ -380,7 +386,7 @@ export const crmControllerGetMediums = <ThrowOnError extends boolean = false>(op
 });
 
 /**
- * Get all campuses
+ * Get all campuses/locations
  */
 export const crmControllerGetCampuses = <ThrowOnError extends boolean = false>(options?: Options<CrmControllerGetCampusesData, ThrowOnError>) => (options?.client ?? client).get<CrmControllerGetCampusesResponses, unknown, ThrowOnError>({
     responseType: 'json',
@@ -389,7 +395,7 @@ export const crmControllerGetCampuses = <ThrowOnError extends boolean = false>(o
 });
 
 /**
- * Get available slots
+ * Get available slots for a doctor
  */
 export const crmControllerGetSlots = <ThrowOnError extends boolean = false>(options: Options<CrmControllerGetSlotsData, ThrowOnError>) => (options.client ?? client).get<CrmControllerGetSlotsResponses, unknown, ThrowOnError>({
     responseType: 'json',
@@ -398,7 +404,7 @@ export const crmControllerGetSlots = <ThrowOnError extends boolean = false>(opti
 });
 
 /**
- * Get slot price
+ * Get price for a specific slot
  */
 export const crmControllerGetSlotPrice = <ThrowOnError extends boolean = false>(options: Options<CrmControllerGetSlotPriceData, ThrowOnError>) => (options.client ?? client).get<CrmControllerGetSlotPriceResponses, unknown, ThrowOnError>({
     responseType: 'json',
@@ -407,7 +413,7 @@ export const crmControllerGetSlotPrice = <ThrowOnError extends boolean = false>(
 });
 
 /**
- * Initiate Razorpay payment for appointment
+ * Initiate Razorpay payment link for an appointment
  */
 export const crmControllerRazorpayPayment = <ThrowOnError extends boolean = false>(options: Options<CrmControllerRazorpayPaymentData, ThrowOnError>) => (options.client ?? client).post<CrmControllerRazorpayPaymentResponses, unknown, ThrowOnError>({
     responseType: 'json',
@@ -420,7 +426,7 @@ export const crmControllerRazorpayPayment = <ThrowOnError extends boolean = fals
 });
 
 /**
- * Initiate Razorpay payment for package
+ * Initiate Razorpay payment link for a package booking
  */
 export const crmControllerRazorpayPackagePayment = <ThrowOnError extends boolean = false>(options: Options<CrmControllerRazorpayPackagePaymentData, ThrowOnError>) => (options.client ?? client).post<CrmControllerRazorpayPackagePaymentResponses, unknown, ThrowOnError>({
     responseType: 'json',
@@ -436,7 +442,6 @@ export const crmControllerRazorpayPackagePayment = <ThrowOnError extends boolean
  * Enable or update notification preferences
  */
 export const crmControllerEnableNotifications = <ThrowOnError extends boolean = false>(options: Options<CrmControllerEnableNotificationsData, ThrowOnError>) => (options.client ?? client).post<CrmControllerEnableNotificationsResponses, unknown, ThrowOnError>({
-    responseType: 'json',
     url: '/api/v1/crm/notifications/enable',
     ...options,
     headers: {
@@ -464,7 +469,7 @@ export const crmControllerGetVideoRoomId = <ThrowOnError extends boolean = false
 });
 
 /**
- * Get psychiatric consultations
+ * Get psychiatric consultations for a patient
  */
 export const crmControllerGetPsychiatricConsultations = <ThrowOnError extends boolean = false>(options: Options<CrmControllerGetPsychiatricConsultationsData, ThrowOnError>) => (options.client ?? client).get<CrmControllerGetPsychiatricConsultationsResponses, unknown, ThrowOnError>({
     responseType: 'json',
@@ -473,7 +478,7 @@ export const crmControllerGetPsychiatricConsultations = <ThrowOnError extends bo
 });
 
 /**
- * Get psychologist consultations
+ * Get psychologist consultations for a patient
  */
 export const crmControllerGetPsychologistConsultations = <ThrowOnError extends boolean = false>(options: Options<CrmControllerGetPsychologistConsultationsData, ThrowOnError>) => (options.client ?? client).get<CrmControllerGetPsychologistConsultationsResponses, unknown, ThrowOnError>({
     responseType: 'json',
@@ -482,7 +487,7 @@ export const crmControllerGetPsychologistConsultations = <ThrowOnError extends b
 });
 
 /**
- * Get consultation summary
+ * Get consultation summary for a patient
  */
 export const crmControllerGetConsultationSummary = <ThrowOnError extends boolean = false>(options: Options<CrmControllerGetConsultationSummaryData, ThrowOnError>) => (options.client ?? client).get<CrmControllerGetConsultationSummaryResponses, unknown, ThrowOnError>({
     responseType: 'json',
@@ -491,7 +496,7 @@ export const crmControllerGetConsultationSummary = <ThrowOnError extends boolean
 });
 
 /**
- * Get consultation history
+ * Get consultation history for a patient
  */
 export const crmControllerGetConsultationHistory = <ThrowOnError extends boolean = false>(options: Options<CrmControllerGetConsultationHistoryData, ThrowOnError>) => (options.client ?? client).get<CrmControllerGetConsultationHistoryResponses, unknown, ThrowOnError>({
     responseType: 'json',

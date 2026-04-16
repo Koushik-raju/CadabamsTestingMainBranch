@@ -4,6 +4,153 @@ export type ClientOptions = {
     baseURL: string;
 };
 
+export type AppHealthResponseDto = {
+    /**
+     * Service status
+     */
+    status: string;
+    /**
+     * Process uptime in seconds
+     */
+    uptime: number;
+};
+
+export type DoctorDataDto = {
+    /**
+     * Doctor DB ID
+     */
+    doctorId: {
+        [key: string]: unknown;
+    } | null;
+    /**
+     * CRM doctor ID
+     */
+    crmDoctorId: {
+        [key: string]: unknown;
+    } | null;
+    /**
+     * Doctor role in their team
+     */
+    doctorRoleInTeam: {
+        [key: string]: unknown;
+    } | null;
+    /**
+     * Employee-doctor DB ID
+     */
+    employeeDoctorId: {
+        [key: string]: unknown;
+    } | null;
+    /**
+     * Employee doctor ID (snake_case alias)
+     */
+    employee_doctor_id: {
+        [key: string]: unknown;
+    } | null;
+    /**
+     * Doctor display name (camelCase)
+     */
+    doctorName: {
+        [key: string]: unknown;
+    } | null;
+    /**
+     * Doctor display name (snake_case alias)
+     */
+    doctor_name: {
+        [key: string]: unknown;
+    } | null;
+};
+
+export type LeadResponseDto = {
+    /**
+     * Lead database ID
+     */
+    id: number;
+    /**
+     * Caller mobile number
+     */
+    caller_mobile: string;
+    /**
+     * Partner / company name or false
+     */
+    partner_name: string | null;
+    /**
+     * Contact person name or false
+     */
+    contact_name: string | null;
+    /**
+     * CRM pipeline stage name
+     */
+    stage: string;
+    /**
+     * Lead lifecycle state
+     */
+    lead_state: string;
+    /**
+     * Win probability (0–100)
+     */
+    probability: number;
+    /**
+     * Record creation timestamp
+     */
+    create_date: string;
+    /**
+     * Last update timestamp
+     */
+    write_date: string;
+    /**
+     * Company relation [id, name] or false
+     */
+    company_id: Array<unknown> | null;
+    /**
+     * Sales team relation [id, name] or false
+     */
+    team_id: Array<unknown> | null;
+    /**
+     * Assigned user relation [id, name] or false
+     */
+    user_id: Array<unknown> | null;
+    /**
+     * Pipeline stage relation [id, name] or false
+     */
+    stage_id: Array<unknown> | null;
+    /**
+     * Source relation [id, name] or false
+     */
+    source_id: Array<unknown> | null;
+    /**
+     * Primary tag relation [id, name] or false
+     */
+    primary_tag_id: Array<unknown> | null;
+    /**
+     * Service relation [id, name] or false
+     */
+    service_id: Array<unknown> | null;
+    /**
+     * Relationship relation [id, name] or false
+     */
+    relationship_id: Array<unknown> | null;
+    /**
+     * Email address or false
+     */
+    email: string | null;
+    /**
+     * Phone number or false
+     */
+    phone: string | null;
+    /**
+     * Gender or false
+     */
+    gender: string | null;
+    /**
+     * Age
+     */
+    age: number;
+    /**
+     * Whether the lead is active
+     */
+    active: boolean;
+};
+
 export type PatientSendOtpDto = {
     /**
      * Patient's phone number
@@ -21,6 +168,10 @@ export type PatientSendOtpDto = {
 
 export type SendOtpResponseDto = {
     message: string;
+    /**
+     * OTP session UID to be passed in the verify call
+     */
+    uid: string;
 };
 
 export type PatientVerifyOtpDto = {
@@ -32,6 +183,10 @@ export type PatientVerifyOtpDto = {
      * The OTP received by the patient
      */
     otp: string;
+    /**
+     * OTP session UID returned from the send-otp call
+     */
+    uid: string;
 };
 
 export type PatientLoginResponseDto = {
@@ -43,6 +198,18 @@ export type PatientLoginResponseDto = {
 
 export type VerifyLoginResponseDto = {
     patient: PatientLoginResponseDto;
+    /**
+     * Short-lived JWT access token
+     */
+    accessToken: string;
+    /**
+     * Long-lived refresh token
+     */
+    refreshToken: string;
+    /**
+     * Access token TTL in seconds
+     */
+    expiresIn: number;
 };
 
 export type PatientSignupVerifyDto = {
@@ -57,6 +224,10 @@ export type PatientSignupVerifyDto = {
     firstName: string;
     lastName: string;
     email?: string;
+    /**
+     * OTP session UID returned from the send-otp call
+     */
+    uid: string;
 };
 
 export type DoctorLoginDto = {
@@ -97,60 +268,329 @@ export type LogoutResponseDto = {
     message: string;
 };
 
-export type LeadResponseDto = {
+export type AppointmentSummaryDto = {
     /**
-     * Lead ID
+     * Consultation type name
+     */
+    consultation_type: string;
+    /**
+     * Doctor speciality
+     */
+    speciality: string;
+    /**
+     * Formatted start date
+     */
+    formatted_startdate: string;
+    /**
+     * Doctor name
+     */
+    doctor_name: string;
+    /**
+     * Appointment time
+     */
+    time: string;
+    /**
+     * Day of the week
+     */
+    day: string;
+};
+
+export type SlotBookingResponseDto = {
+    /**
+     * Booking record ID
      */
     id: number;
     /**
-     * Mobile number
+     * Booking reference name
      */
-    caller_mobile: string;
+    name: string;
     /**
-     * Partner/company name
+     * Availability status
      */
-    partner_name: string;
+    availability: string;
     /**
-     * Contact person name
+     * Appointment type
      */
-    contact_name: string;
+    appointment_type: string;
     /**
-     * Stage
+     * Consultation type name
      */
-    stage: string;
+    consultation_type: string;
     /**
-     * Lead state
+     * Consultation type relation [id, name] or false
      */
-    lead_state: string;
+    consultation_type_id: Array<unknown> | null;
     /**
-     * Email address
+     * Start datetime
      */
-    email?: string;
+    start_datetime: string;
     /**
-     * Phone number
+     * End datetime
      */
-    phone?: string;
+    stop_datetime: string;
     /**
-     * Gender
+     * Duration in minutes
      */
-    gender?: string;
+    duration: number;
     /**
-     * Age
+     * Doctor relation [id, name] or false
      */
-    age?: number;
+    doctor_id: Array<unknown> | null;
     /**
-     * Is active
+     * Lead relation [id, name] or false
      */
-    active: boolean;
+    lead_id: Array<unknown> | null;
+    /**
+     * Campus relation [id, name] or false
+     */
+    campus_id: Array<unknown> | null;
+    /**
+     * Sub-campus relation [id, name] or false
+     */
+    sub_campus_id: Array<unknown> | null;
+    /**
+     * Speciality relation [id, name] or false
+     */
+    speciality_id: Array<unknown> | null;
+    /**
+     * Original slot relation [id, name] or false
+     */
+    slot_id: Array<unknown> | null;
+    /**
+     * Caller name
+     */
+    caller_name: string;
+    /**
+     * Patient name
+     */
+    patient_name: string;
+    /**
+     * Payment mode (cash/online) or false
+     */
+    payment_mode: string | null;
+    /**
+     * Amount charged
+     */
+    amount: number;
+    /**
+     * Online payment URL or false
+     */
+    online_payment_url: string | null;
+    /**
+     * Virtual consultation URL or false
+     */
+    virtual_consultation_url: string | null;
+    /**
+     * ZegoCloud room UUID or false
+     */
+    zegocloud_uuid: string | null;
+    /**
+     * Booked package relation [id, name] or false
+     */
+    booked_package_name: Array<unknown> | null;
+    /**
+     * Product relation [id, name] or false
+     */
+    product_id: Array<unknown> | null;
+    /**
+     * Sale order relation [id, name] or false
+     */
+    sale_id: Array<unknown> | null;
+    /**
+     * Invoice relation [id, name] or false
+     */
+    invoice_id: Array<unknown> | null;
+    /**
+     * Number of invoices attached
+     */
+    invoice_count: number;
+    /**
+     * Record creation timestamp
+     */
+    create_date: string;
+    /**
+     * Last update timestamp
+     */
+    write_date: string;
+};
+
+export type BookAppointmentDataDto = {
+    /**
+     * Slot booking record. JSON key is "slot.booking" (contains a dot)
+     */
+    'slot.booking': SlotBookingResponseDto;
+};
+
+export type CompletedAppointmentDto = {
+    /**
+     * Appointment name/reference
+     */
+    name: string;
+    /**
+     * Consultation type name
+     */
+    consultation_type: string;
+    /**
+     * Formatted start date
+     */
+    formatted_startdate: string;
+    /**
+     * Doctor name
+     */
+    doctor_name: string;
+    /**
+     * Appointment time
+     */
+    time: string;
+};
+
+export type SlotDetailDto = {
+    /**
+     * Slot ID
+     */
+    id: number;
+    /**
+     * Doctor relation [id, name] tuple or false
+     */
+    doctor: Array<unknown> | null;
+    /**
+     * Doctor profile image URL
+     */
+    doctor_image_url: string;
+    /**
+     * Slot start datetime
+     */
+    start_datetime: string;
+    /**
+     * Slot end datetime
+     */
+    stop_datetime: string;
+    /**
+     * Speciality relation [id, name] tuple or false
+     */
+    speciality_id: Array<unknown> | null;
+    /**
+     * Consultation type relation [id, name] tuple or false
+     */
+    consultation_type_ids: Array<unknown> | null;
+    /**
+     * Campus database ID
+     */
+    campus_id: number;
+    /**
+     * Sub-campus ID or false if none
+     */
+    sub_campus_id: number | null;
+    /**
+     * Product relation [id, name] tuple or false
+     */
+    product_id: Array<unknown> | null;
+    /**
+     * Availability status
+     */
+    availability: string;
+    /**
+     * Appointment type
+     */
+    appointment_type: string;
+    /**
+     * Booked package database ID or false
+     */
+    booked_package_name: number | null;
+    /**
+     * Virtual consultation URL or false
+     */
+    virtual_consultation_url: string | null;
+};
+
+export type BookedPackageLineDto = {
+    /**
+     * Booked line ID
+     */
+    line_id: number;
+    /**
+     * Sequence number within the booked package
+     */
+    sequence_no: number;
+    /**
+     * Product relation [id, name] tuple or false
+     */
+    product_id: Array<unknown> | null;
+    /**
+     * Speciality relation [id, name] tuple or false
+     */
+    speciality_id: Array<unknown> | null;
+    /**
+     * Subtotal after discount
+     */
+    price_subtotal: number;
+    /**
+     * Line status
+     */
+    status: 'open' | 'scheduled' | 'done';
+};
+
+export type RazorpayCustomerDto = {
+    /**
+     * Customer name
+     */
+    name: string;
+    /**
+     * Customer email
+     */
+    email: string;
+    /**
+     * Customer contact number
+     */
+    contact: string;
+};
+
+export type DoctorListingResponseDto = {
+    /**
+     * Doctor database ID
+     */
+    id: number;
+    /**
+     * Doctor name
+     */
+    name: string;
+    /**
+     * Speciality [id, name] tuple
+     */
+    speciality_id: Array<unknown>;
+    /**
+     * Profile image URL
+     */
+    image: string;
+    /**
+     * CNS preference [name, id] tuples or null
+     */
+    cns_preference: Array<Array<unknown>> | null;
+    /**
+     * Illness treated [name, id] tuples or null
+     */
+    illness_treated: Array<Array<unknown>> | null;
+    /**
+     * Age group preference [name, id] tuples or null
+     */
+    age_preference: Array<Array<unknown>> | null;
+    /**
+     * Language preference [name, id] tuples or null
+     */
+    language_preference: Array<Array<unknown>> | null;
+    /**
+     * City preference [name, id] tuples or null
+     */
+    city?: Array<Array<unknown>> | null;
 };
 
 export type CreateLeadDto = {
     /**
-     * Mobile number of the lead
+     * Mobile number of the lead (e.g. "9791415355")
      */
     caller_mobile: string;
     /**
-     * Partner/company name
+     * Partner / company name
      */
     partner_name: string;
     /**
@@ -158,7 +598,7 @@ export type CreateLeadDto = {
      */
     contact_name: string;
     /**
-     * Caller ZIP code (optional)
+     * Caller ZIP code
      */
     caller_zip?: string;
     /**
@@ -177,17 +617,11 @@ export type CreateLeadDto = {
      * Age
      */
     age?: number;
-    /**
-     * Additional fields
-     */
-    additionalFields?: {
-        [key: string]: unknown;
-    };
 };
 
-export type DoctorResponseDto = {
+export type DoctorBasicResponseDto = {
     /**
-     * Doctor ID
+     * Doctor database ID
      */
     id: number;
     /**
@@ -195,116 +629,54 @@ export type DoctorResponseDto = {
      */
     name: string;
     /**
-     * Doctor type
+     * Speciality [id, name] tuple
      */
-    doctor_type: string;
+    speciality_id: Array<unknown>;
     /**
-     * Campus ID
+     * Whether this doctor accepts online appointment bookings
      */
-    campus_id: number;
-    /**
-     * Sub-campus ID
-     */
-    sub_campus_id?: number;
-    /**
-     * Email
-     */
-    email?: string;
-    /**
-     * Phone number
-     */
-    phone?: string;
-    /**
-     * Availability status
-     */
-    availability: string;
-    /**
-     * Profile image URL
-     */
-    profile_image?: string;
-    /**
-     * Consultation type IDs
-     */
-    consultation_type_ids?: Array<string>;
+    book_appointments: boolean;
 };
 
-export type DoctorWithSlotsResponseDto = {
+export type DoctorListingPageResponseDto = {
     /**
-     * Doctor ID
+     * Total number of matching doctors
      */
-    id: number;
+    total_count: number;
     /**
-     * Doctor name
+     * Paginated list of doctors with rich profiles
      */
-    name: string;
-    /**
-     * Doctor type
-     */
-    doctor_type: string;
-    /**
-     * Campus ID
-     */
-    campus_id: number;
-    /**
-     * Sub-campus ID
-     */
-    sub_campus_id?: number;
-    /**
-     * Email
-     */
-    email?: string;
-    /**
-     * Phone number
-     */
-    phone?: string;
-    /**
-     * Availability status
-     */
-    availability: string;
-    /**
-     * Profile image URL
-     */
-    profile_image?: string;
-    /**
-     * Consultation type IDs
-     */
-    consultation_type_ids?: Array<string>;
-    /**
-     * Available slots
-     */
-    slots: Array<{
-        [key: string]: unknown;
-    }>;
+    doctors: Array<DoctorListingResponseDto>;
 };
 
 export type AppointmentDashboardResponseDto = {
     /**
-     * Appointments list
+     * Upcoming scheduled appointments
      */
-    appointments: Array<string>;
+    upcoming_appointments: Array<AppointmentSummaryDto>;
     /**
-     * Upcoming appointments count
+     * Past completed appointments
      */
-    upcomingCount: number;
+    completed_appointments: Array<CompletedAppointmentDto>;
     /**
-     * Past appointments count
+     * Next upcoming appointment or false if none
      */
-    pastCount: number;
+    next_appointment: AppointmentSummaryDto | null;
     /**
-     * Cancelled appointments count
+     * Total appointment count
      */
-    cancelledCount: number;
+    total_appointment_counts: number;
 };
 
 export type BookAppointmentDto = {
     /**
-     * Lead ID
-     */
-    lead_id: number;
-    /**
-     * Slot ID
+     * Slot booking database ID to book
      */
     slot_id: number;
+    /**
+     * CRM lead ID
+     */
+    lead_id: number;
     /**
      * Campus ID
      */
@@ -314,99 +686,166 @@ export type BookAppointmentDto = {
      */
     sub_campus_id?: number;
     /**
-     * Consultation type ID
+     * Consultation type ID: 1=In-Person, 2=Virtual, 3=Home-Based
      */
-    consultation_type_id?: number;
+    consultation_type_id: 1 | 2 | 3;
     /**
-     * Payment method
+     * Caller / guardian name
      */
-    payment_method?: string;
+    caller_name: string;
     /**
-     * Payment status
+     * Patient name
      */
-    payment_status?: string;
+    patient_name: string;
     /**
-     * Additional notes
+     * Appointment type. NOTE: "from_packaage" (double-a) is the exact API value.
      */
-    notes?: string;
+    appointment_type: 'individual_appointment' | 'from_packaage';
+    /**
+     * Payment mode
+     */
+    payment_mode: 'cash' | 'online';
+    /**
+     * Latitude (required for Home-Based consultation)
+     */
+    latitude?: number;
+    /**
+     * Longitude (required for Home-Based consultation)
+     */
+    longitude?: number;
+    /**
+     * Booked package database ID (for package appointments)
+     */
+    booked_package_name?: number;
+    /**
+     * Package product line ID (for package appointments)
+     */
+    package_product_id?: number;
 };
 
-export type AppointmentResponseDto = {
+export type BookAppointmentResponseDto = {
     /**
-     * Appointment ID
+     * JSON-RPC version
      */
-    id: number;
+    jsonrpc: string;
     /**
-     * Lead ID
+     * Always null
      */
-    lead_id: number;
+    id: {
+        [key: string]: unknown;
+    } | null;
     /**
-     * Doctor ID
+     * Tuple: [BookAppointmentData, httpStatus]. BookAppointmentData key is "slot.booking".
      */
-    doctor_id: number;
-    /**
-     * Slot ID
-     */
-    slot_id: number;
-    /**
-     * Start datetime
-     */
-    start_datetime: string;
-    /**
-     * End datetime
-     */
-    end_datetime: string;
-    /**
-     * Status
-     */
-    status: string;
-    /**
-     * Payment status
-     */
-    payment_status: string;
-    /**
-     * Payment method
-     */
-    payment_method?: string;
-    /**
-     * Notes
-     */
-    notes?: string;
+    result: Array<{
+        [key: string]: unknown;
+    }>;
 };
 
 export type RescheduleAppointmentDto = {
     /**
-     * Appointment ID
-     */
-    appointment_id: number;
-    /**
-     * New slot ID
+     * New slot booking database ID to move to
      */
     slot_id: number;
     /**
-     * Reason for rescheduling
+     * Existing booked slot ID to be replaced
      */
-    reason?: string;
+    appointment_id: number;
+    /**
+     * CRM lead ID
+     */
+    lead_id: number;
+    /**
+     * Campus ID
+     */
+    campus_id: number;
+    /**
+     * Sub-campus ID
+     */
+    sub_campus_id?: number;
+    /**
+     * Consultation type ID: 1=In-Person, 2=Virtual, 3=Home-Based
+     */
+    consultation_type_id: 1 | 2 | 3;
+    /**
+     * Caller / guardian name
+     */
+    caller_name: string;
+    /**
+     * Patient name
+     */
+    patient_name: string;
+    /**
+     * Appointment type. NOTE: "from_packaage" (double-a) is the exact API value.
+     */
+    appointment_type: 'individual_appointment' | 'from_packaage';
+    /**
+     * Payment mode
+     */
+    payment_mode: 'cash' | 'online';
 };
 
 export type CancelAppointmentDto = {
     /**
-     * Appointment ID
+     * Slot booking ID to cancel
      */
     appointment_id: number;
     /**
+     * Medium ID: 1=Phone, 2=Online, 3=SMS, 4=Email, 5=Others
+     */
+    medium_id: number;
+    /**
      * Reason for cancellation
      */
-    reason?: string;
+    cancel_reason: string;
+};
+
+export type CancelResultDto = {
+    /**
+     * Human-readable cancellation message
+     */
+    message: string;
+    /**
+     * NOTE: "sucess" (missing c) is the exact field name from the API
+     */
+    sucess: boolean;
+};
+
+export type CancelAppointmentResponseDto = {
+    /**
+     * JSON-RPC version
+     */
+    jsonrpc: string;
+    /**
+     * Always null
+     */
+    id: {
+        [key: string]: unknown;
+    } | null;
+    result: CancelResultDto;
 };
 
 export type PackageResponseDto = {
     /**
-     * Package data from CRM (passthrough)
+     * Package database ID
      */
-    result: {
-        [key: string]: unknown;
-    };
+    id: number;
+    /**
+     * Package name
+     */
+    package_name: string;
+    /**
+     * IDs of product lines included in this package
+     */
+    package_product_ids: Array<number>;
+    /**
+     * Total package price
+     */
+    amount_total: number;
+    /**
+     * Service relation [id, name] tuple or false
+     */
+    service_id: Array<unknown> | null;
 };
 
 export type PackageProductLineDto = {
@@ -415,69 +854,77 @@ export type PackageProductLineDto = {
      */
     id: number;
     /**
-     * Package ID
+     * Product relation [id, name] tuple or false
      */
-    package_id: number;
+    product_id: Array<unknown> | null;
     /**
-     * Product ID
+     * Sequence/order number within the package
      */
-    product_id: number;
+    sequence_no?: number;
     /**
-     * Product name
+     * Unit price
      */
-    product_name: string;
+    price_unit?: number;
     /**
-     * Quantity
+     * Subtotal after discount
      */
-    quantity: number;
+    price_subtotal?: number;
     /**
-     * Price
+     * Discount percentage
      */
-    price: number;
-    /**
-     * Total price
-     */
-    total_price: number;
+    discount?: number;
 };
 
 export type BookedPackageDto = {
     /**
-     * Booked package ID
+     * Booked package database ID
      */
-    id: number;
+    booked_package_id: number;
     /**
-     * Lead ID
+     * CRM lead ID
      */
     lead_id: number;
     /**
-     * Package ID
+     * Package relation [id, name] tuple or false
      */
-    package_id: number;
+    package_id: Array<unknown> | null;
     /**
-     * Package name
+     * Current package stage
      */
-    package_name: string;
+    package_stage: 'booked' | 'confirm' | 'in_progress' | 'done';
     /**
-     * Start date
+     * Campus relation [id, name] tuple or false
      */
-    start_date: string;
+    campus_id: Array<unknown> | null;
     /**
-     * End date
+     * Caller / guardian name
      */
-    end_date: string;
+    caller_name: string;
     /**
-     * Status
+     * Patient name
      */
-    status: string;
+    patient_name: string;
     /**
-     * Payment status
+     * Booking date
      */
-    payment_status: string;
+    date: string;
+    /**
+     * Total package cost
+     */
+    package_cost: number;
+    /**
+     * Whether sessions must be booked in sequence order
+     */
+    sequence_booking: boolean;
+    /**
+     * Individual product lines in this booked package
+     */
+    lines: Array<BookedPackageLineDto>;
 };
 
 export type ProductResponseDto = {
     /**
-     * Product ID
+     * Product database ID
      */
     id: number;
     /**
@@ -485,25 +932,17 @@ export type ProductResponseDto = {
      */
     name: string;
     /**
-     * Product code
+     * Product type
      */
-    code: string;
+    type: string;
     /**
-     * Description
+     * List price
      */
-    description?: string;
+    lst_price: number;
     /**
-     * Price
+     * Speciality relation [id, name] tuple or false
      */
-    price: number;
-    /**
-     * Currency
-     */
-    currency: string;
-    /**
-     * Is service
-     */
-    is_service: boolean;
+    speciality_id: Array<unknown> | null;
 };
 
 export type BookPackageDto = {
@@ -516,23 +955,44 @@ export type BookPackageDto = {
 };
 
 export type BookPackageResultDto = {
-    /**
-     * Success status
-     */
-    success: boolean;
-    /**
-     * Booked package ID
-     */
-    booked_package_id?: number;
-    /**
-     * Message
-     */
+    booking_id: number;
     message: string;
+};
+
+export type BookedPackageProductLineDto = {
+    /**
+     * Product line database ID
+     */
+    id: number;
+    /**
+     * Sequence number
+     */
+    sequence_no: number;
+    /**
+     * Product relation [id, name] tuple or false
+     */
+    product_id: Array<unknown> | null;
+    /**
+     * Unit price
+     */
+    price_unit: number;
+    /**
+     * Subtotal after discount
+     */
+    price_subtotal: number;
+    /**
+     * Discount percentage
+     */
+    discount: number;
+    /**
+     * Line status
+     */
+    status: 'open' | 'scheduled' | 'done';
 };
 
 export type ServiceTagResponseDto = {
     /**
-     * Tag ID
+     * Tag database ID
      */
     id: number;
     /**
@@ -543,126 +1003,254 @@ export type ServiceTagResponseDto = {
 
 export type RelationshipResponseDto = {
     /**
-     * Relationship ID
+     * Relationship database ID
      */
     id: number;
     /**
-     * Relationship name
+     * Relationship label
      */
     name: string;
 };
 
 export type MediumResponseDto = {
     /**
-     * Medium ID
+     * Medium database ID
      */
     id: number;
     /**
-     * Medium name
+     * Medium label
      */
     name: string;
 };
 
 export type CampusMasterResponseDto = {
     /**
-     * Campus ID
+     * Campus database ID
      */
     id: number;
     /**
-     * Campus name
+     * Campus display name
      */
     name: string;
+    /**
+     * Short campus code
+     */
+    code: string;
+    /**
+     * Campus alias or false if not set
+     */
+    alias: string | null;
+    /**
+     * City relation [id, name] tuple or false
+     */
+    city: Array<unknown> | null;
+    /**
+     * Latitude coordinate string or false
+     */
+    latitude: string | null;
+    /**
+     * Longitude coordinate string or false
+     */
+    longitude: string | null;
+    /**
+     * Whether appointments can be booked at this campus
+     */
+    book_appointment: boolean;
+    /**
+     * Whether this campus is classified as a hospital
+     */
+    is_hospital: boolean;
+    /**
+     * Whether emergency services are enabled
+     */
+    enable_emergency: boolean;
+    /**
+     * Whether patients can be created at this campus
+     */
+    create_patient: boolean;
 };
 
 export type SlotResponseDto = {
     /**
-     * Slot ID
+     * Slot database ID
      */
     id: number;
     /**
-     * Start datetime
+     * Doctor relation [id, name] tuple or false
+     */
+    doctor_id: Array<unknown> | null;
+    /**
+     * Slot start datetime
      */
     start_datetime: string;
     /**
-     * Stop datetime
+     * Slot end datetime
      */
     stop_datetime: string;
     /**
-     * Campus ID
+     * Availability status
      */
-    campus_id: number;
+    availability: 'open' | 'booked' | 'cancelled';
+    /**
+     * Consultation type name or false
+     */
+    consultation_type: string | null;
+    /**
+     * Consultation type IDs
+     */
+    consultation_type_ids: Array<number>;
+    /**
+     * Campus relation [id, name] tuple or false
+     */
+    campus_id: Array<unknown> | null;
+    /**
+     * Sub-campus relation [id, name] tuple or false
+     */
+    sub_campus_id: Array<unknown> | null;
+    /**
+     * Speciality relation [id, name] tuple or false
+     */
+    speciality_id: Array<unknown> | null;
     /**
      * Duration in minutes
      */
     duration: number;
+    /**
+     * Patient name or false
+     */
+    patient_name: string | null;
+    /**
+     * Caller name or false
+     */
+    caller_name: string | null;
+    /**
+     * Lead relation [id, name] tuple or false
+     */
+    lead_id: Array<unknown> | null;
+    /**
+     * Payment mode or false
+     */
+    payment_mode: string | null;
+    /**
+     * Amount
+     */
+    amount: number;
 };
 
 export type SlotPriceResponseDto = {
     /**
-     * Slot ID
+     * Slot database ID
      */
     slot_id: number;
     /**
-     * Price
+     * Slot price
      */
     price: number;
     /**
-     * Currency
+     * Currency code
      */
-    currency: string;
+    currency?: string;
 };
 
 export type RazorpayPaymentDto = {
     /**
-     * Lead ID
+     * CRM lead ID
      */
     lead_id: number;
     /**
-     * Slot ID
+     * Session/device UID
+     */
+    uid: string;
+    /**
+     * Slot booking database ID
      */
     slot_id: number;
     /**
      * Campus ID
      */
     campus_id: number;
-    /**
-     * UID
-     */
-    uid: string;
 };
 
 export type RazorpayPaymentResponseDto = {
     /**
-     * Razorpay order ID
+     * Razorpay payment link ID
      */
-    razorpay_order_id: string;
+    id: string;
     /**
-     * Amount in paise
+     * Short payment URL for sharing
+     */
+    short_url: string;
+    /**
+     * Internal reference ID
+     */
+    reference_id: string;
+    /**
+     * Link status
+     */
+    status: string;
+    /**
+     * Amount in paise (INR) or smallest currency unit
      */
     amount: number;
     /**
-     * Currency
+     * Currency code
      */
     currency: string;
     /**
-     * Key ID
+     * Payment description shown to customer
      */
-    key_id: string;
+    description: string;
+    /**
+     * Pre-filled customer details
+     */
+    customer: RazorpayCustomerDto;
+    /**
+     * Whether partial payments are accepted
+     */
+    accept_partial: boolean;
+    /**
+     * Unix timestamp when the link expires
+     */
+    expire_by: number;
+    /**
+     * Unix timestamp of link creation
+     */
+    created_at: number;
+    /**
+     * Callback URL after payment
+     */
+    callback_url: string;
+    /**
+     * Callback HTTP method
+     */
+    callback_method: string;
+    /**
+     * UPI deep-link or false if not applicable
+     */
+    upi_link: string | null;
+    /**
+     * WhatsApp link or false if not applicable
+     */
+    whatsapp_link: string | null;
+    /**
+     * Whether payment reminders are enabled
+     */
+    reminder_enable: boolean;
 };
 
 export type RazorpayPackagePaymentDto = {
     /**
-     * Lead booked package ID
-     */
-    lead_booked_package_id: number;
-    /**
-     * Lead ID
+     * CRM lead ID
      */
     lead_id: number;
     /**
-     * UID
+     * Booked package database ID
      */
-    uid: string;
+    booked_package_id: number;
+    /**
+     * Campus ID
+     */
+    campus_id: number;
 };
 
 export type EnableNotificationsDto = {
@@ -673,19 +1261,19 @@ export type EnableNotificationsDto = {
     /**
      * Enable marketing notifications
      */
-    marketing?: boolean;
+    marketing: boolean;
     /**
      * Enable promotional notifications
      */
-    promotional?: boolean;
+    promotional: boolean;
     /**
      * Enable transactional notifications
      */
-    transactional?: boolean;
+    transactional: boolean;
     /**
      * Enable WhatsApp notifications
      */
-    whatsapp?: boolean;
+    whatsapp: boolean;
 };
 
 export type NotificationSettingsResponseDto = {
@@ -761,7 +1349,7 @@ export type UpdateConsultationBodyDto = {
     /**
      * Any ERP fields to update
      */
-    additionalFields?: {
+    additionalFields: {
         [key: string]: unknown;
     };
 };
@@ -786,7 +1374,7 @@ export type UpdateConsultationFieldBodyDto = {
     /**
      * Any ERP fields to update
      */
-    additionalFields?: {
+    additionalFields: {
         [key: string]: unknown;
     };
 };
@@ -871,16 +1459,137 @@ export type BookSlotBodyDto = {
     /**
      * Any additional ERP fields as key-value pairs
      */
-    additionalFields?: {
+    additionalFields: {
         [key: string]: unknown;
     };
+};
+
+export type BookAppointmentResultDto = {
+    id: number;
+    name: string;
+    availability: string;
+    appointment_type: string;
+    consultation_type: string;
+    /**
+     * Odoo many2one [id, display_name] or false
+     */
+    consultation_type_id: [
+        unknown,
+        unknown
+    ] | null;
+    start_datetime: string;
+    stop_datetime: string;
+    /**
+     * Duration in minutes
+     */
+    duration: number;
+    /**
+     * Odoo many2one [id, display_name] or false
+     */
+    doctor_id: [
+        unknown,
+        unknown
+    ] | null;
+    /**
+     * Odoo many2one [id, display_name] or false
+     */
+    lead_id: [
+        unknown,
+        unknown
+    ] | null;
+    /**
+     * Odoo many2one [id, display_name] or false
+     */
+    campus_id: [
+        unknown,
+        unknown
+    ] | null;
+    /**
+     * Odoo many2one [id, display_name] or false
+     */
+    sub_campus_id: [
+        unknown,
+        unknown
+    ] | null;
+    /**
+     * Odoo many2one [id, display_name] or false
+     */
+    speciality_id: [
+        unknown,
+        unknown
+    ] | null;
+    /**
+     * Odoo many2one [id, display_name] or false
+     */
+    slot_id: [
+        unknown,
+        unknown
+    ] | null;
+    caller_name: string;
+    patient_name: string;
+    /**
+     * Payment mode or false
+     */
+    payment_mode: {
+        [key: string]: unknown;
+    } | null;
+    amount: number;
+    /**
+     * Razorpay payment URL or false
+     */
+    online_payment_url: {
+        [key: string]: unknown;
+    } | null;
+    /**
+     * Virtual consultation URL or false
+     */
+    virtual_consultation_url: {
+        [key: string]: unknown;
+    } | null;
+    /**
+     * Zegocloud room UUID or false
+     */
+    zegocloud_uuid: {
+        [key: string]: unknown;
+    } | null;
+    /**
+     * Odoo many2one [id, display_name] or false
+     */
+    booked_package_name: [
+        unknown,
+        unknown
+    ] | null;
+    /**
+     * Odoo many2one [id, display_name] or false
+     */
+    product_id: [
+        unknown,
+        unknown
+    ] | null;
+    /**
+     * Odoo many2one [id, display_name] or false
+     */
+    sale_id: [
+        unknown,
+        unknown
+    ] | null;
+    /**
+     * Odoo many2one [id, display_name] or false
+     */
+    invoice_id: [
+        unknown,
+        unknown
+    ] | null;
+    invoice_count: number;
+    create_date: string;
+    write_date: string;
 };
 
 export type ConfirmOpVisitBodyDto = {
     /**
      * Any ERP fields to update
      */
-    additionalFields?: {
+    additionalFields: {
         [key: string]: unknown;
     };
 };
@@ -890,6 +1599,15 @@ export type EditPackageDto = {
      * Package edit data to be sent to ERP
      */
     data: {
+        [key: string]: unknown;
+    };
+};
+
+export type PackageActionResponseDto = {
+    /**
+     * Result from CRM action (passthrough)
+     */
+    result: {
         [key: string]: unknown;
     };
 };
@@ -912,14 +1630,11 @@ export type UpdatePackageLinesDto = {
 
 export type PackageListResponseDto = {
     /**
-     * List of packages from CRM (passthrough)
+     * List of records from CRM (passthrough)
      */
     items: Array<{
         [key: string]: unknown;
     }>;
-    /**
-     * Total count
-     */
     total?: number;
 };
 
@@ -1194,19 +1909,23 @@ export type SendNoteDto = {
     generatedNote: string;
 };
 
-export type HealthCheckResponseDto = {
+export type HealthResponseDto = {
     /**
-     * Health status of the service
+     * Overall service status
      */
     status: string;
     /**
-     * ISO timestamp of the health check
+     * ISO timestamp of the check
      */
     timestamp: string;
     /**
-     * Name of the service
+     * Service name
      */
     service: string;
+    /**
+     * Database connectivity status
+     */
+    db: string;
 };
 
 export type CompletionAnswerDto = {
@@ -2859,6 +3578,10 @@ export type JourneyTaskDto = {
     audioIds?: Array<string>;
     subJournalingIds?: Array<string>;
     videoIds?: Array<string>;
+    /**
+     * Ordered audio IDs for playback sequence
+     */
+    audioIdsOrder?: Array<string>;
     postAudioAssessmentId?: {
         [key: string]: unknown;
     } | null;
@@ -2956,6 +3679,7 @@ export type JourneyStepTaskResponseDto = {
     audioIds: Array<string>;
     subJournalingIds: Array<string>;
     videoIds: Array<string>;
+    audioIdsOrder: Array<string>;
     postAudioAssessmentId: {
         [key: string]: unknown;
     } | null;
@@ -3277,8 +4001,13 @@ export type AppControllerGetRootData = {
 };
 
 export type AppControllerGetRootResponses = {
-    200: unknown;
+    /**
+     * Service is up
+     */
+    200: AppHealthResponseDto;
 };
+
+export type AppControllerGetRootResponse = AppControllerGetRootResponses[keyof AppControllerGetRootResponses];
 
 export type HealthControllerCheckData = {
     body?: never;
@@ -3291,7 +4020,7 @@ export type HealthControllerCheckResponses = {
     /**
      * Health check successful
      */
-    200: HealthCheckResponseDto;
+    200: HealthResponseDto;
 };
 
 export type HealthControllerCheckResponse = HealthControllerCheckResponses[keyof HealthControllerCheckResponses];
@@ -3318,7 +4047,7 @@ export type AuthControllerVerifyPatientLoginData = {
 
 export type AuthControllerVerifyPatientLoginErrors = {
     /**
-     * Invalid OTP or missing uid cookie.
+     * Invalid OTP.
      */
     401: unknown;
 };
@@ -3341,7 +4070,7 @@ export type AuthControllerPatientSignupVerifyData = {
 
 export type AuthControllerPatientSignupVerifyErrors = {
     /**
-     * Signup OTP verification failed or missing uid cookie.
+     * Signup OTP verification failed.
      */
     401: unknown;
 };
@@ -3394,11 +4123,9 @@ export type AuthControllerDoctorMeData = {
 
 export type AuthControllerDoctorMeResponses = {
     /**
-     * Doctor profile from ERP
+     * Doctor profile from JWT token, or null if not available
      */
-    200: {
-        [key: string]: unknown;
-    };
+    200: DoctorDataDto;
 };
 
 export type AuthControllerDoctorMeResponse = AuthControllerDoctorMeResponses[keyof AuthControllerDoctorMeResponses];
@@ -3448,11 +4175,9 @@ export type AuthControllerMeData = {
 
 export type AuthControllerMeResponses = {
     /**
-     * Current authenticated user profile
+     * Current user profile. Shape depends on role.
      */
-    200: {
-        [key: string]: unknown;
-    };
+    200: DoctorDataDto | LeadResponseDto | null;
 };
 
 export type AuthControllerMeResponse = AuthControllerMeResponses[keyof AuthControllerMeResponses];
@@ -3546,17 +4271,21 @@ export type CrmControllerListDoctorsData = {
     path?: never;
     query?: {
         /**
-         * Fields to return
+         * Filter by consultation type ID (1=In-Person, 2=Virtual, 3=Home-Based)
          */
-        fields?: Array<string>;
+        consultation_type_id?: number;
         /**
-         * Limit number of results
+         * Filter by campus ID
          */
-        limit?: number;
+        campus_id?: number;
         /**
-         * Offset for pagination
+         * Filter by speciality ID
          */
-        offset?: number;
+        speciality_id?: number;
+        /**
+         * Filter to a single doctor by their database ID
+         */
+        doctor_id?: number;
     };
     url: '/api/v1/crm/doctors';
 };
@@ -3565,7 +4294,7 @@ export type CrmControllerListDoctorsResponses = {
     /**
      * List of doctors
      */
-    200: Array<DoctorResponseDto>;
+    200: Array<DoctorBasicResponseDto>;
 };
 
 export type CrmControllerListDoctorsResponse = CrmControllerListDoctorsResponses[keyof CrmControllerListDoctorsResponses];
@@ -3575,34 +4304,54 @@ export type CrmControllerListDoctorsWithSlotsData = {
     path?: never;
     query?: {
         /**
-         * Campus ID
-         */
-        campus_id?: number;
-        /**
-         * Sub-campus ID
-         */
-        sub_campus_id?: number;
-        /**
-         * Consultation type ID
+         * Filter by consultation type ID (1=In-Person, 2=Virtual, 3=Home-Based)
          */
         consultation_type_id?: number;
         /**
-         * Start datetime for filtering slots
+         * Filter by speciality ID
+         */
+        speciality_id?: number;
+        /**
+         * Filter by campus ID
+         */
+        campus_id?: number;
+        /**
+         * Filter by sub-campus ID
+         */
+        sub_campus_id?: number;
+        /**
+         * Filter to a single doctor by their database ID
+         */
+        doctor_id?: number;
+        /**
+         * Start date for slot availability window (ISO date string)
          */
         start_datetime?: string;
         /**
-         * Stop datetime for filtering slots
+         * End date for slot availability window (ISO date string)
          */
         stop_datetime?: string;
+        /**
+         * Comma-separated city IDs to filter by (e.g. "3,4,5")
+         */
+        city?: string;
+        /**
+         * Comma-separated area IDs to filter by (e.g. "3,4,5")
+         */
+        area?: string;
+        /**
+         * Filter to only doctors who accept online bookings
+         */
+        book_appointments?: boolean;
     };
     url: '/api/v1/crm/doctors/with-slots';
 };
 
 export type CrmControllerListDoctorsWithSlotsResponses = {
     /**
-     * List of doctors with slots
+     * Paginated list of doctors with full profiles
      */
-    200: Array<DoctorWithSlotsResponseDto>;
+    200: DoctorListingPageResponseDto;
 };
 
 export type CrmControllerListDoctorsWithSlotsResponse = CrmControllerListDoctorsWithSlotsResponses[keyof CrmControllerListDoctorsWithSlotsResponses];
@@ -3618,9 +4367,9 @@ export type CrmControllerGetDoctorByIdData = {
 
 export type CrmControllerGetDoctorByIdResponses = {
     /**
-     * Doctor found
+     * Doctor full profile
      */
-    200: DoctorResponseDto;
+    200: DoctorListingResponseDto;
 };
 
 export type CrmControllerGetDoctorByIdResponse = CrmControllerGetDoctorByIdResponses[keyof CrmControllerGetDoctorByIdResponses];
@@ -3628,40 +4377,24 @@ export type CrmControllerGetDoctorByIdResponse = CrmControllerGetDoctorByIdRespo
 export type CrmControllerGetDoctorsByFilterData = {
     body?: never;
     path?: never;
-    query?: {
+    query: {
         /**
-         * Campus ID
+         * Doctor database ID
          */
-        campus_id?: number;
+        doctorId: number;
         /**
-         * Doctor type
+         * Fields to return
          */
-        doctor_type?: string;
-        /**
-         * Sub-campus ID
-         */
-        sub_campus_id?: number;
-        /**
-         * Availability status
-         */
-        availability?: string;
-        /**
-         * Start datetime for filtering
-         */
-        start_datetime?: string;
-        /**
-         * Stop datetime for filtering
-         */
-        stop_datetime?: string;
+        fields?: Array<string>;
     };
     url: '/api/v1/crm/doctors/filter';
 };
 
 export type CrmControllerGetDoctorsByFilterResponses = {
     /**
-     * List of doctors matching filter
+     * Doctor basic record
      */
-    200: Array<DoctorResponseDto>;
+    200: DoctorBasicResponseDto;
 };
 
 export type CrmControllerGetDoctorsByFilterResponse = CrmControllerGetDoctorsByFilterResponses[keyof CrmControllerGetDoctorsByFilterResponses];
@@ -3693,9 +4426,9 @@ export type CrmControllerBookAppointmentData = {
 
 export type CrmControllerBookAppointmentResponses = {
     /**
-     * Appointment booked successfully
+     * JSON-RPC 2.0 envelope containing slot.booking record
      */
-    200: AppointmentResponseDto;
+    200: BookAppointmentResponseDto;
 };
 
 export type CrmControllerBookAppointmentResponse = CrmControllerBookAppointmentResponses[keyof CrmControllerBookAppointmentResponses];
@@ -3709,9 +4442,9 @@ export type CrmControllerRescheduleAppointmentData = {
 
 export type CrmControllerRescheduleAppointmentResponses = {
     /**
-     * Appointment rescheduled successfully
+     * JSON-RPC 2.0 envelope containing rescheduled slot.booking record
      */
-    200: AppointmentResponseDto;
+    200: BookAppointmentResponseDto;
 };
 
 export type CrmControllerRescheduleAppointmentResponse = CrmControllerRescheduleAppointmentResponses[keyof CrmControllerRescheduleAppointmentResponses];
@@ -3725,11 +4458,9 @@ export type CrmControllerCancelAppointmentData = {
 
 export type CrmControllerCancelAppointmentResponses = {
     /**
-     * Appointment cancelled successfully
+     * JSON-RPC envelope with cancellation result. Note: "sucess" (missing c) is the exact API field name
      */
-    200: {
-        [key: string]: unknown;
-    };
+    200: CancelAppointmentResponseDto;
 };
 
 export type CrmControllerCancelAppointmentResponse = CrmControllerCancelAppointmentResponses[keyof CrmControllerCancelAppointmentResponses];
@@ -3746,9 +4477,9 @@ export type CrmControllerFetchAppointmentDetailsData = {
 
 export type CrmControllerFetchAppointmentDetailsResponses = {
     /**
-     * Appointment details
+     * List of slot details
      */
-    200: AppointmentResponseDto;
+    200: Array<SlotDetailDto>;
 };
 
 export type CrmControllerFetchAppointmentDetailsResponse = CrmControllerFetchAppointmentDetailsResponses[keyof CrmControllerFetchAppointmentDetailsResponses];
@@ -3765,11 +4496,9 @@ export type CrmControllerFetchFollowupDetailsData = {
 
 export type CrmControllerFetchFollowupDetailsResponses = {
     /**
-     * Followup details
+     * List of followup slot details
      */
-    200: Array<{
-        [key: string]: unknown;
-    }>;
+    200: Array<SlotDetailDto>;
 };
 
 export type CrmControllerFetchFollowupDetailsResponse = CrmControllerFetchFollowupDetailsResponses[keyof CrmControllerFetchFollowupDetailsResponses];
@@ -3819,7 +4548,7 @@ export type CrmControllerGetUserPackagesData = {
 
 export type CrmControllerGetUserPackagesResponses = {
     /**
-     * Booked packages
+     * Booked packages with line details
      */
     200: Array<BookedPackageDto>;
 };
@@ -3853,7 +4582,7 @@ export type CrmControllerGetPackageProductDetailsData = {
 
 export type CrmControllerGetPackageProductDetailsResponses = {
     /**
-     * Package product details
+     * Package product line details
      */
     200: Array<PackageProductLineDto>;
 };
@@ -3888,9 +4617,9 @@ export type CrmControllerGetBookedLinesData = {
 
 export type CrmControllerGetBookedLinesResponses = {
     /**
-     * Booked package lines
+     * Booked package product lines
      */
-    200: Array<PackageProductLineDto>;
+    200: Array<BookedPackageProductLineDto>;
 };
 
 export type CrmControllerGetBookedLinesResponse = CrmControllerGetBookedLinesResponses[keyof CrmControllerGetBookedLinesResponses];
@@ -3964,7 +4693,7 @@ export type CrmControllerGetSlotsData = {
     path?: never;
     query: {
         /**
-         * Doctor ID
+         * Doctor database ID
          */
         doctor_id: number;
         /**
@@ -3972,21 +4701,29 @@ export type CrmControllerGetSlotsData = {
          */
         availability?: string;
         /**
-         * Start datetime filter
+         * Start datetime filter (ISO string)
          */
         start_datetime?: string;
         /**
-         * Stop datetime filter
+         * Stop datetime filter (ISO string)
          */
         stop_datetime?: string;
         /**
-         * Campus ID
+         * Filter by consultation type ID
+         */
+        consultation_type_ids?: number;
+        /**
+         * Filter by campus ID
          */
         campus_id?: number;
         /**
-         * Sub-campus ID
+         * Filter by sub-campus ID
          */
         sub_campus_id?: number;
+        /**
+         * Fields to return
+         */
+        fields?: Array<string>;
     };
     url: '/api/v1/crm/slots';
 };
@@ -4011,7 +4748,7 @@ export type CrmControllerGetSlotPriceData = {
 
 export type CrmControllerGetSlotPriceResponses = {
     /**
-     * Slot price
+     * Slot price info
      */
     200: SlotPriceResponseDto;
 };
@@ -4027,7 +4764,7 @@ export type CrmControllerRazorpayPaymentData = {
 
 export type CrmControllerRazorpayPaymentResponses = {
     /**
-     * Payment order created
+     * Payment link created
      */
     200: RazorpayPaymentResponseDto;
 };
@@ -4043,7 +4780,7 @@ export type CrmControllerRazorpayPackagePaymentData = {
 
 export type CrmControllerRazorpayPackagePaymentResponses = {
     /**
-     * Package payment order created
+     * Package payment link created
      */
     200: RazorpayPaymentResponseDto;
 };
@@ -4059,11 +4796,9 @@ export type CrmControllerEnableNotificationsData = {
 
 export type CrmControllerEnableNotificationsResponses = {
     /**
-     * Notifications updated
+     * Notification preferences updated successfully
      */
-    200: {
-        [key: string]: unknown;
-    };
+    204: void;
 };
 
 export type CrmControllerEnableNotificationsResponse = CrmControllerEnableNotificationsResponses[keyof CrmControllerEnableNotificationsResponses];
@@ -4079,7 +4814,7 @@ export type CrmControllerGetNotificationSettingsData = {
 
 export type CrmControllerGetNotificationSettingsResponses = {
     /**
-     * Notification settings
+     * Notification preferences
      */
     200: NotificationSettingsResponseDto;
 };
@@ -4109,15 +4844,15 @@ export type CrmControllerGetPsychiatricConsultationsData = {
     path?: never;
     query: {
         /**
-         * User/Lead ID
+         * CRM lead / user ID
          */
         userId: number;
         /**
-         * Doctor ID
+         * Filter by doctor database ID
          */
         doctorId?: number;
         /**
-         * Limit
+         * Max records to return
          */
         limit?: number;
     };
@@ -4140,15 +4875,15 @@ export type CrmControllerGetPsychologistConsultationsData = {
     path?: never;
     query: {
         /**
-         * User/Lead ID
+         * CRM lead / user ID
          */
         userId: number;
         /**
-         * Doctor ID
+         * Filter by doctor database ID
          */
         doctorId?: number;
         /**
-         * Limit
+         * Max records to return
          */
         limit?: number;
     };
@@ -4171,11 +4906,11 @@ export type CrmControllerGetConsultationSummaryData = {
     path?: never;
     query: {
         /**
-         * User/Lead ID
+         * CRM lead / user ID
          */
         userId: number;
         /**
-         * Include details
+         * Include detailed consultation data
          */
         includeDetails?: boolean;
     };
@@ -4198,23 +4933,23 @@ export type CrmControllerGetConsultationHistoryData = {
     path?: never;
     query: {
         /**
-         * User/Lead ID
+         * CRM lead / user ID
          */
         userId: number;
         /**
-         * Consultation type
+         * Consultation type filter
          */
         consultationType?: string;
         /**
-         * Date from (ISO)
+         * Filter from this date (ISO string)
          */
         dateFrom?: string;
         /**
-         * Date to (ISO)
+         * Filter to this date (ISO string)
          */
         dateTo?: string;
         /**
-         * Limit
+         * Max records to return
          */
         limit?: number;
     };
@@ -5262,7 +5997,7 @@ export type AppointmentsControllerBookIndividualData = {
 };
 
 export type AppointmentsControllerBookIndividualResponses = {
-    200: ErpActionResponseDto;
+    200: BookAppointmentResultDto;
 };
 
 export type AppointmentsControllerBookIndividualResponse = AppointmentsControllerBookIndividualResponses[keyof AppointmentsControllerBookIndividualResponses];
@@ -5284,7 +6019,7 @@ export type AppointmentsControllerBookPackageData = {
 };
 
 export type AppointmentsControllerBookPackageResponses = {
-    200: ErpActionResponseDto;
+    200: BookAppointmentResultDto;
 };
 
 export type AppointmentsControllerBookPackageResponse = AppointmentsControllerBookPackageResponses[keyof AppointmentsControllerBookPackageResponses];
@@ -6875,7 +7610,7 @@ export type PackagesControllerBookData = {
 };
 
 export type PackagesControllerBookResponses = {
-    201: PackageResponseDto;
+    201: BookPackageResultDto;
 };
 
 export type PackagesControllerBookResponse = PackagesControllerBookResponses[keyof PackagesControllerBookResponses];
@@ -6897,7 +7632,7 @@ export type PackagesControllerEditData = {
 };
 
 export type PackagesControllerEditResponses = {
-    200: PackageResponseDto;
+    200: PackageActionResponseDto;
 };
 
 export type PackagesControllerEditResponse = PackagesControllerEditResponses[keyof PackagesControllerEditResponses];
@@ -6919,7 +7654,7 @@ export type PackagesControllerConfirmData = {
 };
 
 export type PackagesControllerConfirmResponses = {
-    200: PackageResponseDto;
+    200: PackageActionResponseDto;
 };
 
 export type PackagesControllerConfirmResponse = PackagesControllerConfirmResponses[keyof PackagesControllerConfirmResponses];
@@ -6937,7 +7672,7 @@ export type PackagesControllerUpdateLinesData = {
 };
 
 export type PackagesControllerUpdateLinesResponses = {
-    200: PackageResponseDto;
+    200: PackageActionResponseDto;
 };
 
 export type PackagesControllerUpdateLinesResponse = PackagesControllerUpdateLinesResponses[keyof PackagesControllerUpdateLinesResponses];
@@ -6959,7 +7694,7 @@ export type PackagesControllerCreateSessionsData = {
 };
 
 export type PackagesControllerCreateSessionsResponses = {
-    200: PackageResponseDto;
+    200: PackageActionResponseDto;
 };
 
 export type PackagesControllerCreateSessionsResponse = PackagesControllerCreateSessionsResponses[keyof PackagesControllerCreateSessionsResponses];
@@ -6999,7 +7734,7 @@ export type PackagesControllerCreatePaymentData = {
 };
 
 export type PackagesControllerCreatePaymentResponses = {
-    201: PackageResponseDto;
+    201: PackageActionResponseDto;
 };
 
 export type PackagesControllerCreatePaymentResponse = PackagesControllerCreatePaymentResponses[keyof PackagesControllerCreatePaymentResponses];
@@ -7021,7 +7756,7 @@ export type PackagesControllerConfirmCashData = {
 };
 
 export type PackagesControllerConfirmCashResponses = {
-    200: PackageResponseDto;
+    200: PackageActionResponseDto;
 };
 
 export type PackagesControllerConfirmCashResponse = PackagesControllerConfirmCashResponses[keyof PackagesControllerConfirmCashResponses];
@@ -7078,7 +7813,7 @@ export type PackagesControllerDeleteInvoiceLineData = {
 };
 
 export type PackagesControllerDeleteInvoiceLineResponses = {
-    200: PackageResponseDto;
+    200: PackageActionResponseDto;
 };
 
 export type PackagesControllerDeleteInvoiceLineResponse = PackagesControllerDeleteInvoiceLineResponses[keyof PackagesControllerDeleteInvoiceLineResponses];

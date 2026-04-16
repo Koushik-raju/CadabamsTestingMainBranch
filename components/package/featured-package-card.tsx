@@ -7,24 +7,15 @@ import { Badge } from '@/components/ui/badge';
 import { Card } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
 import { getPackagePalette } from '@/lib/package-colors';
-import type { AvailablePackage } from '@/types/package';
+import type { PackageResponseDto } from '@/sdk/backend-v2';
 
 interface FeaturedPackageCardProps {
-  pkg: AvailablePackage;
-}
-
-function getDisplayDuration(pkg: AvailablePackage): number {
-  const duration = pkg.duration ?? pkg.package_duration;
-  if (duration === 90) return 90;
-  const name = (pkg.package_name ?? '').toLowerCase();
-  if (/90[\s-]?day|^90\s/.test(name)) return 90;
-  return duration ?? 30;
+  pkg: PackageResponseDto;
 }
 
 export function FeaturedPackageCard({ pkg }: FeaturedPackageCardProps) {
   const router = useRouter();
-  const duration = getDisplayDuration(pkg);
-  const serviceCount = pkg.package_product_ids?.length ?? 0;
+  const duration = pkg.duration_days ?? 30;
   const palette = getPackagePalette(pkg.id);
 
   return (
@@ -57,15 +48,15 @@ export function FeaturedPackageCard({ pkg }: FeaturedPackageCardProps) {
           </Badge>
           <Badge className={cn('flex items-center gap-1 text-white text-[10px] font-semibold border-0', palette.badgeBg)}>
             <Layers className="w-3 h-3" />
-            {serviceCount} {serviceCount === 1 ? 'Service' : 'Services'}
+            {pkg.active ? 'Active' : 'Available'}
           </Badge>
         </div>
 
         <h2 className="text-white font-bold text-xl leading-tight line-clamp-2 mb-1">
-          {pkg.package_name}
+          {pkg.name}
         </h2>
         <p className="text-white/70 text-sm mb-4">
-          ₹{pkg.amount_total.toLocaleString('en-IN')} · Complete care package
+          ₹{(pkg.price ?? 0).toLocaleString('en-IN')} · Complete care package
         </p>
 
         <Button

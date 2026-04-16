@@ -6,7 +6,7 @@ import {
   crmControllerBookPackage,
   crmControllerRazorpayPackagePayment,
 } from '@/sdk/backend-v2';
-import type { BookedPackageDto, PackageProductLineDto } from '@/sdk/backend-v2';
+import type { PackageResponseDto, BookedPackageDto, PackageProductLineDto } from '@/sdk/backend-v2';
 import {
   availablePackagesKey,
   managedPackagesKey,
@@ -14,22 +14,7 @@ import {
 } from '@/lib/swr-keys';
 import { useAuth } from '@/hooks/shared/auth/use-auth';
 
-// ── Local type definitions matching what pages/components expect ──────────────
 
-export type AvailablePackage = {
-  id: number;
-  package_name: string;
-  amount_total: number;
-  service_id?: [number | string, number | string];
-  package_product_ids?: Array<number>;
-  journey_id?: string | number | null;
-  journey_document_id?: string | null;
-  duration?: number;
-  package_duration?: number;
-  [key: string]: unknown;
-};
-
-// BookedPackage keeps the tuple-style package_id for backward compatibility with pages
 export type BookedPackage = {
   booked_package_id: number;
   package_id: [number | string, number | string];
@@ -59,7 +44,7 @@ function mapBookedPackage(dto: BookedPackageDto): BookedPackage {
     booked_package_id: dto.id,
     package_id: [dto.package_id, dto.package_name],
     package_stage: dto.status ?? 'booked',
-    package_cost: 0, // not provided in new DTO
+    package_cost: 0,
     lead_id: dto.lead_id,
     date: dto.start_date ?? '',
     lines: [],
@@ -84,8 +69,7 @@ export function useAvailablePackages() {
     availablePackagesKey(),
     async () => {
       const res = await crmControllerGetAllPackages();
-      const items = (res.data as Array<{ result?: Record<string, unknown> }> | undefined) ?? [];
-      return items.map((dto) => (dto.result ?? {}) as AvailablePackage);
+      return (res.data as PackageResponseDto[] | undefined) ?? [];
     }
   );
   return { packages: data ?? [], isLoading, error, mutate };

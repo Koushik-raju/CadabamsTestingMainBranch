@@ -5,21 +5,24 @@ import { useRouter } from 'next/navigation';
 import { SWRConfig } from 'swr';
 import { Skeleton } from '@/components/ui/skeleton';
 import { BookingProvider } from '@/contexts/booking-context';
+import { hasAccessToken, setRedirectPath } from '@/lib/cookies';
 
 export default function AuthLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const [ready, setReady] = useState(false);
 
   useEffect(() => {
-    const hasToken = document.cookie.includes('access_token=') || document.cookie.includes('refresh_token=');
-    if (!hasToken) {
-      const path = window.location.pathname + window.location.search;
-      localStorage.setItem('redirectPath', path);
-      router.replace('/auth/login');
-    } else {
-      // eslint-disable-next-line react-hooks/set-state-in-effect
-      setReady(true);
+    async function check() {
+      const authenticated = await hasAccessToken();
+      if (!authenticated) {
+        const path = window.location.pathname + window.location.search;
+        setRedirectPath(path);
+        router.replace('/auth/login');
+      } else {
+        setReady(true);
+      }
     }
+    check();
   }, [router]);
 
   if (!ready) {

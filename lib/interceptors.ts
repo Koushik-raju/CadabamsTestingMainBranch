@@ -1,6 +1,20 @@
 import type { AxiosInstance } from 'axios';
+import { getAccessToken } from '@/lib/cookies';
 import { refreshPatientToken } from './auth';
 
+/** Attaches the access token as a Bearer header on every outgoing request. */
+export function attachAuthInterceptor(axiosInstance: AxiosInstance) {
+  axiosInstance.interceptors.request.use(async (config) => {
+    const token = await getAccessToken();
+    if (token) {
+      config.headers = config.headers ?? {};
+      config.headers['Authorization'] = `Bearer ${token}`;
+    }
+    return config;
+  });
+}
+
+/** On 401, silently refreshes the token and retries the original request once. */
 export function attachRefreshInterceptor(axiosInstance: AxiosInstance) {
   axiosInstance.interceptors.response.use(
     (response) => response,
@@ -16,9 +30,8 @@ export function attachRefreshInterceptor(axiosInstance: AxiosInstance) {
             ...original.headers,
             Authorization: `Bearer ${tokenData.accessToken}`,
           };
-          return axiosInstance(original); // retry with new token
+          return axiosInstance(original);
         } catch {
-          // Refresh failed — send user to login
           if (typeof window !== 'undefined') {
             window.location.href = '/auth/login';
           }

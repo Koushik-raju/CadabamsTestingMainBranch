@@ -22,7 +22,7 @@ import { PackageDiscoveryCard } from '@/components/package/package-discovery-car
 import { useAvailablePackages, useManagedPackages } from '@/hooks/use-packages';
 import { getPackagePalette } from '@/lib/package-colors';
 import { cn } from '@/lib/utils';
-import type { BookedPackage } from '@/types/package';
+import type { BookedPackage } from '@/hooks/use-packages';
 
 // Per-stage visual config
 const STAGE_CONFIG: Record<string, { label: string; Icon: React.ElementType; cardGradient: string; badgeCn: string }> = {
@@ -134,7 +134,7 @@ function PackagesInner() {
   const filtered = useMemo(
     () =>
       available.filter(
-        (p) => !search || p.package_name.toLowerCase().includes(search.toLowerCase())
+        (p) => !search || p.name.toLowerCase().includes(search.toLowerCase())
       ),
     [available, search]
   );
@@ -181,8 +181,8 @@ function PackagesInner() {
               </div>
             ) : (
               <div className="flex gap-3 overflow-x-auto pb-1 -mx-4 px-4 scrollbar-none">
-                {sortedManaged.map((pkg) => (
-                  <PurchasedPackageCard key={pkg.booked_package_id} pkg={pkg} />
+                {sortedManaged.map((pkg, i) => (
+                  <PurchasedPackageCard key={pkg.booked_package_id ?? i} pkg={pkg} />
                 ))}
               </div>
             )}
@@ -218,8 +218,8 @@ function PackagesInner() {
               </div>
             ) : (
               <div className="grid grid-cols-2 gap-3">
-                {quickPicks.map((pkg) => (
-                  <PackageDiscoveryCard key={pkg.id} pkg={pkg} />
+                {quickPicks.map((pkg, i) => (
+                  <PackageDiscoveryCard key={pkg.id ?? i} pkg={pkg} />
                 ))}
               </div>
             )}

@@ -1,5 +1,5 @@
-// Re-export from new hooks — types/package.ts kept for backward compat
-export type { AvailablePackage, BookedPackage, PackageProductLine } from '@/hooks/packages/use-packages';
+export type { PackageResponseDto } from '@/sdk/backend-v2';
+export type { BookedPackage, PackageProductLine } from '@/hooks/packages/use-packages';
 
 // Legacy types kept for compatibility
 export interface PackageBooking {
@@ -31,7 +31,6 @@ export interface MedicineLineItem {
   prescription_id?: [number, string];
 }
 
-// BookedPackageProductLine kept for compatibility
 export type BookedPackageProductLine = {
   id: number;
   line_id?: number;
