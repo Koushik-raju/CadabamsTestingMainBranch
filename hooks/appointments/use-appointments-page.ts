@@ -1,39 +1,18 @@
-import useSWR from 'swr';
+'use client';
+
+import { useState, useEffect, useCallback } from 'react';
 import {
-  crmControllerGetAppointmentDashboard,
+  crmControllerFetchAppointmentDetails,
   crmControllerCancelAppointment,
-  crmControllerGetMediums,
+  type SlotDetailDto,
 } from '@/sdk/backend-v2';
-import { appointmentsKey } from '@/lib/swr-keys';
 import { useAuth } from '@/hooks/shared/auth/use-auth';
 
-// Re-export the same AppointmentDetail shape so components don't need auth-and-crm
-export type AppointmentDetail = {
-  id: number;
-  doctor: [number | string, number | string];
-  doctor_image_url: string;
-  start_datetime: string;
-  stop_datetime: string;
-  speciality_id: [number | string, number | string];
-  consultation_type_ids: [number | string, number | string];
-  campus_id: number;
-  sub_campus_id: number | false;
-  product_id: [number | string, number | string];
-  availability: string;
-  appointment_type: 'individual_appointment' | 'from_packaage';
-  booked_package_name: number | false;
-  virtual_consultation_url: string | false;
-};
+export type { SlotDetailDto };
 
-function parseAppointment(raw: string): AppointmentDetail | null {
-  try {
-    return JSON.parse(raw) as AppointmentDetail;
-  } catch {
-    return null;
-  }
-}
+const ONE_YEAR_AGO = new Date(Date.now() - 365 * 24 * 60 * 60 * 1000).toISOString();
 
-function isUpcoming(apt: AppointmentDetail): boolean {
+function isUpcoming(apt: SlotDetailDto): boolean {
   const status = apt.availability?.toLowerCase();
   if (status === 'cancelled' || status === 'completed') return false;
   return new Date(apt.start_datetime) >= new Date();
@@ -41,42 +20,74 @@ function isUpcoming(apt: AppointmentDetail): boolean {
 
 export function useAppointments() {
   const { user } = useAuth();
-  const phone = (
-    ((user as Record<string, unknown>)?.caller_mobile as string | undefined) ??
-    ((user as Record<string, unknown>)?.phone_number as string | undefined)
-  )?.replace(/\D/g, '') ?? null;
+  const leadId = user?.lead_id ? Number(user.lead_id) : null;
 
-  const { data, error, isLoading, mutate } = useSWR<{ upcoming: AppointmentDetail[]; past: AppointmentDetail[] }>(
-    phone ? appointmentsKey() : null,
-    async () => {
-      const res = await crmControllerGetAppointmentDashboard({ query: { phoneNumber: phone! } });
-      const raw = (res.data as { appointments?: Array<string> } | undefined)?.appointments ?? [];
-      const all = raw.map(parseAppointment).filter((a): a is AppointmentDetail => a !== null);
-      return {
-        upcoming: all.filter(isUpcoming).sort(
-          (a, b) => new Date(a.start_datetime).getTime() - new Date(b.start_datetime).getTime()
-        ),
-        past: all.filter((a) => !isUpcoming(a)).sort(
-          (a, b) => new Date(b.start_datetime).getTime() - new Date(a.start_datetime).getTime()
-        ),
-      };
+  const [all, setAll] = useState<SlotDetailDto[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<Error | null>(null);
+
+  const fetch = useCallback(async () => {
+    if (!leadId) return;
+    setIsLoading(true);
+    setError(null);
+    try {
+      const res = await crmControllerFetchAppointmentDetails({
+        query: { leadId, startDatetime: ONE_YEAR_AGO },
+      });
+      setAll(res.data ?? []);
+    } catch (err) {
+      setError(err instanceof Error ? err : new Error('Failed to load appointments'));
+    } finally {
+      setIsLoading(false);
     }
-  );
+  }, [leadId]);
+
+  useEffect(() => { fetch(); }, [fetch]);
 
   return {
-    upcoming: data?.upcoming ?? [],
-    past: data?.past ?? [],
+    upcoming: all.filter(isUpcoming).sort(
+      (a, b) => new Date(a.start_datetime).getTime() - new Date(b.start_datetime).getTime()
+    ),
+    past: all.filter((a) => !isUpcoming(a)).sort(
+      (a, b) => new Date(b.start_datetime).getTime() - new Date(a.start_datetime).getTime()
+    ),
     isLoading,
     error,
-    mutate,
+    refetch: fetch,
   };
 }
 
-export async function cancelAppointment(appointmentId: number, reason: string): Promise<void> {
-  await crmControllerCancelAppointment({ body: { appointment_id: appointmentId, reason } });
+export function useAppointmentById(id: number | null) {
+  const { user } = useAuth();
+  const leadId = user?.lead_id ? Number(user.lead_id) : null;
+
+  const [appointment, setAppointment] = useState<SlotDetailDto | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<Error | null>(null);
+
+  const fetch = useCallback(async () => {
+    if (!leadId || !id) return;
+    setIsLoading(true);
+    setError(null);
+    try {
+      const res = await crmControllerFetchAppointmentDetails({
+        query: { leadId, startDatetime: ONE_YEAR_AGO },
+      });
+      setAppointment((res.data ?? []).find((a) => a.id === id) ?? null);
+    } catch (err) {
+      setError(err instanceof Error ? err : new Error('Failed to load appointment'));
+    } finally {
+      setIsLoading(false);
+    }
+  }, [leadId, id]);
+
+  useEffect(() => { fetch(); }, [fetch]);
+
+  return { appointment, isLoading, error, refetch: fetch };
 }
 
-export async function getMediums(): Promise<Array<{ id: number; name: string }>> {
-  const res = await crmControllerGetMediums();
-  return (res.data as Array<{ id: number; name: string }> | undefined) ?? [];
+export async function cancelAppointment(appointmentId: number, reason: string): Promise<void> {
+  await crmControllerCancelAppointment({
+    body: { appointment_id: appointmentId, medium_id: 5, cancel_reason: reason },
+  });
 }

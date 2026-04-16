@@ -1,23 +1,31 @@
-'use client';
+"use client";
 
-import { Suspense, useState, useEffect, useCallback, useMemo } from 'react';
-import { useRouter, useSearchParams, useParams } from 'next/navigation';
-import { Video, Building2, Loader2, AlertCircle } from 'lucide-react';
-import { cn } from '@/lib/utils';
-import { Button } from '@/components/ui/button';
-import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
-import { BackButton } from '@/components/shared/navigation/back-button';
-import { SlotSection } from '@/components/booking/slot-section';
-import { DateStrip, toDateKey } from '@/components/booking/date-strip';
-import { CampusSheet } from '@/components/booking/campus-sheet';
-import { useBooking } from '@/contexts/booking-context';
+import { Suspense, useState, useEffect, useCallback, useMemo } from "react";
+import { useRouter, useSearchParams, useParams } from "next/navigation";
+import { Video, Building2, Loader2, AlertCircle } from "lucide-react";
+import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
+import { BackButton } from "@/components/shared/navigation/back-button";
+import { SlotSection } from "@/components/booking/slot-section";
+import { DateStrip, toDateKey } from "@/components/booking/date-strip";
+import { CampusSheet } from "@/components/booking/campus-sheet";
+import { useBooking } from "@/contexts/booking-context";
 import {
   crmControllerGetDoctorById,
   crmControllerGetSlots,
   crmControllerGetSlotPrice,
-  mastersControllerGetCampuses,
-} from '@/sdk/backend-v2';
-import type { DoctorResponseDto, SlotResponseDto } from '@/sdk/backend-v2';
+  crmControllerGetCampuses,
+  crmControllerRescheduleAppointment,
+} from "@/sdk/backend-v2";
+import type { DoctorBasicResponseDto, SlotResponseDto } from "@/sdk/backend-v2";
+import { useAuth } from "@/hooks/shared/auth/use-auth";
+
+// The API returns additional fields not yet in the generated DTO
+type DoctorResponseDto = DoctorBasicResponseDto & {
+  doctor_type?: string;
+  profile_image?: string;
+};
 
 type CampusItem = {
   id: number;
@@ -30,35 +38,41 @@ type CampusItem = {
 
 // ── helpers ────────────────────────────────────────────────────────────────────
 function displayName(doctor: DoctorResponseDto | null): string {
-  if (!doctor) return 'Doctor';
-  const raw = (doctor.name || '').trim();
-  const name = raw.includes(',') ? raw.split(',').pop()!.trim() : raw;
-  if (!name) return 'Doctor';
+  if (!doctor) return "Doctor";
+  const raw = (doctor.name || "").trim();
+  const name = raw.includes(",") ? raw.split(",").pop()!.trim() : raw;
+  if (!name) return "Doctor";
   return /^Dr\.?\s/i.test(name) ? name : `Dr. ${name}`;
 }
 
 function specialityName(doctor: DoctorResponseDto | null): string {
-  if (!doctor) return '';
-  return doctor.doctor_type || '';
+  if (!doctor) return "";
+  return doctor.doctor_type || "";
 }
 
 // ── BookingContent ─────────────────────────────────────────────────────────────
 function BookingContent() {
-  const router        = useRouter();
+  const router = useRouter();
   const { setBooking } = useBooking();
   const { doctor_id } = useParams<{ doctor_id: string }>();
-  const searchParams  = useSearchParams();
+  const searchParams = useSearchParams();
+  const { user } = useAuth();
 
-  const initMode = searchParams.get('mode') ?? 'online';
+  const isReschedule = searchParams.get("reschedule") === "true";
+  const existingSlotId = isReschedule
+    ? Number(searchParams.get("appointment_id"))
+    : null;
+  const rescheduleAptType = searchParams.get("appointment_type") ?? "";
+  const initMode = searchParams.get("mode") ?? "online";
 
   // ── doctor ──────────────────────────────────────────────────────────────────
-  const [doctor,       setDoctor]       = useState<DoctorResponseDto | null>(null);
-  const [loadingDoc,   setLoadingDoc]   = useState(true);
-  const [docError,     setDocError]     = useState<string | null>(null);
+  const [doctor, setDoctor] = useState<DoctorResponseDto | null>(null);
+  const [loadingDoc, setLoadingDoc] = useState(true);
+  const [docError, setDocError] = useState<string | null>(null);
 
   // ── all campuses ─────────────────────────────────────────────────────────────
-  const [campuses,      setCampuses]      = useState<CampusItem[]>([]);
-  const [loadingMeta,   setLoadingMeta]   = useState(true);
+  const [campuses, setCampuses] = useState<CampusItem[]>([]);
+  const [loadingMeta, setLoadingMeta] = useState(true);
 
   // ── slots ───────────────────────────────────────────────────────────────────
   const dates = useMemo(() => {
@@ -71,74 +85,81 @@ function BookingContent() {
     });
   }, []);
 
-  const [isOnline,      setIsOnline]      = useState(initMode !== 'offline');
-  const [datePage,      setDatePage]      = useState(0);
-  const [selectedDate,  setSelectedDate]  = useState<Date>(dates[0]);
-  const [slots,         setSlots]         = useState<SlotResponseDto[]>([]);
-  const [selectedSlot,  setSelectedSlot]  = useState<number | null>(null);
-  const [slotPrice,     setSlotPrice]     = useState<number | null>(null);
-  const [loadingSlots,  setLoadingSlots]  = useState(false);
-  const [error,         setError]         = useState<string | null>(null);
+  const [isOnline, setIsOnline] = useState(initMode !== "offline");
+  const [datePage, setDatePage] = useState(0);
+  const [selectedDate, setSelectedDate] = useState<Date>(dates[0]);
+  const [slots, setSlots] = useState<SlotResponseDto[]>([]);
+  const [newSlotId,    setNewSlotId]    = useState<number | null>(null);
+  const [slotPrice, setSlotPrice] = useState<number | null>(null);
+  const [loadingSlots, setLoadingSlots] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   // ── campus sheet ─────────────────────────────────────────────────────────────
-  const [sheetOpen,         setSheetOpen]         = useState(false);
-  const [sheetStep,         setSheetStep]         = useState<'campus' | 'sub-campus'>('campus');
-  const [pendingCampusId,   setPendingCampusId]   = useState<number | null>(null);
-  const [confirmedCampusId, setConfirmedCampusId] = useState<number | null>(null);
-  const [confirmedSubId,    setConfirmedSubId]     = useState<number | null>(null);
+  const [sheetOpen, setSheetOpen] = useState(false);
+  const [sheetStep, setSheetStep] = useState<"campus" | "sub-campus">("campus");
+  const [pendingCampusId, setPendingCampusId] = useState<number | null>(null);
+  const [confirmedCampusId, setConfirmedCampusId] = useState<number | null>(
+    null,
+  );
+  const [confirmedSubId, setConfirmedSubId] = useState<number | null>(null);
 
   // ── fetch doctor ─────────────────────────────────────────────────────────────
   useEffect(() => {
     if (!doctor_id) return;
     setLoadingDoc(true);
     crmControllerGetDoctorById({ path: { id: Number(doctor_id) } })
-      .then(r => {
+      .then((r) => {
         const d = r.data as DoctorResponseDto | undefined;
-        if (!d) throw new Error('Not found');
+        if (!d) throw new Error("Not found");
         setDoctor(d);
       })
-      .catch(() => setDocError('Failed to load doctor details.'))
+      .catch(() => setDocError("Failed to load doctor details."))
       .finally(() => setLoadingDoc(false));
   }, [doctor_id]);
 
   // ── fetch campuses ───────────────────────────────────────────────────────────
   useEffect(() => {
     setLoadingMeta(true);
-    mastersControllerGetCampuses({ path: { campus: 'cadabams' } })
-      .then(r => {
-        const raw = Array.isArray(r.data) ? r.data : (r.data ? [r.data] : []);
-        setCampuses((raw as CampusItem[]).filter(c => c.book_appointment));
+    crmControllerGetCampuses({})
+      .then((r) => {
+        const raw = Array.isArray(r.data) ? r.data : r.data ? [r.data] : [];
+        setCampuses((raw as CampusItem[]).filter((c) => c.book_appointment));
       })
       .catch(() => {})
       .finally(() => setLoadingMeta(false));
   }, []);
 
   // ── fetch slots ───────────────────────────────────────────────────────────────
-  const fetchSlots = useCallback(async (consultTypeId: number) => {
-    if (!doctor_id) return;
-    setLoadingSlots(true);
-    setSlots([]);
-    setSelectedSlot(null);
-    setSlotPrice(null);
-    setError(null);
-    try {
-      const start = new Date(dates[0]);
-      const end   = new Date(dates[dates.length - 1]);
-      end.setHours(23, 59, 59, 999);
-      const res = await crmControllerGetSlots({
-        query: {
-          doctor_id:    Number(doctor_id),
-          availability: 'open',
-        },
-      });
-      setSlots(Array.isArray(res.data) ? (res.data as SlotResponseDto[]) : []);
-    } catch (err) {
-      console.error(err);
-      setError('Failed to load time slots. Please try again.');
-    } finally {
-      setLoadingSlots(false);
-    }
-  }, [doctor_id, dates]);
+  const fetchSlots = useCallback(
+    async (consultTypeId: number) => {
+      if (!doctor_id) return;
+      setLoadingSlots(true);
+      setSlots([]);
+      setNewSlotId(null);
+      setSlotPrice(null);
+      setError(null);
+      try {
+        const start = new Date(dates[0]);
+        const end = new Date(dates[dates.length - 1]);
+        end.setHours(23, 59, 59, 999);
+        const res = await crmControllerGetSlots({
+          query: {
+            doctor_id: Number(doctor_id),
+            availability: "open",
+          },
+        });
+        setSlots(
+          Array.isArray(res.data) ? (res.data as SlotResponseDto[]) : [],
+        );
+      } catch (err) {
+        console.error(err);
+        setError("Failed to load time slots. Please try again.");
+      } finally {
+        setLoadingSlots(false);
+      }
+    },
+    [doctor_id, dates],
+  );
 
   useEffect(() => {
     fetchSlots(isOnline ? 2 : 1);
@@ -146,24 +167,27 @@ function BookingContent() {
   }, []);
 
   useEffect(() => {
-    if (selectedSlot === null) { setSlotPrice(null); return; }
-    crmControllerGetSlotPrice({ path: { id: selectedSlot } })
-      .then(r => {
+    if (newSlotId === null) {
+      setSlotPrice(null);
+      return;
+    }
+    crmControllerGetSlotPrice({ path: { id: newSlotId } })
+      .then((r) => {
         const d = r.data as { price?: number } | undefined;
         setSlotPrice(d?.price ?? null);
       })
       .catch(() => setSlotPrice(null));
-  }, [selectedSlot]);
+  }, [newSlotId]);
 
   // ── open sheet when slot is picked (in-person only) ─────────────────────────
   useEffect(() => {
-    if (selectedSlot !== null && !isOnline) {
-      setSheetStep('campus');
+    if (newSlotId !== null && !isOnline) {
+      setSheetStep("campus");
       setPendingCampusId(null);
       setSheetOpen(true);
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedSlot]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [newSlotId]);
 
   const handleSessionToggle = (online: boolean) => {
     setIsOnline(online);
@@ -173,10 +197,16 @@ function BookingContent() {
   };
 
   // ── derived sub-campus options (from campus master data) ─────────────────────
-  const getSubCampusOptions = useCallback((campusId: number) => {
-    const master = campuses.find(c => c.id === campusId);
-    return (master?.area ?? []).map(([id, name]) => ({ id: Number(id), name: String(name) }));
-  }, [campuses]);
+  const getSubCampusOptions = useCallback(
+    (campusId: number) => {
+      const master = campuses.find((c) => c.id === campusId);
+      return (master?.area ?? []).map(([id, name]) => ({
+        id: Number(id),
+        name: String(name),
+      }));
+    },
+    [campuses],
+  );
 
   // ── derived display values ───────────────────────────────────────────────────
   const slotsByDate = useMemo(() => {
@@ -188,48 +218,119 @@ function BookingContent() {
     return map;
   }, [slots]);
 
-  const maxPage      = Math.ceil(dates.length / 10) - 1;
+  const maxPage = Math.ceil(dates.length / 10) - 1;
 
-  const selectedKey    = toDateKey(selectedDate);
-  const daySlots       = slotsByDate[selectedKey] ?? [];
-  const morningSlots   = daySlots.filter(s => new Date(s.start_datetime).getHours() < 12);
-  const afternoonSlots = daySlots.filter(s => { const h = new Date(s.start_datetime).getHours(); return h >= 12 && h < 17; });
-  const eveningSlots   = daySlots.filter(s => new Date(s.start_datetime).getHours() >= 17);
+  const selectedKey = toDateKey(selectedDate);
+  const daySlots = slotsByDate[selectedKey] ?? [];
+  const morningSlots = daySlots.filter(
+    (s) => new Date(s.start_datetime).getHours() < 12,
+  );
+  const afternoonSlots = daySlots.filter((s) => {
+    const h = new Date(s.start_datetime).getHours();
+    return h >= 12 && h < 17;
+  });
+  const eveningSlots = daySlots.filter(
+    (s) => new Date(s.start_datetime).getHours() >= 17,
+  );
 
-  const slotHeading    = selectedDate.toLocaleDateString('en-US', { weekday: 'short', day: 'numeric', month: 'short' });
+  const slotHeading = selectedDate.toLocaleDateString("en-US", {
+    weekday: "short",
+    day: "numeric",
+    month: "short",
+  });
   const sessionDuration = slots[0]?.duration ?? null;
 
-  const initials = (doctor?.name || '')
-    .replace(/^Dr\.?\s*/i, '')
-    .split(' ').map((w: string) => w[0]).slice(0, 2).join('').toUpperCase();
+  const initials = (doctor?.name || "")
+    .replace(/^Dr\.?\s*/i, "")
+    .split(" ")
+    .map((w: string) => w[0])
+    .slice(0, 2)
+    .join("")
+    .toUpperCase();
 
-  const confirmedCampusName = confirmedCampusId !== null
-    ? campuses.find(c => c.id === confirmedCampusId)?.display_name
-      || campuses.find(c => c.id === confirmedCampusId)?.name
-      || null
-    : null;
+  const confirmedCampusName =
+    confirmedCampusId !== null
+      ? campuses.find((c) => c.id === confirmedCampusId)?.display_name ||
+        campuses.find((c) => c.id === confirmedCampusId)?.name ||
+        null
+      : null;
 
   const confirmedSubName = useMemo(() => {
     if (confirmedSubId === null || confirmedCampusId === null) return null;
-    return getSubCampusOptions(confirmedCampusId).find(s => s.id === confirmedSubId)?.name ?? null;
+    return (
+      getSubCampusOptions(confirmedCampusId).find(
+        (s) => s.id === confirmedSubId,
+      )?.name ?? null
+    );
   }, [confirmedSubId, confirmedCampusId, getSubCampusOptions]);
 
-  // ── confirm booking ───────────────────────────────────────────────────────────
-  const handleConfirm = () => {
-    if (!selectedSlot)                { setError('Please select a time slot to continue.'); return; }
-    if (!isOnline && !confirmedCampusId) { setError('Please select a campus to continue.'); return; }
-    const hasSubs = !isOnline && confirmedCampusId ? getSubCampusOptions(confirmedCampusId).length > 0 : false;
-    if (hasSubs && !confirmedSubId) { setError('Please select a center to continue.'); return; }
-    const slot = slots.find(s => s.id === selectedSlot);
+  // ── confirm booking / reschedule ─────────────────────────────────────────────
+  const [confirming, setConfirming] = useState(false);
+
+  const handleConfirm = async () => {
+    if (!newSlotId) {
+      setError("Please select a time slot to continue.");
+      return;
+    }
+    if (!isOnline && !confirmedCampusId) {
+      setError("Please select a campus to continue.");
+      return;
+    }
+    const hasSubs =
+      !isOnline && confirmedCampusId
+        ? getSubCampusOptions(confirmedCampusId).length > 0
+        : false;
+    if (hasSubs && !confirmedSubId) {
+      setError("Please select a center to continue.");
+      return;
+    }
+
+    if (isReschedule && existingSlotId) {
+      const leadId = user?.lead_id ? Number(user.lead_id) : null;
+      if (!leadId) {
+        setError("User session missing. Please log in again.");
+        return;
+      }
+      if (!confirmedCampusId && !isOnline) {
+        setError("Please select a campus to continue.");
+        return;
+      }
+      setConfirming(true);
+      setError(null);
+      try {
+        await crmControllerRescheduleAppointment({
+          body: {
+            slot_id: existingSlotId,        // existing slot being replaced
+            appointment_id: newSlotId,   // new slot selected by user
+            lead_id: leadId,
+            campus_id: confirmedCampusId ?? 1,
+            sub_campus_id: confirmedSubId ?? undefined,
+            consultation_type_id: isOnline ? 2 : 1,
+            caller_name: user?.name ?? "",
+            patient_name: user?.name ?? "",
+            appointment_type: rescheduleAptType,
+            payment_mode: isOnline ? "online" : "cash",
+          } as Parameters<typeof crmControllerRescheduleAppointment>[0]["body"],
+        });
+        router.push("/consult/appointments");
+      } catch {
+        setError("Failed to reschedule. Please try again.");
+      } finally {
+        setConfirming(false);
+      }
+      return;
+    }
+
+    const slot = slots.find((s) => s.id === newSlotId);
     setBooking({
-      slotId:             selectedSlot,
-      doctorId:           Number(doctor_id),
-      campusId:           confirmedCampusId,
-      subCampusId:        isOnline ? null : confirmedSubId,
+      slotId: newSlotId,
+      doctorId: Number(doctor_id),
+      campusId: confirmedCampusId,
+      subCampusId: isOnline ? null : confirmedSubId,
       consultationTypeId: isOnline ? 2 : 1,
-      startDatetime:      slot?.start_datetime ?? null,
+      startDatetime: slot?.start_datetime ?? null,
     });
-    router.push('/consult/checkout');
+    router.push("/consult/checkout");
   };
 
   // ── loading / error states ────────────────────────────────────────────────────
@@ -246,7 +347,9 @@ function BookingContent() {
       <div className="min-h-screen flex flex-col items-center justify-center gap-3 px-6 text-center">
         <AlertCircle className="h-8 w-8 text-destructive" />
         <p className="text-sm text-destructive">{docError}</p>
-        <Button variant="outline" onClick={() => router.back()}>Go back</Button>
+        <Button variant="outline" onClick={() => router.back()}>
+          Go back
+        </Button>
       </div>
     );
   }
@@ -256,32 +359,46 @@ function BookingContent() {
       {/* Header */}
       <div className="flex items-center gap-3 px-4 pt-6 pb-4">
         <BackButton fallback="/consult/find-therapist" />
-        <h1 className="text-base font-semibold">Select a slot</h1>
+        <h1 className="text-base font-semibold">
+          {isReschedule ? "Reschedule appointment" : "Select a slot"}
+        </h1>
       </div>
 
       <div className="flex-1 px-4 pb-36 space-y-5 max-w-xl mx-auto w-full">
-
         {/* ── Doctor card ── */}
         <div className="rounded-2xl border border-border bg-background p-3 flex items-center justify-between gap-3">
           <div className="flex items-center gap-3 min-w-0">
             <Avatar className="h-11 w-11 shrink-0 rounded-xl">
-              {doctor?.profile_image && <AvatarImage src={doctor.profile_image} alt={displayName(doctor)} />}
+              {doctor?.profile_image && (
+                <AvatarImage
+                  src={doctor.profile_image}
+                  alt={displayName(doctor)}
+                />
+              )}
               <AvatarFallback className="bg-primary/10 text-primary font-semibold text-sm rounded-xl">
-                {initials || 'DR'}
+                {initials || "DR"}
               </AvatarFallback>
             </Avatar>
             <div className="min-w-0">
-              <p className="font-semibold text-sm truncate">{displayName(doctor)}</p>
+              <p className="font-semibold text-sm truncate">
+                {displayName(doctor)}
+              </p>
               <p className="text-xs text-muted-foreground leading-snug">
-                {[specialityName(doctor), sessionDuration ? `${sessionDuration} min session` : null]
-                  .filter(Boolean).join(' · ')}
+                {[
+                  specialityName(doctor),
+                  sessionDuration ? `${sessionDuration} min session` : null,
+                ]
+                  .filter(Boolean)
+                  .join(" · ")}
               </p>
             </div>
           </div>
           <div className="shrink-0 bg-orange-50 rounded-xl p-2.5">
-            {isOnline
-              ? <Video className="h-4 w-4 text-primary" />
-              : <Building2 className="h-4 w-4 text-primary" />}
+            {isOnline ? (
+              <Video className="h-4 w-4 text-primary" />
+            ) : (
+              <Building2 className="h-4 w-4 text-primary" />
+            )}
           </div>
         </div>
 
@@ -293,8 +410,10 @@ function BookingContent() {
               type="button"
               onClick={() => handleSessionToggle(true)}
               className={cn(
-                'px-4 py-1.5 rounded-md transition-all',
-                isOnline ? 'bg-background text-foreground shadow-sm' : 'text-muted-foreground',
+                "px-4 py-1.5 rounded-md transition-all",
+                isOnline
+                  ? "bg-background text-foreground shadow-sm"
+                  : "text-muted-foreground",
               )}
             >
               Online
@@ -303,8 +422,10 @@ function BookingContent() {
               type="button"
               onClick={() => handleSessionToggle(false)}
               className={cn(
-                'px-4 py-1.5 rounded-md transition-all',
-                !isOnline ? 'bg-background text-foreground shadow-sm' : 'text-muted-foreground',
+                "px-4 py-1.5 rounded-md transition-all",
+                !isOnline
+                  ? "bg-background text-foreground shadow-sm"
+                  : "text-muted-foreground",
               )}
             >
               In-person
@@ -340,9 +461,24 @@ function BookingContent() {
             </p>
           ) : (
             <>
-              <SlotSection title="Morning"   slots={morningSlots}   selectedId={selectedSlot} onSelect={setSelectedSlot} />
-              <SlotSection title="Afternoon" slots={afternoonSlots} selectedId={selectedSlot} onSelect={setSelectedSlot} />
-              <SlotSection title="Evening"   slots={eveningSlots}   selectedId={selectedSlot} onSelect={setSelectedSlot} />
+              <SlotSection
+                title="Morning"
+                slots={morningSlots}
+                selectedId={newSlotId}
+                onSelect={setNewSlotId}
+              />
+              <SlotSection
+                title="Afternoon"
+                slots={afternoonSlots}
+                selectedId={newSlotId}
+                onSelect={setNewSlotId}
+              />
+              <SlotSection
+                title="Evening"
+                slots={eveningSlots}
+                selectedId={newSlotId}
+                onSelect={setNewSlotId}
+              />
             </>
           )}
 
@@ -361,15 +497,25 @@ function BookingContent() {
               <Building2 className="h-4 w-4 text-primary" />
             </div>
             <div className="flex-1 min-w-0">
-              <p className="text-xs text-muted-foreground mb-0.5">Selected campus</p>
-              <p className="text-sm font-semibold text-foreground truncate">{confirmedCampusName}</p>
+              <p className="text-xs text-muted-foreground mb-0.5">
+                Selected campus
+              </p>
+              <p className="text-sm font-semibold text-foreground truncate">
+                {confirmedCampusName}
+              </p>
               {confirmedSubName && (
-                <p className="text-xs text-muted-foreground truncate">{confirmedSubName}</p>
+                <p className="text-xs text-muted-foreground truncate">
+                  {confirmedSubName}
+                </p>
               )}
             </div>
             <button
               type="button"
-              onClick={() => { setSheetStep('campus'); setPendingCampusId(null); setSheetOpen(true); }}
+              onClick={() => {
+                setSheetStep("campus");
+                setPendingCampusId(null);
+                setSheetOpen(true);
+              }}
               className="text-xs font-medium text-primary shrink-0 hover:underline"
             >
               Change
@@ -385,7 +531,7 @@ function BookingContent() {
             <>
               <p className="text-xl font-bold">₹{slotPrice}</p>
               <p className="text-xs text-muted-foreground">
-                Per{sessionDuration ? ` ${sessionDuration} min` : ''} session
+                Per{sessionDuration ? ` ${sessionDuration} min` : ""} session
               </p>
             </>
           ) : (
@@ -394,13 +540,24 @@ function BookingContent() {
         </div>
         <Button
           onClick={handleConfirm}
-          disabled={!selectedSlot || (!isOnline && (
-            !confirmedCampusId ||
-            (confirmedCampusId !== null && getSubCampusOptions(confirmedCampusId).length > 0 && !confirmedSubId)
-          ))}
+          disabled={
+            confirming ||
+            !newSlotId ||
+            (!isOnline &&
+              (!confirmedCampusId ||
+                (confirmedCampusId !== null &&
+                  getSubCampusOptions(confirmedCampusId).length > 0 &&
+                  !confirmedSubId)))
+          }
           className="rounded-full px-8 h-12 text-sm font-semibold"
         >
-          Confirm booking
+          {confirming ? (
+            <Loader2 className="h-4 w-4 animate-spin" />
+          ) : isReschedule ? (
+            "Confirm reschedule"
+          ) : (
+            "Confirm booking"
+          )}
         </Button>
       </div>
 
@@ -426,11 +583,13 @@ function BookingContent() {
 
 export default function BookingPage() {
   return (
-    <Suspense fallback={
-      <div className="min-h-screen flex items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
-      </div>
-    }>
+    <Suspense
+      fallback={
+        <div className="min-h-screen flex items-center justify-center">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        </div>
+      }
+    >
       <BookingContent />
     </Suspense>
   );
