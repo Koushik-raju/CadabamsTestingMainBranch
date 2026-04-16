@@ -98,16 +98,16 @@ function BookPackageContent() {
                 <div className="flex-1 min-w-0 space-y-2">
                   <div className="flex items-start justify-between gap-2">
                     <p className="font-semibold text-sm text-foreground leading-snug line-clamp-2 flex-1">
-                      {pkg.name}
+                      {pkg.package_name}
                     </p>
                     <span className="text-base font-bold text-primary shrink-0 leading-none mt-0.5">
-                      ₹{(pkg.price ?? 0).toLocaleString('en-IN')}
+                      ₹{(pkg.amount_total ?? 0).toLocaleString('en-IN')}
                     </span>
                   </div>
                   <div className="flex items-center gap-2">
                     <Badge variant="outline" className="gap-1 text-xs font-normal h-5 px-2">
                       <Clock className="w-3 h-3" />
-                      {pkg.duration_days ?? 30}d
+                      30d
                     </Badge>
                   </div>
                 </div>

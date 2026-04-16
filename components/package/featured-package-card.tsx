@@ -15,7 +15,6 @@ interface FeaturedPackageCardProps {
 
 export function FeaturedPackageCard({ pkg }: FeaturedPackageCardProps) {
   const router = useRouter();
-  const duration = pkg.duration_days ?? 30;
   const palette = getPackagePalette(pkg.id);
 
   return (
@@ -44,19 +43,19 @@ export function FeaturedPackageCard({ pkg }: FeaturedPackageCardProps) {
         <div className="flex items-center gap-2 mb-3">
           <Badge className={cn('flex items-center gap-1 text-white text-[10px] font-semibold border-0', palette.badgeBg)}>
             <Clock className="w-3 h-3" />
-            {duration} Days
+            30 Days
           </Badge>
           <Badge className={cn('flex items-center gap-1 text-white text-[10px] font-semibold border-0', palette.badgeBg)}>
             <Layers className="w-3 h-3" />
-            {pkg.active ? 'Active' : 'Available'}
+            Available
           </Badge>
         </div>
 
         <h2 className="text-white font-bold text-xl leading-tight line-clamp-2 mb-1">
-          {pkg.name}
+          {pkg.package_name}
         </h2>
         <p className="text-white/70 text-sm mb-4">
-          ₹{(pkg.price ?? 0).toLocaleString('en-IN')} · Complete care package
+          ₹{(pkg.amount_total ?? 0).toLocaleString('en-IN')} · Complete care package
         </p>
 
         <Button

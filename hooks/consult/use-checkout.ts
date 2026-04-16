@@ -2,20 +2,19 @@ import useSWR from 'swr';
 import {
   crmControllerGetDoctorById,
   crmControllerGetSlotPrice,
-  appointmentsControllerBookIndividual,
-  appointmentsControllerConfirm,
+  crmControllerBookAppointment,
   crmControllerRazorpayPayment,
 } from '@/sdk/backend-v2';
-import type { DoctorResponseDto, RazorpayPaymentResponseDto } from '@/sdk/backend-v2';
+import type { DoctorListingResponseDto, RazorpayPaymentResponseDto } from '@/sdk/backend-v2';
 
-export type { DoctorResponseDto, RazorpayPaymentResponseDto };
+export type { DoctorListingResponseDto, RazorpayPaymentResponseDto };
 
 export function useCheckoutDoctor(doctorId: number | string | null) {
   const { data, error, isLoading } = useSWR(
     doctorId ? `/doctor/${doctorId}` : null,
     async () => {
       const res = await crmControllerGetDoctorById({ path: { id: Number(doctorId) } });
-      return (res.data as DoctorResponseDto | undefined) ?? null;
+      return res.data ?? null;
     }
   );
   return { doctor: data ?? null, isLoading, error };
@@ -26,8 +25,7 @@ export function useCheckoutSlotPrice(slotId: number | null) {
     slotId != null ? `/slot-price/${slotId}` : null,
     async () => {
       const res = await crmControllerGetSlotPrice({ path: { id: slotId! } });
-      const d = res.data as { price?: number } | undefined;
-      return d?.price ?? null;
+      return res.data?.price ?? null;
     }
   );
   return { price: data ?? null, isLoading, error };
@@ -37,24 +35,26 @@ export async function bookAndPay(opts: {
   slotId: number;
   campusId: number;
   subCampusId?: number;
-  consultationTypeId?: number;
+  consultationTypeId?: 1 | 2 | 3;
   leadId: number;
   uid: string;
+  callerName: string;
+  patientName: string;
 }): Promise<RazorpayPaymentResponseDto> {
-  // Step 1: book the slot
-  await appointmentsControllerBookIndividual({
-    path: { campus: 'cadabams', id: opts.slotId },
+  await crmControllerBookAppointment({
     body: {
-      slotId: opts.slotId,
+      slot_id: opts.slotId,
       lead_id: opts.leadId,
       campus_id: opts.campusId,
       sub_campus_id: opts.subCampusId,
-      consultation_type_id: opts.consultationTypeId,
-      payment_method: 'online',
+      consultation_type_id: opts.consultationTypeId ?? 1,
+      caller_name: opts.callerName,
+      patient_name: opts.patientName,
+      appointment_type: 'individual_appointment',
+      payment_mode: 'online',
     },
   });
 
-  // Step 2: initiate Razorpay payment
   const payRes = await crmControllerRazorpayPayment({
     body: {
       slot_id: opts.slotId,
@@ -63,11 +63,7 @@ export async function bookAndPay(opts: {
       uid: opts.uid,
     },
   });
-  const payData = payRes.data as RazorpayPaymentResponseDto | undefined;
-  if (!payData) throw new Error('Payment initiation failed — no data returned');
-  return payData;
-}
 
-export async function confirmAppointment(appointmentId: number): Promise<void> {
-  await appointmentsControllerConfirm({ path: { campus: 'cadabams', id: appointmentId } });
+  if (!payRes.data?.result) throw new Error('Payment initiation failed — no data returned');
+  return payRes.data.result;
 }

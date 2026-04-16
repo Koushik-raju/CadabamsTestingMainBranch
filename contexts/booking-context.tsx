@@ -7,7 +7,7 @@ type BookingState = {
   doctorId:           number | null;
   campusId:           number | null;
   subCampusId:        number | null;
-  consultationTypeId: number;
+  consultationTypeId: 1 | 2 | 3;
   startDatetime:      string | null;
 };
 

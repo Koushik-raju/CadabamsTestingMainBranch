@@ -530,21 +530,6 @@ export type BookedPackageLineDto = {
     status: 'open' | 'scheduled' | 'done';
 };
 
-export type RazorpayCustomerDto = {
-    /**
-     * Customer name
-     */
-    name: string;
-    /**
-     * Customer email
-     */
-    email: string;
-    /**
-     * Customer contact number
-     */
-    contact: string;
-};
-
 export type DoctorListingResponseDto = {
     /**
      * Doctor database ID
@@ -1171,6 +1156,21 @@ export type RazorpayPaymentDto = {
     campus_id: number;
 };
 
+export type RazorpayCustomerDto = {
+    /**
+     * Customer name
+     */
+    name: string;
+    /**
+     * Customer email
+     */
+    email: string;
+    /**
+     * Customer contact number
+     */
+    contact: string;
+};
+
 export type RazorpayPaymentResponseDto = {
     /**
      * Razorpay payment link ID
@@ -1236,6 +1236,21 @@ export type RazorpayPaymentResponseDto = {
      * Whether payment reminders are enabled
      */
     reminder_enable: boolean;
+};
+
+export type RazorpayPaymentEnvelopeDto = {
+    /**
+     * JSON-RPC version
+     */
+    jsonrpc: string;
+    /**
+     * JSON-RPC request id (always null)
+     */
+    id: number | null;
+    /**
+     * Payment link payload
+     */
+    result: RazorpayPaymentResponseDto;
 };
 
 export type RazorpayPackagePaymentDto = {
@@ -4766,7 +4781,7 @@ export type CrmControllerRazorpayPaymentResponses = {
     /**
      * Payment link created
      */
-    200: RazorpayPaymentResponseDto;
+    200: RazorpayPaymentEnvelopeDto;
 };
 
 export type CrmControllerRazorpayPaymentResponse = CrmControllerRazorpayPaymentResponses[keyof CrmControllerRazorpayPaymentResponses];
@@ -4782,7 +4797,7 @@ export type CrmControllerRazorpayPackagePaymentResponses = {
     /**
      * Package payment link created
      */
-    200: RazorpayPaymentResponseDto;
+    200: RazorpayPaymentEnvelopeDto;
 };
 
 export type CrmControllerRazorpayPackagePaymentResponse = CrmControllerRazorpayPackagePaymentResponses[keyof CrmControllerRazorpayPackagePaymentResponses];

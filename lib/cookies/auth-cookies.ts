@@ -99,21 +99,20 @@ export async function removeUser(): Promise<boolean> {
 
 // ── Redirect path ─────────────────────────────────────────────────────────────
 
-export function getRedirectPath(): string | null {
+export async function getRedirectPath(): Promise<string | null> {
   return getCookie(COOKIE_NAMES.REDIRECT_PATH);
 }
 
-export function setRedirectPath(path: string): boolean {
-  return setCookie(COOKIE_NAMES.REDIRECT_PATH, path, { path: '/', sameSite: 'lax', maxAge: 60 * 5 }) as unknown as boolean;
+export async function setRedirectPath(path: string): Promise<boolean> {
+  return setCookie(COOKIE_NAMES.REDIRECT_PATH, path, { path: '/', sameSite: 'lax', maxAge: 60 * 5 });
 }
 
-export function removeRedirectPath(): boolean {
-  return removeCookie(COOKIE_NAMES.REDIRECT_PATH) as unknown as boolean;
+export async function removeRedirectPath(): Promise<boolean> {
+  return removeCookie(COOKIE_NAMES.REDIRECT_PATH);
 }
 
 // ── Clear all auth state ──────────────────────────────────────────────────────
 
 export async function clearAuthState(): Promise<void> {
-  await Promise.all([clearTokens(), removeUser()]);
-  removeRedirectPath();
+  await Promise.all([clearTokens(), removeUser(), removeRedirectPath()]);
 }

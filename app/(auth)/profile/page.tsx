@@ -34,7 +34,7 @@ import type { AppointmentDashboardResponseDto } from "@/sdk/backend-v2";
 import { PackageListCard } from "@/components/package/package-list-card";
 import { useManagedPackages } from "@/hooks/packages/use-packages";
 import { useAuthMe } from "@/hooks/shared/auth/use-auth";
-import type { BookedPackage } from "@/types/package";
+import type { BookedPackageDto } from "@/sdk/backend-v2";
 
 
 function InfoRow({
@@ -121,11 +121,11 @@ export default function ProfilePage() {
     .join("")
     .toUpperCase();
 
-  const upcomingCount = dashboard?.upcomingCount ?? 0;
-  const completedCount = dashboard?.pastCount ?? 0;
-  const totalCount = (dashboard?.upcomingCount ?? 0) + (dashboard?.pastCount ?? 0) + (dashboard?.cancelledCount ?? 0);
+  const upcomingCount = dashboard?.upcoming_appointments?.length ?? 0;
+  const completedCount = dashboard?.completed_appointments?.length ?? 0;
+  const totalCount = dashboard?.total_appointment_counts ?? 0;
 
-  const bookedPackages = rawPackages as BookedPackage[];
+  const bookedPackages = rawPackages as BookedPackageDto[];
   const pendingPayments = bookedPackages.filter((p) => p.package_stage === "booked");
   const activePackages = bookedPackages.filter(
     (p) => p.package_stage === "confirm" || p.package_stage === "in_progress"

@@ -4,19 +4,16 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
-import { IndianRupee, Package, Clock, Star, CheckCircle2 } from 'lucide-react';
-import type { PackageResponseDto } from '@/sdk/backend-v2';
-import type { PackageProductLine } from '@/hooks/packages/use-packages';
+import { IndianRupee, Clock, Star, CheckCircle2 } from 'lucide-react';
+import type { PackageResponseDto, PackageProductLineDto } from '@/sdk/backend-v2';
 
 interface PackageCardProps {
   pkg: PackageResponseDto;
-  productLines?: PackageProductLine[];
+  productLines?: PackageProductLineDto[];
   onBook: () => void;
 }
 
 export function PackageCard({ pkg, productLines, onBook }: PackageCardProps) {
-  const duration = pkg.duration_days ?? 30;
-
   return (
     <Card className="border-border bg-card hover:shadow-md transition-shadow">
       <CardContent className="p-4 space-y-4">
@@ -24,7 +21,7 @@ export function PackageCard({ pkg, productLines, onBook }: PackageCardProps) {
         <div className="flex items-start justify-between gap-2">
           <div className="flex-1 min-w-0">
             <h3 className="font-semibold text-foreground text-sm leading-snug line-clamp-2">
-              {pkg.name}
+              {pkg.package_name}
             </h3>
           </div>
           <Badge variant="secondary" className="shrink-0 text-xs gap-1">
@@ -44,7 +41,7 @@ export function PackageCard({ pkg, productLines, onBook }: PackageCardProps) {
             <div>
               <p className="text-xs text-muted-foreground">Total Cost</p>
               <p className="text-sm font-medium text-foreground">
-                ₹{(pkg.price ?? 0).toLocaleString('en-IN')}
+                ₹{(pkg.amount_total ?? 0).toLocaleString('en-IN')}
               </p>
             </div>
           </div>
@@ -55,21 +52,10 @@ export function PackageCard({ pkg, productLines, onBook }: PackageCardProps) {
             </div>
             <div>
               <p className="text-xs text-muted-foreground">Duration</p>
-              <p className="text-sm font-medium text-foreground">{duration} Days</p>
+              <p className="text-sm font-medium text-foreground">30 Days</p>
             </div>
           </div>
 
-          {pkg.description && (
-            <div className="flex items-center gap-2.5">
-              <div className="flex items-center justify-center w-7 h-7 bg-muted rounded-lg shrink-0">
-                <Package className="w-3.5 h-3.5 text-primary" />
-              </div>
-              <div>
-                <p className="text-xs text-muted-foreground">About</p>
-                <p className="text-sm font-medium text-foreground line-clamp-2">{pkg.description}</p>
-              </div>
-            </div>
-          )}
         </div>
 
         {/* Services preview */}
@@ -81,7 +67,7 @@ export function PackageCard({ pkg, productLines, onBook }: PackageCardProps) {
                 <li key={line.id} className="flex items-center gap-2">
                   <CheckCircle2 className="w-3 h-3 text-primary shrink-0" />
                   <span className="text-xs text-foreground truncate">
-                    {String(line.product_id[1])}
+                    {String((line.product_id as unknown[])?.[1] ?? '')}
                   </span>
                 </li>
               ))}

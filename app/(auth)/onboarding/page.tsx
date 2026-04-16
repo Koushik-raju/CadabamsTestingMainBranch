@@ -115,19 +115,6 @@ function OnboardingContent() {
           caller_mobile: user?.phone_number ?? '',
           partner_name: `${data.patientFirstName} ${data.patientLastName}`.trim() || (user?.name ?? ''),
           contact_name: user?.name ?? '',
-          additionalFields: {
-            lead_id: user?.lead_id,
-            dob: data.dob,
-            tags: data.tags.join(','),
-            notifPhone: data.notifPhone,
-            notifEmail: data.notifEmail,
-            notifWhatsapp: data.notifWhatsapp,
-            patientFirstName: data.patientFirstName,
-            patientLastName: data.patientLastName,
-            locationPermission: data.locationPermission,
-            bluetoothPermission: data.bluetoothPermission,
-            trackingPermission: data.trackingPermission,
-          },
         },
       });
     } catch {

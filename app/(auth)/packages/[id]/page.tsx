@@ -29,7 +29,7 @@ import { BackButton } from '@/components/shared/navigation/back-button';
 import { useManagedPackages, initiatePackagePayment } from '@/hooks/use-packages';
 import { useAuth } from '@/hooks/use-auth';
 import { getPackagePalette } from '@/lib/package-colors';
-import type { BookedPackage, BookedPackageProductLine } from '@/types/package';
+import type { BookedPackageDto, BookedPackageLineDto } from '@/sdk/backend-v2';
 
 function getStageMeta(stage: string): { label: string; Icon: React.ElementType } {
   switch (stage) {
@@ -66,10 +66,6 @@ function getLineStatusBadge(status: string) {
   }
 }
 
-type ManagedPkg = BookedPackage & {
-  lines?: BookedPackageProductLine[];
-};
-
 export default function PackageDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
   const router = useRouter();
@@ -79,7 +75,7 @@ export default function PackageDetailPage({ params }: { params: Promise<{ id: st
   const [payLoading, setPayLoading] = useState(false);
   const [payError, setPayError] = useState<string | null>(null);
 
-  const pkg = packages.find((p) => String(p.booked_package_id) === id) as ManagedPkg | undefined;
+  const pkg = packages.find((p) => String(p.booked_package_id) === id) as BookedPackageDto | undefined;
 
   const handlePayNow = async () => {
     if (!pkg || !user?.lead_id) return;
@@ -89,7 +85,7 @@ export default function PackageDetailPage({ params }: { params: Promise<{ id: st
       const payData = await initiatePackagePayment({
         leadBookedPackageId: Number(pkg.booked_package_id),
         leadId: Number(user.lead_id),
-        uid: (user.sub as string) ?? String(user.lead_id),
+        campusId: Number((pkg.campus_id as unknown[])?.[0] ?? 0),
       });
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const RazorpayCheckout = (window as unknown as Record<string, unknown>).Razorpay as (new (opts: unknown) => { open(): void }) | undefined;
@@ -105,11 +101,6 @@ export default function PackageDetailPage({ params }: { params: Promise<{ id: st
       setPayError((err as { message?: string })?.message ?? 'Failed to process payment');
       setPayLoading(false);
     }
-  };
-
-  const handleViewJourney = () => {
-    if (!pkg?.journey_id) return;
-    router.push(`/journeys/${pkg.journey_id}/details`);
   };
 
   if (isLoading) {
@@ -145,9 +136,9 @@ export default function PackageDetailPage({ params }: { params: Promise<{ id: st
 
   const palette = getPackagePalette(pkg.booked_package_id);
   const { label, Icon } = getStageMeta(pkg.package_stage);
-  const packageName = String(pkg.package_id[1] ?? 'Package');
-  const campusName = pkg.campus_id ? String(pkg.campus_id[1] ?? '') : '';
-  const lines = (pkg.lines ?? []) as BookedPackageProductLine[];
+  const packageName = String((pkg.package_id as unknown[])?.[1] ?? 'Package');
+  const campusName = pkg.campus_id ? String((pkg.campus_id as unknown[])?.[1] ?? '') : '';
+  const lines: BookedPackageLineDto[] = pkg.lines ?? [];
   const doneCount = lines.filter((l) => l.status === 'done').length;
 
   const initials = packageName
@@ -269,31 +260,6 @@ export default function PackageDetailPage({ params }: { params: Promise<{ id: st
           </Card>
         )}
 
-        {/* Care Journey */}
-        {pkg.journey_id && (
-          <Card className="border-violet-200 bg-violet-50/50">
-            <CardContent className="p-4 flex items-center justify-between gap-3">
-              <div className="flex items-center gap-3">
-                <div className="w-9 h-9 rounded-xl bg-violet-100 flex items-center justify-center shrink-0">
-                  <BookOpen className="w-4 h-4 text-violet-600" />
-                </div>
-                <div>
-                  <p className="text-sm font-semibold text-foreground">Care Journey</p>
-                  <p className="text-xs text-muted-foreground">Your personalised care plan</p>
-                </div>
-              </div>
-              <Button
-                size="sm"
-                variant="outline"
-                className="shrink-0 rounded-full border-violet-200 text-violet-700 hover:bg-violet-100"
-                onClick={handleViewJourney}
-              >
-                View
-              </Button>
-            </CardContent>
-          </Card>
-        )}
-
         {/* Sessions */}
         {lines.length > 0 && (
           <Card>
@@ -312,18 +278,18 @@ export default function PackageDetailPage({ params }: { params: Promise<{ id: st
               </div>
               <div className="space-y-1">
                 {lines.map((line, i) => (
-                  <div key={line.id ?? i} className="flex items-center gap-3 py-2.5 border-b border-border last:border-0">
+                  <div key={line.line_id ?? i} className="flex items-center gap-3 py-2.5 border-b border-border last:border-0">
                     <div className="w-7 h-7 rounded-full bg-muted flex items-center justify-center shrink-0 text-[11px] font-bold text-muted-foreground">
                       {line.sequence_no ?? i + 1}
                     </div>
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-medium text-foreground truncate">
-                        {String(line.product_id[1])}
+                        {String((line.product_id as unknown[])?.[1] ?? '')}
                       </p>
                       {line.speciality_id && (
                         <div className="flex items-center gap-1 mt-0.5">
                           <Stethoscope className="w-3 h-3 text-muted-foreground" />
-                          <p className="text-xs text-muted-foreground">{String(line.speciality_id[1])}</p>
+                          <p className="text-xs text-muted-foreground">{String((line.speciality_id as unknown[])?.[1] ?? '')}</p>
                         </div>
                       )}
                     </div>
@@ -381,15 +347,6 @@ export default function PackageDetailPage({ params }: { params: Promise<{ id: st
           </Button>
         )}
 
-        {pkg.package_stage === 'done' && pkg.journey_id && (
-          <Button
-            className={`w-full rounded-full h-12 text-base font-semibold gap-2 bg-gradient-to-r ${palette.ctaGradient} border-0 text-white`}
-            onClick={handleViewJourney}
-          >
-            <BookOpen className="h-5 w-5" />
-            View Journey
-          </Button>
-        )}
       </div>
     </div>
   );

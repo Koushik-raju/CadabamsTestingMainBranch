@@ -5,5 +5,4 @@ export {
   bookPackage,
   initiatePackagePayment,
 } from '@/hooks/packages/use-packages';
-export type { BookedPackage, PackageProductLine } from '@/hooks/packages/use-packages';
-export type { PackageResponseDto } from '@/sdk/backend-v2';
+export type { PackageResponseDto, BookedPackageDto, PackageProductLineDto } from '@/sdk/backend-v2';

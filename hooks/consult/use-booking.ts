@@ -1,24 +1,20 @@
-import { useState, useCallback } from 'react';
+import { useCallback } from 'react';
 import useSWR from 'swr';
 import {
   crmControllerGetDoctorById,
   crmControllerGetSlots,
   crmControllerGetSlotPrice,
-  mastersControllerGetCampuses,
-  appointmentsControllerBookIndividual,
+  crmControllerGetCampuses,
+  crmControllerBookAppointment,
 } from '@/sdk/backend-v2';
-import type { DoctorResponseDto, SlotResponseDto } from '@/sdk/backend-v2';
+import type { DoctorListingResponseDto, CampusMasterResponseDto, SlotResponseDto } from '@/sdk/backend-v2';
 
-export type { DoctorResponseDto, SlotResponseDto };
+export type { DoctorListingResponseDto, SlotResponseDto };
 
-// Campus shape (passthrough from CRM)
-export type CampusItem = {
-  id: number;
-  name: string;
+// CampusMasterResponseDto extended with extra fields the API sends that aren't yet in the SDK type
+export type CampusItem = CampusMasterResponseDto & {
   display_name?: string;
-  book_appointment?: boolean;
   area?: Array<[string | number, string | number]>;
-  [key: string]: unknown;
 };
 
 export function useBookingDoctor(doctorId: number | string | null) {
@@ -26,7 +22,7 @@ export function useBookingDoctor(doctorId: number | string | null) {
     doctorId ? `/doctor/${doctorId}` : null,
     async () => {
       const res = await crmControllerGetDoctorById({ path: { id: Number(doctorId) } });
-      return (res.data as DoctorResponseDto | undefined) ?? null;
+      return res.data ?? null;
     }
   );
   return { doctor: data ?? null, isLoading, error };
@@ -36,9 +32,8 @@ export function useBookingCampuses() {
   const { data, error, isLoading } = useSWR(
     '/campuses/booking',
     async () => {
-      const res = await mastersControllerGetCampuses({ path: { campus: 'cadabams' } });
-      const raw = Array.isArray(res.data) ? res.data : (res.data ? [res.data] : []);
-      return (raw as CampusItem[]).filter((c) => c.book_appointment);
+      const res = await crmControllerGetCampuses({});
+      return (res.data ?? []).filter((c) => c.book_appointment) as CampusItem[];
     }
   );
   return { campuses: data ?? [], isLoading, error };
@@ -64,7 +59,7 @@ export function useBookingSlots(
           availability: 'open',
         },
       });
-      return (res.data as SlotResponseDto[] | undefined) ?? [];
+      return res.data ?? [];
     }
   );
 
@@ -76,8 +71,7 @@ export function useBookingSlotPrice(slotId: number | null) {
     slotId != null ? `/slot-price/${slotId}` : null,
     async () => {
       const res = await crmControllerGetSlotPrice({ path: { id: slotId! } });
-      const d = res.data as { price?: number } | undefined;
-      return d?.price ?? null;
+      return res.data?.price ?? null;
     }
   );
   return { price: data ?? null, isLoading, error };
@@ -89,18 +83,22 @@ export async function bookIndividualSlot(
     leadId?: number;
     campusId?: number;
     subCampusId?: number;
-    consultationTypeId?: number;
+    consultationTypeId?: 1 | 2 | 3;
+    callerName?: string;
+    patientName?: string;
   }
 ): Promise<void> {
-  await appointmentsControllerBookIndividual({
-    path: { campus: 'cadabams', id: slotId },
+  await crmControllerBookAppointment({
     body: {
-      slotId,
-      lead_id: opts?.leadId,
-      campus_id: opts?.campusId,
+      slot_id: slotId,
+      lead_id: opts?.leadId ?? 0,
+      campus_id: opts?.campusId ?? 0,
       sub_campus_id: opts?.subCampusId,
-      consultation_type_id: opts?.consultationTypeId,
-      payment_method: 'online',
+      consultation_type_id: opts?.consultationTypeId ?? 1,
+      caller_name: opts?.callerName ?? '',
+      patient_name: opts?.patientName ?? '',
+      appointment_type: 'individual_appointment',
+      payment_mode: 'online',
     },
   });
 }

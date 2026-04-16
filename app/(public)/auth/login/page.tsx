@@ -1,7 +1,7 @@
 'use client';
 
 import { Suspense, useState, useEffect, useCallback, useRef } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -26,7 +26,6 @@ type PhoneForm = z.infer<typeof phoneSchema>;
 
 function LoginContent() {
   const router = useRouter();
-  const searchParams = useSearchParams();
   const { login } = useAuth();
   const { sendOtp, verifyLogin, isSendingOtp, isVerifying } = useAuthActions();
 
@@ -37,7 +36,6 @@ function LoginContent() {
   const [redirectModal, setRedirectModal] = useState(false);
   const verifyingRef = useRef(false);
 
-  const returnUrl = searchParams.get('returnUrl') ?? '';
 
   const { control, handleSubmit, getValues, formState: { errors } } = useForm<PhoneForm>({
     resolver: zodResolver(phoneSchema),
@@ -156,7 +154,7 @@ function LoginContent() {
                 <p className="text-muted-foreground">
                   Don&apos;t have an account?{' '}
                   <Button variant="link" asChild className="p-0 h-auto text-sm">
-                    <Link href={`/auth/signup${returnUrl ? `?returnUrl=${returnUrl}` : ''}`}>
+                    <Link href="/auth/signup">
                       Sign up
                     </Link>
                   </Button>

@@ -32,9 +32,6 @@ export function attachRefreshInterceptor(axiosInstance: AxiosInstance) {
           };
           return axiosInstance(original);
         } catch {
-          if (typeof window !== 'undefined') {
-            window.location.href = '/auth/login';
-          }
           return Promise.reject(error);
         }
       }

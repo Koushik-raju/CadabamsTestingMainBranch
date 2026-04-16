@@ -125,7 +125,6 @@ function BookPackageContent({ packageId }: { packageId: string }) {
       const payData = await initiatePackagePayment({
         leadBookedPackageId: booking_id,
         leadId: Number(user.lead_id),
-        uid: (user.sub as string) ?? String(user.lead_id),
       });
       const RazorpayCheckout = (window as unknown as Record<string, unknown>).Razorpay as (new (opts: unknown) => { open(): void }) | undefined;
       if (!RazorpayCheckout) throw new Error('Razorpay SDK not loaded.');
@@ -171,7 +170,7 @@ function BookPackageContent({ packageId }: { packageId: string }) {
                 <Package className="w-6 h-6 text-primary" />
               </div>
               <div className="flex-1 min-w-0">
-                <h2 className="text-lg font-bold text-foreground">{pkg.name}</h2>
+                <h2 className="text-lg font-bold text-foreground">{pkg.package_name}</h2>
                 <p className="text-sm text-muted-foreground">ID: #{pkg.id}</p>
               </div>
             </div>
@@ -189,7 +188,7 @@ function BookPackageContent({ packageId }: { packageId: string }) {
                 </div>
               </div>
               <p className="text-2xl font-bold text-primary">
-                ₹{(pkg.price ?? 0).toLocaleString('en-IN')}
+                ₹{(pkg.amount_total ?? 0).toLocaleString('en-IN')}
               </p>
             </div>
 
@@ -232,7 +231,7 @@ function BookPackageContent({ packageId }: { packageId: string }) {
             <h3 className="font-semibold text-foreground mb-3">Payment Summary</h3>
             <div className="flex justify-between text-sm">
               <span className="text-muted-foreground">Package Cost</span>
-              <span className="text-foreground">₹{(pkg.price ?? 0).toLocaleString('en-IN')}</span>
+              <span className="text-foreground">₹{(pkg.amount_total ?? 0).toLocaleString('en-IN')}</span>
             </div>
             <div className="flex justify-between text-sm">
               <span className="text-muted-foreground">Taxes &amp; Fees</span>
@@ -241,7 +240,7 @@ function BookPackageContent({ packageId }: { packageId: string }) {
             <Separator />
             <div className="flex justify-between font-semibold">
               <span className="text-foreground">Total Amount</span>
-              <span className="text-primary text-lg">₹{(pkg.price ?? 0).toLocaleString('en-IN')}</span>
+              <span className="text-primary text-lg">₹{(pkg.amount_total ?? 0).toLocaleString('en-IN')}</span>
             </div>
           </CardContent>
         </Card>
@@ -252,7 +251,7 @@ function BookPackageContent({ packageId }: { packageId: string }) {
           {isLoading ? (
             <><Loader2 className="w-5 h-5 animate-spin" />Processing Payment...</>
           ) : (
-            <><CreditCard className="w-5 h-5" />Pay ₹{(pkg.price ?? 0).toLocaleString('en-IN')}</>
+            <><CreditCard className="w-5 h-5" />Pay ₹{(pkg.amount_total ?? 0).toLocaleString('en-IN')}</>
           )}
         </Button>
 

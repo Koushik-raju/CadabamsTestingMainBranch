@@ -124,6 +124,6 @@ export function managedPackagesKey(): string {
   return '/packages/managed';
 }
 
-export function packageProductLinesKey(): string {
-  return '/packages/product-lines';
+export function packageProductLinesKey(packageId?: number): string {
+  return packageId ? `/packages/product-lines/${packageId}` : '/packages/product-lines';
 }

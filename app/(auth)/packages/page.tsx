@@ -22,7 +22,7 @@ import { PackageDiscoveryCard } from '@/components/package/package-discovery-car
 import { useAvailablePackages, useManagedPackages } from '@/hooks/use-packages';
 import { getPackagePalette } from '@/lib/package-colors';
 import { cn } from '@/lib/utils';
-import type { BookedPackage } from '@/hooks/use-packages';
+import type { BookedPackageDto } from '@/sdk/backend-v2';
 
 // Per-stage visual config
 const STAGE_CONFIG: Record<string, { label: string; Icon: React.ElementType; cardGradient: string; badgeCn: string }> = {
@@ -61,9 +61,9 @@ function fallbackConfig(stage: string) {
   };
 }
 
-function PurchasedPackageCard({ pkg }: { pkg: BookedPackage }) {
+function PurchasedPackageCard({ pkg }: { pkg: BookedPackageDto }) {
   const router = useRouter();
-  const packageName = String(pkg.package_id[1] ?? 'Package');
+  const packageName = String((pkg.package_id as unknown[])?.[1] ?? 'Package');
   const initials = packageName
     .split(' ')
     .slice(0, 2)
@@ -134,7 +134,7 @@ function PackagesInner() {
   const filtered = useMemo(
     () =>
       available.filter(
-        (p) => !search || p.name.toLowerCase().includes(search.toLowerCase())
+        (p) => !search || p.package_name.toLowerCase().includes(search.toLowerCase())
       ),
     [available, search]
   );

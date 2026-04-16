@@ -1,5 +1,5 @@
 import useSWR from 'swr';
-import { mastersControllerGetCampuses } from '@/sdk/backend-v2';
+import { crmControllerGetCampuses } from '@/sdk/backend-v2';
 import { campusesKey } from '@/lib/swr-keys';
 
 interface UseCampusesResult {
@@ -12,7 +12,7 @@ export function useCampuses(): UseCampusesResult {
   const { data, error, isLoading } = useSWR(
     campusesKey(),
     async () => {
-      const res = await mastersControllerGetCampuses({ path: { campus: 'cadabams' } });
+      const res = await crmControllerGetCampuses({});
       if (res.error) throw new Error(JSON.stringify(res.error));
       const result = res.data;
       return Array.isArray(result) ? result : (result ? [result] : []);

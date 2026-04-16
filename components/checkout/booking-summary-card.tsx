@@ -4,9 +4,9 @@ import { User as UserIcon, Video, Building2 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import type { DoctorResponseDto } from '@/sdk/backend-v2';
+import type { CrmControllerGetDoctorByIdResponse } from '@/sdk/backend-v2';
 
-function displayName(doctor: DoctorResponseDto | null): string {
+function displayName(doctor: CrmControllerGetDoctorByIdResponse | null): string {
   if (!doctor) return 'Doctor';
   const raw = (doctor.name || '').trim();
   const name = raw.includes(',') ? raw.split(',').pop()!.trim() : raw;
@@ -35,7 +35,7 @@ function formatDatetime(iso: string | null): string {
 }
 
 export interface BookingSummaryCardProps {
-  doctor: DoctorResponseDto | null;
+  doctor: CrmControllerGetDoctorByIdResponse | null;
   startDatetime: string | null;
   isOnline: boolean;
 }
@@ -44,7 +44,7 @@ export function BookingSummaryCard({ doctor, startDatetime, isOnline }: BookingS
   const initials = (doctor?.name || '')
     .replace(/^Dr\.?\s*/i, '')
     .split(' ')
-    .map((w) => w[0])
+    .map((w: string) => w[0])
     .slice(0, 2)
     .join('')
     .toUpperCase();
@@ -59,8 +59,8 @@ export function BookingSummaryCard({ doctor, startDatetime, isOnline }: BookingS
       <CardContent className="space-y-4">
         <div className="flex items-center gap-4">
           <Avatar className="h-14 w-14">
-            {doctor?.profile_image && (
-              <AvatarImage src={doctor.profile_image} alt={displayName(doctor)} />
+            {doctor?.image && (
+              <AvatarImage src={doctor.image} alt={displayName(doctor)} />
             )}
             <AvatarFallback className="bg-primary/10 text-primary font-semibold">
               {initials || <UserIcon className="h-6 w-6" />}
@@ -70,9 +70,9 @@ export function BookingSummaryCard({ doctor, startDatetime, isOnline }: BookingS
             <p className="font-semibold text-foreground">
               {displayName(doctor)}
             </p>
-            {doctor?.doctor_type && (
+            {doctor?.speciality_id?.[1] && (
               <p className="text-sm text-muted-foreground">
-                {doctor.doctor_type}
+                {String(doctor.speciality_id[1])}
               </p>
             )}
           </div>

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, use, useMemo, useEffect } from 'react';
+import { useState, use, useMemo, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -16,6 +16,7 @@ export default function AssessmentFormPage({ params }: { params: Promise<{ id: s
   const { user } = useAuth();
 
   const [answers, setAnswers] = useState<Record<string, AnswerValue>>({});
+  const answersInitialized = useRef(false);
   const [currentStep, setCurrentStep] = useState(0);
   const [isStepComplete, setIsStepComplete] = useState(false);
   const [submitting, setSubmitting] = useState(false);
@@ -41,7 +42,8 @@ export default function AssessmentFormPage({ params }: { params: Promise<{ id: s
   }, [assessment?.Questions]);
 
   useEffect(() => {
-    if (!questions.length) return;
+    if (!questions.length || answersInitialized.current) return;
+    answersInitialized.current = true;
     const initial: Record<string, AnswerValue> = {};
     questions.forEach((q, index) => {
       const key = `q_${q.id}_step_${index}`;

@@ -98,7 +98,7 @@ function PackageDetailContent({ packageId }: { packageId: string }) {
     router.push(`/packages/book/${pkg.id}`);
   };
 
-  const duration = pkg.duration_days ?? 30;
+  const duration = 30;
   const palette = getPackagePalette(pkg.id);
 
   return (
@@ -119,10 +119,10 @@ function PackageDetailContent({ packageId }: { packageId: string }) {
           </div>
           <div className="relative p-5 w-full">
             <p className="text-white/70 text-sm font-semibold mb-1">
-              ₹{(pkg.price ?? 0).toLocaleString('en-IN')}
+              ₹{(pkg.amount_total ?? 0).toLocaleString('en-IN')}
             </p>
             <h1 className="text-white font-bold text-xl leading-tight line-clamp-2">
-              {pkg.name}
+              {pkg.package_name}
             </h1>
           </div>
         </div>
@@ -139,7 +139,7 @@ function PackageDetailContent({ packageId }: { packageId: string }) {
               <IndianRupee className="w-4 h-4 text-primary" />
               <div>
                 <p className="text-sm font-semibold text-foreground">
-                  ₹{(pkg.price ?? 0).toLocaleString('en-IN')}
+                  ₹{(pkg.amount_total ?? 0).toLocaleString('en-IN')}
                 </p>
                 <p className="text-[11px] text-muted-foreground">Total Cost</p>
               </div>
@@ -163,7 +163,7 @@ function PackageDetailContent({ packageId }: { packageId: string }) {
           {/* What's included */}
           {lines.length > 0 && (() => {
             const groups = lines.reduce<{ name: string; count: number }[]>((acc, line) => {
-              const name = String(line.product_id[1]);
+              const name = String((line.product_id as unknown[])?.[1] ?? '');
               const existing = acc.find((g) => g.name === name);
               if (existing) { existing.count++; } else { acc.push({ name, count: 1 }); }
               return acc;
@@ -186,9 +186,7 @@ function PackageDetailContent({ packageId }: { packageId: string }) {
             );
           })()}
 
-          {pkg.description && (
-            <p className="text-sm text-muted-foreground leading-relaxed">{pkg.description}</p>
-          )}
+
         </div>
       </div>
 
@@ -198,7 +196,7 @@ function PackageDetailContent({ packageId }: { packageId: string }) {
           className="w-full bg-primary hover:bg-primary/90 text-primary-foreground font-semibold text-base h-14 rounded-2xl"
           onClick={handleProceed}
         >
-          Book for ₹{(pkg.price ?? 0).toLocaleString('en-IN')}
+          Book for ₹{(pkg.amount_total ?? 0).toLocaleString('en-IN')}
           <ChevronRight className="w-5 h-5 ml-1" />
         </Button>
       </div>

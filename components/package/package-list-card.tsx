@@ -4,10 +4,10 @@ import { useRouter } from 'next/navigation';
 import { IndianRupee, Calendar, Package, Clock, CheckCircle, PlayCircle } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
-import type { BookedPackage } from '@/types/package';
+import type { BookedPackageDto } from '@/sdk/backend-v2';
 
 interface PackageListCardProps {
-  pkg: BookedPackage;
+  pkg: BookedPackageDto;
 }
 
 function getStageBadge(stage: string) {
@@ -26,7 +26,7 @@ function getStageBadge(stage: string) {
 export function PackageListCard({ pkg }: PackageListCardProps) {
   const router = useRouter();
   const { label, className, Icon } = getStageBadge(pkg.package_stage);
-  const packageName = String(pkg.package_id[1] ?? 'Package');
+  const packageName = String((pkg.package_id as unknown[])?.[1] ?? 'Package');
 
   const initials = packageName
     .split(' ')
