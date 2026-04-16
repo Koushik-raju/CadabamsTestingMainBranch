@@ -21,7 +21,7 @@
  * DEPENDENCIES:
  *   PathNode, UnitHeaderBar
  *
- * LAST UPDATED: 2026-04-16 — rewrite getTaskType() with correct priority using ID arrays (read > assessments > worksheets > subJournalings > audios > videos > flags)
+ * LAST UPDATED: 2026-04-16 — remove video type and bare-description read fallback; read requires both extraTaskTitle and extraTaskDescription
  */
 'use client';
 
@@ -61,15 +61,11 @@ export function getTaskType(task: JourneyTask): NodeTaskType {
   if (task.subJournalingIds?.length || task.subJournalings?.length) return 'journal';
   // 5. Audios
   if (task.audioIds?.length || task.audios?.length)              return 'audio';
-  // 6. Videos
-  if (task.videoIds?.length || task.videos?.length)              return 'video';
-  // 7. Boolean flags
+  // 6. Boolean flags
   if (task.moodCheckIn)                                          return 'gift';
   if (task.showAppointments || task.showFirstBooking)            return 'book';
   if (task.fillSelfJournal)                                      return 'journal';
-  // 8. Fallback — extraTaskDescription alone (no title) still counts as read
-  if (task.extraTaskDescription?.length)                         return 'read';
-  return 'video';
+  return 'journal'; // default fallback
 }
 
 const LR = [-68, 68]; // px from center, alternating

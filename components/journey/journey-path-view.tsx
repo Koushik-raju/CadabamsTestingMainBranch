@@ -285,13 +285,7 @@ export function JourneyPathView({ journey, progress, mobile, journeyId }: Journe
       return;
     }
 
-    // 6. Videos
-    if (task.videoIds?.length) {
-      router.push(`/wellness/videos/${task.videoIds[0]}?redirectTo=${redirectTo}`);
-      return;
-    }
-
-    // 7. Boolean-flag tasks
+    // 6. Boolean-flag tasks
     if (task.moodCheckIn) {
       router.push(`/journeys/mood-check?journey=${journeyId}&redirectTo=${redirectTo}`);
       return;
@@ -305,8 +299,6 @@ export function JourneyPathView({ journey, progress, mobile, journeyId }: Journe
       return;
     }
 
-    // 8. Fallback read — content shown in-sheet only
-    if (task.extraTaskDescription?.length) return;
   }
 
   async function markNodeDone(node: PathChainNode) {
