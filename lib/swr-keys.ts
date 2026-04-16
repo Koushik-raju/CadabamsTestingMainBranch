@@ -15,12 +15,13 @@
  *   enrolledJourneysKey()    — key for the current user's journey enrollments list
  *   availablePackagesKey()   — key for the browsable package catalogue
  *   managedPackagesKey()     — key for the user's purchased packages
+ *   threadsKey(resourceId)   — key for the user's chat thread list
  *   (all other keys)         — see individual function names
  *
  * DEPENDENCIES:
  *   None — pure string-returning functions, no imports.
  *
- * LAST UPDATED: 2026-04-16 — added enrolledJourneysKey for My Journeys section
+ * LAST UPDATED: 2026-04-16 — added threadsKey for chat thread list
  */
 export function authMeKey(): string {
   return '/auth/me';
@@ -158,4 +159,8 @@ export function packageProductDetailsKey(packageId: number): string {
 
 export function enrolledJourneysKey(): string {
   return '/journeys/enrolled';
+}
+
+export function threadsKey(resourceId: string): readonly ['threads', string] {
+  return ['threads', resourceId] as const;
 }
