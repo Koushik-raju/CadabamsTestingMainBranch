@@ -1,7 +1,7 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import { Clock, Layers, ArrowRight, Sparkles } from 'lucide-react';
+import { Layers, ArrowRight, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card } from '@/components/ui/card';
@@ -42,12 +42,8 @@ export function FeaturedPackageCard({ pkg }: FeaturedPackageCardProps) {
       <div className="absolute bottom-0 left-0 right-0 p-5">
         <div className="flex items-center gap-2 mb-3">
           <Badge className={cn('flex items-center gap-1 text-white text-[10px] font-semibold border-0', palette.badgeBg)}>
-            <Clock className="w-3 h-3" />
-            30 Days
-          </Badge>
-          <Badge className={cn('flex items-center gap-1 text-white text-[10px] font-semibold border-0', palette.badgeBg)}>
             <Layers className="w-3 h-3" />
-            Available
+            {pkg.package_product_ids.length} Sessions
           </Badge>
         </div>
 
@@ -55,7 +51,7 @@ export function FeaturedPackageCard({ pkg }: FeaturedPackageCardProps) {
           {pkg.package_name}
         </h2>
         <p className="text-white/70 text-sm mb-4">
-          ₹{(pkg.amount_total ?? 0).toLocaleString('en-IN')} · Complete care package
+          ₹{pkg.amount_total.toLocaleString('en-IN')}
         </p>
 
         <Button

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, Suspense } from 'react';
+import { Suspense } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -8,14 +8,13 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { BackButton } from '@/components/shared/navigation/back-button';
 import {
   CheckCircle2,
-  Clock,
   Layers,
   IndianRupee,
   AlertCircle,
   Package,
   ChevronRight,
 } from 'lucide-react';
-import { useAvailablePackages, usePackageProductLines } from '@/hooks/use-packages';
+import { useAvailablePackages, usePackageProductDetails } from '@/hooks/use-packages';
 import { getPackagePalette } from '@/lib/package-colors';
 import { cn } from '@/lib/utils';
 import type { PackageResponseDto } from '@/sdk/backend-v2';
@@ -50,29 +49,9 @@ function PackageDetailSkeleton() {
 function PackageDetailContent({ packageId }: { packageId: string }) {
   const router = useRouter();
   const { packages, isLoading: pkgLoading } = useAvailablePackages();
-  const { lines, isLoading: linesLoading } = usePackageProductLines();
-  const [pkg, setPkg] = useState<PackageResponseDto | null>(null);
-
-  useEffect(() => {
-    if (!pkgLoading && packages.length > 0) {
-      const found = packages.find((p) => String(p.id) === packageId);
-      if (found) {
-        setPkg(found);
-      } else {
-        if (typeof sessionStorage !== 'undefined') {
-          const stored = sessionStorage.getItem('selected_package');
-          if (stored) {
-            try {
-              const parsed = JSON.parse(stored) as PackageResponseDto;
-              if (String(parsed.id) === packageId) setPkg(parsed);
-            } catch {
-              // ignore
-            }
-          }
-        }
-      }
-    }
-  }, [packages, pkgLoading, packageId]);
+  const numericId = Number(packageId);
+  const pkg = packages.find((p) => p.id === numericId) ?? null;
+  const { lines, isLoading: linesLoading } = usePackageProductDetails(numericId);
 
   const isLoading = pkgLoading || linesLoading;
 
@@ -98,7 +77,6 @@ function PackageDetailContent({ packageId }: { packageId: string }) {
     router.push(`/packages/book/${pkg.id}`);
   };
 
-  const duration = 30;
   const palette = getPackagePalette(pkg.id);
 
   return (
@@ -119,7 +97,7 @@ function PackageDetailContent({ packageId }: { packageId: string }) {
           </div>
           <div className="relative p-5 w-full">
             <p className="text-white/70 text-sm font-semibold mb-1">
-              ₹{(pkg.amount_total ?? 0).toLocaleString('en-IN')}
+              ₹{pkg.amount_total.toLocaleString('en-IN')}
             </p>
             <h1 className="text-white font-bold text-xl leading-tight line-clamp-2">
               {pkg.package_name}
@@ -134,28 +112,21 @@ function PackageDetailContent({ packageId }: { packageId: string }) {
           </div>
 
           {/* Stats row */}
-          <div className="grid grid-cols-3 py-3 border-y border-border">
+          <div className="grid grid-cols-2 py-3 border-y border-border">
             <div className="flex items-center gap-2">
               <IndianRupee className="w-4 h-4 text-primary" />
               <div>
                 <p className="text-sm font-semibold text-foreground">
-                  ₹{(pkg.amount_total ?? 0).toLocaleString('en-IN')}
+                  ₹{pkg.amount_total.toLocaleString('en-IN')}
                 </p>
                 <p className="text-[11px] text-muted-foreground">Total Cost</p>
-              </div>
-            </div>
-            <div className="flex items-center gap-2">
-              <Clock className="w-4 h-4 text-primary" />
-              <div>
-                <p className="text-sm font-semibold text-foreground">{duration} Days</p>
-                <p className="text-[11px] text-muted-foreground">Duration</p>
               </div>
             </div>
             <div className="flex items-center gap-2">
               <Layers className="w-4 h-4 text-primary" />
               <div>
                 <p className="text-sm font-semibold text-foreground">{lines.length}</p>
-                <p className="text-[11px] text-muted-foreground">Services</p>
+                <p className="text-[11px] text-muted-foreground">Sessions</p>
               </div>
             </div>
           </div>
@@ -163,7 +134,7 @@ function PackageDetailContent({ packageId }: { packageId: string }) {
           {/* What's included */}
           {lines.length > 0 && (() => {
             const groups = lines.reduce<{ name: string; count: number }[]>((acc, line) => {
-              const name = String((line.product_id as unknown[])?.[1] ?? '');
+              const name = String(line.product_id?.[1] ?? '');
               const existing = acc.find((g) => g.name === name);
               if (existing) { existing.count++; } else { acc.push({ name, count: 1 }); }
               return acc;
@@ -196,7 +167,7 @@ function PackageDetailContent({ packageId }: { packageId: string }) {
           className="w-full bg-primary hover:bg-primary/90 text-primary-foreground font-semibold text-base h-14 rounded-2xl"
           onClick={handleProceed}
         >
-          Book for ₹{(pkg.amount_total ?? 0).toLocaleString('en-IN')}
+          Book for ₹{pkg.amount_total.toLocaleString('en-IN')}
           <ChevronRight className="w-5 h-5 ml-1" />
         </Button>
       </div>

@@ -63,7 +63,7 @@ function fallbackConfig(stage: string) {
 
 function PurchasedPackageCard({ pkg }: { pkg: BookedPackageDto }) {
   const router = useRouter();
-  const packageName = String((pkg.package_id as unknown[])?.[1] ?? 'Package');
+  const packageName = String(pkg.package_id?.[1] ?? 'Package');
   const initials = packageName
     .split(' ')
     .slice(0, 2)

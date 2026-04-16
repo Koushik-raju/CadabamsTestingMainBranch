@@ -1,7 +1,7 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import { Clock, ArrowRight } from 'lucide-react';
+import { Layers, ArrowRight } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
 import { getPackagePalette } from '@/lib/package-colors';
@@ -55,8 +55,8 @@ export function PackageDiscoveryCard({ pkg, className }: PackageDiscoveryCardPro
           {pkg.package_name}
         </h4>
         <div className="flex items-center gap-1 mt-1 text-[10px] text-muted-foreground">
-          <Clock className="w-3 h-3" />
-          <span>30 Days</span>
+          <Layers className="w-3 h-3" />
+          <span>{pkg.package_product_ids.length} Sessions</span>
         </div>
       </CardContent>
     </Card>

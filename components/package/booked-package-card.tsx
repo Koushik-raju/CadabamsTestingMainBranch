@@ -55,7 +55,7 @@ export function BookedPackageCard({
         {/* Header */}
         <div className="flex items-start justify-between gap-2">
           <h3 className="font-semibold text-foreground text-sm leading-snug flex-1 min-w-0 line-clamp-2">
-            {String((pkg.package_id as unknown[])?.[1] ?? 'Package')}
+            {String(pkg.package_id?.[1] ?? 'Package')}
           </h3>
           <Badge variant={stageConfig.variant} className="shrink-0 text-xs gap-1">
             <StageIcon className="w-3 h-3" />

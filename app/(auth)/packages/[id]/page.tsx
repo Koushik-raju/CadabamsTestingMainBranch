@@ -29,7 +29,7 @@ import { BackButton } from '@/components/shared/navigation/back-button';
 import { useManagedPackages, initiatePackagePayment } from '@/hooks/use-packages';
 import { useAuth } from '@/hooks/use-auth';
 import { getPackagePalette } from '@/lib/package-colors';
-import type { BookedPackageDto, BookedPackageLineDto } from '@/sdk/backend-v2';
+import type { BookedPackageLineDto } from '@/sdk/backend-v2';
 
 function getStageMeta(stage: string): { label: string; Icon: React.ElementType } {
   switch (stage) {
@@ -75,7 +75,7 @@ export default function PackageDetailPage({ params }: { params: Promise<{ id: st
   const [payLoading, setPayLoading] = useState(false);
   const [payError, setPayError] = useState<string | null>(null);
 
-  const pkg = packages.find((p) => String(p.booked_package_id) === id) as BookedPackageDto | undefined;
+  const pkg = packages.find((p) => String(p.booked_package_id) === id);
 
   const handlePayNow = async () => {
     if (!pkg || !user?.lead_id) return;
@@ -85,18 +85,9 @@ export default function PackageDetailPage({ params }: { params: Promise<{ id: st
       const payData = await initiatePackagePayment({
         leadBookedPackageId: Number(pkg.booked_package_id),
         leadId: Number(user.lead_id),
-        campusId: Number((pkg.campus_id as unknown[])?.[0] ?? 0),
+        campusId: Number(pkg.campus_id?.[0] ?? 0),
       });
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const RazorpayCheckout = (window as unknown as Record<string, unknown>).Razorpay as (new (opts: unknown) => { open(): void }) | undefined;
-      if (!RazorpayCheckout) throw new Error('Razorpay SDK not loaded.');
-      new RazorpayCheckout({
-        key: payData.key_id,
-        amount: payData.amount,
-        currency: 'INR',
-        order_id: payData.razorpay_order_id,
-        handler: () => { window.location.href = '/packages'; },
-      }).open();
+      window.location.href = payData.result.short_url;
     } catch (err: unknown) {
       setPayError((err as { message?: string })?.message ?? 'Failed to process payment');
       setPayLoading(false);
@@ -136,8 +127,8 @@ export default function PackageDetailPage({ params }: { params: Promise<{ id: st
 
   const palette = getPackagePalette(pkg.booked_package_id);
   const { label, Icon } = getStageMeta(pkg.package_stage);
-  const packageName = String((pkg.package_id as unknown[])?.[1] ?? 'Package');
-  const campusName = pkg.campus_id ? String((pkg.campus_id as unknown[])?.[1] ?? '') : '';
+  const packageName = String(pkg.package_id?.[1] ?? 'Package');
+  const campusName = pkg.campus_id ? String(pkg.campus_id?.[1] ?? '') : '';
   const lines: BookedPackageLineDto[] = pkg.lines ?? [];
   const doneCount = lines.filter((l) => l.status === 'done').length;
 
@@ -284,12 +275,12 @@ export default function PackageDetailPage({ params }: { params: Promise<{ id: st
                     </div>
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-medium text-foreground truncate">
-                        {String((line.product_id as unknown[])?.[1] ?? '')}
+                        {String(line.product_id?.[1] ?? '')}
                       </p>
                       {line.speciality_id && (
                         <div className="flex items-center gap-1 mt-0.5">
                           <Stethoscope className="w-3 h-3 text-muted-foreground" />
-                          <p className="text-xs text-muted-foreground">{String((line.speciality_id as unknown[])?.[1] ?? '')}</p>
+                          <p className="text-xs text-muted-foreground">{String(line.speciality_id?.[1] ?? '')}</p>
                         </div>
                       )}
                     </div>

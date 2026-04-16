@@ -139,3 +139,9 @@ Each hook returns `{ data, isLoading, error }`. Pages should handle all three st
 # Notes
 use ast-grep for search.
 follow @docs/DESIGN_GUIDELINES.md when creating / editing UI.
+
+# API & SDK Rules
+1. **Use only `crmController...` functions** — only call SDK functions whose names start with `crmController`.
+2. **No hardcoded types** — import all types directly from the SDK (`@/sdk/backend-v2`), never define custom type shapes manually.
+3. **Pages must be independent** — Pages must be independent — list and detail pages fetch their own data separately, no shared state between pages.
+4. **Never call APIs directly** — do not use `client.post/get/...`, raw `fetch`, or `axios` to call backend endpoints. If a required SDK function does not exist, **ask the user** — do not bypass the SDK.

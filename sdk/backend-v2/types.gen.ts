@@ -1171,6 +1171,21 @@ export type RazorpayCustomerDto = {
     contact: string;
 };
 
+export type RazorpayNotifyDto = {
+    /**
+     * Send notification via SMS
+     */
+    sms: boolean;
+    /**
+     * Send notification via email
+     */
+    email: boolean;
+    /**
+     * Send notification via WhatsApp
+     */
+    whatsapp: boolean;
+};
+
 export type RazorpayPaymentResponseDto = {
     /**
      * Razorpay payment link ID
@@ -1193,6 +1208,14 @@ export type RazorpayPaymentResponseDto = {
      */
     amount: number;
     /**
+     * Amount already paid, in paise
+     */
+    amount_paid: number;
+    /**
+     * Minimum first partial payment amount, in paise
+     */
+    first_min_partial_amount: number;
+    /**
      * Currency code
      */
     currency: string;
@@ -1205,17 +1228,41 @@ export type RazorpayPaymentResponseDto = {
      */
     customer: RazorpayCustomerDto;
     /**
+     * Notification channel preferences
+     */
+    notify: RazorpayNotifyDto;
+    /**
      * Whether partial payments are accepted
      */
     accept_partial: boolean;
     /**
-     * Unix timestamp when the link expires
+     * Whether payment reminders are enabled
      */
-    expire_by: number;
+    reminder_enable: boolean;
     /**
      * Unix timestamp of link creation
      */
     created_at: number;
+    /**
+     * Unix timestamp of last update
+     */
+    updated_at: number;
+    /**
+     * Unix timestamp when the link expires (0 = no expiry)
+     */
+    expire_by: number;
+    /**
+     * Unix timestamp when the link expired (0 = not expired)
+     */
+    expired_at: number;
+    /**
+     * Unix timestamp when the link was cancelled (0 = not cancelled)
+     */
+    cancelled_at: number;
+    /**
+     * Razorpay internal user ID
+     */
+    user_id: string;
     /**
      * Callback URL after payment
      */
@@ -1225,17 +1272,31 @@ export type RazorpayPaymentResponseDto = {
      */
     callback_method: string;
     /**
-     * UPI deep-link or false if not applicable
+     * UPI deep-link URL, or false if not applicable
      */
-    upi_link: string | null;
+    upi_link: boolean;
     /**
-     * WhatsApp link or false if not applicable
+     * WhatsApp payment link URL, or false if not applicable
      */
-    whatsapp_link: string | null;
+    whatsapp_link: boolean;
     /**
-     * Whether payment reminders are enabled
+     * Arbitrary notes attached to the link
      */
-    reminder_enable: boolean;
+    notes: {
+        [key: string]: unknown;
+    } | null;
+    /**
+     * Scheduled reminders
+     */
+    reminders: Array<{
+        [key: string]: unknown;
+    }>;
+    /**
+     * Payments made against this link
+     */
+    payments: {
+        [key: string]: unknown;
+    } | null;
 };
 
 export type RazorpayPaymentEnvelopeDto = {
@@ -2481,6 +2542,13 @@ export type UpdateJournalEntryDto = {
      * Replace all prompts (full array)
      */
     prompts?: Array<JournalPromptDto>;
+};
+
+export type EnrollJourneyDto = {
+    /**
+     * CMS journey documentId to enroll in
+     */
+    journeyId: string;
 };
 
 export type JourneyDayProgressResponseDto = {
@@ -9233,6 +9301,24 @@ export type JourneysControllerListMineResponses = {
 };
 
 export type JourneysControllerListMineResponse = JourneysControllerListMineResponses[keyof JourneysControllerListMineResponses];
+
+export type JourneysControllerEnrollData = {
+    body: EnrollJourneyDto;
+    path: {
+        /**
+         * Campus slug
+         */
+        campus: 'cadabams' | 'whitefield' | 'mysore' | 'mindtalk';
+    };
+    query?: never;
+    url: '/api/v1/{campus}/journeys/enrollments';
+};
+
+export type JourneysControllerEnrollResponses = {
+    200: PatientJourneyResponseDto;
+};
+
+export type JourneysControllerEnrollResponse = JourneysControllerEnrollResponses[keyof JourneysControllerEnrollResponses];
 
 export type JourneysControllerGetEnrollmentData = {
     body?: never;

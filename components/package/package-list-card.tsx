@@ -26,7 +26,7 @@ function getStageBadge(stage: string) {
 export function PackageListCard({ pkg }: PackageListCardProps) {
   const router = useRouter();
   const { label, className, Icon } = getStageBadge(pkg.package_stage);
-  const packageName = String((pkg.package_id as unknown[])?.[1] ?? 'Package');
+  const packageName = String(pkg.package_id?.[1] ?? 'Package');
 
   const initials = packageName
     .split(' ')

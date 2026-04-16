@@ -127,3 +127,7 @@ export function managedPackagesKey(): string {
 export function packageProductLinesKey(packageId?: number): string {
   return packageId ? `/packages/product-lines/${packageId}` : '/packages/product-lines';
 }
+
+export function packageProductDetailsKey(packageId: number): string {
+  return `/packages/${packageId}/details`;
+}
