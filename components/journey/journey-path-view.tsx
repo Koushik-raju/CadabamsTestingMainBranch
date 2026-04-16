@@ -299,6 +299,8 @@ export function JourneyPathView({ journey, progress, mobile, journeyId }: Journe
       return;
     }
 
+    // Fallback for any remaining journal-type task with no specific target
+    router.push(`/self-journaling/new?redirectTo=${redirectTo}`);
   }
 
   async function markNodeDone(node: PathChainNode) {
