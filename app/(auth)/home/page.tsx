@@ -1,3 +1,31 @@
+/**
+ * FILE: app/(auth)/home/page.tsx
+ *
+ * PURPOSE:
+ *   Root home screen shown after authentication. Composes all home section
+ *   components and routes quick-action taps to their respective pages.
+ *
+ * LOGIC OVERVIEW:
+ *   1. Fetches upcoming appointments via useHomePage().
+ *   2. handleAction dispatches router.push based on action type + subtype.
+ *   3. Renders HomeHeader (gradient), then main content pulled up over the
+ *      header with a negative top margin and rounded corners.
+ *
+ * KEY VARIABLES / PROPS / EXPORTS:
+ *   appointments — upcoming appointment list from useHomePage
+ *   handleAction — central router dispatcher for all home interactions
+ *
+ * DEPENDENCIES:
+ *   useHomePage      — provides upcoming appointments
+ *   HomeHeader       — gradient hero header with mood CTA
+ *   UpcomingSession  — next appointment card
+ *   SupportSection   — talk-to-therapist / match-me CTAs
+ *   QuickActions     — 2-column grid of feature shortcuts
+ *   JourneySection   — active journey progress
+ *
+ * LAST UPDATED: 2026-04-17 — add prescriptions quick action route
+ */
+
 'use client';
 
 import { useRouter } from 'next/navigation';
@@ -48,6 +76,9 @@ export default function HomePage() {
             break;
           case 'documents':
             router.push('/documents');
+            break;
+          case 'prescriptions':
+            router.push('/prescriptions');
             break;
         }
         break;
