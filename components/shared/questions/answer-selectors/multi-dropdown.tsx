@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { ChevronDown, X, CheckCircle2 } from 'lucide-react';
+import { ChevronDown, CheckCircle2 } from 'lucide-react';
 import {
   Sheet,
   SheetContent,
@@ -79,14 +79,8 @@ export function MultiDropdownSelector({
       {/* Bottom sheet picker */}
       <Sheet open={openSheetFor !== null} onOpenChange={(open) => !open && setOpenSheetFor(null)}>
         <SheetContent side="bottom" className="rounded-t-2xl px-5 pb-8">
-          <SheetHeader className="flex flex-row items-center justify-between mb-4">
+          <SheetHeader className="mb-4">
             <SheetTitle className="text-base font-semibold">Choose response</SheetTitle>
-            <button
-              onClick={() => setOpenSheetFor(null)}
-              className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-muted transition-colors"
-            >
-              <X className="w-4 h-4 text-muted-foreground" />
-            </button>
           </SheetHeader>
 
           {activeSubQuestion && (

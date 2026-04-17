@@ -78,6 +78,10 @@ export interface AssessmentItem {
     choice: string | null;
     answer: string | null;
     text: string | null;
+    keyValue: string | Record<string, unknown> | null;
+    // assessment.qa nested sub-questions and shared answer options (JSON from backend)
+    questions: Array<{ question: string }> | null;
+    answers: Array<{ answer: string }> | null;
     options: Array<{ id: string; label: string; value: string; order: number }>;
   }>;
 }
@@ -165,6 +169,9 @@ export function mapAssessment(item: AssessmentResponseDto): AssessmentItem {
       choice: extractString(q.choice as unknown),
       answer: extractString(q.answer as unknown),
       text: extractString(q.text as unknown),
+      keyValue: q.keyValue && typeof q.keyValue === 'object' ? q.keyValue : extractString(q.keyValue as unknown),
+      questions: Array.isArray(q.questions) ? q.questions as Array<{ question: string }> : null,
+      answers: Array.isArray(q.answers) ? q.answers as Array<{ answer: string }> : null,
       options: (q.options ?? []).map((o, i) => ({
         id: `${q.id}-opt-${i}`,
         label: o.label,
