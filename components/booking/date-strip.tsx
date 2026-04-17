@@ -2,7 +2,7 @@
 
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import type { TimeSlot } from '@/sdk/auth-and-crm';
+import type { SlotResponseDto as TimeSlot } from '@/sdk/backend-v2';
 
 type AvailStatus = 'available' | 'few-left' | 'no-slots' | 'full';
 

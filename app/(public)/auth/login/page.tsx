@@ -1,13 +1,12 @@
 'use client';
 
-import { Suspense, useState, useEffect, useCallback } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { Suspense, useState, useEffect, useCallback, useRef } from 'react';
+import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { toast } from 'react-toastify';
-import useSWRMutation from 'swr/mutation';
 import { ArrowLeft, Heart } from 'lucide-react';
 import { PhoneInput, type Country } from '@/components/common/phone-input';
 import { OTPInput } from '@/components/common/otp-input';
@@ -17,18 +16,8 @@ import { Separator } from '@/components/ui/separator';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from '@/components/ui/dialog';
 import { useAuth } from '@/hooks/use-auth';
+import { useAuthActions } from '@/hooks/use-auth-actions';
 import { cn } from '@/lib/utils';
-
-async function postJson<T>(url: string, { arg }: { arg: T }) {
-  const res = await fetch(url, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(arg),
-  });
-  const data = await res.json().catch(() => ({}));
-  if (!res.ok) throw { status: res.status, ...data };
-  return data;
-}
 
 const phoneSchema = z.object({
   phone: z.string().min(6, 'Enter a valid phone number'),
@@ -37,24 +26,21 @@ type PhoneForm = z.infer<typeof phoneSchema>;
 
 function LoginContent() {
   const router = useRouter();
-  const searchParams = useSearchParams();
   const { login } = useAuth();
+  const { sendOtp, verifyLogin, isSendingOtp, isVerifying } = useAuthActions();
 
   const [country, setCountry] = useState<Country | null>(null);
   const [step, setStep] = useState<'phone' | 'otp'>('phone');
   const [otp, setOtp] = useState('');
   const [timer, setTimer] = useState(0);
   const [redirectModal, setRedirectModal] = useState(false);
+  const verifyingRef = useRef(false);
 
-  const returnUrl = searchParams.get('returnUrl') ?? '';
 
   const { control, handleSubmit, getValues, formState: { errors } } = useForm<PhoneForm>({
     resolver: zodResolver(phoneSchema),
     defaultValues: { phone: '' },
   });
-
-  const { trigger: sendOtp, isMutating: isSending } = useSWRMutation('/api/auth/send-otp', postJson);
-  const { trigger: verifyOtp, isMutating: isVerifying } = useSWRMutation('/api/auth/verify-login', postJson);
 
   useEffect(() => {
     if (timer <= 0) return;
@@ -64,7 +50,7 @@ function LoginContent() {
 
   const onSendOtp = async ({ phone }: PhoneForm) => {
     try {
-      await sendOtp({ phone, type: 'login' });
+      await sendOtp(phone, 'login');
       toast.success('OTP sent successfully');
       setStep('otp');
       setTimer(30);
@@ -77,9 +63,10 @@ function LoginContent() {
   };
 
   const handleVerifyOtp = useCallback(async (code: string) => {
-    if (code.length < 4) return;
+    if (code.length < 4 || verifyingRef.current) return;
+    verifyingRef.current = true;
     try {
-      await verifyOtp({ phone: getValues('phone'), otp: code });
+      await verifyLogin(getValues('phone'), code);
       toast.success('Welcome back!');
       login().catch(() => {});
       router.replace('/home');
@@ -89,12 +76,14 @@ function LoginContent() {
       if (e.status === 404) { toast.error('Account not found'); setRedirectModal(true); return; }
       toast.error('Something went wrong. Try again.');
       setOtp('');
+    } finally {
+      verifyingRef.current = false;
     }
-  }, [verifyOtp, getValues, login, router]);
+  }, [verifyLogin, getValues, login, router]);
 
   useEffect(() => {
     if (otp.length === 4) handleVerifyOtp(otp);
-  }, [otp, handleVerifyOtp]);
+  }, [otp]); // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
     <div className="min-h-screen flex flex-col bg-background">
@@ -155,8 +144,8 @@ function LoginContent() {
                       </div>
                     )}
                   />
-                  <Button type="submit" size="lg" disabled={isSending} className="w-full">
-                    {isSending ? 'Sending…' : 'Send OTP'}
+                  <Button type="submit" size="lg" disabled={isSendingOtp} className="w-full">
+                    {isSendingOtp ? 'Sending…' : 'Send OTP'}
                   </Button>
                 </form>
               </CardContent>
@@ -165,7 +154,7 @@ function LoginContent() {
                 <p className="text-muted-foreground">
                   Don&apos;t have an account?{' '}
                   <Button variant="link" asChild className="p-0 h-auto text-sm">
-                    <Link href={`/auth/signup${returnUrl ? `?returnUrl=${returnUrl}` : ''}`}>
+                    <Link href="/auth/signup">
                       Sign up
                     </Link>
                   </Button>

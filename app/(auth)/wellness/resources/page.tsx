@@ -9,9 +9,9 @@ import { CategoryFilter } from '@/components/wellness/category-filter';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { useWellnessResources } from '@/hooks/use-wellness-resources';
+import { useWellnessResources } from '@/hooks/wellness/use-wellness-resources';
 import { getStrapiImageUrl } from '@/lib/strapi-fetcher';
-import type { WellnessResource } from '@/types/wellness';
+import type { WellnessResource } from '@/hooks/wellness/use-wellness-resources';
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 

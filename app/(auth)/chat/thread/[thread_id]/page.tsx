@@ -1,61 +1,67 @@
-'use client';
+/**
+ * FILE: app/(auth)/chat/thread/[thread_id]/page.tsx
+ *
+ * PURPOSE:
+ *   Renders the active chat conversation for a given thread UUID.
+ *   Handles both historical message display and real-time streaming replies.
+ *
+ * LOGIC OVERVIEW:
+ *   1. Reads thread_id from URL params and resource_id from mastraDataContext.
+ *   2. Delegates all data-fetching and streaming state to useChatSession, which
+ *      merges SWR-cached history with live @ai-sdk/react messages.
+ *   3. Renders ChatHeader (with history drawer toggle), MessageList (merged
+ *      messages + pagination), and ChatInput (send form).
+ *   4. HistoryDrawer slides in from the right for navigating past threads.
+ *
+ * KEY VARIABLES / PROPS / EXPORTS:
+ *   threadId        — UUID from URL, scopes the chat session
+ *   resource_id     — user identity from mastraDataContext (JWT sub or UUID)
+ *   allMessages     — merged historical + live messages from useChatSession
+ *   isStreaming     — true while assistant is generating; disables send button
+ *   handleSubmit    — form submit handler; calls useChatSession.sendMessage
+ *
+ * DEPENDENCIES:
+ *   useChatSession, mastraDataContext, ChatHeader, MessageList, ChatInput,
+ *   HistoryDrawer
+ *
+ * LAST UPDATED: 2026-04-16 — consolidated useThreadMessages + useChat into useChatSession
+ */
+"use client";
 
-import { useCallback, useContext, useEffect, useState } from 'react';
-import { useRouter, useParams } from 'next/navigation';
-import { getAccessToken } from '@/lib/cookies';
-import { useChat } from '@ai-sdk/react';
-import { DefaultChatTransport } from 'ai';
-import { mastraDataContext } from '@/contexts/mastra-data-context';
-import { MASTRA_BACKEND_URL } from '@/lib/config';
-import { ChatHeader } from '@/components/chat/chat-header';
-import { MessageList } from '@/components/chat/message-list';
-import { ChatInput } from '@/components/chat/chat-input';
-import { HistoryDrawer } from '@/components/chat/history-drawer';
-import { useThreadMessages } from '@/hooks/use-thread-messages';
+import { useCallback, useContext, useState } from "react";
+import { useParams } from "next/navigation";
+import { mastraDataContext } from "@/contexts/mastra-data-context";
+import { ChatHeader } from "@/components/chat/chat-header";
+import { MessageList } from "@/components/chat/message-list";
+import { ChatInput } from "@/components/chat/chat-input";
+import { HistoryDrawer } from "@/components/chat/history-drawer";
+import { useChatSession } from "@/hooks/use-chat-session";
 
 export default function ChatPage() {
   const params = useParams();
   const threadId = params.thread_id as string;
 
-  const [text, setText] = useState('');
   const [historyOpen, setHistoryOpen] = useState(false);
-  const router = useRouter();
   const { resource_id } = useContext(mastraDataContext);
 
-  const { historicalMessages, loadMore, hasMore, isLoading, isInitialLoading } = useThreadMessages({
-    threadId,
-    agentId: 'super-agent',
-  });
-
-  const { messages, sendMessage, status } = useChat({
-    transport: new DefaultChatTransport({
-      api: MASTRA_BACKEND_URL,
-    }),
-  });
-
-  const allMessages = [...historicalMessages, ...messages];
+  const {
+    allMessages,
+    sendMessage,
+    isStreaming,
+    loadMore,
+    hasMore,
+    isLoadingMore,
+    text,
+    setText,
+  } = useChatSession({ threadId, resourceId: resource_id });
 
   const handleSubmit = useCallback(
     (e: React.FormEvent) => {
       e.preventDefault();
-      if (!text.trim() || status === 'streaming') return;
-      sendMessage(
-        { text },
-        {
-          body: {
-            memory: {
-              thread: threadId,
-              resource: resource_id,
-            },
-          },
-        }
-      );
-      setText('');
+      sendMessage(text);
     },
-    [text, sendMessage, threadId, resource_id, status]
+    [text, sendMessage],
   );
-
-  const isStreaming = status === 'streaming' || status === 'submitted';
 
   return (
     <div className="flex h-[100dvh] flex-col bg-[#f6f4f2] overflow-hidden">
@@ -66,7 +72,7 @@ export default function ChatPage() {
         isStreaming={isStreaming}
         onLoadMore={loadMore}
         hasMore={hasMore}
-        isLoadingMore={isLoading}
+        isLoadingMore={isLoadingMore}
       />
 
       <ChatInput

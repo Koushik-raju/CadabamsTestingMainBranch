@@ -1,30 +1,20 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import { Clock, Layers, ArrowRight, Sparkles } from 'lucide-react';
+import { Layers, ArrowRight, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
 import { getPackagePalette } from '@/lib/package-colors';
-import type { AvailablePackage } from '@/types/package';
+import type { PackageResponseDto } from '@/sdk/backend-v2';
 
 interface FeaturedPackageCardProps {
-  pkg: AvailablePackage;
-}
-
-function getDisplayDuration(pkg: AvailablePackage): number {
-  const duration = pkg.duration ?? pkg.package_duration;
-  if (duration === 90) return 90;
-  const name = (pkg.package_name ?? '').toLowerCase();
-  if (/90[\s-]?day|^90\s/.test(name)) return 90;
-  return duration ?? 30;
+  pkg: PackageResponseDto;
 }
 
 export function FeaturedPackageCard({ pkg }: FeaturedPackageCardProps) {
   const router = useRouter();
-  const duration = getDisplayDuration(pkg);
-  const serviceCount = pkg.package_product_ids?.length ?? 0;
   const palette = getPackagePalette(pkg.id);
 
   return (
@@ -52,12 +42,8 @@ export function FeaturedPackageCard({ pkg }: FeaturedPackageCardProps) {
       <div className="absolute bottom-0 left-0 right-0 p-5">
         <div className="flex items-center gap-2 mb-3">
           <Badge className={cn('flex items-center gap-1 text-white text-[10px] font-semibold border-0', palette.badgeBg)}>
-            <Clock className="w-3 h-3" />
-            {duration} Days
-          </Badge>
-          <Badge className={cn('flex items-center gap-1 text-white text-[10px] font-semibold border-0', palette.badgeBg)}>
             <Layers className="w-3 h-3" />
-            {serviceCount} {serviceCount === 1 ? 'Service' : 'Services'}
+            {pkg.package_product_ids.length} Sessions
           </Badge>
         </div>
 
@@ -65,7 +51,7 @@ export function FeaturedPackageCard({ pkg }: FeaturedPackageCardProps) {
           {pkg.package_name}
         </h2>
         <p className="text-white/70 text-sm mb-4">
-          ₹{pkg.amount_total.toLocaleString('en-IN')} · Complete care package
+          ₹{pkg.amount_total.toLocaleString('en-IN')}
         </p>
 
         <Button

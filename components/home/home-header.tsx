@@ -27,8 +27,12 @@ export function HomeHeader({ moodTracker, onMoodClick }: Props) {
         {/* Top bar — greeting + actions */}
         <div className="flex justify-between items-center h-12">
           <div className="flex flex-col leading-tight">
-            <span className="text-[13px] font-medium text-white/80">Good Morning,</span>
-            <span className="text-[20px] font-black text-white leading-tight">{firstName}</span>
+            <span className="text-[13px] font-medium text-white/80">
+              Good Morning,
+            </span>
+            <span className="text-[20px] font-black text-white leading-tight">
+              {firstName}
+            </span>
           </div>
 
           <div className="flex items-center gap-2">
@@ -46,11 +50,17 @@ export function HomeHeader({ moodTracker, onMoodClick }: Props) {
               aria-label="Go to profile"
             >
               {profileImage && profileImage !== '/profile.png' ? (
-                <Image src={profileImage} alt={firstName} width={40} height={40} className="object-cover h-full w-full" />
+                <Image
+                  src={profileImage}
+                  alt={firstName}
+                  width={40}
+                  height={40}
+                  className="object-cover h-full w-full"
+                />
               ) : (
                 <div className="w-full h-full flex items-center justify-center bg-white/20">
                   <span className="text-base font-bold text-white select-none">
-                    {firstName?.[0]?.toUpperCase()}
+                    {firstName?.[0]}
                   </span>
                 </div>
               )}
@@ -62,7 +72,8 @@ export function HomeHeader({ moodTracker, onMoodClick }: Props) {
         <div className="flex flex-col gap-4 w-full">
           <div className="flex flex-col gap-1.5 max-w-[280px]">
             <h2 className="text-[22px] font-bold leading-[1.15] tracking-tight">
-              Hi <span className="font-black">{firstName}</span>, how are you feeling today?
+              Hi <span className="font-black">{firstName}</span>, how are you
+              feeling today?
             </h2>
             <p className="text-white/80 text-[13px] font-medium leading-relaxed">
               Your check-in helps us shape your home, guidance, and support.
@@ -79,7 +90,9 @@ export function HomeHeader({ moodTracker, onMoodClick }: Props) {
             </span>
             <div className="flex gap-2.5">
               {MOODS.map((emoji, i) => {
-                const isSelected = currentMoodId ? currentMoodId === i + 1 : false;
+                const isSelected = currentMoodId
+                  ? currentMoodId === i + 1
+                  : false;
                 return (
                   <span
                     key={i}

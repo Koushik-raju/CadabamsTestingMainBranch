@@ -1,19 +1,3 @@
-'use client';
-
-import useSWR from 'swr';
-import { fetchVideoBySlug } from '@/lib/strapi-fetcher';
-import { videoDetailKey } from '@/lib/swr-keys';
-
-export function useVideoDetail(slug: string) {
-  const { data, error, isLoading } = useSWR(
-    slug ? videoDetailKey(slug) : null,
-    () => fetchVideoBySlug(slug),
-    { revalidateOnFocus: false }
-  );
-
-  return {
-    video: data ?? null,
-    isLoading,
-    error,
-  };
-}
+// Re-export shim — use hooks/wellness/use-video-detail instead
+export { useVideoDetail } from '@/hooks/wellness/use-video-detail';
+export type { VideoItem } from '@/hooks/wellness/use-video-detail';

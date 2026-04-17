@@ -1,13 +1,13 @@
 'use client';
 
 import { Trophy, TrendingUp, Zap, Star } from 'lucide-react';
-import useSWR from 'swr';
+
 import { BackButton } from '@/components/shared/navigation/back-button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Podium } from '@/components/leaderboard/podium';
 import { LeaderboardEntry, type LeaderboardEntryData } from '@/components/leaderboard/leaderboard-entry';
-import { leaderboardService } from '@/services/leaderboard.service';
+import { useLeaderboard } from '@/hooks/leaderboard/use-leaderboard';
 import { useAuth } from '@/hooks/use-auth';
 
 // Shape returned by the backend
@@ -57,7 +57,7 @@ function ScoreCard({
 export default function LeaderboardPage() {
   const { user } = useAuth();
 
-  const { data, isLoading, error } = useSWR('leaderboard', () => leaderboardService.getLeaderboard());
+  const { data, isLoading, error } = useLeaderboard();
 
   const currentMobile = (user as { caller_mobile?: string } | null)?.caller_mobile ?? user?.phone_number ?? '';
 

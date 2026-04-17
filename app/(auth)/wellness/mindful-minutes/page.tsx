@@ -1,15 +1,43 @@
+/**
+ * FILE: app/(auth)/wellness/mindful-minutes/page.tsx
+ *
+ * PURPOSE:
+ *   Index page listing all mindful minute collections. Each item is a collection
+ *   of audio sessions — tapping a card navigates to the detail (slug) page.
+ *
+ * LOGIC OVERVIEW:
+ *   1. Fetches all mindful minute collections via useMindfulMinutes().
+ *   2. Supports category filter and text search.
+ *   3. In overview mode: shows a featured card + remaining items list + category grid.
+ *   4. In list mode (category selected or "View all" tapped): shows full filtered list.
+ *   5. Cards navigate to /wellness/mindful-minutes/[slug]; no audio plays on this page.
+ *
+ * KEY VARIABLES / PROPS / EXPORTS:
+ *   items            — full list of MindfulMinute collections from SWR
+ *   filteredItems    — items after category + search filter
+ *   featuredItem     — first item, shown in hero card in overview mode
+ *   isListView       — true when category is selected or viewMode === 'list'
+ *
+ * DEPENDENCIES:
+ *   useMindfulMinutes() — SWR hook for all collections
+ *   getStrapiImageUrl   — resolves Strapi image paths
+ *
+ * LAST UPDATED: 2026-04-16 — replaced misleading Play CTAs with Browse sessions navigation,
+ *               added session count badge on list cards
+ */
+
 'use client';
 
 import { useState, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
-import { Play, RefreshCw, Search } from 'lucide-react';
+import { ChevronRight, RefreshCw, Search } from 'lucide-react';
 import { BackButton } from '@/components/shared/navigation/back-button';
 import { CategoryFilter } from '@/components/wellness/category-filter';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { useMindfulMinutes } from '@/hooks/use-mindful-minutes';
+import { useMindfulMinutes } from '@/hooks/wellness/use-mindful-minutes';
 import { getStrapiImageUrl } from '@/lib/strapi-fetcher';
 import { cn } from '@/lib/utils';
 
@@ -146,9 +174,9 @@ export default function MindfulMinutesPage() {
                       )}
                     </div>
                   </div>
-                  <div className="flex items-center gap-1.5 text-primary font-extrabold text-[14px]">
-                    <Play className="w-4 h-4 fill-current" />
-                    Play now
+                  <div className="flex items-center gap-1 text-primary font-extrabold text-[14px]">
+                    Browse sessions
+                    <ChevronRight className="w-4 h-4" />
                   </div>
                 </div>
               </div>
@@ -211,10 +239,15 @@ export default function MindfulMinutesPage() {
                               {item.category}
                             </span>
                           )}
+                          {item.audios && item.audios.length > 0 && (
+                            <span className="text-[11px] bg-muted text-muted-foreground px-2 py-0.5 rounded font-bold">
+                              {item.audios.length} session{item.audios.length !== 1 ? 's' : ''}
+                            </span>
+                          )}
                         </div>
-                        <div className="flex items-center gap-1.5 text-primary font-extrabold text-[13px] mt-1.5">
-                          <Play size={13} className="fill-current" />
-                          Play
+                        <div className="flex items-center gap-1 text-primary font-extrabold text-[13px] mt-1.5">
+                          Browse sessions
+                          <ChevronRight size={13} />
                         </div>
                       </div>
                     </div>

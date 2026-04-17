@@ -2,8 +2,24 @@
 
 import { useState } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
-import type { AssessmentQuestionItem, AssessmentOption } from '@/types/assessment';
-import { extractTextFromRich } from '@/types/assessment';
+interface AssessmentOption { id: string; label: string; value: string | number; order: number; }
+interface AssessmentQuestionItem {
+  id: string; type: string; title?: string; subtitle?: unknown; hint?: unknown;
+  continueLabel?: string; order?: number; smileys?: unknown[]; count?: unknown;
+  label?: unknown; prompt?: string; choice?: unknown; answer?: unknown; text?: string;
+  options?: AssessmentOption[];
+}
+
+function extractTextFromRich(val: unknown): string {
+  if (!val) return '';
+  if (typeof val === 'string') return val;
+  if (typeof val === 'object') {
+    const obj = val as Record<string, unknown>;
+    if (obj.text && typeof obj.text === 'string') return obj.text;
+    if (obj.en && typeof obj.en === 'string') return obj.en;
+  }
+  return '';
+}
 
 interface AssessmentQuestionCardProps {
   question: AssessmentQuestionItem;
@@ -46,12 +62,12 @@ function SmileySelector({
             onClick={() => onSelect(index)}
             className={`flex flex-col items-center gap-2 p-3 rounded-xl border-2 transition-all ${
               isSelected
-                ? 'border-orange-400 bg-orange-50 shadow-md'
-                : 'border-transparent bg-white hover:border-slate-200'
+                ? 'border-primary/30 bg-primary/5 shadow-md'
+                : 'border-transparent bg-card hover:border-border'
             }`}
           >
             <span className="text-3xl">{emoji}</span>
-            <span className={`text-[10px] font-medium ${isSelected ? 'text-orange-600' : 'text-slate-600'}`}>
+            <span className={`text-[10px] font-medium ${isSelected ? 'text-primary' : 'text-muted-foreground'}`}>
               {label}
             </span>
           </button>
@@ -83,16 +99,16 @@ function SingleChoice({
             onClick={() => onSelect(typeof opt.value === 'number' ? index : Number(opt.value))}
             className={`w-full text-left p-4 rounded-xl border-2 transition-all flex items-center gap-3 ${
               isSelected
-                ? 'border-orange-400 bg-orange-50'
-                : 'border-transparent bg-white hover:border-slate-200'
+                ? 'border-primary/30 bg-primary/5'
+                : 'border-transparent bg-card hover:border-border'
             }`}
           >
             <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center flex-shrink-0 ${
-              isSelected ? 'border-orange-500 bg-orange-500' : 'border-slate-300'
+              isSelected ? 'border-primary bg-primary' : 'border-border'
             }`}>
               {isSelected && <div className="w-2 h-2 rounded-full bg-white" />}
             </div>
-            <span className={`text-sm ${isSelected ? 'text-orange-700 font-medium' : 'text-slate-700'}`}>
+            <span className={`text-sm ${isSelected ? 'text-primary font-medium' : 'text-foreground'}`}>
               {opt.label}
             </span>
           </button>
@@ -116,7 +132,7 @@ function TextArea({
       value={value ?? ''}
       onChange={(e) => onChange(e.target.value)}
       placeholder={placeholder ?? 'Type your answer here...'}
-      className="w-full h-40 p-4 rounded-xl border border-slate-200 bg-white text-sm text-slate-700 placeholder:text-slate-400 resize-none"
+      className="w-full h-40 p-4 rounded-xl border border-border bg-card text-sm text-foreground placeholder:text-muted-foreground resize-none"
     />
   );
 }
@@ -132,9 +148,9 @@ function Indicator({
   
   return (
     <div className="space-y-4">
-      <div className="flex justify-between text-sm text-slate-600">
+      <div className="flex justify-between text-sm text-muted-foreground">
         <span>Low</span>
-        <span className="font-semibold text-orange-600">{sliderValue}</span>
+        <span className="font-semibold text-primary">{sliderValue}</span>
         <span>High</span>
       </div>
       <input
@@ -147,7 +163,7 @@ function Indicator({
           setSliderValue(v);
           onChange(v);
         }}
-        className="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-orange-500"
+        className="w-full h-2 bg-muted rounded-lg appearance-none cursor-pointer accent-primary"
       />
     </div>
   );
@@ -235,15 +251,15 @@ export function AssessmentQuestionCard({
     <div className="space-y-6">
       <div className="space-y-2">
         {prompt && (
-          <p className="text-xs font-medium text-orange-600 uppercase tracking-wide">
+          <p className="text-xs font-medium text-primary uppercase tracking-wide">
             {prompt}
           </p>
         )}
-        <h2 className="text-lg font-semibold text-slate-900 leading-relaxed">
+        <h2 className="text-lg font-semibold text-foreground leading-relaxed">
           {title}
         </h2>
         {subtitle && (
-          <p className="text-sm text-slate-500">{subtitle}</p>
+          <p className="text-sm text-muted-foreground">{subtitle}</p>
         )}
       </div>
 

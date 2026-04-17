@@ -1,9 +1,38 @@
+/**
+ * FILE: components/journey/journey-path-view.tsx
+ *
+ * PURPOSE:
+ *   Main orchestrator component for the enrolled-journey path view.
+ *   Renders the StatsBar, premium banners, today-progress banner, the zigzag
+ *   PathChain, and various bottom sheets (task action, unit tasks, premium upsell).
+ *
+ * LOGIC OVERVIEW:
+ *   1. Flattens all steps into allNodes to track completion and active state.
+ *   2. getVariant() determines each node's state: completed / active / locked / default.
+ *   3. navigateToTask() routes based on task ID arrays and boolean flags, with
+ *      a redirectTo query param pointing back to this page.
+ *   4. handleNodeTap() opens the action sheet; handleContinue() navigates to active task.
+ *   5. markNodeDone() calls updateNodeProgress() and triggers XP animation.
+ *   6. Auto-advances to next day via advanceCurrentDay() when current day is done.
+ *
+ * KEY VARIABLES / PROPS / EXPORTS:
+ *   journey        — JourneyItem with steps and task data
+ *   progress       — JourneyProgress enrollment record (null if not subscribed)
+ *   mobile         — user's mobile number for API calls
+ *   journeyId      — string ID of the journey (from URL params)
+ *
+ * DEPENDENCIES:
+ *   useJourneyProgress, subscribeToJourney, updateNodeProgress, advanceCurrentDay
+ *   PathChain, JourneyTaskActionSheet, JourneyUnitTasksSheet
+ *
+ * LAST UPDATED: 2026-04-16 — fix navigateToTask/getTaskTitle/getIsMandatory to use ID arrays; add redirectTo param; route book tasks to /consult/find-therapist
+ */
 'use client';
 
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import {
-  Flame, Zap, Lock, Clock, BarChart2, Timer,
+  Flame, Zap, Lock, Clock, BarChart2, Timer, Sparkles,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { PathChain, getTaskType, type PathChainNode, type ChainItem } from './path-chain';
@@ -17,8 +46,8 @@ import {
 } from '@/components/ui/sheet';
 import {
   useJourneyProgress, subscribeToJourney, updateNodeProgress, advanceCurrentDay,
-} from '@/hooks/use-journey';
-import type { JourneyProgress } from '@/hooks/use-journey';
+} from '@/hooks/journeys/use-journey-detail';
+import type { JourneyProgress } from '@/hooks/journeys/use-journey-detail';
 import { hapticLight, hapticMedium, hapticSuccess, hapticWarning } from '@/lib/haptics';
 import { extractJourneyName, extractJourneyDescription } from '@/types/journey';
 import type { JourneyItem, JourneyTask, JourneyAudio, JourneyRichText } from '@/types/journey';
@@ -153,11 +182,28 @@ export function JourneyPathView({ journey, progress, mobile, journeyId }: Journe
     advanceCurrentDay(mobile, journeyId).catch(console.error);
   }, [isSubscribed, mobile, currentDayAllDone, currentDayIdx, steps.length, journeyId, progress?.lastUpdated]);
 
-  function getVariant(nodeId: string, stepIdx: number, taskIdx: number): NodeVariant {
-    // Unsubscribed: only Day 1 preview
+  const isPaidFreePreview = isSubscribed && (journey.isPremium ?? false) && !progress?.isPremium;
+
+  function isAppointmentTask(task: JourneyTask): boolean {
+    return !!(task.showAppointments || task.showFirstBooking);
+  }
+
+  function getVariant(nodeId: string, stepIdx: number, taskIdx: number, task: JourneyTask): NodeVariant {
+    // Unsubscribed: only Day 1 static preview (no interactivity)
     if (!isSubscribed) {
       if (stepIdx === 0) return taskIdx === 0 ? 'active' : 'default';
       return 'locked';
+    }
+
+    // Enrolled in paid journey but no premium package — Day 1 digital assets only
+    if (isPaidFreePreview) {
+      if (stepIdx > 0) return 'locked';
+      // Day 1: appointment tasks are locked, digital tasks follow normal sequence
+      if (isAppointmentTask(task)) return 'locked';
+      if (completedIds.has(nodeId)) return 'completed';
+      if (nodeId === activeNodeId) return 'active';
+      const firstIncomplete = currentDayNodes.find(n => !completedIds.has(n.nodeId) && !isAppointmentTask(n.task));
+      return firstIncomplete?.nodeId === nodeId ? 'default' : 'locked';
     }
 
     // Previous days — always completed (or locked if somehow missed)
@@ -174,30 +220,87 @@ export function JourneyPathView({ journey, progress, mobile, journeyId }: Journe
   }
 
   function getIsMandatory(task: JourneyTask): boolean {
-    return (task.assessments?.length ?? 0) > 0 || (task.audios?.length ?? 0) > 0 || task.fillSelfJournal === true;
+    return (task.assessmentIds?.length ?? task.assessments?.length ?? 0) > 0
+      || (task.audioIds?.length ?? task.audios?.length ?? 0) > 0
+      || task.fillSelfJournal === true;
   }
 
   function getTaskTitle(task: JourneyTask): string {
     if (task.extraTaskTitle) return task.extraTaskTitle;
     if (task.assessments?.length) return task.assessments[0].title ?? '';
     if (task.audios?.length) return task.audios[0].title ?? '';
-    return '';
+    const type = getTaskType(task);
+    const labels: Record<string, string> = {
+      assessment: 'Assessment',
+      audio: 'Audio Session',
+      video: 'Video',
+      journal: 'Journal Entry',
+      book: 'Book a Session',
+      gift: 'Mood Check-in',
+      read: 'Reading',
+    };
+    return labels[type] ?? '';
   }
 
   function navigateToTask(task: JourneyTask) {
-    if (task.assessments?.length) {
-      router.push(`/assessments/${task.assessments[0].id}?journey=${journeyId}`);
-    } else if (task.audios?.length) {
-      const audio = task.audios[0] as JourneyAudio;
-      router.push(`/wellness/mindful-minutes/${audio.mindfulMinuteId || audio.documentId || audio.id}`);
-    } else if (task.moodCheckIn) {
-      router.push(`/journeys/mood-check?journey=${journeyId}`);
-    } else if (task.showAppointments || task.showFirstBooking) {
-      router.push('/consult/appointments');
-    } else if (task.fillSelfJournal || (task.worksheets && (task.worksheets as unknown[]).length > 0)) {
-      const ws = task.worksheets as Array<{ id: string }> | undefined;
-      router.push(ws?.length ? `/worksheet/${ws[0].id}` : '/self-journaling/new');
+    const redirectTo = encodeURIComponent(`/journeys/${journeyId}/details`);
+
+    // 1. Read task — content shown in-sheet, no page navigation
+    if (task.extraTaskTitle && task.extraTaskDescription?.length) return;
+
+    // 2. Assessments
+    if (task.assessmentIds?.length) {
+      router.push(`/assessments/${task.assessmentIds[0]}?journey=${journeyId}&redirectTo=${redirectTo}`);
+      return;
     }
+    if (task.assessments?.length) {
+      router.push(`/assessments/${task.assessments[0].id}?journey=${journeyId}&redirectTo=${redirectTo}`);
+      return;
+    }
+
+    // 3. Worksheets
+    if (task.worksheetIds?.length) {
+      router.push(`/worksheet/${task.worksheetIds[0]}?redirectTo=${redirectTo}`);
+      return;
+    }
+    if (task.worksheets?.length) {
+      router.push(`/worksheet/${(task.worksheets[0] as { id: string }).id}?redirectTo=${redirectTo}`);
+      return;
+    }
+
+    // 4. Sub-journalings
+    if (task.subJournalingIds?.length) {
+      router.push(`/self-journaling/new?redirectTo=${redirectTo}`);
+      return;
+    }
+
+    // 5. Audios
+    if (task.audioIds?.length) {
+      router.push(`/wellness/mindful-minutes/${task.audioIds[0]}?redirectTo=${redirectTo}`);
+      return;
+    }
+    if (task.audios?.length) {
+      const audio = task.audios[0] as JourneyAudio;
+      router.push(`/wellness/mindful-minutes/${audio.mindfulMinuteId || audio.documentId || audio.id}?redirectTo=${redirectTo}`);
+      return;
+    }
+
+    // 6. Boolean-flag tasks
+    if (task.moodCheckIn) {
+      router.push(`/journeys/mood-check?journey=${journeyId}&redirectTo=${redirectTo}`);
+      return;
+    }
+    if (task.showAppointments || task.showFirstBooking) {
+      router.push(`/consult/find-therapist?redirectTo=${redirectTo}`);
+      return;
+    }
+    if (task.fillSelfJournal) {
+      router.push(`/self-journaling/new?redirectTo=${redirectTo}`);
+      return;
+    }
+
+    // Fallback for any remaining journal-type task with no specific target
+    router.push(`/self-journaling/new?redirectTo=${redirectTo}`);
   }
 
   async function markNodeDone(node: PathChainNode) {
@@ -217,7 +320,11 @@ export function JourneyPathView({ journey, progress, mobile, journeyId }: Journe
   function handleNodeTap(node: PathChainNode) {
     if (node.variant === 'locked') {
       hapticWarning();
-      if (node.isPremiumStep && isSubscribed) setPremiumSheetOpen(true);
+      // Show upsell sheet for any locked node when in paid free preview,
+      // or for locked premium steps on fully enrolled users
+      if (isPaidFreePreview || (node.isPremiumStep && isSubscribed)) {
+        setPremiumSheetOpen(true);
+      }
       return;
     }
     hapticLight();
@@ -249,8 +356,8 @@ export function JourneyPathView({ journey, progress, mobile, journeyId }: Journe
     const tasks: UnitTask[] = (step.tasks ?? []).map((task, ti) => ({
       title: getTaskTitle(task),
       type: getTaskType(task),
-      isLocked: getVariant(`${step.id}-${task.id}`, stepIdx, ti) === 'locked',
-      isCompleted: getVariant(`${step.id}-${task.id}`, stepIdx, ti) === 'completed',
+      isLocked: getVariant(`${step.id}-${task.id}`, stepIdx, ti, task) === 'locked',
+      isCompleted: getVariant(`${step.id}-${task.id}`, stepIdx, ti, task) === 'completed',
       task,
     }));
     setUnitTasksData({ title: `Day ${stepIdx + 1}: ${title}`, tasks });
@@ -282,7 +389,7 @@ export function JourneyPathView({ journey, progress, mobile, journeyId }: Journe
         kind: 'node',
         node: {
           task,
-          variant: getVariant(nodeId, stepIdx, ti),
+          variant: getVariant(nodeId, stepIdx, ti, task),
           taskType: getTaskType(task),
           nodeId,
           taskTitle: getTaskTitle(task),
@@ -304,6 +411,33 @@ export function JourneyPathView({ journey, progress, mobile, journeyId }: Journe
     <>
       {/* Stats */}
       {isSubscribed && progress && <StatsBar progress={progress} />}
+
+      {/* Paid free-preview banner */}
+      {isPaidFreePreview && (
+        <div className="mx-4 mt-3 rounded-2xl overflow-hidden border border-violet-200">
+          <div className="bg-gradient-to-br from-violet-500 to-purple-600 px-4 py-3 flex items-start gap-3">
+            <div className="relative w-11 h-11 rounded-2xl bg-gradient-to-br from-violet-400 to-purple-500 flex-shrink-0 flex items-center justify-center shadow-sm">
+              <div className="absolute -top-2 -right-2 w-7 h-7 rounded-full bg-white/10" />
+              <Sparkles className="w-5 h-5 text-white" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-bold text-white">Premium Journey</p>
+              <p className="text-xs text-white/80 mt-0.5 leading-snug">
+                Day 1 is free — digital tasks only. Appointments are not included.
+              </p>
+            </div>
+          </div>
+          <div className="bg-card px-4 py-2.5 flex items-center justify-between">
+            <p className="text-xs text-muted-foreground">Unlock all days &amp; appointments</p>
+            <button
+              onClick={() => router.push('/packages')}
+              className="text-xs font-bold text-primary"
+            >
+              View Plans →
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Today banner */}
       {isSubscribed && activeStep && !allComplete && (
@@ -444,6 +578,42 @@ export function JourneyPathView({ journey, progress, mobile, journeyId }: Journe
                 className="w-full h-14 rounded-2xl bg-foreground text-background font-bold text-base"
               >
                 View Plans →
+              </button>
+            </>
+          ) : isPaidFreePreview ? (
+            <>
+              <div className="flex items-center gap-3 mb-4">
+                <div className="relative w-11 h-11 rounded-2xl bg-gradient-to-br from-violet-500 to-purple-600 flex-shrink-0 flex items-center justify-center shadow-sm">
+                  <div className="absolute -top-2 -right-2 w-7 h-7 rounded-full bg-white/10" />
+                  <Sparkles className="w-5 h-5 text-white" />
+                </div>
+                <div>
+                  <p className="text-base font-bold text-foreground">Premium Journey</p>
+                  <p className="text-xs text-muted-foreground">Day 1 free · full access requires a plan</p>
+                </div>
+              </div>
+              <p className="text-sm text-muted-foreground mb-2 leading-relaxed">
+                You're experiencing <span className="font-semibold text-foreground">Day 1 for free</span>. Digital tasks like audio, assessments, and journaling are available.
+              </p>
+              <p className="text-sm text-muted-foreground mb-6 leading-relaxed">
+                Appointments and all remaining days are included with a package.
+              </p>
+              <div className="flex gap-2 mb-5 flex-wrap">
+                {[
+                  { icon: <Clock className="w-3 h-3" />, text: `${dayCount} Tasks` },
+                  { icon: <BarChart2 className="w-3 h-3" />, text: `${steps.length} Days` },
+                  { icon: <Timer className="w-3 h-3" />, text: `${months}M Duration` },
+                ].map(({ icon, text }) => (
+                  <span key={text} className="flex items-center gap-1.5 bg-muted text-muted-foreground text-xs font-semibold px-3 py-1 rounded-full">
+                    {icon}{text}
+                  </span>
+                ))}
+              </div>
+              <button
+                onClick={() => { setPremiumSheetOpen(false); router.push('/packages'); }}
+                className="w-full h-14 rounded-2xl bg-gradient-to-r from-violet-500 to-purple-600 text-white font-bold text-base"
+              >
+                Get Full Access →
               </button>
             </>
           ) : (

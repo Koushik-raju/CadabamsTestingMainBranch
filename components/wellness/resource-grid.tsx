@@ -1,4 +1,4 @@
-import { WellnessResource } from '@/types/wellness';
+import type { WellnessResource } from '@/hooks/wellness/use-wellness-resources';
 import { ResourceCard } from './resource-card';
 
 interface ResourceGridProps {

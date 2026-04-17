@@ -1,11 +1,21 @@
 'use client';
 
-import { Clock, ShieldCheck, Sparkles, ChevronRight } from 'lucide-react';
+import { Clock, ShieldCheck, Sparkles, ChevronRight, ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
-import type { AssessmentItem } from '@/types/assessment';
-import { extractTextFromRich } from '@/types/assessment';
+import type { AssessmentItem } from '@/hooks/assessments/use-assessments-page';
+
+function extractTextFromRich(val: unknown): string {
+  if (!val) return '';
+  if (typeof val === 'string') return val;
+  if (typeof val === 'object') {
+    const obj = val as Record<string, unknown>;
+    if (obj.text && typeof obj.text === 'string') return obj.text;
+    if (obj.en && typeof obj.en === 'string') return obj.en;
+  }
+  return '';
+}
 
 interface AssessmentLandingProps {
   assessment: AssessmentItem;
@@ -24,31 +34,29 @@ export function AssessmentLanding({ assessment, onStart, onBack }: AssessmentLan
   const points = landing?.points ?? [];
 
   return (
-    <div className="min-h-screen bg-[#F6F3EC] flex flex-col">
+    <div className="min-h-screen bg-background flex flex-col">
       <header className="px-5 pt-12 pb-6">
         <Button
           variant="ghost"
           size="icon"
-          className="rounded-full bg-white/40 hover:bg-white/80"
+          className="rounded-full hover:bg-muted"
           onClick={onBack}
           aria-label="Go back"
         >
-          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-          </svg>
+          <ArrowLeft className="w-5 h-5" />
         </Button>
 
         <div className="mt-6 space-y-3">
           {badgeText && (
-            <Badge className="bg-orange-100 text-orange-600 border border-orange-200 w-max">
+            <Badge variant="secondary" className="w-max">
               {badgeText}
             </Badge>
           )}
-          <h1 className="text-2xl font-semibold tracking-tight text-slate-900">
+          <h1 className="text-2xl font-semibold tracking-tight text-foreground">
             {landingTitle}
           </h1>
           {landingDescription && (
-            <p className="text-sm text-slate-600 leading-relaxed">
+            <p className="text-sm text-muted-foreground leading-relaxed">
               {landingDescription}
             </p>
           )}
@@ -57,7 +65,7 @@ export function AssessmentLanding({ assessment, onStart, onBack }: AssessmentLan
 
       <main className="flex-1 px-5 pb-32 space-y-6">
         {assessment.image && (
-          <div className="w-full overflow-hidden rounded-3xl bg-gradient-to-br from-orange-200 via-orange-100 to-white border border-orange-100 shadow-sm">
+          <div className="w-full overflow-hidden rounded-3xl bg-muted border border-border shadow-sm">
             <div className="aspect-[4/3] flex items-center justify-center">
               <img
                 src={assessment.image}
@@ -70,10 +78,10 @@ export function AssessmentLanding({ assessment, onStart, onBack }: AssessmentLan
 
         <div className="grid grid-cols-2 gap-3">
           {minutes && (
-            <Card className="border border-orange-100 bg-white">
+            <Card>
               <CardContent className="p-4 flex flex-col gap-1">
-                <span className="text-xs uppercase tracking-wide text-orange-500 font-medium">Duration</span>
-                <span className="text-sm font-semibold text-slate-900 flex items-center gap-1">
+                <span className="text-xs uppercase tracking-wide text-primary font-medium">Duration</span>
+                <span className="text-sm font-semibold text-foreground flex items-center gap-1">
                   <Clock className="w-4 h-4" />
                   {minutes} min
                 </span>
@@ -81,13 +89,11 @@ export function AssessmentLanding({ assessment, onStart, onBack }: AssessmentLan
             </Card>
           )}
           {questionCount && (
-            <Card className="border border-orange-100 bg-white">
+            <Card>
               <CardContent className="p-4 flex flex-col gap-1">
-                <span className="text-xs uppercase tracking-wide text-orange-500 font-medium">Questions</span>
-                <span className="text-sm font-semibold text-slate-900 flex items-center gap-1">
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                  </svg>
+                <span className="text-xs uppercase tracking-wide text-primary font-medium">Questions</span>
+                <span className="text-sm font-semibold text-foreground flex items-center gap-1">
+                  <Sparkles className="w-4 h-4" />
                   {questionCount}
                 </span>
               </CardContent>
@@ -96,18 +102,18 @@ export function AssessmentLanding({ assessment, onStart, onBack }: AssessmentLan
         </div>
 
         {points.length > 0 && (
-          <Card className="bg-white border border-slate-200">
+          <Card>
             <CardContent className="p-5 space-y-4">
               <div>
-                <h2 className="text-base font-semibold text-slate-900 flex items-center gap-2">
-                  <ShieldCheck className="w-5 h-5 text-orange-500" />
+                <h2 className="text-base font-semibold text-foreground flex items-center gap-2">
+                  <ShieldCheck className="w-5 h-5 text-primary" />
                   What to expect
                 </h2>
               </div>
               <ul className="space-y-3">
                 {points.map((point, index) => (
-                  <li key={point.id ?? index} className="flex items-start gap-3 text-sm text-slate-700">
-                    <div className="w-5 h-5 rounded-full bg-orange-100 text-orange-600 flex items-center justify-center flex-shrink-0 mt-0.5">
+                  <li key={point.id ?? index} className="flex items-start gap-3 text-sm text-foreground">
+                    <div className="w-5 h-5 rounded-full bg-primary/10 text-primary flex items-center justify-center flex-shrink-0 mt-0.5">
                       <span className="text-xs font-bold">{index + 1}</span>
                     </div>
                     <span>{point.item}</span>
@@ -119,17 +125,17 @@ export function AssessmentLanding({ assessment, onStart, onBack }: AssessmentLan
         )}
 
         {assessment.citationText && (
-          <div className="rounded-2xl border border-slate-200 bg-white p-4 text-xs text-slate-500 leading-relaxed">
-            <p className="font-medium text-slate-600 mb-1">Note</p>
+          <div className="rounded-2xl border border-border bg-card p-4 text-xs text-muted-foreground leading-relaxed">
+            <p className="font-medium text-foreground mb-1">Note</p>
             <p>{assessment.citationText}</p>
           </div>
         )}
       </main>
 
-      <footer className="sticky bottom-0 inset-x-0 bg-[#F6F3EC]/95 backdrop-blur px-5 pb-8 pt-4 border-t border-orange-100">
+      <footer className="sticky bottom-0 inset-x-0 bg-background/95 backdrop-blur px-5 pb-8 pt-4 border-t border-border">
         <Button
           size="lg"
-          className="w-full rounded-full bg-gradient-to-r from-orange-500 to-orange-600 text-white hover:from-orange-500/90 hover:to-orange-600/90"
+          className="w-full rounded-full"
           onClick={onStart}
         >
           {actionLabel}

@@ -1,3 +1,28 @@
+/**
+ * FILE: components/journey/path-chain.tsx
+ *
+ * PURPOSE:
+ *   Renders the Duolingo-style zigzag path of task nodes and day-header bars,
+ *   connected by an SVG curved dashed line.
+ *
+ * LOGIC OVERVIEW:
+ *   PathChain receives a flat ChainItem[] list (alternating 'header' and 'node' items)
+ *   and renders them in a column. Nodes alternate left/right at ±68px from center.
+ *   An SVG overlay draws cubic Bézier curves connecting consecutive node circles.
+ *   getTaskType() derives the visual node type from task fields using ID arrays and
+ *   boolean flags, in a defined priority order.
+ *
+ * KEY VARIABLES / PROPS / EXPORTS:
+ *   PathChainNode    — node data shape (task, variant, taskType, nodeId, etc.)
+ *   ChainItem        — union of 'node' | 'header' items passed to PathChain
+ *   getTaskType()    — exported helper used by journey-path-view and action sheet
+ *   PathChain        — main component rendering the path
+ *
+ * DEPENDENCIES:
+ *   PathNode, UnitHeaderBar
+ *
+ * LAST UPDATED: 2026-04-16 — remove video type and bare-description read fallback; read requires both extraTaskTitle and extraTaskDescription
+ */
 'use client';
 
 import { useRef, useEffect, useState } from 'react';
@@ -26,15 +51,21 @@ interface PathChainProps {
 }
 
 export function getTaskType(task: JourneyTask): NodeTaskType {
-  if (task.audios       && task.audios.length > 0)                          return 'audio';
-  if (task.assessments  && task.assessments.length > 0)                     return 'assessment';
-  if (task.fillSelfJournal)                                                  return 'journal';
-  if (task.worksheets   && (task.worksheets as unknown[]).length > 0)        return 'journal';
-  if (task.showAppointments || task.showFirstBooking)                        return 'book';
-  if (task.moodCheckIn)                                                      return 'gift';
-  // Tasks with only extraTaskDescription (no media) = reading material
-  if (task.extraTaskDescription && (task.extraTaskDescription as unknown[]).length > 0) return 'read';
-  return 'video';
+  // 1. Read task — extraTaskTitle + extraTaskDescription together signal a text reading task
+  if (task.extraTaskTitle && task.extraTaskDescription?.length)   return 'read';
+  // 2. Assessments (ID array takes priority over legacy populated array)
+  if (task.assessmentIds?.length || task.assessments?.length)    return 'assessment';
+  // 3. Worksheets → rendered as journal type visually
+  if (task.worksheetIds?.length || (task.worksheets as unknown[])?.length) return 'journal';
+  // 4. Sub-journalings → rendered as journal type visually
+  if (task.subJournalingIds?.length || task.subJournalings?.length) return 'journal';
+  // 5. Audios
+  if (task.audioIds?.length || task.audios?.length)              return 'audio';
+  // 6. Boolean flags
+  if (task.moodCheckIn)                                          return 'gift';
+  if (task.showAppointments || task.showFirstBooking)            return 'book';
+  if (task.fillSelfJournal)                                      return 'journal';
+  return 'journal'; // default fallback
 }
 
 const LR = [-68, 68]; // px from center, alternating

@@ -1,3 +1,30 @@
+/**
+ * FILE: app/(auth)/chat/page.tsx
+ *
+ * PURPOSE:
+ *   Chat history list page. Shows all past conversation threads for the current
+ *   user and provides entry points to open an existing thread or start a new one.
+ *
+ * LOGIC OVERVIEW:
+ *   1. Reads resource_id from mastraDataContext (JWT sub or UUID).
+ *   2. Fetches the user's thread list via useThreads(resource_id) — SWR-cached
+ *      with key threadsKey(resource_id).
+ *   3. Renders LoadingState while fetching, EmptyState when no threads exist,
+ *      or ThreadList with the thread cards.
+ *   4. handleNewChat navigates to a fresh UUID thread; handleThreadClick opens
+ *      an existing thread.
+ *
+ * KEY VARIABLES / PROPS / EXPORTS:
+ *   resource_id     — user identity from mastraDataContext
+ *   threads         — SWR data: array of MastraThread (normalised dates)
+ *   isLoading       — true during the initial threads fetch
+ *
+ * DEPENDENCIES:
+ *   useThreads, mastraDataContext, ThreadList, LoadingState, EmptyState,
+ *   BackButton
+ *
+ * LAST UPDATED: 2026-04-16 — added file header
+ */
 "use client";
 
 import { useRouter } from "next/navigation";

@@ -1,20 +1,65 @@
-'use client';
+/**
+ * FILE: app/(auth)/journeys/[id]/page.tsx
+ *
+ * PURPOSE:
+ *   Journey landing/detail page. Displays a single journey's hero image, stats,
+ *   rich-text description (Strapi blocks), and a CTA to subscribe or continue.
+ *
+ * LOGIC OVERVIEW:
+ *   1. Resolves the journey ID from route params.
+ *   2. Fetches journey detail and subscription progress via SWR hooks.
+ *   3. Shows a skeleton while loading; shows error state if not found.
+ *   4. Renders hero image, badge, title, BlocksRenderer description, stats row,
+ *      and step highlights.
+ *   5. Fixed CTA button: subscribes the user (if not yet subscribed) then
+ *      navigates to /journeys/[id]/details.
+ *
+ * KEY VARIABLES / PROPS / EXPORTS:
+ *   id              — journey ID from URL params
+ *   journey         — full journey object from useJourneyDetail
+ *   progress        — subscription/progress object from useJourneyProgress
+ *   isSubscribed    — true when progress record exists
+ *   subscribing     — local loading flag while subscribeToJourney runs
+ *
+ * DEPENDENCIES:
+ *   useJourneyDetail(id)    — SWR hook for journey data
+ *   useJourneyProgress(id)  — SWR hook for user progress
+ *   subscribeToJourney      — mutation to enroll user
+ *   BlocksRenderer          — @strapi/blocks-react-renderer for rich-text
+ *
+ * LAST UPDATED: 2026-04-16 — add separator before disclaimer, italic disclaimer
+ */
 
-import { use, useState, Suspense } from 'react';
-import { useRouter } from 'next/navigation';
-import { Button } from '@/components/ui/button';
-import { Skeleton } from '@/components/ui/skeleton';
-import { BackButton } from '@/components/shared/navigation/back-button';
-import { CheckCircle2, Clock, Layers, Timer, ChevronRight, AlertCircle, Zap } from 'lucide-react';
+"use client";
+
+import { use, useState, Suspense } from "react";
+import { useRouter } from "next/navigation";
+import { Button } from "@/components/ui/button";
+import { Separator } from "@/components/ui/separator";
+import { Skeleton } from "@/components/ui/skeleton";
+import { BackButton } from "@/components/shared/navigation/back-button";
+import {
+  CheckCircle2,
+  Clock,
+  Layers,
+  Timer,
+  ChevronRight,
+  AlertCircle,
+  Zap,
+} from "lucide-react";
 import {
   useJourneyDetail,
   useJourneyProgress,
   subscribeToJourney,
-} from '@/hooks/use-journey';
-import { useAuth } from '@/hooks/use-auth';
-import { extractJourneyName, extractJourneyDescription } from '@/types/journey';
-import { fixImageUrl } from '@/lib/utils';
-import { hapticMedium } from '@/lib/haptics';
+} from "@/hooks/journeys/use-journey-detail";
+import { useAuth } from "@/hooks/shared/auth/use-auth";
+import { extractJourneyName } from "@/types/journey";
+import {
+  BlocksRenderer,
+  type BlocksContent,
+} from "@strapi/blocks-react-renderer";
+import { fixImageUrl } from "@/lib/utils";
+import { hapticMedium } from "@/lib/haptics";
 
 interface PageProps {
   params: Promise<{ id: string }>;
@@ -24,10 +69,13 @@ function JourneyLandingContent({ params }: PageProps) {
   const { id } = use(params);
   const router = useRouter();
   const { user } = useAuth();
-  const mobile = (
-    ((user as Record<string, unknown>)?.caller_mobile as string | undefined) ??
-    ((user as Record<string, unknown>)?.phone_number as string | undefined)
-  )?.replace(/\D/g, '') ?? null;
+  const mobile =
+    (
+      ((user as Record<string, unknown>)?.caller_mobile as
+        | string
+        | undefined) ??
+      ((user as Record<string, unknown>)?.phone_number as string | undefined)
+    )?.replace(/\D/g, "") ?? null;
 
   const { journey, isLoading } = useJourneyDetail(id);
   const { progress, isLoading: progLoad } = useJourneyProgress(id);
@@ -48,7 +96,9 @@ function JourneyLandingContent({ params }: PageProps) {
             <Skeleton className="h-4 w-5/6" />
             <Skeleton className="h-16 w-full rounded-2xl" />
             <div className="space-y-3">
-              {[1, 2, 3].map((i) => <Skeleton key={i} className="h-12 w-full rounded-xl" />)}
+              {[1, 2, 3].map((i) => (
+                <Skeleton key={i} className="h-12 w-full rounded-xl" />
+              ))}
             </div>
           </div>
         </div>
@@ -61,7 +111,11 @@ function JourneyLandingContent({ params }: PageProps) {
       <div className="min-h-screen bg-background flex flex-col items-center justify-center p-6">
         <AlertCircle className="w-12 h-12 text-destructive mb-4" />
         <p className="text-destructive text-center">Journey not found.</p>
-        <Button className="mt-4" variant="outline" onClick={() => router.back()}>
+        <Button
+          className="mt-4"
+          variant="outline"
+          onClick={() => router.back()}
+        >
           Go Back
         </Button>
       </div>
@@ -69,19 +123,27 @@ function JourneyLandingContent({ params }: PageProps) {
   }
 
   const name = extractJourneyName(journey.name);
-  const description = extractJourneyDescription(journey.description);
   const imageUrl = fixImageUrl(journey.icon);
   const isSubscribed = !!progress;
   const stepCount = journey.steps?.length ?? 0;
-  const taskCount = (journey.steps ?? []).reduce((a, s) => a + (s.tasks?.length ?? 0), 0);
+  const taskCount = (journey.steps ?? []).reduce(
+    (a, s) => a + (s.tasks?.length ?? 0),
+    0,
+  );
   const months = Math.max(1, Math.round(stepCount / 30));
 
   // Derive highlights from step titles (first 3)
-  const highlights = (journey.steps ?? []).slice(0, 3).map((s) =>
-    (typeof s.title === 'string' ? s.title : extractJourneyName(s.title as never))
-      .replace(/^Day\s*\d+\s*[:\-·]?\s*/i, '')
-      .trim()
-  ).filter(Boolean);
+  const highlights = (journey.steps ?? [])
+    .slice(0, 3)
+    .map((s) =>
+      (typeof s.title === "string"
+        ? s.title
+        : extractJourneyName(s.title as never)
+      )
+        .replace(/^Day\s*\d+\s*[:\-·]?\s*/i, "")
+        .trim(),
+    )
+    .filter(Boolean);
 
   async function handleCTA() {
     if (isSubscribed) {
@@ -89,7 +151,7 @@ function JourneyLandingContent({ params }: PageProps) {
       return;
     }
     if (!mobile) {
-      router.push('/auth/login');
+      router.push("/auth/login");
       return;
     }
     setSubscribing(true);
@@ -105,10 +167,10 @@ function JourneyLandingContent({ params }: PageProps) {
   }
 
   const ctaLabel = isSubscribed
-    ? 'Continue Journey'
+    ? "Continue Journey"
     : journey.isPremium
-    ? 'Try Day 1 Free'
-    : 'Start Journey';
+      ? "Try Day 1 Free"
+      : "Start Journey";
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
@@ -122,7 +184,11 @@ function JourneyLandingContent({ params }: PageProps) {
         {/* Hero image */}
         <div className="w-full aspect-[4/3] bg-muted overflow-hidden">
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src={imageUrl} alt={name} className="w-full h-full object-cover" />
+          <img
+            src={imageUrl}
+            alt={name}
+            className="w-full h-full object-cover"
+          />
         </div>
 
         <div className="px-5 pt-5 space-y-5">
@@ -130,31 +196,32 @@ function JourneyLandingContent({ params }: PageProps) {
           <div className="flex items-center gap-1.5">
             <Zap className="w-3.5 h-3.5 text-primary" />
             <p className="text-xs font-semibold text-primary tracking-wide">
-              {journey.isPremium ? 'Premium Journey' : 'Free Journey'}
+              {journey.isPremium ? "Premium Journey" : "Free Journey"}
             </p>
           </div>
 
           {/* Title */}
-          <h1 className="text-2xl font-bold text-foreground leading-tight">{name}</h1>
-
-          {/* Description */}
-          {description && (
-            <p className="text-sm text-muted-foreground leading-relaxed">{description}</p>
-          )}
+          <h1 className="text-2xl font-bold text-foreground leading-tight">
+            {name}
+          </h1>
 
           {/* Stats row */}
           <div className="grid grid-cols-3 py-3 border-y border-border">
             <div className="flex items-center gap-2">
               <Layers className="w-4 h-4 text-primary" />
               <div>
-                <p className="text-sm font-semibold text-foreground">{stepCount} Days</p>
+                <p className="text-sm font-semibold text-foreground">
+                  {stepCount} Days
+                </p>
                 <p className="text-[11px] text-muted-foreground">Units</p>
               </div>
             </div>
             <div className="flex items-center gap-2">
               <Clock className="w-4 h-4 text-primary" />
               <div>
-                <p className="text-sm font-semibold text-foreground">{taskCount} Tasks</p>
+                <p className="text-sm font-semibold text-foreground">
+                  {taskCount} Tasks
+                </p>
                 <p className="text-[11px] text-muted-foreground">Activities</p>
               </div>
             </div>
@@ -162,12 +229,22 @@ function JourneyLandingContent({ params }: PageProps) {
               <Timer className="w-4 h-4 text-primary" />
               <div>
                 <p className="text-sm font-semibold text-foreground">
-                  {months} {months === 1 ? 'Month' : 'Months'}
+                  {months} {months === 1 ? "Month" : "Months"}
                 </p>
                 <p className="text-[11px] text-muted-foreground">Duration</p>
               </div>
             </div>
           </div>
+
+          {/* Description */}
+          {journey.description &&
+            (journey.description as unknown[]).length > 0 && (
+              <div className="prose prose-sm prose-muted max-w-none text-muted-foreground">
+                <BlocksRenderer
+                  content={journey.description as unknown as BlocksContent}
+                />
+              </div>
+            )}
 
           {/* Highlights */}
           {highlights.length > 0 && (
@@ -181,10 +258,12 @@ function JourneyLandingContent({ params }: PageProps) {
             </ul>
           )}
 
+          <Separator />
+
           {/* Disclaimer */}
-          <p className="text-xs text-muted-foreground text-center pb-2">
-            This journey is for personal growth and wellness purposes and does not replace
-            professional medical or psychological advice.
+          <p className="text-xs text-muted-foreground text-center italic pb-2">
+            This journey is for personal growth and wellness purposes and does
+            not replace professional medical or psychological advice.
           </p>
         </div>
       </div>
@@ -201,7 +280,7 @@ function JourneyLandingContent({ params }: PageProps) {
           disabled={subscribing}
           onClick={handleCTA}
         >
-          {subscribing ? 'Please wait...' : ctaLabel}
+          {subscribing ? "Please wait..." : ctaLabel}
           {!subscribing && <ChevronRight className="w-5 h-5 ml-1" />}
         </Button>
       </div>

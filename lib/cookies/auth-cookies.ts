@@ -1,103 +1,118 @@
+// Pure cookie functions — no React, works on server and client.
+// Tokens and user profile are stored as JS-accessible browser cookies so the
+// Next.js middleware (server/edge) can read them via request.cookies.
+
 import { getCookie, setCookie, removeCookie, cookieExists } from './universal-cookies';
 import {
   COOKIE_NAMES,
   ACCESS_TOKEN_OPTIONS,
   REFRESH_TOKEN_OPTIONS,
+  USER_COOKIE_OPTIONS,
 } from './constants';
-import type { SetCookieOptions } from './types';
+import type { User } from '@/types';
 
-// ── Access token (client + server readable) ───────────────────────────────────
+// ── Access token ──────────────────────────────────────────────────────────────
 
 export async function getAccessToken(): Promise<string | null> {
   return getCookie(COOKIE_NAMES.ACCESS_TOKEN);
 }
 
-export async function setAccessToken(
-  token: string,
-  overrides?: Partial<SetCookieOptions>,
-): Promise<boolean> {
+export async function setAccessToken(token: string, maxAge?: number): Promise<boolean> {
   return setCookie(COOKIE_NAMES.ACCESS_TOKEN, token, {
     ...ACCESS_TOKEN_OPTIONS,
-    ...overrides,
+    ...(maxAge !== undefined ? { maxAge } : {}),
   });
 }
 
 export async function removeAccessToken(): Promise<boolean> {
-  return removeCookie(COOKIE_NAMES.ACCESS_TOKEN, { path: ACCESS_TOKEN_OPTIONS.path });
+  return removeCookie(COOKIE_NAMES.ACCESS_TOKEN);
 }
 
 export async function hasAccessToken(): Promise<boolean> {
   return cookieExists(COOKIE_NAMES.ACCESS_TOKEN);
 }
 
-// ── Refresh token (server-only, httpOnly) ─────────────────────────────────────
+// ── Refresh token ─────────────────────────────────────────────────────────────
 
-/** Always returns null on the client — cookie is httpOnly. */
 export async function getRefreshToken(): Promise<string | null> {
   return getCookie(COOKIE_NAMES.REFRESH_TOKEN);
 }
 
-export async function setRefreshToken(
-  token: string,
-  overrides?: Partial<SetCookieOptions>,
-): Promise<boolean> {
-  return setCookie(COOKIE_NAMES.REFRESH_TOKEN, token, {
-    ...REFRESH_TOKEN_OPTIONS,
-    ...overrides,
-  });
+export async function setRefreshToken(token: string): Promise<boolean> {
+  return setCookie(COOKIE_NAMES.REFRESH_TOKEN, token, REFRESH_TOKEN_OPTIONS);
 }
 
 export async function removeRefreshToken(): Promise<boolean> {
-  return removeCookie(COOKIE_NAMES.REFRESH_TOKEN, { path: REFRESH_TOKEN_OPTIONS.path });
+  return removeCookie(COOKIE_NAMES.REFRESH_TOKEN);
 }
 
-/** Always returns false on the client — cookie is httpOnly. */
 export async function hasRefreshToken(): Promise<boolean> {
   return cookieExists(COOKIE_NAMES.REFRESH_TOKEN);
 }
 
-// ── Pair helpers ──────────────────────────────────────────────────────────────
+// ── Token pair ────────────────────────────────────────────────────────────────
 
 export interface TokenPair {
   accessToken: string;
   refreshToken: string;
 }
 
-/**
- * Store both tokens at once (e.g. after login).
- * Must be called from a server context — refresh token is httpOnly.
- */
 export async function setTokens(
   tokens: TokenPair,
-  overrides?: {
-    accessTokenOptions?: Partial<SetCookieOptions>;
-    refreshTokenOptions?: Partial<SetCookieOptions>;
-  },
+  options?: { accessTokenOptions?: { maxAge?: number } },
 ): Promise<{ accessToken: boolean; refreshToken: boolean }> {
-  const [accessResult, refreshResult] = await Promise.all([
-    setAccessToken(tokens.accessToken, overrides?.accessTokenOptions),
-    setRefreshToken(tokens.refreshToken, overrides?.refreshTokenOptions),
+  const maxAge = options?.accessTokenOptions?.maxAge;
+  const [accessToken, refreshToken] = await Promise.all([
+    setAccessToken(tokens.accessToken, maxAge),
+    setRefreshToken(tokens.refreshToken),
   ]);
-  return { accessToken: accessResult, refreshToken: refreshResult };
+  return { accessToken, refreshToken };
 }
 
-/** Clear both tokens (e.g. on logout). */
-export async function clearTokens(): Promise<{ accessToken: boolean; refreshToken: boolean }> {
-  const [accessResult, refreshResult] = await Promise.all([
-    removeAccessToken(),
-    removeRefreshToken(),
-  ]);
-  return { accessToken: accessResult, refreshToken: refreshResult };
+export async function clearTokens(): Promise<void> {
+  await Promise.all([removeAccessToken(), removeRefreshToken()]);
 }
 
-/**
- * Returns true if the user is probably authenticated.
- * On the server, also checks refresh token so we can still refresh.
- */
 export async function isAuthenticated(): Promise<boolean> {
-  const hasAccess = await hasAccessToken();
-  if (typeof window === 'undefined') {
-    return hasAccess || (await hasRefreshToken());
+  return hasAccessToken();
+}
+
+// ── User profile ──────────────────────────────────────────────────────────────
+
+export async function getUser(): Promise<User | null> {
+  const raw = await getCookie(COOKIE_NAMES.USER);
+  if (!raw) return null;
+  try {
+    return JSON.parse(raw) as User;
+  } catch {
+    return null;
   }
-  return hasAccess;
+}
+
+export async function setUser(user: User): Promise<boolean> {
+  return setCookie(COOKIE_NAMES.USER, JSON.stringify(user), USER_COOKIE_OPTIONS);
+}
+
+export async function removeUser(): Promise<boolean> {
+  return removeCookie(COOKIE_NAMES.USER);
+}
+
+// ── Redirect path ─────────────────────────────────────────────────────────────
+
+export async function getRedirectPath(): Promise<string | null> {
+  return getCookie(COOKIE_NAMES.REDIRECT_PATH);
+}
+
+export async function setRedirectPath(path: string): Promise<boolean> {
+  return setCookie(COOKIE_NAMES.REDIRECT_PATH, path, { path: '/', sameSite: 'lax', maxAge: 60 * 5 });
+}
+
+export async function removeRedirectPath(): Promise<boolean> {
+  return removeCookie(COOKIE_NAMES.REDIRECT_PATH);
+}
+
+// ── Clear all auth state ──────────────────────────────────────────────────────
+
+export async function clearAuthState(): Promise<void> {
+  await Promise.all([clearTokens(), removeUser(), removeRedirectPath()]);
 }

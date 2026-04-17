@@ -20,9 +20,9 @@ import { Button } from '@/components/ui/button';
 import { BackButton } from '@/components/shared/navigation/back-button';
 import { AudioPlayer } from '@/components/wellness/audio-player';
 import { VideoPlayer } from '@/components/wellness/video-player';
-import { useWellnessResourceDetail } from '@/hooks/use-wellness-resource-detail';
+import { useWellnessResourceDetail } from '@/hooks/wellness/use-wellness-resource-detail';
 import { getStrapiImageUrl } from '@/lib/strapi-fetcher';
-import type { WellnessResource, ResourceBlock } from '@/types/wellness';
+import type { WellnessResource, ResourceBlock } from '@/hooks/wellness/use-wellness-resource-detail';
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 

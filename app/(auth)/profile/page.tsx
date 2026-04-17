@@ -13,7 +13,6 @@ import {
   CalendarCheck2,
   CalendarClock,
   CheckCircle2,
-  ChevronRight,
   CreditCard,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -30,32 +29,12 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { useAuth } from "@/hooks/use-auth";
-import {
-  getPatientsMe,
-  getAppointmentsDashboard,
-  getPackagesManaged,
-} from "@/sdk/auth-and-crm/sdk.gen";
-import type { AppointmentDashboard, ManagedPackage } from "@/sdk/auth-and-crm/types.gen";
+import { crmControllerGetAppointmentDashboard } from "@/sdk/backend-v2";
+import type { AppointmentDashboardResponseDto } from "@/sdk/backend-v2";
 import { PackageListCard } from "@/components/package/package-list-card";
-import type { BookedPackage } from "@/types/package";
-
-async function fetchProfile() {
-  const { data, error } = await getPatientsMe();
-  if (error) throw error;
-  return data;
-}
-
-async function fetchDashboard(): Promise<AppointmentDashboard> {
-  const { data, error } = await getAppointmentsDashboard();
-  if (error) throw error;
-  return data as AppointmentDashboard;
-}
-
-async function fetchPackages(): Promise<ManagedPackage[]> {
-  const { data, error } = await getPackagesManaged();
-  if (error) throw error;
-  return (data ?? []) as ManagedPackage[];
-}
+import { useManagedPackages } from "@/hooks/packages/use-packages";
+import { useAuthMe } from "@/hooks/shared/auth/use-auth";
+import type { BookedPackageDto } from "@/sdk/backend-v2";
 
 
 function InfoRow({
@@ -114,28 +93,27 @@ export default function ProfilePage() {
   const router = useRouter();
   const { logout } = useAuth();
 
-  const { data: profile, isLoading: profileLoading } = useSWR(
-    "patients/me",
-    fetchProfile,
-    { onError: () => toast.error("Failed to load profile") }
-  );
+  const { profile: rawProfile, isLoading: profileLoading } = useAuthMe();
+  const profile = rawProfile as Record<string, unknown> | null;
 
+  const phoneNumber = profile?.caller_mobile as string | undefined;
   const { data: dashboard, isLoading: dashLoading } = useSWR(
-    "appointments/dashboard",
-    fetchDashboard
+    phoneNumber ? ["appointments/dashboard", phoneNumber] : null,
+    async ([, phone]: [string, string]) => {
+      const { data, error } = await crmControllerGetAppointmentDashboard({ query: { phoneNumber: phone } });
+      if (error) throw error;
+      return data as AppointmentDashboardResponseDto;
+    }
   );
 
-  const { data: packages, isLoading: packagesLoading } = useSWR(
-    "packages/managed",
-    fetchPackages
-  );
+  const { packages: rawPackages, isLoading: packagesLoading } = useManagedPackages();
 
   const handleLogout = async () => {
     await logout();
     router.replace("/auth/login");
   };
 
-  const displayName = profile?.contact_name || profile?.partner_name || "—";
+  const displayName = (profile?.contact_name as string) || (profile?.partner_name as string) || "—";
   const initials = displayName
     .split(" ")
     .slice(0, 2)
@@ -144,12 +122,10 @@ export default function ProfilePage() {
     .toUpperCase();
 
   const upcomingCount = dashboard?.upcoming_appointments?.length ?? 0;
-  const completedCount = dashboard?.total_appointment_counts
-    ? dashboard.total_appointment_counts - upcomingCount
-    : dashboard?.completed_appointments?.length ?? 0;
+  const completedCount = dashboard?.completed_appointments?.length ?? 0;
   const totalCount = dashboard?.total_appointment_counts ?? 0;
 
-  const bookedPackages = (packages as unknown as BookedPackage[] | undefined) ?? [];
+  const bookedPackages = rawPackages as BookedPackageDto[];
   const pendingPayments = bookedPackages.filter((p) => p.package_stage === "booked");
   const activePackages = bookedPackages.filter(
     (p) => p.package_stage === "confirm" || p.package_stage === "in_progress"
@@ -201,7 +177,7 @@ export default function ProfilePage() {
             </h2>
             {profile?.id && (
               <span className="text-[12px] font-medium text-muted-foreground">
-                Patient ID #{profile.id}
+                Patient ID #{String(profile.id)}
               </span>
             )}
           </>
@@ -222,17 +198,17 @@ export default function ProfilePage() {
               <InfoRow
                 icon={<Phone className="w-4 h-4 text-primary" />}
                 label="Mobile"
-                value={profile?.caller_mobile ?? "—"}
+                value={(profile?.caller_mobile as string) ?? "—"}
               />
               <InfoRow
                 icon={<Mail className="w-4 h-4 text-primary" />}
                 label="Email"
-                value={profile?.caller_email || "Not provided"}
+                value={(profile?.caller_email as string) || "Not provided"}
               />
               <InfoRow
                 icon={<Hash className="w-4 h-4 text-primary" />}
                 label="Patient ID"
-                value={profile?.id ? `#${profile.id}` : "—"}
+                value={profile?.id ? `#${String(profile.id)}` : "—"}
               />
             </>
           )}
@@ -272,41 +248,6 @@ export default function ProfilePage() {
             </div>
           )}
         </div>
-
-        {/* Next Appointment */}
-        {!dashLoading && dashboard?.next_appointment?.doctor_name && (
-          <div>
-            <p className="text-[13px] font-bold text-muted-foreground uppercase tracking-widest mb-2 px-1">
-              Next Appointment
-            </p>
-            <button
-              className="w-full bg-card rounded-2xl border border-border shadow-sm p-4 flex items-center gap-3 text-left hover:bg-muted/30 transition-all active:scale-[0.98]"
-              onClick={() => router.push("/consult/appointments")}
-            >
-              <div className="w-11 h-11 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
-                <CalendarClock className="w-5 h-5 text-primary" />
-              </div>
-              <div className="flex-1 min-w-0">
-                <p className="text-[14px] font-bold text-foreground truncate">
-                  {dashboard.next_appointment.doctor_name}
-                </p>
-                <p className="text-[12px] text-muted-foreground truncate">
-                  {dashboard.next_appointment.speciality}
-                  {dashboard.next_appointment.consultation_type
-                    ? ` · ${dashboard.next_appointment.consultation_type}`
-                    : ""}
-                </p>
-                <p className="text-[12px] font-semibold text-primary mt-0.5">
-                  {dashboard.next_appointment.formatted_startdate}
-                  {dashboard.next_appointment.time
-                    ? ` · ${dashboard.next_appointment.time}`
-                    : ""}
-                </p>
-              </div>
-              <ChevronRight className="w-4 h-4 text-muted-foreground flex-shrink-0" />
-            </button>
-          </div>
-        )}
 
         {/* Pending Payments */}
         {packagesLoading && (

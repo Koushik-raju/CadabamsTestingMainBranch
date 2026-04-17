@@ -64,7 +64,14 @@ async function main() {
   const output = `// AUTO-GENERATED — do not edit manually.
 // Run: CADABAMS_AUTH_API_KEY=<key> pnpm tsx scripts/fetch-and-cache-doctors.ts
 
-import type { Doctor } from '@/sdk/auth-and-crm';
+type Doctor = {
+  id: number;
+  name: string;
+  speciality_id: [number | string, number | string];
+  image?: string;
+  book_package: boolean;
+  [key: string]: unknown;
+};
 
 type DoctorPreferenceTuple = [string, number];
 

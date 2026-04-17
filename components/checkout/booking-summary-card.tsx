@@ -1,52 +1,58 @@
-'use client';
+"use client";
 
-import { User as UserIcon, Video, Building2 } from 'lucide-react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Separator } from '@/components/ui/separator';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import type { DoctorDetail } from '@/sdk/auth-and-crm';
+import { User as UserIcon, Video, Building2 } from "lucide-react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Separator } from "@/components/ui/separator";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import type { CrmControllerGetDoctorByIdResponse } from "@/sdk/backend-v2";
 
-function displayName(doctor: DoctorDetail | null): string {
-  if (!doctor) return 'Doctor';
-  const full = (doctor.display_name || doctor.name || '').trim();
-  const raw = full.includes(',') ? full.split(',').pop()!.trim() : full;
-  return /^Dr\.?\s/i.test(raw) ? raw : `Dr. ${raw}`;
+function displayName(
+  doctor: CrmControllerGetDoctorByIdResponse | null,
+): string {
+  if (!doctor) return "Doctor";
+  const raw = (doctor.name || "").trim();
+  const name = raw.includes(",") ? raw.split(",").pop()!.trim() : raw;
+  return /^Dr\.?\s/i.test(name) ? name : `Dr. ${name}`;
 }
 
 function formatDatetime(iso: string | null): string {
-  if (!iso) return '';
+  if (!iso) return "";
   try {
     return (
-      new Date(iso).toLocaleDateString('en-IN', {
-        weekday: 'long',
-        day: 'numeric',
-        month: 'long',
-        year: 'numeric',
+      new Date(iso).toLocaleDateString("en-IN", {
+        weekday: "long",
+        day: "numeric",
+        month: "long",
+        year: "numeric",
       }) +
-      ' at ' +
-      new Date(iso).toLocaleTimeString('en-IN', {
-        hour: '2-digit',
-        minute: '2-digit',
+      " at " +
+      new Date(iso).toLocaleTimeString("en-IN", {
+        hour: "2-digit",
+        minute: "2-digit",
       })
     );
   } catch {
-    return '';
+    return "";
   }
 }
 
 export interface BookingSummaryCardProps {
-  doctor: DoctorDetail | null;
+  doctor: CrmControllerGetDoctorByIdResponse | null;
   startDatetime: string | null;
   isOnline: boolean;
 }
 
-export function BookingSummaryCard({ doctor, startDatetime, isOnline }: BookingSummaryCardProps) {
-  const initials = (doctor?.display_name || doctor?.name || '')
-    .replace(/^Dr\.?\s*/i, '')
-    .split(' ')
-    .map((w) => w[0])
+export function BookingSummaryCard({
+  doctor,
+  startDatetime,
+  isOnline,
+}: BookingSummaryCardProps) {
+  const initials = (doctor?.name || "")
+    .replace(/^Dr\.?\s*/i, "")
+    .split(" ")
+    .map((w: string) => w[0])
     .slice(0, 2)
-    .join('')
+    .join("")
     .toUpperCase();
 
   return (
@@ -70,11 +76,13 @@ export function BookingSummaryCard({ doctor, startDatetime, isOnline }: BookingS
             <p className="font-semibold text-foreground">
               {displayName(doctor)}
             </p>
-            {doctor?.speciality_id?.[1] && (
-              <p className="text-sm text-muted-foreground">
-                {String(doctor.speciality_id[1])}
-              </p>
-            )}
+            <>
+              {doctor?.speciality_id?.[1] && (
+                <p className="text-sm text-muted-foreground">
+                  {String(doctor.speciality_id[1])}
+                </p>
+              )}
+            </>
           </div>
         </div>
 

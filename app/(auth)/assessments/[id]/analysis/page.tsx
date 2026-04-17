@@ -4,8 +4,8 @@ import { use, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
-import { useAuth } from '@/hooks/use-auth';
-import { useAssessmentScoreSummary } from '@/hooks/use-assessments';
+import { useAuth } from '@/hooks/shared/auth/use-auth';
+import { useAssessmentScoreSummary } from '@/hooks/assessments/use-assessment-detail';
 import { Sparkles, AlertCircle, ChevronRight, X } from 'lucide-react';
 
 export default function AssessmentAnalysisPage({
@@ -18,15 +18,7 @@ export default function AssessmentAnalysisPage({
   const { user } = useAuth();
 
   const leadId = useMemo(() => {
-    if (user?.lead_id) return String(user.lead_id);
-    try {
-      const raw = localStorage.getItem('user');
-      if (raw) {
-        const parsed = JSON.parse(raw);
-        return parsed.lead_id ? String(parsed.lead_id) : null;
-      }
-    } catch {}
-    return null;
+    return user?.lead_id ? String(user.lead_id) : null;
   }, [user]);
 
   const { scoreSummary, submissions, isLoading, error } = useAssessmentScoreSummary(
@@ -94,7 +86,7 @@ export default function AssessmentAnalysisPage({
               Complete the assessment to generate your personalized report.
             </p>
             <Button
-              className="bg-orange-500 hover:bg-orange-600 text-white"
+              className="bg-primary hover:bg-primary/90 text-white"
               onClick={() => router.push(`/assessments/${assessmentId}`)}
             >
               Take Assessment
@@ -105,8 +97,8 @@ export default function AssessmentAnalysisPage({
           <div className="pt-5 space-y-5">
             {/* AI badge */}
             <div className="flex items-center gap-1.5">
-              <Sparkles className="w-3.5 h-3.5 text-orange-500" />
-              <span className="text-xs font-semibold text-orange-500">AI-generated summary</span>
+              <Sparkles className="w-3.5 h-3.5 text-primary" />
+              <span className="text-xs font-semibold text-primary">AI-generated summary</span>
             </div>
 
             {/* Score heading */}
@@ -158,7 +150,7 @@ export default function AssessmentAnalysisPage({
       {hasSubmissions && (
         <div className="fixed bottom-0 left-0 right-0 px-5 pb-8 pt-3 bg-background border-t border-border space-y-2">
           <Button
-            className="w-full bg-orange-500 hover:bg-orange-600 text-white font-semibold h-14 rounded-2xl text-base"
+            className="w-full bg-primary hover:bg-primary/90 text-white font-semibold h-14 rounded-2xl text-base"
             onClick={() => router.push('/consult/appointments')}
           >
             Book appointment with a specialist

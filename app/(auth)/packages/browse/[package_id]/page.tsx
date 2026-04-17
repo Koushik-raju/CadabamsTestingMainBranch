@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, Suspense } from 'react';
+import { Suspense } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -8,27 +8,18 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { BackButton } from '@/components/shared/navigation/back-button';
 import {
   CheckCircle2,
-  Clock,
   Layers,
   IndianRupee,
   AlertCircle,
   Package,
   ChevronRight,
 } from 'lucide-react';
-import { useAvailablePackages, usePackageProductLines } from '@/hooks/use-packages';
+import { useAvailablePackages, usePackageProductDetails } from '@/hooks/use-packages';
 import { getPackagePalette } from '@/lib/package-colors';
 import { cn } from '@/lib/utils';
-import type { AvailablePackage } from '@/types/package';
+import type { PackageResponseDto } from '@/sdk/backend-v2';
 
-function getDisplayDuration(pkg: AvailablePackage): number {
-  const duration = pkg.duration ?? pkg.package_duration;
-  if (duration === 90) return 90;
-  const name = (pkg.package_name ?? '').toLowerCase();
-  if (/90[\s-]?day|^90\s/.test(name)) return 90;
-  return duration ?? 30;
-}
-
-function storeSelectedPackage(pkg: AvailablePackage) {
+function storeSelectedPackage(pkg: PackageResponseDto) {
   if (typeof sessionStorage !== 'undefined') {
     sessionStorage.setItem('selected_package', JSON.stringify(pkg));
   }
@@ -58,30 +49,9 @@ function PackageDetailSkeleton() {
 function PackageDetailContent({ packageId }: { packageId: string }) {
   const router = useRouter();
   const { packages, isLoading: pkgLoading } = useAvailablePackages();
-  const { lines, isLoading: linesLoading } = usePackageProductLines();
-  const [pkg, setPkg] = useState<AvailablePackage | null>(null);
-
-  useEffect(() => {
-    if (!pkgLoading && packages.length > 0) {
-      const found = packages.find((p) => String(p.id) === packageId);
-      if (found) {
-        setPkg(found);
-      } else {
-        // Fallback to sessionStorage
-        if (typeof sessionStorage !== 'undefined') {
-          const stored = sessionStorage.getItem('selected_package');
-          if (stored) {
-            try {
-              const parsed = JSON.parse(stored) as AvailablePackage;
-              if (String(parsed.id) === packageId) setPkg(parsed);
-            } catch {
-              // ignore
-            }
-          }
-        }
-      }
-    }
-  }, [packages, pkgLoading, packageId]);
+  const numericId = Number(packageId);
+  const pkg = packages.find((p) => p.id === numericId) ?? null;
+  const { lines, isLoading: linesLoading } = usePackageProductDetails(numericId);
 
   const isLoading = pkgLoading || linesLoading;
 
@@ -107,19 +77,14 @@ function PackageDetailContent({ packageId }: { packageId: string }) {
     router.push(`/packages/book/${pkg.id}`);
   };
 
-  const duration = getDisplayDuration(pkg);
-  const serviceCount = pkg.package_product_ids?.length ?? 0;
-  const sheetLines = lines.filter((l) => pkg.package_product_ids?.includes(l.id));
   const palette = getPackagePalette(pkg.id);
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
-      {/* Sticky header */}
       <div className="flex items-center px-2 py-2 border-b border-border bg-background">
         <BackButton fallback="/packages" />
       </div>
 
-      {/* Scrollable content */}
       <div className="flex-1 overflow-y-auto pb-32">
         {/* Hero banner */}
         <div className={cn('w-full h-52 bg-gradient-to-br relative overflow-hidden flex items-end', palette.gradient)}>
@@ -141,14 +106,13 @@ function PackageDetailContent({ packageId }: { packageId: string }) {
         </div>
 
         <div className="px-5 pt-5 space-y-5">
-          {/* Badge */}
           <div className="flex items-center gap-1.5">
             <Package className="w-3.5 h-3.5 text-primary" />
             <p className="text-xs font-semibold text-primary tracking-wide">Healthcare Package</p>
           </div>
 
           {/* Stats row */}
-          <div className="grid grid-cols-3 py-3 border-y border-border">
+          <div className="grid grid-cols-2 py-3 border-y border-border">
             <div className="flex items-center gap-2">
               <IndianRupee className="w-4 h-4 text-primary" />
               <div>
@@ -159,26 +123,18 @@ function PackageDetailContent({ packageId }: { packageId: string }) {
               </div>
             </div>
             <div className="flex items-center gap-2">
-              <Clock className="w-4 h-4 text-primary" />
-              <div>
-                <p className="text-sm font-semibold text-foreground">{duration} Days</p>
-                <p className="text-[11px] text-muted-foreground">Duration</p>
-              </div>
-            </div>
-            <div className="flex items-center gap-2">
               <Layers className="w-4 h-4 text-primary" />
               <div>
-                <p className="text-sm font-semibold text-foreground">{serviceCount}</p>
-                <p className="text-[11px] text-muted-foreground">Services</p>
+                <p className="text-sm font-semibold text-foreground">{lines.length}</p>
+                <p className="text-[11px] text-muted-foreground">Sessions</p>
               </div>
             </div>
           </div>
 
-          {/* What's included — grouped by service name */}
-          {sheetLines.length > 0 && (() => {
-            // Group by product name, preserve insertion order
-            const groups = sheetLines.reduce<{ name: string; count: number }[]>((acc, line) => {
-              const name = String(line.product_id[1]);
+          {/* What's included */}
+          {lines.length > 0 && (() => {
+            const groups = lines.reduce<{ name: string; count: number }[]>((acc, line) => {
+              const name = String(line.product_id?.[1] ?? '');
               const existing = acc.find((g) => g.name === name);
               if (existing) { existing.count++; } else { acc.push({ name, count: 1 }); }
               return acc;
@@ -201,17 +157,6 @@ function PackageDetailContent({ packageId }: { packageId: string }) {
             );
           })()}
 
-          {sheetLines.length === 0 && serviceCount > 0 && (
-            <ul className="space-y-3">
-              <li className="flex items-center gap-3">
-                <CheckCircle2 className="w-5 h-5 text-primary flex-shrink-0" />
-                <p className="text-sm font-medium text-foreground flex-1">Consultation sessions</p>
-                <Badge variant="secondary" className="text-xs font-semibold shrink-0">
-                  ×{serviceCount}
-                </Badge>
-              </li>
-            </ul>
-          )}
 
         </div>
       </div>

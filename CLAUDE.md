@@ -1,5 +1,64 @@
 @AGENTS.md
 
+---
+
+# ⛔ NON-BREAKABLE RULE — FILE HEADER COMMENTS
+
+**This rule is mandatory. It cannot be skipped, abbreviated, or deferred.**
+
+## Rule: Every file must have a header comment block at the very top.
+
+### When it applies
+- **Opening a file**: If the header comment is missing, ADD IT before doing anything else.
+- **Creating a file**: Add the header as the first thing written.
+- **Editing a file**: If you change logic or add/remove variables, UPDATE the header to reflect the change.
+
+### What the header must include
+
+```tsx
+/**
+ * FILE: <relative path from project root>
+ *
+ * PURPOSE:
+ *   <One or two sentences explaining what this file does and why it exists.>
+ *
+ * LOGIC OVERVIEW:
+ *   <Step-by-step description of how the file works — data flow, conditions,
+ *    side effects, SDK calls, state transitions, etc.>
+ *
+ * KEY VARIABLES / PROPS / EXPORTS:
+ *   <varName>       — <what it holds and where it comes from>
+ *   <propName>      — <what the consumer passes in and why>
+ *   <exportedFn>    — <what it returns / does>
+ *
+ * DEPENDENCIES:
+ *   <SDK hook or function used, e.g. useJourneyDetail(id)>
+ *   <External lib, e.g. SWR, date-fns>
+ *
+ * LAST UPDATED: <date in YYYY-MM-DD> — <brief reason for update>
+ */
+```
+
+### Rules for the header
+
+1. **Always at line 1** — before imports, `"use client"`, or anything else.
+2. **Accurate, not aspirational** — describe what the code actually does, not what you wish it did.
+3. **Update on every change** — if you modify logic or variables, update the relevant sections and the `LAST UPDATED` line.
+4. **No placeholders** — never write `<TODO>` or `<describe later>` in a shipped header.
+5. **Applies to all file types** — `.tsx`, `.ts`, `.js`, `.css`, config files. For non-JS files use the appropriate comment syntax (`/* */`, `#`, `<!-- -->`).
+
+### Enforcement
+
+If you open or create a file without a header:
+1. STOP — add the header first.
+2. Read the file to understand its current logic.
+3. Write an accurate header.
+4. Then proceed with your original task.
+
+**Skipping this rule is not allowed under any circumstance.**
+
+---
+
 <!-- code-review-graph MCP tools -->
 ## MCP Tools: code-review-graph
 
@@ -138,3 +197,15 @@ Each hook returns `{ data, isLoading, error }`. Pages should handle all three st
 
 # Notes
 use ast-grep for search.
+follow @docs/DESIGN_GUIDELINES.md when creating / editing UI.
+
+# API & SDK Rules
+1. **Use only `crmController...` functions** — only call SDK functions whose names start with `crmController`.
+2. **No hardcoded types** — import all types directly from the SDK (`@/sdk/backend-v2`), never define custom type shapes manually.
+3. **Pages must be independent** — Pages must be independent — list and detail pages fetch their own data separately, no shared state between pages.
+4. **Never call APIs directly** — do not use `client.post/get/...`, raw `fetch`, or `axios` to call backend endpoints. If a required SDK function does not exist, **ask the user** — do not bypass the SDK.
+5. **No type coercions** — never use `as SomeType` or `as unknown[]` casts. If an SDK type is too vague (e.g. `Array<unknown>`), flag it to the user and wait for SDK regeneration.
+6. **No hardcoded UI data** — never render hardcoded strings like `"30 Days"`, `"Available"`, or `"Complete care package"`. Only render what the API actually returns.
+7. **Hooks wrap CRM functions; pages use hooks** — `crmController...` calls belong inside SWR hooks in `hooks/`. Pages import from hooks, not from the SDK directly.
+8. **Flag SDK gaps, don't work around them** — if a required field is missing from an SDK type (e.g. `razorpay_order_id`, `journey_id`), inform the user and wait for them to update the spec and regenerate. Do not cast or fabricate the shape.
+9. **Scope data fetching to the resource** — never call a list endpoint (e.g. `usePackageProductLines()` with no ID) to get data for a specific item. Always pass the specific ID to the correct endpoint.

@@ -3,11 +3,11 @@
 import { useRouter } from 'next/navigation';
 import { Calendar, Clock, Video, Building2 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import type { AppointmentDetail } from '@/sdk/auth-and-crm';
+import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import type { SlotDetailDto } from '@/hooks/appointments/use-appointments-page';
 
 interface AppointmentCardProps {
-  appointment: AppointmentDetail;
+  appointment: SlotDetailDto;
   isPast?: boolean;
 }
 
@@ -41,30 +41,40 @@ function formatTime(dateStr: string): string {
   } catch { return dateStr; }
 }
 
-function cleanDoctorName(raw: string): string {
-  const name = raw.includes(',') ? raw.split(',').pop()!.trim() : raw.trim();
-  return /^Dr\.?\s/i.test(name) ? name : `Dr. ${name}`;
+function getDoctorName(doctor: SlotDetailDto['doctor']): string {
+  if (Array.isArray(doctor) && doctor.length >= 2 && typeof doctor[1] === 'string') {
+    const raw = doctor[1];
+    const name = raw.includes(',') ? raw.split(',').pop()!.trim() : raw.trim();
+    return /^Dr\.?\s/i.test(name) ? name : `Dr. ${name}`;
+  }
+  return 'Doctor';
+}
+
+function getConsultationType(ids: SlotDetailDto['consultation_type_ids']): string {
+  if (Array.isArray(ids) && ids.length >= 2 && typeof ids[1] === 'string') return ids[1];
+  return '';
+}
+
+function getInitials(name: string): string {
+  return name.replace(/^Dr\.?\s*/i, '').split(' ').map((w) => w[0]).slice(0, 2).join('').toUpperCase();
 }
 
 export function AppointmentCard({ appointment, isPast }: AppointmentCardProps) {
   const router = useRouter();
-  const { id, doctor, doctor_image_url, start_datetime, availability, consultation_type_ids } = appointment;
-
-  const doctorName  = cleanDoctorName(typeof doctor[1] === 'string' ? doctor[1] : 'Doctor');
-  const isVirtual   = appointment.virtual_consultation_url !== false;
-  const status      = availability || 'booked';
-  const initials    = doctorName.replace(/^Dr\.?\s*/i, '').split(' ').map(w => w[0]).slice(0, 2).join('').toUpperCase();
+  const doctorName = getDoctorName(appointment.doctor);
+  const initials = getInitials(doctorName);
+  const isVirtual = !!appointment.virtual_consultation_url;
+  const status = appointment.availability || 'booked';
 
   return (
     <button
       type="button"
-      onClick={() => router.push(`/consult/appointments/${id}`)}
+      onClick={() => router.push(`/consult/appointments/${appointment.id}`)}
       className="w-full text-left bg-white rounded-2xl border border-border shadow-sm p-4 flex items-center gap-3 active:scale-[0.98] transition-transform"
     >
       <div className="relative shrink-0">
         <Avatar className="h-12 w-12">
-          <AvatarImage src={doctor_image_url || ''} alt={doctorName} />
-          <AvatarFallback className="bg-primary/10 text-primary text-sm font-semibold">
+          <AvatarFallback className={`text-sm font-semibold ${isPast ? 'bg-muted text-muted-foreground' : 'bg-primary/10 text-primary'}`}>
             {initials}
           </AvatarFallback>
         </Avatar>
@@ -81,16 +91,16 @@ export function AppointmentCard({ appointment, isPast }: AppointmentCardProps) {
           </Badge>
         </div>
         <p className="text-xs text-muted-foreground mt-0.5">
-          {typeof consultation_type_ids[1] === 'string' ? consultation_type_ids[1] : ''}
+          {getConsultationType(appointment.consultation_type_ids)}
         </p>
         <div className="flex items-center gap-3 mt-1.5">
           <span className="flex items-center gap-1 text-xs text-muted-foreground">
             <Calendar className="h-3 w-3" />
-            {formatDate(start_datetime)}
+            {formatDate(appointment.start_datetime)}
           </span>
           <span className="flex items-center gap-1 text-xs text-muted-foreground">
             <Clock className="h-3 w-3" />
-            {formatTime(start_datetime)}
+            {formatTime(appointment.start_datetime)}
           </span>
           {isVirtual
             ? <Video className="h-3 w-3 text-primary ml-auto" />

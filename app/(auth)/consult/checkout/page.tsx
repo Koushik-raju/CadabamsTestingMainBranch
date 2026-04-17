@@ -1,34 +1,53 @@
-'use client';
+"use client";
 
-import { Suspense, useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { Suspense, useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import {
   User as UserIcon,
   CreditCard,
   Loader2,
   AlertCircle,
-  CheckCircle2,
-} from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
-import { BackButton } from '@/components/shared/navigation/back-button';
-import { BookingSummaryCard } from '@/components/checkout/booking-summary-card';
-import { PaymentSummaryCard } from '@/components/checkout/payment-summary-card';
-import { useAuth } from '@/hooks/use-auth';
-import { useBooking } from '@/contexts/booking-context';
+  ChevronRight,
+  Check,
+  Users,
+} from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Separator } from "@/components/ui/separator";
+import { Skeleton } from "@/components/ui/skeleton";
 import {
-  getDoctorsById,
-  getAppointmentsSlotsBySlotIdPrice,
-  putAppointmentsBookBySlotId,
-  postPaymentsAppointment,
-} from '@/sdk/auth-and-crm';
-import type { DoctorDetail } from '@/sdk/auth-and-crm';
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+} from "@/components/ui/sheet";
+import { BackButton } from "@/components/shared/navigation/back-button";
+import { BookingSummaryCard } from "@/components/checkout/booking-summary-card";
+import { PaymentSummaryCard } from "@/components/checkout/payment-summary-card";
+import { useAuth } from "@/hooks/shared/auth/use-auth";
+import { useBooking } from "@/contexts/booking-context";
+import {
+  crmControllerGetDoctorById,
+  crmControllerGetSlotPrice,
+  crmControllerBookAppointment,
+  crmControllerRazorpayPayment,
+  crmControllerGetRelationships,
+} from "@/sdk/backend-v2";
+import type {
+  CrmControllerGetDoctorByIdResponse,
+  RelationshipResponseDto,
+} from "@/sdk/backend-v2";
 
-function displayName(doctor: DoctorDetail | null): string {
-  if (!doctor) return 'Doctor';
-  const full = (doctor.display_name || doctor.name || '').trim();
-  const raw = full.includes(',') ? full.split(',').pop()!.trim() : full;
-  return /^Dr\.?\s/i.test(raw) ? raw : `Dr. ${raw}`;
+function displayName(doctor: CrmControllerGetDoctorByIdResponse | null): string {
+  if (!doctor) return "Doctor";
+  const raw = (doctor.name || "").trim();
+  const name = raw.includes(",") ? raw.split(",").pop()!.trim() : raw;
+  return /^Dr\.?\s/i.test(name) ? name : `Dr. ${name}`;
+}
+
+function isSelf(relation: RelationshipResponseDto): boolean {
+  return relation.name.toLowerCase() === "self";
 }
 
 function CheckoutContent() {
@@ -43,23 +62,33 @@ function CheckoutContent() {
     startDatetime,
   } = useBooking();
 
-  const [doctor, setDoctor] = useState<DoctorDetail | null>(null);
+  const [doctor, setDoctor] =
+    useState<CrmControllerGetDoctorByIdResponse | null>(null);
   const [price, setPrice] = useState<number | null>(null);
   const [loading, setLoading] = useState(true);
   const [processing, setProcessing] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [success, setSuccess] = useState(false);
+
+  // Relation sheet state
+  const [sheetOpen, setSheetOpen] = useState(false);
+  const [sheetStep, setSheetStep] = useState<"relation" | "name">("relation");
+  const [relations, setRelations] = useState<RelationshipResponseDto[]>([]);
+  const [relationsLoading, setRelationsLoading] = useState(false);
+  const [relationsError, setRelationsError] = useState(false);
+  const [selectedRelation, setSelectedRelation] =
+    useState<RelationshipResponseDto | null>(null);
+  const [patientNameInput, setPatientNameInput] = useState("");
 
   const isOnline = consultationTypeId === 2;
 
   useEffect(() => {
     if (!slotId || !doctorId) {
-      router.replace('/find-therapist');
+      router.replace("/find-therapist");
       return;
     }
     Promise.all([
-      getDoctorsById({ path: { id: doctorId } }),
-      getAppointmentsSlotsBySlotIdPrice({ path: { slotId } }),
+      crmControllerGetDoctorById({ path: { id: doctorId } }),
+      crmControllerGetSlotPrice({ path: { id: slotId } }),
     ])
       .then(([docRes, priceRes]) => {
         setDoctor(docRes.data ?? null);
@@ -69,57 +98,87 @@ function CheckoutContent() {
       .finally(() => setLoading(false));
   }, [slotId, doctorId, router]);
 
-  const handlePay = async () => {
+  const openRelationSheet = () => {
+    setSheetStep("relation");
+    setSelectedRelation(null);
+    setPatientNameInput("");
+    setSheetOpen(true);
+
+    if (relations.length === 0) {
+      setRelationsLoading(true);
+      setRelationsError(false);
+      crmControllerGetRelationships({})
+        .then((res) => setRelations(res.data ?? []))
+        .catch(() => setRelationsError(true))
+        .finally(() => setRelationsLoading(false));
+    }
+  };
+
+  const handleRelationSelect = (relation: RelationshipResponseDto) => {
+    setSelectedRelation(relation);
+    if (isSelf(relation)) {
+      // Book immediately with user's own name
+      proceedWithBooking(user?.name ?? "", relation);
+    } else {
+      setSheetStep("name");
+    }
+  };
+
+  const handleNameConfirm = () => {
+    if (!patientNameInput.trim() || !selectedRelation) return;
+    proceedWithBooking(patientNameInput.trim(), selectedRelation);
+  };
+
+  const proceedWithBooking = async (
+    patientName: string,
+    relation: RelationshipResponseDto,
+  ) => {
     if (!slotId) return;
+    setSheetOpen(false);
     setProcessing(true);
     setError(null);
     try {
-      // Step 1: book the slot
       const isVirtual = consultationTypeId === 2;
       const resolvedCampusId = isVirtual ? 1 : (campusId ?? 1);
+      const leadId = user?.lead_id ? Number(user.lead_id) : 0;
+      const uid = user?.sub ?? "";
+      const callerName = user?.name ?? "";
 
-      const patientName = String(user?.name ?? user?.first_name ?? '');
-
-      const bookRes = await putAppointmentsBookBySlotId({
-        path: { slotId },
+      await crmControllerBookAppointment({
         body: {
-          consultation_type_id: consultationTypeId as 1 | 2 | 3,
+          slot_id: slotId,
+          lead_id: leadId,
           campus_id: resolvedCampusId,
           sub_campus_id: isVirtual ? undefined : (subCampusId ?? undefined),
-          lead_id: user?.lead_id ? Number(user.lead_id) : undefined,
-          appointment_type: 'individual_appointment',
-          availability: 'booked',
-          caller_name: patientName,
+          consultation_type_id: consultationTypeId,
+          caller_name: callerName,
           patient_name: patientName,
-          payment_mode: 'online',
+          appointment_type: "individual_appointment",
+          payment_mode: "online",
         },
       });
 
-      if (bookRes.error) throw new Error(JSON.stringify(bookRes.error));
-      if (!bookRes.data) throw new Error('Failed to book appointment.');
-
-      // Step 2: initiate payment
-      const payRes = await postPaymentsAppointment({
+      const payRes = await crmControllerRazorpayPayment({
         body: {
           slot_id: slotId,
           campus_id: resolvedCampusId,
-          lead_id: user?.lead_id ? Number(user.lead_id) : undefined,
-          uid: user?.sub ?? '',
+          lead_id: leadId,
+          uid,
         },
       });
 
-      if (payRes.error) throw new Error(JSON.stringify(payRes.error));
+      if (!payRes.data?.result.short_url)
+        throw new Error(
+          "Payment initiation failed — no payment link received.",
+        );
 
-      const url = payRes.data?.result?.short_url;
-      if (!url) throw new Error('No payment URL received from server.');
-
-      window.location.href = url;
+      window.location.href = payRes.data?.result.short_url;
     } catch (err) {
       console.error(err);
       setError(
         err instanceof Error
           ? err.message
-          : 'Payment initiation failed. Please try again.'
+          : "Payment initiation failed. Please try again.",
       );
       setProcessing(false);
     }
@@ -133,31 +192,6 @@ function CheckoutContent() {
     );
   }
 
-  if (success) {
-    return (
-      <div className="min-h-screen bg-background flex flex-col items-center justify-center px-6 text-center gap-4">
-        <CheckCircle2 className="h-16 w-16 text-green-500" />
-        <h2 className="text-xl font-bold text-foreground">
-          Appointment Confirmed!
-        </h2>
-        <p className="text-sm text-muted-foreground">
-          Your appointment with {displayName(doctor)} has been booked.
-        </p>
-        <p className="text-xs text-muted-foreground">
-          Redirecting to your appointments…
-        </p>
-      </div>
-    );
-  }
-
-  const initials = (doctor?.display_name || doctor?.name || '')
-    .replace(/^Dr\.?\s*/i, '')
-    .split(' ')
-    .map((w) => w[0])
-    .slice(0, 2)
-    .join('')
-    .toUpperCase();
-
   return (
     <div className="min-h-screen bg-background">
       <div className="flex items-center gap-3 px-4 pt-6 pb-4 border-b border-border">
@@ -168,27 +202,24 @@ function CheckoutContent() {
       </div>
 
       <div className="px-4 py-5 pb-32 max-w-2xl mx-auto space-y-4">
-        {/* Doctor summary */}
         <BookingSummaryCard
           doctor={doctor}
           startDatetime={startDatetime}
           isOnline={isOnline}
         />
 
-        {/* Price breakdown */}
         <PaymentSummaryCard price={price} />
 
-        {/* Logged-in user */}
         {user && (
           <Card className="border-border">
             <CardContent className="p-4 flex items-center gap-3">
               <UserIcon className="h-5 w-5 text-muted-foreground shrink-0" />
               <div className="min-w-0">
                 <p className="text-sm font-medium text-foreground truncate">
-                  {String(user.caller_name ?? user.name ?? 'You')}
+                  {String(user.caller_name ?? user.name ?? "You")}
                 </p>
                 <p className="text-xs text-muted-foreground truncate">
-                  {String(user.caller_mobile ?? user.phone_number ?? '')}
+                  {String(user.caller_mobile ?? user.phone_number ?? "")}
                 </p>
               </div>
             </CardContent>
@@ -207,7 +238,7 @@ function CheckoutContent() {
         <Button
           className="w-full rounded-full h-12 text-base font-semibold gap-2"
           disabled={processing || price === null}
-          onClick={handlePay}
+          onClick={openRelationSheet}
         >
           {processing ? (
             <Loader2 className="h-5 w-5 animate-spin" />
@@ -215,13 +246,130 @@ function CheckoutContent() {
             <CreditCard className="h-5 w-5" />
           )}
           {processing
-            ? 'Redirecting to Razorpay…'
-            : `Pay ${price !== null ? `₹${price}` : ''}`}
+            ? "Redirecting to Razorpay…"
+            : `Pay ${price !== null ? `₹${price}` : ""}`}
         </Button>
         <p className="text-center text-[11px] text-muted-foreground">
           Secured by Razorpay · 256-bit SSL
         </p>
       </div>
+
+      {/* Relation / patient name sheet */}
+      <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
+        <SheetContent side="bottom" className="rounded-t-2xl px-0 pb-8">
+          {sheetStep === "relation" ? (
+            <>
+              <SheetHeader className="px-4 pb-3">
+                <SheetTitle className="text-base font-bold text-foreground">
+                  Who is this appointment for?
+                </SheetTitle>
+              </SheetHeader>
+
+              {relationsLoading ? (
+                <div className="px-4 space-y-0">
+                  <Card>
+                    <CardContent className="py-0 px-3">
+                      {Array.from({ length: 4 }).map((_, i) => (
+                        <div key={i}>
+                          <div className="flex items-center gap-3 py-3">
+                            <Skeleton className="w-11 h-11 rounded-2xl flex-shrink-0" />
+                            <Skeleton className="h-4 w-32 rounded" />
+                          </div>
+                          {i < 3 && <Separator />}
+                        </div>
+                      ))}
+                    </CardContent>
+                  </Card>
+                </div>
+              ) : relationsError ? (
+                <div className="px-4 flex flex-col items-center gap-3 py-8 text-center">
+                  <AlertCircle className="w-8 h-8 text-destructive" />
+                  <p className="text-sm text-muted-foreground">
+                    Failed to load options.
+                  </p>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => {
+                      setRelationsError(false);
+                      setRelationsLoading(true);
+                      crmControllerGetRelationships({})
+                        .then((res) => setRelations(res.data ?? []))
+                        .catch(() => setRelationsError(true))
+                        .finally(() => setRelationsLoading(false));
+                    }}
+                  >
+                    Retry
+                  </Button>
+                </div>
+              ) : (
+                <div className="px-4">
+                  <Card>
+                    <CardContent className="py-0 px-3">
+                      {relations.map((relation, i) => (
+                        <div key={relation.id}>
+                          <button
+                            type="button"
+                            className="w-full flex items-center gap-3 py-3 transition-colors hover:bg-muted/50 active:bg-muted"
+                            onClick={() => handleRelationSelect(relation)}
+                          >
+                            <div className="relative w-11 h-11 rounded-2xl bg-gradient-to-br from-sky-500 to-blue-600 flex-shrink-0 flex items-center justify-center overflow-hidden shadow-sm">
+                              <div className="absolute -top-2 -right-2 w-7 h-7 rounded-full bg-white/10" />
+                              <Users className="w-5 h-5 text-white" />
+                            </div>
+                            <span className="flex-1 text-sm font-medium text-foreground text-left">
+                              {relation.name}
+                            </span>
+                            <ChevronRight className="w-4 h-4 text-muted-foreground flex-shrink-0" />
+                          </button>
+                          {i < relations.length - 1 && <Separator />}
+                        </div>
+                      ))}
+                    </CardContent>
+                  </Card>
+                </div>
+              )}
+            </>
+          ) : (
+            <>
+              <SheetHeader className="px-4 pb-3">
+                <SheetTitle className="text-base font-bold text-foreground">
+                  Patient's name
+                </SheetTitle>
+                <p className="text-sm text-muted-foreground">
+                  Enter the name of the {selectedRelation?.name.toLowerCase()}{" "}
+                  you are booking for.
+                </p>
+              </SheetHeader>
+
+              <div className="px-4 space-y-4">
+                <Input
+                  placeholder="Full name"
+                  value={patientNameInput}
+                  onChange={(e) => setPatientNameInput(e.target.value)}
+                  className="rounded-xl h-12"
+                  autoFocus
+                />
+                <Button
+                  className="w-full rounded-full h-12 text-base font-semibold gap-2"
+                  disabled={!patientNameInput.trim()}
+                  onClick={handleNameConfirm}
+                >
+                  <Check className="w-5 h-5" />
+                  Confirm &amp; Pay
+                </Button>
+                <button
+                  type="button"
+                  className="w-full text-sm text-muted-foreground py-1 hover:text-foreground transition-colors"
+                  onClick={() => setSheetStep("relation")}
+                >
+                  ← Back
+                </button>
+              </div>
+            </>
+          )}
+        </SheetContent>
+      </Sheet>
     </div>
   );
 }

@@ -1,5 +1,84 @@
-export function doctorKey(id: number | string): string {
-  return `/doctors/${id}`;
+/**
+ * FILE: lib/swr-keys.ts
+ *
+ * PURPOSE:
+ *   Centralised factory for all SWR cache keys used across the app.
+ *   Keeping keys in one place prevents typo-driven cache mismatches and
+ *   makes it easy to grep for every consumer of a given endpoint.
+ *
+ * LOGIC OVERVIEW:
+ *   Each exported function returns a stable string (or tuple) that SWR uses
+ *   as the deduplication/cache key for a given resource. Parameterised keys
+ *   embed IDs so separate resources get separate cache slots.
+ *
+ * KEY VARIABLES / PROPS / EXPORTS:
+ *   enrolledJourneysKey()    — key for the current user's journey enrollments list
+ *   availablePackagesKey()   — key for the browsable package catalogue
+ *   managedPackagesKey()     — key for the user's purchased packages
+ *   threadsKey(resourceId)   — key for the user's chat thread list
+ *   (all other keys)         — see individual function names
+ *
+ * DEPENDENCIES:
+ *   None — pure string-returning functions, no imports.
+ *
+ * LAST UPDATED: 2026-04-16 — added threadsKey for chat thread list
+ */
+export function authMeKey(): string {
+  return '/auth/me';
+}
+
+export function assessmentsKey(): string {
+  return '/assessments';
+}
+
+export function assessmentByIdKey(id: number | string): string {
+  return `/assessments/${id}`;
+}
+
+export function assignedAssessmentsKey(leadId: number | string): string {
+  return `/assigned-assessments/${leadId}`;
+}
+
+export function assessmentSubmissionsKey(leadId: number | string, assessmentId?: number | string): string {
+  return assessmentId !== undefined
+    ? `/assessment-submissions/${leadId}/${assessmentId}`
+    : `/assessment-submissions/${leadId}`;
+}
+
+export function journeyEnrollmentKey(journeyId: number | string): string {
+  return `/journey-enrollment/${journeyId}`;
+}
+
+export function packagesKey(): string {
+  return '/packages';
+}
+
+export function packageByIdKey(id: number | string): string {
+  return `/packages/${id}`;
+}
+
+export function documentsKey(): string {
+  return '/documents';
+}
+
+export function notificationsKey(): string {
+  return '/notifications';
+}
+
+export function prescriptionsKey(): string {
+  return '/prescriptions';
+}
+
+export function leaderboardKey(): string {
+  return '/leaderboard';
+}
+
+export function selfJournalingKey(): string {
+  return '/self-journaling';
+}
+
+export function selfJournalingEntryKey(entryId: number | string): string {
+  return `/self-journaling/${entryId}`;
 }
 
 export function appointmentsKey(): string {
@@ -16,10 +95,6 @@ export function slotPriceKey(slotId: number | string): string {
 
 export function campusesKey(): string {
   return '/campuses';
-}
-
-export function doctorAvailabilityKey(id: number | string): string {
-  return `/doctor-availability/${id}`;
 }
 
 export function journeysKey(category?: string, search?: string): string {
@@ -86,6 +161,18 @@ export function managedPackagesKey(): string {
   return '/packages/managed';
 }
 
-export function packageProductLinesKey(): string {
-  return '/packages/product-lines';
+export function packageProductLinesKey(packageId?: number): string {
+  return packageId ? `/packages/product-lines/${packageId}` : '/packages/product-lines';
+}
+
+export function packageProductDetailsKey(packageId: number): string {
+  return `/packages/${packageId}/details`;
+}
+
+export function enrolledJourneysKey(): string {
+  return '/journeys/enrolled';
+}
+
+export function threadsKey(resourceId: string): readonly ['threads', string] {
+  return ['threads', resourceId] as const;
 }

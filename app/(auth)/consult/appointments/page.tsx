@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { BackButton } from '@/components/shared/navigation/back-button';
 import { AppointmentCard } from '@/components/appointments/appointment-card';
-import { useAppointments } from '@/hooks/use-appointments';
+import { useAppointments } from '@/hooks/appointments/use-appointments-page';
 
 export default function AppointmentsPage() {
   const { upcoming, past, isLoading, error } = useAppointments();
@@ -85,7 +85,7 @@ export default function AppointmentsPage() {
                   </Button>
                 </div>
               ) : (
-                upcoming.map(apt => <AppointmentCard key={apt.id} appointment={apt} isPast={false} />)
+                upcoming.map((apt) => <AppointmentCard key={apt.id} appointment={apt} isPast={false} />)
               )}
             </TabsContent>
 
@@ -93,7 +93,7 @@ export default function AppointmentsPage() {
               {past.length === 0 ? (
                 <p className="text-center text-muted-foreground text-sm py-10">No past appointments</p>
               ) : (
-                past.map(apt => <AppointmentCard key={apt.id} appointment={apt} isPast />)
+                past.map((apt) => <AppointmentCard key={apt.id} appointment={apt} isPast />)
               )}
             </TabsContent>
           </Tabs>

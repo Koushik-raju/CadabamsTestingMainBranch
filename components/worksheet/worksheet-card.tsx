@@ -4,7 +4,19 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { BookOpen, ChevronRight, CheckCircle2 } from 'lucide-react';
-import type { AssignedWorksheetItem } from '@/services/assessment.service';
+
+export interface AssignedWorksheetItem {
+  documentId: string;
+  id: string | number | undefined;
+  label: string;
+  description: string;
+  category: string[];
+  assignedAt: string | undefined;
+  status: string;
+  isCompleted: boolean;
+  lastUsed: string;
+  image: string | null;
+}
 
 interface WorksheetCardProps {
   item: AssignedWorksheetItem;

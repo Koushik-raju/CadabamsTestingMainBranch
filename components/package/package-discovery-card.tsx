@@ -1,31 +1,22 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import { Clock, ArrowRight } from 'lucide-react';
+import { Layers, ArrowRight } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
 import { getPackagePalette } from '@/lib/package-colors';
-import type { AvailablePackage } from '@/types/package';
+import type { PackageResponseDto } from '@/sdk/backend-v2';
 
 interface PackageDiscoveryCardProps {
-  pkg: AvailablePackage;
+  pkg: PackageResponseDto;
   className?: string;
-}
-
-function getDisplayDuration(pkg: AvailablePackage): number {
-  const duration = pkg.duration ?? pkg.package_duration;
-  if (duration === 90) return 90;
-  const name = (pkg.package_name ?? '').toLowerCase();
-  if (/90[\s-]?day|^90\s/.test(name)) return 90;
-  return duration ?? 30;
 }
 
 export function PackageDiscoveryCard({ pkg, className }: PackageDiscoveryCardProps) {
   const router = useRouter();
-  const duration = getDisplayDuration(pkg);
   const palette = getPackagePalette(pkg.id);
 
-  const initials = pkg.package_name
+  const initials = (pkg.package_name ?? '')
     .split(' ')
     .slice(0, 2)
     .map((w) => w[0] ?? '')
@@ -50,7 +41,7 @@ export function PackageDiscoveryCard({ pkg, className }: PackageDiscoveryCardPro
         {/* Price badge */}
         <div className="absolute bottom-3 right-3">
           <span className={cn('text-[10px] font-bold px-2 py-0.5 rounded-full backdrop-blur-sm', palette.badgeBg, 'text-white')}>
-            ₹{pkg.amount_total.toLocaleString('en-IN')}
+            ₹{(pkg.amount_total ?? 0).toLocaleString('en-IN')}
           </span>
         </div>
         {/* Arrow */}
@@ -64,8 +55,8 @@ export function PackageDiscoveryCard({ pkg, className }: PackageDiscoveryCardPro
           {pkg.package_name}
         </h4>
         <div className="flex items-center gap-1 mt-1 text-[10px] text-muted-foreground">
-          <Clock className="w-3 h-3" />
-          <span>{duration} Days</span>
+          <Layers className="w-3 h-3" />
+          <span>{pkg.package_product_ids.length} Sessions</span>
         </div>
       </CardContent>
     </Card>

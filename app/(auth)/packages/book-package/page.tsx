@@ -7,19 +7,11 @@ import { BackButton } from '@/components/shared/navigation/back-button';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Card, CardContent } from '@/components/ui/card';
-import { PackageOpen, Clock, Layers, ChevronRight } from 'lucide-react';
+import { PackageOpen, Clock, ChevronRight } from 'lucide-react';
 import { useAvailablePackages } from '@/hooks/use-packages';
-import type { AvailablePackage } from '@/types/package';
+import type { PackageResponseDto } from '@/sdk/backend-v2';
 
-function getDisplayDuration(pkg: AvailablePackage): number {
-  const duration = pkg.duration ?? pkg.package_duration;
-  if (duration === 90) return 90;
-  const name = (pkg.package_name ?? '').toLowerCase();
-  if (/90[\s-]?day|^90\s/.test(name)) return 90;
-  return duration ?? 30;
-}
-
-function storeSelectedPackage(pkg: AvailablePackage) {
+function storeSelectedPackage(pkg: PackageResponseDto) {
   if (typeof sessionStorage !== 'undefined') {
     sessionStorage.setItem('selected_package', JSON.stringify(pkg));
   }
@@ -47,14 +39,13 @@ function BookPackageContent() {
   const router = useRouter();
   const { packages, isLoading, error, mutate } = useAvailablePackages();
 
-  const handlePackageClick = (pkg: AvailablePackage) => {
+  const handlePackageClick = (pkg: PackageResponseDto) => {
     storeSelectedPackage(pkg);
     router.push(`/packages/browse/${pkg.id}`);
   };
 
   return (
     <div className="min-h-screen bg-background pb-28">
-      {/* Header */}
       <div className="bg-card border-b border-border px-4 pt-6 pb-4">
         <div className="flex items-center gap-3">
           <BackButton fallback="/packages" />
@@ -72,7 +63,6 @@ function BookPackageContent() {
         </div>
       </div>
 
-      {/* Package list */}
       <div className="px-4 pt-4 space-y-3">
         {isLoading && [0, 1, 2, 3].map((i) => <PackageCardSkeleton key={i} />)}
 
@@ -83,9 +73,7 @@ function BookPackageContent() {
               <p className="font-semibold text-sm text-foreground">Something went wrong</p>
               <p className="text-sm text-muted-foreground mt-1">Failed to load packages.</p>
             </div>
-            <Button variant="outline" size="sm" onClick={() => mutate()}>
-              Try again
-            </Button>
+            <Button variant="outline" size="sm" onClick={() => mutate()}>Try again</Button>
           </div>
         )}
 
@@ -94,53 +82,40 @@ function BookPackageContent() {
             <PackageOpen className="w-12 h-12 text-muted-foreground/30" />
             <div>
               <p className="font-semibold text-sm text-foreground">No packages found</p>
-              <p className="text-sm text-muted-foreground mt-1">
-                No packages are available right now.
-              </p>
+              <p className="text-sm text-muted-foreground mt-1">No packages are available right now.</p>
             </div>
           </div>
         )}
 
-        {!isLoading &&
-          !error &&
-          packages.map((pkg) => {
-            const duration = getDisplayDuration(pkg);
-            const count = pkg.package_product_ids?.length ?? 0;
-
-            return (
-              <Card
-                key={pkg.id}
-                className="cursor-pointer active:scale-[0.98] transition-transform hover:border-primary/30 hover:shadow-sm"
-                onClick={() => handlePackageClick(pkg)}
-              >
-                <CardContent className="p-4">
-                  <div className="flex items-start gap-3">
-                    <div className="flex-1 min-w-0 space-y-2">
-                      <div className="flex items-start justify-between gap-2">
-                        <p className="font-semibold text-sm text-foreground leading-snug line-clamp-2 flex-1">
-                          {pkg.package_name}
-                        </p>
-                        <span className="text-base font-bold text-primary shrink-0 leading-none mt-0.5">
-                          ₹{pkg.amount_total.toLocaleString('en-IN')}
-                        </span>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <Badge variant="outline" className="gap-1 text-xs font-normal h-5 px-2">
-                          <Clock className="w-3 h-3" />
-                          {duration}d
-                        </Badge>
-                        <Badge variant="outline" className="gap-1 text-xs font-normal h-5 px-2">
-                          <Layers className="w-3 h-3" />
-                          {count} {count === 1 ? 'service' : 'services'}
-                        </Badge>
-                      </div>
-                    </div>
-                    <ChevronRight className="w-4 h-4 text-muted-foreground shrink-0 mt-1" />
+        {!isLoading && !error && packages.map((pkg) => (
+          <Card
+            key={pkg.id}
+            className="cursor-pointer active:scale-[0.98] transition-transform hover:border-primary/30 hover:shadow-sm"
+            onClick={() => handlePackageClick(pkg)}
+          >
+            <CardContent className="p-4">
+              <div className="flex items-start gap-3">
+                <div className="flex-1 min-w-0 space-y-2">
+                  <div className="flex items-start justify-between gap-2">
+                    <p className="font-semibold text-sm text-foreground leading-snug line-clamp-2 flex-1">
+                      {pkg.package_name}
+                    </p>
+                    <span className="text-base font-bold text-primary shrink-0 leading-none mt-0.5">
+                      ₹{(pkg.amount_total ?? 0).toLocaleString('en-IN')}
+                    </span>
                   </div>
-                </CardContent>
-              </Card>
-            );
-          })}
+                  <div className="flex items-center gap-2">
+                    <Badge variant="outline" className="gap-1 text-xs font-normal h-5 px-2">
+                      <Clock className="w-3 h-3" />
+                      30d
+                    </Badge>
+                  </div>
+                </div>
+                <ChevronRight className="w-4 h-4 text-muted-foreground shrink-0 mt-1" />
+              </div>
+            </CardContent>
+          </Card>
+        ))}
       </div>
     </div>
   );

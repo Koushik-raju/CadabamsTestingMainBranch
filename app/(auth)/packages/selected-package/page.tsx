@@ -14,29 +14,24 @@ import {
   Loader2,
   BookOpen,
 } from 'lucide-react';
-import { postPackagesBook, postPaymentsPackage } from '@/sdk/auth-and-crm';
-import { useAuth } from '@/hooks/use-auth';
-import type { AvailablePackage } from '@/types/package';
+import { bookPackage, initiatePackagePayment } from '@/hooks/packages/use-packages';
+import { useAuth } from '@/hooks/shared/auth/use-auth';
+import type { PackageResponseDto } from '@/sdk/backend-v2';
 
 const JOURNEY_BASE_URL = 'https://mindtalkbuddy.com/api/mindful-journeys';
 
-function getPackageFromSession(): AvailablePackage | null {
+function getPackageFromSession(): PackageResponseDto | null {
   if (typeof sessionStorage === 'undefined') return null;
   try {
     const raw = sessionStorage.getItem('selected_package');
-    return raw ? (JSON.parse(raw) as AvailablePackage) : null;
+    return raw ? (JSON.parse(raw) as PackageResponseDto) : null;
   } catch {
     return null;
   }
 }
 
 interface JourneyData {
-  attributes?: {
-    description?: unknown;
-    summary?: unknown;
-    shortDescription?: unknown;
-    overview?: unknown;
-  };
+  attributes?: { description?: unknown; summary?: unknown; shortDescription?: unknown; overview?: unknown };
   description?: unknown;
   summary?: unknown;
   shortDescription?: unknown;
@@ -72,7 +67,7 @@ function SelectedPackageContent() {
   const searchParams = useSearchParams();
   const { user } = useAuth();
 
-  const [pkg, setPkg] = useState<AvailablePackage | null>(null);
+  const [pkg, setPkg] = useState<PackageResponseDto | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [journeyData, setJourneyData] = useState<JourneyData | null>(null);
   const [journeyLoading, setJourneyLoading] = useState(false);
@@ -87,12 +82,13 @@ function SelectedPackageContent() {
     }
   }, [router]);
 
-  const journeyId = searchParams.get('journeyId') ?? pkg?.journey_document_id ?? (pkg?.journey_id ? String(pkg.journey_id) : null);
+  const journeyId = searchParams.get('journeyId')
+    ?? (pkg as Record<string, unknown> | null)?.journey_document_id as string | null
+    ?? ((pkg as Record<string, unknown> | null)?.journey_id ? String((pkg as Record<string, unknown>).journey_id) : null);
 
   useEffect(() => {
     if (!journeyId) return;
     let cancelled = false;
-
     (async () => {
       setJourneyLoading(true);
       try {
@@ -106,7 +102,6 @@ function SelectedPackageContent() {
         if (!cancelled) setJourneyLoading(false);
       }
     })();
-
     return () => { cancelled = true; };
   }, [journeyId]);
 
@@ -116,38 +111,24 @@ function SelectedPackageContent() {
     if (!pkg || !user?.lead_id) return;
     setIsLoading(true);
     setError(null);
-
     try {
-      const patientName = String(user.name ?? user.first_name ?? '');
+      const patientName = String(user.name ?? '');
+      const leadId = Number(user.lead_id);
 
-      const bookRes = await postPackagesBook({
-        body: {
-          package_id:       pkg.id,
-          caller_name:      patientName,
-          patient_name:     patientName,
-          lead_id:          Number(user.lead_id),
-          campus_id:        1,
-          sequence_booking: false,
-          package_stage:    'booked',
-          payment_mode:     'online',
-          date:             new Date().toISOString().split('T')[0],
-        },
+      const { booking_id } = await bookPackage({
+        package_id:       pkg.id,
+        caller_name:      patientName,
+        patient_name:     patientName,
+        lead_id:          leadId,
+        campus_id:        1,
+        sequence_booking: false,
+        package_stage:    'booked',
+        payment_mode:     'online',
+        date:             new Date().toISOString().split('T')[0],
       });
-      if (bookRes.error) throw new Error(JSON.stringify(bookRes.error));
-      const bookingId = bookRes.data?.booking_id;
-      if (!bookingId) throw new Error('No booking ID returned.');
 
-      const payRes = await postPaymentsPackage({
-        body: {
-          booked_package_id: bookingId,
-          campus_id:         1,
-          lead_id:           Number(user.lead_id),
-        },
-      });
-      if (payRes.error) throw new Error(JSON.stringify(payRes.error));
-      const url = payRes.data?.result?.short_url;
-      if (!url) throw new Error('No payment URL received.');
-      window.location.href = url;
+      const payData = await initiatePackagePayment({ leadBookedPackageId: booking_id, leadId });
+      window.location.href = payData.result.short_url;
     } catch (err: unknown) {
       setError((err as { message?: string })?.message ?? 'Failed to process payment');
     } finally {
@@ -165,8 +146,7 @@ function SelectedPackageContent() {
 
   return (
     <div className="min-h-screen bg-background pb-24">
-      {/* Header */}
-      <div className="px-4 pt-safe-top pt-4 mb-6">
+      <div className="px-4 pt-4 mb-6">
         <div className="flex items-center gap-3">
           <BackButton fallback="/packages/book-package" />
           <div>
@@ -177,7 +157,6 @@ function SelectedPackageContent() {
       </div>
 
       <div className="px-4 space-y-4">
-        {/* Package card */}
         <Card className="border-border">
           <CardContent className="p-5 space-y-5">
             <div className="flex items-start gap-4">
@@ -192,7 +171,6 @@ function SelectedPackageContent() {
 
             <Separator />
 
-            {/* Price */}
             <div className="flex items-center justify-between p-4 rounded-xl bg-muted">
               <div className="flex items-center gap-3">
                 <div className="p-2 bg-background rounded-lg">
@@ -208,7 +186,6 @@ function SelectedPackageContent() {
               </p>
             </div>
 
-            {/* Security notice */}
             <div className="flex items-start gap-3 p-3 rounded-lg bg-muted/50">
               <Shield className="w-4 h-4 text-muted-foreground mt-0.5 shrink-0" />
               <div>
@@ -221,7 +198,6 @@ function SelectedPackageContent() {
           </CardContent>
         </Card>
 
-        {/* Journey overview */}
         {(journeyId || journeyLoading || description) && (
           <Card className="border-border">
             <CardContent className="p-5 space-y-3">
@@ -236,19 +212,14 @@ function SelectedPackageContent() {
                   <div className="h-3 bg-muted rounded animate-pulse w-2/3" />
                 </div>
               ) : description ? (
-                <p className="text-sm text-foreground leading-relaxed whitespace-pre-line">
-                  {description}
-                </p>
+                <p className="text-sm text-foreground leading-relaxed whitespace-pre-line">{description}</p>
               ) : (
-                <p className="text-sm text-muted-foreground">
-                  Journey description is unavailable for this package.
-                </p>
+                <p className="text-sm text-muted-foreground">Journey description is unavailable for this package.</p>
               )}
             </CardContent>
           </Card>
         )}
 
-        {/* Payment summary */}
         <Card className="border-border">
           <CardContent className="p-4 space-y-2">
             <h3 className="font-semibold text-foreground mb-3">Payment Summary</h3>
@@ -268,34 +239,18 @@ function SelectedPackageContent() {
           </CardContent>
         </Card>
 
-        {/* Error */}
-        {error && (
-          <p className="text-sm text-destructive text-center">{error}</p>
-        )}
+        {error && <p className="text-sm text-destructive text-center">{error}</p>}
 
-        {/* Pay button */}
-        <Button
-          size="lg"
-          className="w-full gap-2"
-          onClick={handleCheckout}
-          disabled={isLoading}
-        >
+        <Button size="lg" className="w-full gap-2" onClick={handleCheckout} disabled={isLoading}>
           {isLoading ? (
-            <>
-              <Loader2 className="w-5 h-5 animate-spin" />
-              Processing Payment...
-            </>
+            <><Loader2 className="w-5 h-5 animate-spin" />Processing Payment...</>
           ) : (
-            <>
-              <CreditCard className="w-5 h-5" />
-              Pay ₹{pkg.amount_total.toLocaleString('en-IN')}
-            </>
+            <><CreditCard className="w-5 h-5" />Pay ₹{pkg.amount_total.toLocaleString('en-IN')}</>
           )}
         </Button>
 
         <p className="text-xs text-muted-foreground text-center pb-4">
-          By proceeding, you agree to our terms and conditions.
-          <br />
+          By proceeding, you agree to our terms and conditions.<br />
           Secure payment powered by Razorpay.
         </p>
       </div>
@@ -305,11 +260,7 @@ function SelectedPackageContent() {
 
 export default function SelectedPackagePage() {
   return (
-    <Suspense fallback={
-      <div className="flex items-center justify-center min-h-screen">
-        <Loader2 className="w-8 h-8 animate-spin text-primary" />
-      </div>
-    }>
+    <Suspense fallback={<div className="flex items-center justify-center min-h-screen"><Loader2 className="w-8 h-8 animate-spin text-primary" /></div>}>
       <SelectedPackageContent />
     </Suspense>
   );

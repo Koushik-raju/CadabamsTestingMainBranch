@@ -10,10 +10,10 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { BackButton } from '@/components/shared/navigation/back-button';
 import { QuestionRenderer, type Question, type AnswerValue } from '@/components/shared/questions/question-renderer';
 import { ChevronRight, ChevronLeft, CheckCircle2, AlertCircle } from 'lucide-react';
-import { getApiV1WorksheetsById } from '@/sdk/strapi';
+import { cmsWorksheetsControllerFindOne } from '@/sdk/backend-v2';
+import { getUser } from '@/lib/cookies';
 
 interface WorksheetData {
-  label?: string;
   title?: string;
   description?: string;
   Questions?: Question[];
@@ -36,14 +36,14 @@ export default function WorksheetFormPage({ params }: { params: Promise<{ id: st
   useEffect(() => {
     async function fetchData() {
       try {
-        const res = await getApiV1WorksheetsById({ path: { id: worksheetId } });
-        const data = (res.data as { data: WorksheetData })?.data;
-        setWorksheet(data);
-        setQuestions(data.Questions || []);
+        const res = await cmsWorksheetsControllerFindOne({ path: { id: worksheetId } });
+        const data = res.data as WorksheetData | undefined;
+        setWorksheet(data ?? null);
+        setQuestions(data?.Questions || []);
 
         // Initialize answers
         const initial: Record<string, AnswerValue> = {};
-        (data.Questions || []).forEach((q, index) => {
+        (data?.Questions || []).forEach((q, index) => {
           const key = `${q.__component || 'q'}_${q.id}_step_${index}`;
           const comp = q.__component || '';
           if (comp.includes('smiley') || q.type === 'smiley') {
@@ -117,8 +117,8 @@ export default function WorksheetFormPage({ params }: { params: Promise<{ id: st
   const handleSubmit = async () => {
     setSubmitting(true);
     try {
-      const user = JSON.parse(localStorage.getItem('user') || '{}');
-      const leadId = String(user.lead_id || '');
+      const user = await getUser();
+      const leadId = String(user?.lead_id || '');
 
       // Build payload
       const payload: Record<string, unknown> = { date: new Date().toISOString() };
@@ -206,7 +206,7 @@ export default function WorksheetFormPage({ params }: { params: Promise<{ id: st
   const progress = Math.round(((currentStep + 1) / questions.length) * 100);
   const currentQuestion = questions[currentStep];
   const isLastStep = currentStep === questions.length - 1;
-  const worksheetTitle = worksheet?.label || worksheet?.title || 'Worksheet';
+  const worksheetTitle = worksheet?.title || 'Worksheet';
 
   return (
     <div className="min-h-screen bg-background flex flex-col">

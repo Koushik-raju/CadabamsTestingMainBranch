@@ -1,3 +1,26 @@
+/**
+ * FILE: types/journey.ts
+ *
+ * PURPOSE:
+ *   App-level TypeScript interfaces for journey data, mapped from V2 SDK DTOs.
+ *
+ * LOGIC OVERVIEW:
+ *   Defines the shape of JourneyItem, JourneyStep, JourneyTask, JourneyAudio,
+ *   JourneyAssessment, and JourneyRichText used throughout the journey feature.
+ *   Helper functions extractJourneyName and extractJourneyDescription convert
+ *   Strapi rich-text arrays to plain strings for display.
+ *
+ * KEY VARIABLES / PROPS / EXPORTS:
+ *   JourneyTask           — core task type with all boolean flags and ID arrays
+ *   JourneyItem           — top-level journey containing steps
+ *   extractJourneyName    — converts name (string | JourneyRichText[]) → string
+ *   extractJourneyDescription — alias of extractJourneyName for descriptions
+ *
+ * DEPENDENCIES:
+ *   None (pure types and helpers)
+ *
+ * LAST UPDATED: 2026-04-16 — added ID array fields (assessmentIds, worksheetIds, audioIds, subJournalingIds, videoIds) to JourneyTask
+ */
 export interface JourneyRichText {
   type: string;
   children: Array<{
@@ -56,6 +79,11 @@ export interface JourneyTask {
   extraTaskTitle?: string;
   extraTaskDescription?: JourneyRichText[];
   audioIdsOrder?: string[];
+  assessmentIds?: string[];
+  worksheetIds?: string[];
+  audioIds?: string[];
+  subJournalingIds?: string[];
+  videoIds?: string[];
   postAudioAssessmentId?: unknown;
   assessments?: JourneyAssessment[];
   worksheets?: unknown[];

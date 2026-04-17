@@ -3,6 +3,8 @@ import type { CookieOptions } from './types';
 export const COOKIE_NAMES = {
   ACCESS_TOKEN: 'access_token',
   REFRESH_TOKEN: 'refresh_token',
+  USER: 'user_profile',
+  REDIRECT_PATH: 'redirect_path',
 } as const;
 
 export const DURATIONS = {
@@ -34,4 +36,13 @@ export const REFRESH_TOKEN_OPTIONS: CookieOptions = {
   secure: false,
   sameSite: 'lax',
   maxAge: DURATIONS.REFRESH_TOKEN,
+};
+
+export const USER_COOKIE_OPTIONS: CookieOptions = {
+  path: '/',
+  httpOnly: false,
+  serverOnly: false,
+  secure: false,
+  sameSite: 'lax',
+  maxAge: DURATIONS.REFRESH_TOKEN, // same lifetime as refresh token
 };

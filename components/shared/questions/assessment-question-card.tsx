@@ -1,8 +1,24 @@
 'use client';
 
 import { useState } from 'react';
-import type { AssessmentQuestionItem, AssessmentOption } from '@/types/assessment';
-import { extractTextFromRich } from '@/types/assessment';
+interface AssessmentOption { id: string; label: string; value: string | number; order: number; }
+interface AssessmentQuestionItem {
+  id: string; type: string; title?: string; subtitle?: unknown; hint?: unknown;
+  continueLabel?: string; order?: number; smileys?: unknown[]; count?: unknown;
+  label?: unknown; prompt?: string; choice?: unknown; answer?: unknown; text?: string;
+  options?: AssessmentOption[];
+}
+
+function extractTextFromRich(val: unknown): string {
+  if (!val) return '';
+  if (typeof val === 'string') return val;
+  if (typeof val === 'object') {
+    const obj = val as Record<string, unknown>;
+    if (obj.text && typeof obj.text === 'string') return obj.text;
+    if (obj.en && typeof obj.en === 'string') return obj.en;
+  }
+  return '';
+}
 
 interface AssessmentQuestionCardProps {
   question: AssessmentQuestionItem;

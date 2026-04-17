@@ -1,46 +1,41 @@
-import Image from 'next/image';
 import Link from 'next/link';
-import { Video } from 'lucide-react';
+import { CalendarCheck, Video } from 'lucide-react';
+import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
-import type { AppointmentDetail } from '@/sdk/auth-and-crm';
+import type { SlotDetailDto } from '@/hooks/appointments/use-appointments-page';
 
 interface Props {
-  appointments?: AppointmentDetail[];
+  appointments?: SlotDetailDto[];
   onJoin?: () => void;
 }
 
-function formatDateTime(startDatetime: string): string {
-  try {
-    const d = new Date(startDatetime);
-    const date = d.toLocaleDateString('en-IN', {
-      weekday: 'short',
-      day: '2-digit',
-      month: 'short',
-      year: 'numeric',
-    });
-    const time = d.toLocaleTimeString('en-IN', {
-      hour: '2-digit',
-      minute: '2-digit',
-      hour12: true,
-    });
-    return `${date} • ${time}`;
-  } catch {
-    return '';
+function getDoctorName(doctor: SlotDetailDto['doctor']): string {
+  if (Array.isArray(doctor) && doctor.length >= 2 && typeof doctor[1] === 'string') {
+    const raw = doctor[1];
+    const name = raw.includes(',') ? raw.split(',').pop()!.trim() : raw.trim();
+    return /^Dr\.?\s/i.test(name) ? name : `Dr. ${name}`;
   }
+  return 'Doctor';
 }
 
-function getDoctorName(doctor: [number | string, number | string]): string {
-  return typeof doctor[1] === 'string' ? doctor[1] : 'Doctor';
+function getSpeciality(specialityId: SlotDetailDto['speciality_id']): string {
+  if (Array.isArray(specialityId) && specialityId.length >= 2 && typeof specialityId[1] === 'string') {
+    return specialityId[1];
+  }
+  return '';
 }
 
-function getSpecialization(specialityId: [number | string, number | string]): string {
-  return typeof specialityId[1] === 'string' ? specialityId[1] : '';
+function formatDateTime(iso: string): string {
+  try {
+    const d = new Date(iso);
+    const date = d.toLocaleDateString('en-IN', { weekday: 'short', day: '2-digit', month: 'short' });
+    const time = d.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: true });
+    return `${date} • ${time}`;
+  } catch { return ''; }
 }
 
 export function UpcomingSession({ appointments, onJoin }: Props) {
-  const hasAppointments = appointments && appointments.length > 0;
-
-  if (!hasAppointments) return null;
+  if (!appointments || appointments.length === 0) return null;
 
   return (
     <div className="px-4 mb-4">
@@ -52,35 +47,33 @@ export function UpcomingSession({ appointments, onJoin }: Props) {
       </div>
 
       <div className="flex flex-col gap-3">
-        {appointments.map((apt, index) => {
+        {appointments.map((apt) => {
           const doctorName = getDoctorName(apt.doctor);
-          const specialization = getSpecialization(apt.speciality_id);
-          const formattedTime = formatDateTime(apt.start_datetime);
-          const profileImage = apt.doctor_image_url || '/doctor_ananya.png';
-          const isVirtual = apt.virtual_consultation_url !== false;
+          const speciality = getSpeciality(apt.speciality_id);
+          const isVirtual = !!apt.virtual_consultation_url;
 
-          const content = (
-            <>
-              <div className="w-12 h-12 rounded-full overflow-hidden flex-shrink-0 relative">
-                <Image
-                  src={profileImage}
-                  alt={doctorName}
-                  fill
-                  className="object-cover"
-                />
+          return (
+            <Link
+              key={apt.id}
+              href={`/consult/appointments/${apt.id}`}
+              className="bg-white rounded-xl border border-border p-4 flex items-center gap-3 shadow-sm active:scale-[0.97] transition-transform"
+            >
+              <div className={cn(
+                'relative w-11 h-11 rounded-2xl bg-gradient-to-br flex-shrink-0',
+                'flex items-center justify-center overflow-hidden shadow-sm',
+                'from-emerald-500 to-teal-600'
+              )}>
+                <div className="absolute -top-2 -right-2 w-7 h-7 rounded-full bg-white/10" />
+                <CalendarCheck className="w-5 h-5 text-white" />
               </div>
 
               <div className="flex-grow min-w-0">
-                <h4 className="text-sm font-bold text-foreground line-clamp-1">
-                  {doctorName}
-                </h4>
-                {specialization && (
-                  <p className="text-xs text-muted-foreground line-clamp-1">
-                    {specialization}
-                  </p>
+                <h4 className="text-sm font-bold text-foreground line-clamp-1">{doctorName}</h4>
+                {speciality && (
+                  <p className="text-xs text-muted-foreground line-clamp-1">{speciality}</p>
                 )}
                 <p className="text-xs text-muted-foreground mt-0.5">
-                  {formattedTime}
+                  {formatDateTime(apt.start_datetime)}
                 </p>
               </div>
 
@@ -99,24 +92,7 @@ export function UpcomingSession({ appointments, onJoin }: Props) {
                   <span>Join</span>
                 </Button>
               )}
-            </>
-          );
-
-          return (
-            <div key={apt.id}>
-              {index === 0 ? (
-                <Link
-                  href={`/consult/appointments/${apt.id}`}
-                  className="bg-white rounded-xl border border-border p-4 flex items-center gap-3 shadow-sm"
-                >
-                  {content}
-                </Link>
-              ) : (
-                <div className="bg-white rounded-xl border border-border p-4 flex items-center gap-3 shadow-sm">
-                  {content}
-                </div>
-              )}
-            </div>
+            </Link>
           );
         })}
       </div>

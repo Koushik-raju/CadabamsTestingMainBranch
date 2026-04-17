@@ -13,14 +13,12 @@ import {
   Clock,
   Package,
   CreditCard,
-  Eye,
 } from 'lucide-react';
-import type { BookedPackage } from '@/types/package';
+import type { BookedPackageDto } from '@/sdk/backend-v2';
 
 interface BookedPackageCardProps {
-  pkg: BookedPackage;
+  pkg: BookedPackageDto;
   onPayNow?: () => void;
-  onViewJourney?: () => void;
   paymentLoading?: boolean;
 }
 
@@ -46,7 +44,6 @@ function getStageConfig(stage: string): StageConfig {
 export function BookedPackageCard({
   pkg,
   onPayNow,
-  onViewJourney,
   paymentLoading = false,
 }: BookedPackageCardProps) {
   const stageConfig = getStageConfig(pkg.package_stage);
@@ -58,7 +55,7 @@ export function BookedPackageCard({
         {/* Header */}
         <div className="flex items-start justify-between gap-2">
           <h3 className="font-semibold text-foreground text-sm leading-snug flex-1 min-w-0 line-clamp-2">
-            {pkg.package_id[1]}
+            {String(pkg.package_id?.[1] ?? 'Package')}
           </h3>
           <Badge variant={stageConfig.variant} className="shrink-0 text-xs gap-1">
             <StageIcon className="w-3 h-3" />
@@ -104,30 +101,17 @@ export function BookedPackageCard({
         </div>
 
         {/* Action buttons */}
-        {(pkg.package_stage === 'booked' || pkg.journey_id) && (
+        {pkg.package_stage === 'booked' && onPayNow && (
           <div className="flex gap-2">
-            {pkg.package_stage === 'booked' && onPayNow && (
-              <Button
-                size="sm"
-                className="flex-1 gap-1.5"
-                onClick={onPayNow}
-                disabled={paymentLoading}
-              >
-                <CreditCard className="w-3.5 h-3.5" />
-                {paymentLoading ? 'Processing...' : 'Pay Now'}
-              </Button>
-            )}
-            {pkg.journey_id && onViewJourney && (
-              <Button
-                size="sm"
-                variant={pkg.package_stage === 'booked' ? 'outline' : 'default'}
-                className="flex-1 gap-1.5"
-                onClick={onViewJourney}
-              >
-                <Eye className="w-3.5 h-3.5" />
-                View Journey
-              </Button>
-            )}
+            <Button
+              size="sm"
+              className="flex-1 gap-1.5"
+              onClick={onPayNow}
+              disabled={paymentLoading}
+            >
+              <CreditCard className="w-3.5 h-3.5" />
+              {paymentLoading ? 'Processing...' : 'Pay Now'}
+            </Button>
           </div>
         )}
       </CardContent>

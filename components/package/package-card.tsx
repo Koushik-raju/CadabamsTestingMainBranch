@@ -4,27 +4,16 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
-import { IndianRupee, Package, Clock, Star, CheckCircle2 } from 'lucide-react';
-import type { AvailablePackage, PackageProductLine } from '@/types/package';
+import { IndianRupee, Layers, Star, CheckCircle2 } from 'lucide-react';
+import type { PackageResponseDto, PackageProductLineDto } from '@/sdk/backend-v2';
 
 interface PackageCardProps {
-  pkg: AvailablePackage;
-  productLines?: PackageProductLine[];
+  pkg: PackageResponseDto;
+  productLines?: PackageProductLineDto[];
   onBook: () => void;
 }
 
-function getDisplayDuration(pkg: AvailablePackage): number {
-  const duration = pkg.duration ?? pkg.package_duration;
-  if (duration === 90) return 90;
-  const name = (pkg.package_name ?? '').toLowerCase();
-  if (/90[\s-]?day|^90\s/.test(name)) return 90;
-  return duration ?? 30;
-}
-
 export function PackageCard({ pkg, productLines, onBook }: PackageCardProps) {
-  const duration = getDisplayDuration(pkg);
-  const serviceCount = pkg.package_product_ids?.length ?? 0;
-
   return (
     <Card className="border-border bg-card hover:shadow-md transition-shadow">
       <CardContent className="p-4 space-y-4">
@@ -59,46 +48,32 @@ export function PackageCard({ pkg, productLines, onBook }: PackageCardProps) {
 
           <div className="flex items-center gap-2.5">
             <div className="flex items-center justify-center w-7 h-7 bg-muted rounded-lg shrink-0">
-              <Package className="w-3.5 h-3.5 text-primary" />
+              <Layers className="w-3.5 h-3.5 text-primary" />
             </div>
             <div>
-              <p className="text-xs text-muted-foreground">Services Included</p>
-              <p className="text-sm font-medium text-foreground">
-                {serviceCount} {serviceCount === 1 ? 'service' : 'services'}
-              </p>
+              <p className="text-xs text-muted-foreground">Sessions</p>
+              <p className="text-sm font-medium text-foreground">{pkg.package_product_ids.length}</p>
             </div>
           </div>
 
-          <div className="flex items-center gap-2.5">
-            <div className="flex items-center justify-center w-7 h-7 bg-muted rounded-lg shrink-0">
-              <Clock className="w-3.5 h-3.5 text-primary" />
-            </div>
-            <div>
-              <p className="text-xs text-muted-foreground">Duration</p>
-              <p className="text-sm font-medium text-foreground">{duration} Days</p>
-            </div>
-          </div>
         </div>
 
         {/* Services preview */}
-        {productLines && pkg.package_product_ids?.length > 0 && (
+        {productLines && productLines.length > 0 && (
           <div className="rounded-lg bg-muted p-3 space-y-1.5">
             <p className="text-xs font-medium text-muted-foreground">Package includes:</p>
             <ul className="space-y-1">
-              {pkg.package_product_ids.slice(0, 3).map((sid) => {
-                const line = productLines.find((l) => l.id === sid);
-                return (
-                  <li key={sid} className="flex items-center gap-2">
-                    <CheckCircle2 className="w-3 h-3 text-primary shrink-0" />
-                    <span className="text-xs text-foreground truncate">
-                      {line ? line.product_id[1] : `Service ${sid}`}
-                    </span>
-                  </li>
-                );
-              })}
-              {pkg.package_product_ids.length > 3 && (
+              {productLines.slice(0, 3).map((line) => (
+                <li key={line.id} className="flex items-center gap-2">
+                  <CheckCircle2 className="w-3 h-3 text-primary shrink-0" />
+                  <span className="text-xs text-foreground truncate">
+                    {String(line.product_id?.[1] ?? '')}
+                  </span>
+                </li>
+              ))}
+              {productLines.length > 3 && (
                 <li className="text-xs text-primary font-medium pl-5">
-                  +{pkg.package_product_ids.length - 3} more services
+                  +{productLines.length - 3} more services
                 </li>
               )}
             </ul>
