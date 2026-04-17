@@ -1,154 +1,165 @@
 'use client';
 
-import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useMemo } from 'react';
 import { useRouter } from 'next/navigation';
-import { ChevronLeft, Pencil, Sun, Moon, Sparkles, Plus } from 'lucide-react';
+import { ChevronLeft, Pencil, Clock, ChevronRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
-import { useAuth } from '@/hooks/use-auth';
-import { JournalEntryCard } from '@/components/journal/journal-entry-card';
+import {
+  useJournalingCategories,
+  useSelfJournalingEntries,
+} from '@/hooks/use-journaling';
+import type { SelfJournalingEntry, JournalingCategory } from '@/hooks/use-journaling';
 
-interface JournalPrompt {
-  heading: string;
-  text: string;
-}
+// ---------------------------------------------------------------------------
+// Helpers
+// ---------------------------------------------------------------------------
 
-interface JournalEntry {
-  id: string;
-  entry?: string;
-  prompts?: JournalPrompt[];
-  createdAt: string;
-  timestamp?: number;
-}
+function groupEntriesByDate(entries: SelfJournalingEntry[]) {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const todayStr = today.toISOString().split('T')[0];
+  const yesterday = new Date(today);
+  yesterday.setDate(yesterday.getDate() - 1);
+  const yesterdayStr = yesterday.toISOString().split('T')[0];
 
-const GUIDED_REFLECTIONS = [
-  {
-    id: 'gratitude',
-    title: 'Gratitude',
-    description: '3 min focus',
-    Icon: Sun,
-    iconColor: 'text-blue-500',
-    bgColor: 'bg-blue-50',
-    template: 'gratitude',
-  },
-  {
-    id: 'sleeplog',
-    title: 'Sleep Log',
-    description: 'Evening reset',
-    Icon: Moon,
-    iconColor: 'text-purple-500',
-    bgColor: 'bg-purple-50',
-    template: 'sleeplog',
-  },
-  {
-    id: 'affirmations',
-    title: 'Affirmations',
-    description: 'Daily boost',
-    Icon: Sparkles,
-    iconColor: 'text-green-500',
-    bgColor: 'bg-green-50',
-    template: 'affirmations',
-  },
-];
+  const groups: { label: string; entries: SelfJournalingEntry[] }[] = [];
+  const map = new Map<string, SelfJournalingEntry[]>();
 
-function calculateStreak(entries: JournalEntry[]): number {
-  if (!entries.length) return 0;
-  const dates = [
-    ...new Set(
-      entries.map((e) => {
-        const d = new Date(e.createdAt);
-        return isNaN(d.getTime()) ? null : d.toISOString().split('T')[0];
-      })
-    ),
-  ]
-    .filter((d): d is string => d !== null)
-    .sort((a, b) => (a < b ? 1 : -1));
-
-  let streak = 0;
-  const current = new Date();
-  current.setHours(0, 0, 0, 0);
-  const todayStr = current.toISOString().split('T')[0];
-
-  if (dates[0] !== todayStr) {
-    current.setDate(current.getDate() - 1);
-    if (dates[0] !== current.toISOString().split('T')[0]) return 0;
+  for (const entry of entries) {
+    const d = new Date(entry.createdAt);
+    if (isNaN(d.getTime())) continue;
+    const dateStr = d.toISOString().split('T')[0];
+    const arr = map.get(dateStr) ?? [];
+    arr.push(entry);
+    map.set(dateStr, arr);
   }
 
-  for (const d of dates) {
-    if (d === current.toISOString().split('T')[0]) {
-      streak++;
-      current.setDate(current.getDate() - 1);
-    } else if (d < current.toISOString().split('T')[0]) {
-      break;
-    }
+  for (const [dateStr, items] of Array.from(map.entries()).sort(([a], [b]) => (a > b ? -1 : 1))) {
+    let label: string;
+    if (dateStr === todayStr) label = 'Today';
+    else if (dateStr === yesterdayStr) label = 'Yesterday';
+    else label = new Date(dateStr + 'T00:00:00').toLocaleDateString('en-US', { weekday: 'short', month: 'long', day: 'numeric' });
+    groups.push({ label, entries: items });
   }
-  return streak;
+
+  return groups.slice(0, 3); // Show up to 3 date groups
 }
+
+// ---------------------------------------------------------------------------
+// Category Card
+// ---------------------------------------------------------------------------
+
+function CategoryCard({ category, onClick }: { category: JournalingCategory; onClick: () => void }) {
+  const subCount = category.subJournalings?.length ?? 0;
+
+  return (
+    <button
+      onClick={onClick}
+      className="bg-card border border-border rounded-2xl overflow-hidden text-left shadow-sm hover:shadow-xl transition-all duration-300 hover:-translate-y-1 group"
+    >
+      {/* Image area */}
+      <div className="aspect-[16/10] bg-primary/10 flex items-center justify-center relative overflow-hidden">
+        {category.icon ? (
+          <span className="text-4xl">{category.icon}</span>
+        ) : (
+          <div className="flex items-end gap-1 h-8">
+            {[0.6, 1, 0.4, 0.8].map((h, i) => (
+              <div
+                key={i}
+                className="w-2 bg-primary/40 rounded-full animate-pulse"
+                style={{ height: `${h * 100}%`, animationDelay: `${i * 0.2}s` }}
+              />
+            ))}
+          </div>
+        )}
+        <div className="absolute inset-0 bg-gradient-to-t from-black/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+      </div>
+
+      {/* Content */}
+      <div className="p-4">
+        <h3 className="text-sm font-bold text-foreground line-clamp-2 mb-1">
+          {category.title}
+        </h3>
+        {category.description && (
+          <p className="text-xs text-muted-foreground line-clamp-2 mb-2">
+            {category.description}
+          </p>
+        )}
+        <span className="text-[10px] font-semibold text-primary uppercase tracking-wide">
+          {subCount} {subCount === 1 ? 'journal' : 'journals'}
+        </span>
+      </div>
+    </button>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Entry Row
+// ---------------------------------------------------------------------------
+
+function EntryRow({ entry }: { entry: SelfJournalingEntry }) {
+  const time = new Date(entry.createdAt).toLocaleTimeString('en-US', {
+    hour: 'numeric',
+    minute: '2-digit',
+    hour12: true,
+  });
+
+  const preview =
+    entry.prompts && entry.prompts.length > 0
+      ? entry.prompts[0].text ?? entry.prompts[0].heading ?? ''
+      : entry.entry ?? '';
+
+  const promptCount = entry.prompts?.length ?? 0;
+
+  return (
+    <div className="bg-card border border-border rounded-2xl p-4 flex items-start gap-3 hover:shadow-lg transition-all duration-300 hover:-translate-y-0.5 cursor-pointer relative overflow-hidden">
+      {/* Time badge */}
+      <div className="flex-shrink-0 flex flex-col items-center gap-1 pt-0.5">
+        <Clock className="w-3.5 h-3.5 text-muted-foreground" />
+        <span className="text-[10px] font-medium text-muted-foreground">{time}</span>
+      </div>
+
+      {/* Content */}
+      <div className="flex-1 min-w-0">
+        {entry.title && (
+          <p className="text-sm font-semibold text-foreground line-clamp-1 mb-0.5">
+            {entry.title}
+          </p>
+        )}
+        <p className="text-xs text-muted-foreground line-clamp-2 leading-relaxed">
+          {preview}
+        </p>
+      </div>
+
+      {/* Prompt count */}
+      {promptCount > 0 && (
+        <span className="flex-shrink-0 bg-primary/10 text-primary text-[10px] font-bold px-2 py-0.5 rounded-full">
+          {promptCount} {promptCount === 1 ? 'prompt' : 'prompts'}
+        </span>
+      )}
+
+      {/* Right accent gradient */}
+      <div className="absolute right-0 top-0 bottom-0 w-8 bg-gradient-to-l from-primary/5 to-transparent pointer-events-none" />
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Page
+// ---------------------------------------------------------------------------
 
 export default function JournalHomePage() {
   const router = useRouter();
-  const { user } = useAuth();
-  const [journals, setJournals] = useState<JournalEntry[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const { categories, isLoading: categoriesLoading } = useJournalingCategories();
+  const { entries, isLoading: entriesLoading } = useSelfJournalingEntries();
 
-  const getUserId = useCallback(() => {
-    if (!user) return null;
-    return user.lead_id ? String(user.lead_id) : null;
-  }, [user]);
+  const publishedCategories = useMemo(
+    () => categories.filter((c) => c.status === 'PUBLISHED'),
+    [categories],
+  );
 
-  const fetchJournals = useCallback(async () => {
-    const userId = getUserId();
-    if (!userId) { setIsLoading(false); return; }
-
-    try {
-      const { database } = await import('@/lib/firebase');
-      const { ref, get } = await import('firebase/database');
-      const snap = await get(ref(database, `self-journalings/${userId}`));
-      if (snap.exists()) {
-        const arr: JournalEntry[] = [];
-        snap.forEach((child) => {
-          arr.push({ id: child.key ?? '', ...(child.val() as Omit<JournalEntry, 'id'>) });
-        });
-        arr.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
-        setJournals(arr);
-      }
-    } catch (err) {
-      console.error('Error fetching journals:', err);
-    } finally {
-      setIsLoading(false);
-    }
-  }, [getUserId]);
-
-  useEffect(() => {
-    fetchJournals();
-  }, [fetchJournals]);
-
-  const streak = useMemo(() => calculateStreak(journals), [journals]);
-
-  const weekDays = useMemo(() => {
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    const day = today.getDay(); // 0 = Sunday
-    const offset = day === 0 ? -6 : 1 - day; // Monday start
-    return Array.from({ length: 7 }, (_, i) => {
-      const d = new Date(today);
-      d.setDate(today.getDate() + offset + i);
-      const dateStr = d.toISOString().split('T')[0];
-      const hasEntry = journals.some((j) => {
-        const jd = new Date(j.createdAt);
-        return jd.toISOString().split('T')[0] === dateStr;
-      });
-      return {
-        dayName: d.toLocaleDateString('en-US', { weekday: 'short' })[0],
-        dayNum: d.getDate(),
-        isToday: dateStr === today.toISOString().split('T')[0],
-        hasEntry,
-      };
-    });
-  }, [journals]);
-
-  const recentJournals = journals.slice(0, 5);
+  const recentGroups = useMemo(() => groupEntriesByDate(entries), [entries]);
 
   return (
     <div className="flex flex-col min-h-screen bg-background pb-28">
@@ -158,135 +169,112 @@ export default function JournalHomePage() {
           <ChevronLeft className="w-5 h-5" />
         </Button>
         <div>
-          <h1 className="text-xl font-bold text-foreground">Journal</h1>
-          <p className="text-sm text-muted-foreground">Your safe space for thoughts</p>
+          <h1 className="text-xl font-bold text-foreground">Self Journaling</h1>
+          <p className="text-sm text-muted-foreground">Reflect, write, and grow</p>
         </div>
       </div>
 
       <div className="px-4 flex flex-col gap-6">
-        {/* Free Flow CTA */}
-        <button
-          onClick={() => router.push('/self-journaling/new')}
-          className="w-full bg-primary text-primary-foreground rounded-2xl p-6 flex items-center justify-between min-h-[120px] relative overflow-hidden text-left"
-        >
-          <div className="z-10">
-            <h2 className="text-2xl font-bold mb-1">Free Flow</h2>
-            <p className="text-sm text-white/80 max-w-[180px] leading-tight">
-              Write whatever is on your mind. No prompts, just you.
-            </p>
-          </div>
-          <div className="w-12 h-12 bg-white rounded-full flex items-center justify-center flex-shrink-0 z-10 shadow-md">
-            <Pencil className="w-5 h-5 text-primary" />
-          </div>
-          <Pencil
-            className="absolute right-[-20px] bottom-[-20px] text-white/5 rotate-12 pointer-events-none"
-            size={140}
-          />
-        </button>
-
-        {/* Guided Reflections */}
+        {/* Start Journaling Section */}
         <section>
-          <h3 className="text-base font-bold text-foreground mb-3">Guided Reflection</h3>
-          <div className="flex gap-3 overflow-x-auto scrollbar-hide pb-1">
-            {GUIDED_REFLECTIONS.map((item) => (
-              <button
-                key={item.id}
-                onClick={() => router.push(`/self-journaling/new?template=${item.template}`)}
-                className="bg-card border border-border rounded-2xl p-4 flex flex-col gap-5 min-w-[140px] text-left flex-shrink-0 shadow-sm hover:shadow-md transition-shadow"
-              >
-                <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${item.bgColor}`}>
-                  <item.Icon className={`w-5 h-5 ${item.iconColor}`} />
-                </div>
-                <div>
-                  <p className="text-sm font-bold text-foreground">{item.title}</p>
-                  <p className="text-xs text-muted-foreground mt-0.5">{item.description}</p>
-                </div>
-              </button>
-            ))}
-          </div>
-        </section>
+          <h2 className="text-base font-bold text-foreground mb-3">
+            Start Journaling
+          </h2>
 
-        {/* Daily tracker */}
-        <section>
-          <Card className="cursor-pointer" onClick={() => router.push('/self-journaling/new')}>
-            <CardContent className="p-5">
-              <div className="flex items-start justify-between mb-5">
-                <div>
-                  <h3 className="text-base font-bold text-foreground">Daily Gratitude</h3>
-                  <p className="text-sm text-muted-foreground">Your daily mindful pause</p>
+          <div className="grid grid-cols-2 gap-3">
+            {/* Free Writing Card */}
+            <button
+              onClick={() => router.push('/self-journaling/new')}
+              className="bg-primary text-primary-foreground rounded-2xl overflow-hidden text-left shadow-sm hover:shadow-xl transition-all duration-300 hover:-translate-y-1 group col-span-2"
+            >
+              <div className="p-5 flex items-center justify-between min-h-[100px] relative overflow-hidden">
+                <div className="z-10">
+                  <h3 className="text-lg font-bold mb-1">Free Writing</h3>
+                  <p className="text-sm text-white/80 max-w-[200px] leading-tight">
+                    Write whatever is on your mind. No prompts, just you.
+                  </p>
                 </div>
-                <div className="bg-muted px-3 py-1 rounded-full">
-                  <span className="text-xs font-bold text-muted-foreground uppercase tracking-wide">
-                    {streak} day streak
-                  </span>
+                <div className="w-12 h-12 bg-white rounded-full flex items-center justify-center flex-shrink-0 z-10 shadow-md">
+                  <Pencil className="w-5 h-5 text-primary" />
                 </div>
-              </div>
-
-              {/* Week view */}
-              <div className="bg-muted rounded-xl p-2 flex justify-between">
-                {weekDays.map((day, i) => (
-                  <div key={i} className="flex flex-col items-center gap-1.5 flex-1">
-                    <span className="text-[10px] font-bold text-muted-foreground uppercase">
-                      {day.dayName}
-                    </span>
-                    <div
-                      className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold transition-all ${
-                        day.hasEntry || day.isToday
-                          ? 'bg-primary text-primary-foreground shadow-md'
-                          : 'text-foreground'
-                      }`}
-                    >
-                      {day.dayNum}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-        </section>
-
-        {/* Recent entries */}
-        {!isLoading && recentJournals.length > 0 && (
-          <section>
-            <div className="flex items-center justify-between mb-3">
-              <h3 className="text-base font-bold text-foreground">Recent Entries</h3>
-              <Button variant="ghost" size="sm" className="text-primary" onClick={() => router.push('/self-journaling/history')}>
-                View all
-              </Button>
-            </div>
-            <div className="flex flex-col gap-3">
-              {recentJournals.map((j) => (
-                <JournalEntryCard
-                  key={j.id}
-                  id={j.id}
-                  entry={j.entry}
-                  prompts={j.prompts}
-                  createdAt={j.createdAt}
+                <Pencil
+                  className="absolute right-[-20px] bottom-[-20px] text-white/5 rotate-12 pointer-events-none"
+                  size={120}
                 />
+              </div>
+            </button>
+
+            {/* Category cards */}
+            {categoriesLoading
+              ? [...Array(4)].map((_, i) => (
+                  <Skeleton key={i} className="aspect-[3/4] rounded-2xl" />
+                ))
+              : publishedCategories.map((cat) => (
+                  <CategoryCard
+                    key={cat.id}
+                    category={cat}
+                    onClick={() => router.push(`/self-journaling/categories/${cat.id}`)}
+                  />
+                ))}
+          </div>
+        </section>
+
+        {/* Recent Reflections */}
+        <section>
+          <div className="flex items-center justify-between mb-3">
+            <h2 className="text-base font-bold text-foreground">
+              Your Recent Reflections
+            </h2>
+            {entries.length > 0 && (
+              <Button
+                variant="ghost"
+                size="sm"
+                className="text-primary text-xs gap-1"
+                onClick={() => router.push('/self-journaling/history')}
+              >
+                View Full History
+                <ChevronRight className="w-3.5 h-3.5" />
+              </Button>
+            )}
+          </div>
+
+          {entriesLoading ? (
+            <div className="flex flex-col gap-3">
+              {[...Array(3)].map((_, i) => (
+                <Skeleton key={i} className="h-20 rounded-2xl" />
               ))}
             </div>
-          </section>
-        )}
-
-        {isLoading && (
-          <div className="flex flex-col gap-3">
-            {[...Array(3)].map((_, i) => (
-              <Skeleton key={i} className="h-20 rounded-2xl" />
-            ))}
-          </div>
-        )}
-      </div>
-
-      {/* FAB */}
-      <div className="fixed right-4 z-50" style={{ bottom: 'calc(80px + env(safe-area-inset-bottom, 0px))' }}>
-        <Button
-          size="icon"
-          className="w-14 h-14 rounded-full shadow-lg"
-          onClick={() => router.push('/self-journaling/new')}
-          aria-label="New journal entry"
-        >
-          <Plus className="w-6 h-6" />
-        </Button>
+          ) : recentGroups.length === 0 ? (
+            <div className="text-center py-10">
+              <p className="text-sm text-muted-foreground">
+                No entries yet. Start your first journal!
+              </p>
+            </div>
+          ) : (
+            <div className="flex flex-col gap-5">
+              {recentGroups.map((group) => (
+                <div key={group.label}>
+                  <p className="text-xs font-bold text-muted-foreground uppercase tracking-wide mb-2">
+                    {group.label}
+                  </p>
+                  <div className="flex flex-col gap-2">
+                    {group.entries.map((entry) => (
+                      <div
+                        key={entry.id}
+                        onClick={() => {
+                          const dateStr = new Date(entry.createdAt).toISOString().split('T')[0];
+                          router.push(`/self-journaling/${dateStr}`);
+                        }}
+                      >
+                        <EntryRow entry={entry} />
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </section>
       </div>
     </div>
   );
