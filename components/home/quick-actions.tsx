@@ -18,10 +18,10 @@
  *   lucide-react   — icons
  *   shadcn Card, Badge
  *
- * LAST UPDATED: 2026-04-17 — add Prescriptions tile
+ * LAST UPDATED: 2026-04-17 — add Appointments tile before Assessments
  */
 
-import { ClipboardList, Map, BookOpen, Sparkles, Package, Wind, MessageCircle, PlayCircle, FileText, Pill, LucideIcon } from 'lucide-react';
+import { ClipboardList, Map, BookOpen, Sparkles, Package, Wind, MessageCircle, PlayCircle, FileText, Pill, CalendarCheck, LucideIcon } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 
@@ -36,6 +36,7 @@ interface Action {
 }
 
 const ACTIONS: Action[] = [
+  { key: 'appointments', title: 'Appointments', description: 'View and manage your sessions.', badge: 'My sessions', icon: CalendarCheck, iconBg: 'bg-emerald-100', iconColor: 'text-emerald-600' },
   { key: 'assessment', title: 'Assessments', description: 'Check anxiety, mood & more.', badge: '2 new suggested', icon: ClipboardList, iconBg: 'bg-violet-100', iconColor: 'text-violet-600' },
   { key: 'journey', title: 'Guided journeys', description: 'Duolingo-style paths for your mind.', badge: 'Day 9 of 36%', icon: Map, iconBg: 'bg-emerald-100', iconColor: 'text-emerald-600' },
   { key: 'prescriptions', title: 'Prescriptions', description: 'Download your prescription PDFs.', badge: 'View all', icon: Pill, iconBg: 'bg-rose-100', iconColor: 'text-rose-600' },

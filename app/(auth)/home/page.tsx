@@ -23,7 +23,7 @@
  *   QuickActions     — 2-column grid of feature shortcuts
  *   JourneySection   — active journey progress
  *
- * LAST UPDATED: 2026-04-17 — add prescriptions quick action route
+ * LAST UPDATED: 2026-04-17 — add appointments + prescriptions quick action routes
  */
 
 'use client';
@@ -44,6 +44,9 @@ export default function HomePage() {
     switch (type) {
       case 'quick_action':
         switch (subtype) {
+          case 'appointments':
+            router.push('/consult/appointments');
+            break;
           case 'therapist':
             router.push('/consult/find-therapist');
             break;
