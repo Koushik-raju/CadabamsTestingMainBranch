@@ -1,0 +1,58 @@
+**Migrate all API/network calls to `@sdk/backend-v2/index.ts` and reorganize the codebase.**
+
+## Migration Rules
+
+1. **Replace ALL existing API calls** (Firebase, old SDKs, direct network calls) with `@sdk/backend-v2` methods.
+2. **Use SDK request/response types everywhere** — components, hooks, props, state. Remove all custom/hardcoded data types. If an existing service defines its own types, delete them and import from SDK instead.
+3. **Exception: Doctors data** — currently loaded from cache. Keep this caching logic intact; do not migrate.
+4. **Exception: Mastra client** — separate service, do not modify.
+5. **Use SWR** for all data fetching wherever possible.
+6. **No UI changes** — this is purely a wiring + structure refactor.
+7. Delete old SDKs and files once the migration is done.
+
+## Target File Structure
+
+```
+/app
+  /(auth)/
+  /(public)/
+/components
+  /shared/[usage]/component-name.tsx
+  /app/[page_path]/component-1.tsx
+/hooks
+  /[page_path]/use-page-name.ts
+  /shared/[use]/use-resource.ts        ← split out when reused or complex
+```
+
+## Hook Architecture
+
+**Default: one hook per page** that encapsulates all data operations (GET, PUT, POST, DELETE) using SWR for reads and exposing mutation functions for writes.
+
+**Split by resource when:**
+- The hook exceeds ~150 lines
+- Multiple pages need the same resource (extract to a shared resource hook)
+- A page aggregates unrelated entities (e.g., dashboard with appointments + stats + notifications)
+
+**When splitting, use an orchestrator pattern:**
+```
+/hooks
+  /dashboard
+    /use-dashboard.ts          ← orchestrator, composes the below
+    /use-appointments.ts       ← reusable resource hook
+    /use-stats.ts
+  /patients
+    /use-patients.ts           ← simple page, single hook is fine
+```
+
+The page component always imports one orchestrator hook for a clean interface. Resource hooks underneath are reusable and testable in isolation.
+
+**Keep SWR cache keys in a shared constants file** for consistency across hooks.
+
+## Shared Components
+
+Audit pages for custom one-off components that duplicate functionality available in `/components/shared`. Replace with the shared version where appropriate.
+Do same for shared hooks.
+
+## Execution Approach
+
+Use subagent-driven development. Plan the migration page-by-page, with each unit of work covering: API call replacement → type migration → hook creation → file reorganization → shared component swap.

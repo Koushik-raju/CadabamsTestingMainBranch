@@ -1,6 +1,6 @@
 import useSWR, { mutate as globalMutate } from 'swr';
 import axios from 'axios';
-import { BACKEND_URL } from '@/config/env';
+import { CONFIG } from '@/config/env';
 import { swrConfig } from '@/lib/swr-config';
 import {
   journalingCategoriesKey,
@@ -9,7 +9,7 @@ import {
 } from '@/lib/swr-keys';
 import { useAuth } from '@/hooks/use-auth';
 
-const cmsApi = axios.create({ baseURL: BACKEND_URL });
+const cmsApi = axios.create({ baseURL: CONFIG.BACKEND_URL });
 
 // ---------------------------------------------------------------------------
 // Types

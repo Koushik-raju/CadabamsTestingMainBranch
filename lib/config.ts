@@ -1,9 +1,22 @@
-export const MASTRA_BACKEND_URL =
-  process.env.NEXT_PUBLIC_MASTRA_BACKEND_URL ||
-  "http://localhost:4111/super-chat";
-
-export const MASTRA_AGENT_ID =
-  process.env.NEXT_PUBLIC_MASTRA_AGENT_ID || "super-chat";
+/**
+ * FILE: lib/config.ts
+ *
+ * PURPOSE:
+ *   Exports the shared chat loading messages array for use across the chat feature.
+ *   Mastra config values are now accessed directly via CONFIG from config/env.ts.
+ *
+ * LOGIC OVERVIEW:
+ *   CHAT_REMAINING_MESSAGES is a static array of empathetic loading strings
+ *   shown in the chat UI while awaiting AI replies.
+ *
+ * KEY VARIABLES / PROPS / EXPORTS:
+ *   CHAT_REMAINING_MESSAGES — Array of empathetic loading strings for the chat UI
+ *
+ * DEPENDENCIES:
+ *   None
+ *
+ * LAST UPDATED: 2026-04-17 — removed MASTRA_* re-exports; consumers now use CONFIG directly
+ */
 
 export const CHAT_REMAINING_MESSAGES = [
   // Listening & understanding

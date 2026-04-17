@@ -36,7 +36,7 @@
  *
  * DEPENDENCIES:
  *   swr (useSWRConfig only), @ai-sdk/react (useChat), ai (DefaultChatTransport,
- *   UIMessage), createMastraClient, MASTRA_BACKEND_URL, MASTRA_AGENT_ID,
+ *   UIMessage), createMastraClient, CONFIG.MASTRA_BACKEND_URL, CONFIG.MASTRA_AGENT_ID,
  *   threadsKey
  *
  * LAST UPDATED: 2026-04-16 — removed SWR caching for messages (always fetch fresh)
@@ -49,7 +49,7 @@ import { useChat } from "@ai-sdk/react";
 import { DefaultChatTransport } from "ai";
 import type { UIMessage } from "ai";
 import { createMastraClient } from "@/lib/mastra-client";
-import { MASTRA_BACKEND_URL, MASTRA_AGENT_ID } from "@/lib/config";
+import { CONFIG } from "@/config/env";
 import { threadsKey } from "@/lib/swr-keys";
 
 const PER_PAGE = 10;
@@ -115,7 +115,7 @@ export function useChatSession({ threadId, resourceId }: UseChatSessionProps) {
       try {
         const client = await createMastraClient();
         const result = await client.listThreadMessages(threadId, {
-          agentId: MASTRA_AGENT_ID,
+          agentId: CONFIG.MASTRA_AGENT_ID,
           requestContext: { page: 0, perPage: PER_PAGE },
         }) as any;
         if (!cancelled) {
@@ -166,7 +166,7 @@ export function useChatSession({ threadId, resourceId }: UseChatSessionProps) {
 
   const { messages: liveMessages, sendMessage: sendChatMessage, status } = useChat({
     transport: new DefaultChatTransport({
-      api: MASTRA_BACKEND_URL,
+      api: CONFIG.MASTRA_BACKEND_URL,
     }),
   });
 
