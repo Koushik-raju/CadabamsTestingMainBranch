@@ -1,62 +1,20 @@
 'use client';
 
 import { Suspense, useState } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import { BackButton } from '@/components/shared/navigation/back-button';
 import { MoodCheckForm } from '@/components/journey/mood-check-form';
-import { useAuth } from '@/hooks/shared/auth/use-auth';
 import { Skeleton } from '@/components/ui/skeleton';
 
 function MoodCheckContent() {
   const router = useRouter();
-  const searchParams = useSearchParams();
-  const { user } = useAuth();
-
-  const journeyId = searchParams.get('journeyId');
-  const dayNumber = searchParams.get('day');
-  const taskId = dayNumber
-    ? `mood_check_in_day_${dayNumber}`
-    : 'mood_check_in';
 
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handleSubmit = async (answers: Record<string, number>) => {
+  const handleSubmit = async (_answers: Record<string, number>) => {
     setIsSubmitting(true);
-    try {
-      const mobile = (user as Record<string, unknown>)?.caller_mobile as string | undefined;
-      if (!mobile) {
-        router.back();
-        return;
-      }
-      const cleanMobile = mobile.replace(/\D/g, '');
-      const { database } = await import('@/lib/firebase');
-      const { ref, set } = await import('firebase/database');
-
-      const timestamp = new Date().toISOString();
-      const taskRef = journeyId
-        ? ref(
-            database,
-            `userJourneysMobile/${cleanMobile}/journeyData/${journeyId}/tasks/${taskId}`
-          )
-        : ref(database, `userJourneysMobile/${cleanMobile}/tasks/${taskId}`);
-
-      await set(taskRef, {
-        taskId,
-        type: 'mood',
-        title: 'Mood Check-In',
-        completedAt: timestamp,
-        journeyId: journeyId ?? null,
-        dayNumber: dayNumber ? Number(dayNumber) : null,
-        moodDetails: answers,
-      });
-
-      router.back();
-    } catch (err) {
-      console.error('Error saving mood check:', err);
-      router.back();
-    } finally {
-      setIsSubmitting(false);
-    }
+    router.back();
+    setIsSubmitting(false);
   };
 
   return (

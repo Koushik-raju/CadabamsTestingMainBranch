@@ -1,6 +1,5 @@
 'use client';
 
-import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { BackButton } from '@/components/shared/navigation/back-button';
 import { PrescriptionCard } from '@/components/prescription/prescription-card';
@@ -8,7 +7,6 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import { ClipboardList, AlertCircle } from 'lucide-react';
 import { usePrescriptions } from '@/hooks/prescriptions/use-prescriptions';
-import { BASE_URL_HOS } from '@/config/env';
 import dayjs from 'dayjs';
 import type { Prescription } from '@/types/package';
 
@@ -16,32 +14,12 @@ export default function PrescriptionsPage() {
   const router = useRouter();
   const { prescriptions, isLoading, error, mutate } = usePrescriptions();
 
-  const [downloadingId, setDownloadingId] = useState<number | null>(null);
-  const [downloadError, setDownloadError] = useState<string | null>(null);
-
   const handleView = (prescription: Prescription) => {
     if (prescription.prescription_line && prescription.prescription_line.length > 0) {
       const ids = prescription.prescription_line.join(',');
       router.push(`/prescription-overview?lineItems=${ids}`);
     } else {
       router.push('/prescription-overview');
-    }
-  };
-
-  const handleDownload = async (prescription: Prescription) => {
-    if (!prescription.id) return;
-    try {
-      setDownloadingId(prescription.id);
-      setDownloadError(null);
-      const url = `${BASE_URL_HOS}/download/prescription/form/${prescription.id}`;
-      if (typeof window !== 'undefined') {
-        window.open(url, '_blank', 'noopener,noreferrer');
-      }
-    } catch {
-      setDownloadError('Failed to download prescription. Please try again.');
-      setTimeout(() => setDownloadError(null), 5000);
-    } finally {
-      setDownloadingId(null);
     }
   };
 
@@ -59,14 +37,6 @@ export default function PrescriptionsPage() {
       </div>
 
       <div className="px-4 space-y-4">
-        {/* Download error */}
-        {downloadError && (
-          <Alert variant="destructive">
-            <AlertCircle className="h-4 w-4" />
-            <AlertDescription>{downloadError}</AlertDescription>
-          </Alert>
-        )}
-
         {/* Loading */}
         {isLoading && (
           <div className="flex flex-col items-center justify-center py-16 gap-3">
@@ -115,8 +85,6 @@ export default function PrescriptionsPage() {
                 prescription={prescription}
                 index={index}
                 onView={() => handleView(prescription)}
-                onDownload={() => handleDownload(prescription)}
-                downloadingId={downloadingId}
               />
             ))}
           </div>

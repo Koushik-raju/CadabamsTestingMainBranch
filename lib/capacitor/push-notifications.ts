@@ -1,32 +1,37 @@
 /**
- * Push notification flow for Capacitor + Firebase.
- * All imports are dynamic to avoid SSR crashes.
+ * FILE: lib/capacitor/push-notifications.ts
+ *
+ * PURPOSE:
+ *   Initialises Capacitor push notifications on native platforms: requests
+ *   permission, registers with APNs/FCM, and handles foreground/tap events.
+ *
+ * LOGIC OVERVIEW:
+ *   1. Guards against non-native environments via isNative().
+ *   2. Requests OS push permission; exits early if denied.
+ *   3. Registers the device for remote notifications.
+ *   4. Adds listeners for foreground notifications and notification taps.
+ *   5. On tap, resolves a client-side route from the notification payload
+ *      and navigates via window.location.href.
+ *
+ * KEY VARIABLES / PROPS / EXPORTS:
+ *   initPushNotifications — call once after auth; sets up all listeners
+ *
+ * DEPENDENCIES:
+ *   @capacitor/push-notifications — native push bridge
+ *   lib/capacitor/platform        — isNative() guard
+ *
+ * LAST UPDATED: 2026-04-17 — removed Firebase RTDB token saving (Firebase removed)
  */
 import { isNative } from './platform';
 
 /**
- * Saves an FCM token to Firebase RTDB at users/{userId}/fcmToken.
- */
-export async function updateFcmToken(userId: string, token: string): Promise<void> {
-  try {
-    const { getDatabase, ref, set } = await import('firebase/database');
-    const { app } = await import('@/lib/firebase');
-    const db = getDatabase(app);
-    await set(ref(db, `users/${userId}/fcmToken`), token);
-  } catch (e) {
-    console.warn('[PushNotifications] updateFcmToken failed:', e);
-  }
-}
-
-/**
  * Full push notification initialisation:
  *  1. Request permission
- *  2. Register for remote notifications (FCM)
- *  3. Save FCM token to Firebase RTDB
- *  4. Handle foreground notifications
- *  5. Handle notification taps (navigate to relevant page)
+ *  2. Register for remote notifications
+ *  3. Handle foreground notifications
+ *  4. Handle notification taps (navigate to relevant page)
  */
-export async function initPushNotifications(userId: string): Promise<void> {
+export async function initPushNotifications(): Promise<void> {
   if (!(await isNative())) return;
 
   try {
@@ -39,27 +44,20 @@ export async function initPushNotifications(userId: string): Promise<void> {
       return;
     }
 
-    // 2. Register with FCM
+    // 2. Register with APNs/FCM
     await PushNotifications.register();
-
-    // 3. Save FCM token when registration completes
-    await PushNotifications.addListener('registration', async (token) => {
-      await updateFcmToken(userId, token.value);
-    });
 
     // Handle registration errors
     await PushNotifications.addListener('registrationError', (error) => {
       console.error('[PushNotifications] Registration error:', error);
     });
 
-    // 4. Handle foreground notifications (display a toast or local notification)
+    // 3. Handle foreground notifications
     await PushNotifications.addListener('pushNotificationReceived', (notification) => {
       console.log('[PushNotifications] Foreground notification received:', notification.title);
-      // Foreground notifications are handled by the app; the OS won't display them
-      // Components that need to react can subscribe to their own SWR keys
     });
 
-    // 5. Handle notification taps — navigate to the appropriate page
+    // 4. Handle notification taps — navigate to the appropriate page
     await PushNotifications.addListener('pushNotificationActionPerformed', (action) => {
       const data = action.notification.data as Record<string, unknown> | undefined;
       if (!data) return;
@@ -74,9 +72,6 @@ export async function initPushNotifications(userId: string): Promise<void> {
   }
 }
 
-/**
- * Resolves a client-side route from notification payload data.
- */
 function resolveNotificationRoute(data: Record<string, unknown>): string | null {
   const type = data['type'] as string | undefined;
   const id = data['id'] as string | undefined;

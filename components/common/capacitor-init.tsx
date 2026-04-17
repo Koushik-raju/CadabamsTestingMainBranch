@@ -61,8 +61,7 @@ export function CapacitorInit() {
   // --- Push notifications (runs when user logs in) ---
   useEffect(() => {
     if (!user) return;
-    const userId = String(user.lead_id);
-    initPushNotifications(userId).catch((e) => {
+    initPushNotifications().catch((e) => {
       console.warn('[CapacitorInit] initPushNotifications failed:', e);
     });
   }, [user]);

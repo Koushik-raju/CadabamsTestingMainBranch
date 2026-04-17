@@ -2,8 +2,6 @@
 
 import { useState, useEffect, use } from 'react';
 import { useRouter } from 'next/navigation';
-import { ref, push } from 'firebase/database';
-import { database } from '@/lib/firebase';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -129,12 +127,6 @@ export default function WorksheetFormPage({ params }: { params: Promise<{ id: st
           questionText: q.question || q.title || q.label || 'Unknown Question',
         };
       });
-
-      // Save to Firebase
-      if (leadId && worksheetId) {
-        const dbRef = ref(database, `worksheets/${leadId}/${worksheetId}`);
-        await push(dbRef, payload);
-      }
 
       setSubmitted(true);
     } catch (err) {

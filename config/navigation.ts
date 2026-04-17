@@ -1,3 +1,22 @@
+/**
+ * FILE: config/navigation.ts
+ *
+ * PURPOSE:
+ *   Defines the bottom tab bar navigation items used across the authenticated app shell.
+ *
+ * LOGIC OVERVIEW:
+ *   Exports a typed array of nav items consumed by BottomNavigation to render
+ *   tab links with icons and labels.
+ *
+ * KEY VARIABLES / PROPS / EXPORTS:
+ *   NavItem              — shape of a single nav entry
+ *   navigationMenuItems  — ordered array of tab bar items
+ *
+ * DEPENDENCIES:
+ *   lucide-react — icon components
+ *
+ * LAST UPDATED: 2026-04-17 — recreated after accidental deletion
+ */
 import { HomeIcon, MessageSquareIcon, CalendarIcon, UserIcon, LucideIcon } from 'lucide-react';
 
 export interface NavItem {

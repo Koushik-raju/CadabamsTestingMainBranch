@@ -1,10 +1,32 @@
+/**
+ * FILE: components/prescription/prescription-card.tsx
+ *
+ * PURPOSE:
+ *   Renders a single prescription as a card with metadata and a View Details action.
+ *
+ * LOGIC OVERVIEW:
+ *   Displays prescription name, date, doctor, and medicine count from the SDK type.
+ *   Renders a status badge derived from the prescription state field.
+ *   Calls onView when the user taps "View Details".
+ *
+ * KEY VARIABLES / PROPS / EXPORTS:
+ *   prescription — SDK Prescription object to display
+ *   index        — fallback for display name when prescription has no name
+ *   onView       — callback to navigate to the prescription detail view
+ *
+ * DEPENDENCIES:
+ *   @/types/package — Prescription type
+ *   dayjs           — date formatting
+ *
+ * LAST UPDATED: 2026-04-17 — removed download button (no SDK endpoint for PDF download)
+ */
 'use client';
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
-import { CalendarDays, User2, Eye, Download, Pill, AlertCircle } from 'lucide-react';
+import { CalendarDays, User2, Eye, Pill, AlertCircle } from 'lucide-react';
 import dayjs from 'dayjs';
 import type { Prescription } from '@/types/package';
 
@@ -12,8 +34,6 @@ interface PrescriptionCardProps {
   prescription: Prescription;
   index: number;
   onView: () => void;
-  onDownload: () => void;
-  downloadingId?: number | null;
 }
 
 function getStateBadgeVariant(state?: string): 'default' | 'secondary' | 'destructive' | 'outline' {
@@ -29,15 +49,8 @@ function getStateBadgeVariant(state?: string): 'default' | 'secondary' | 'destru
   }
 }
 
-export function PrescriptionCard({
-  prescription,
-  index,
-  onView,
-  onDownload,
-  downloadingId,
-}: PrescriptionCardProps) {
+export function PrescriptionCard({ prescription, index, onView }: PrescriptionCardProps) {
   const displayName = prescription.display_name ?? prescription.name ?? `Prescription #${index + 1}`;
-  const isDownloading = downloadingId === prescription.id;
 
   return (
     <Card className="border-border bg-card hover:shadow-md transition-shadow">
@@ -88,26 +101,10 @@ export function PrescriptionCard({
 
         <Separator />
 
-        <div className="flex gap-2">
-          <Button
-            size="sm"
-            variant="outline"
-            className="flex-1 gap-1.5"
-            onClick={onDownload}
-            disabled={isDownloading}
-          >
-            <Download className="w-3.5 h-3.5" />
-            {isDownloading ? 'Downloading...' : 'Download'}
-          </Button>
-          <Button
-            size="sm"
-            className="flex-1 gap-1.5"
-            onClick={onView}
-          >
-            <Eye className="w-3.5 h-3.5" />
-            View Details
-          </Button>
-        </div>
+        <Button size="sm" className="w-full gap-1.5" onClick={onView}>
+          <Eye className="w-3.5 h-3.5" />
+          View Details
+        </Button>
       </CardContent>
     </Card>
   );
