@@ -5,9 +5,39 @@ import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
 import { Loader2 } from 'lucide-react';
 
+/**
+ * FILE: components/journal/journal-editor.tsx
+ *
+ * PURPOSE:
+ *   Reusable rich journal editor used on the new-entry page. Handles both
+ *   free-writing and AI-guided prompt modes.
+ *
+ * LOGIC OVERVIEW:
+ *   1. Renders previously saved prompt/response pairs (savedPrompts) above the textarea.
+ *   2. Shows the current AI-generated heading if isPromptMode is active.
+ *   3. Shows a spinner while isPrompting is true and no heading has arrived yet.
+ *   4. Exposes action buttons: Prompt Me, Go Deeper, Finish — rendered conditionally
+ *      based on whether content exists and which mode is active.
+ *
+ * KEY VARIABLES / PROPS / EXPORTS:
+ *   savedPrompts    — array of completed prompt+response pairs to display above the input
+ *   currentHeading  — the AI-generated heading for the next prompt being answered
+ *   isPromptMode    — true when operating in guided AI-prompt mode
+ *   isPrompting     — true while waiting for an AI response
+ *   onPromptMe      — triggers the first AI prompt request
+ *   onGoDeeper      — triggers a follow-up deeper prompt
+ *   onSave          — saves the full entry
+ *
+ * DEPENDENCIES:
+ *   Textarea, Button, Loader2 — shadcn/ui + lucide-react
+ *
+ * LAST UPDATED: 2026-04-17 — Made JournalPrompt fields optional to align with
+ *   JournalingPrompt type from hooks/use-journaling.ts.
+ */
+
 interface JournalPrompt {
-  heading: string;
-  text: string;
+  heading?: string;
+  text?: string;
 }
 
 interface JournalEditorProps {
