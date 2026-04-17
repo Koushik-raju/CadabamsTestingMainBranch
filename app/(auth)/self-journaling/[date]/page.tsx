@@ -1,76 +1,34 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useMemo } from 'react';
 import { useRouter, useParams } from 'next/navigation';
-import { ChevronLeft, Calendar, Loader2 } from 'lucide-react';
+import { ChevronLeft, Calendar } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
-import { useAuth } from '@/hooks/use-auth';
-
-interface JournalPrompt {
-  heading: string;
-  text: string;
-}
-
-interface JournalEntry {
-  id: string;
-  entry?: string;
-  prompts?: JournalPrompt[];
-  createdAt: string;
-}
+import { useSelfJournalingEntries } from '@/hooks/use-journaling';
 
 export default function JournalDatePage() {
   const router = useRouter();
   const params = useParams();
   const date = params.date as string;
-  const { user } = useAuth();
+  const { entries: allEntries, isLoading } = useSelfJournalingEntries();
 
-  const [entries, setEntries] = useState<JournalEntry[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-
-  const getUserId = useCallback(() => {
-    if (!user) return null;
-    return user.lead_id ? String(user.lead_id) : null;
-  }, [user]);
-
-  const fetchEntries = useCallback(async () => {
-    const userId = getUserId();
-    if (!userId) { setIsLoading(false); return; }
-
-    try {
-      const { database } = await import('@/lib/firebase');
-      const { ref, get } = await import('firebase/database');
-      const snap = await get(ref(database, `self-journalings/${userId}`));
-
-      if (snap.exists()) {
-        const arr: JournalEntry[] = [];
-        snap.forEach((child) => {
-          arr.push({ id: child.key ?? '', ...(child.val() as Omit<JournalEntry, 'id'>) });
-        });
-
-        const filtered = arr.filter((e) => {
-          const d = new Date(e.createdAt);
-          return !isNaN(d.getTime()) && d.toISOString().split('T')[0] === date;
-        });
-
-        filtered.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
-        setEntries(filtered);
-      }
-    } catch (err) {
-      console.error('Error fetching entries:', err);
-    } finally {
-      setIsLoading(false);
-    }
-  }, [getUserId, date]);
-
-  useEffect(() => {
-    fetchEntries();
-  }, [fetchEntries]);
+  const entries = useMemo(
+    () =>
+      allEntries.filter((e) => {
+        const d = new Date(e.createdAt);
+        return !isNaN(d.getTime()) && d.toISOString().split('T')[0] === date;
+      }),
+    [allEntries, date],
+  );
 
   const formattedDate = (() => {
     try {
       return new Date(date + 'T00:00:00').toLocaleDateString('en-US', {
-        weekday: 'long', month: 'long', day: 'numeric', year: 'numeric',
+        weekday: 'long',
+        month: 'long',
+        day: 'numeric',
+        year: 'numeric',
       });
     } catch {
       return date;
@@ -87,7 +45,9 @@ export default function JournalDatePage() {
         <div className="flex-1">
           <div className="flex items-center gap-1.5">
             <Calendar className="w-4 h-4 text-muted-foreground" />
-            <h1 className="text-base font-semibold text-foreground">{formattedDate}</h1>
+            <h1 className="text-base font-semibold text-foreground">
+              {formattedDate}
+            </h1>
           </div>
         </div>
       </div>
@@ -104,20 +64,31 @@ export default function JournalDatePage() {
           </div>
         ) : entries.length === 0 ? (
           <div className="flex-1 flex flex-col items-center justify-center gap-4 text-center py-20">
-            <p className="text-muted-foreground">No journal entries for this date.</p>
-            <Button className="rounded-full" onClick={() => router.push('/self-journaling/new')}>
+            <p className="text-muted-foreground">
+              No journal entries for this date.
+            </p>
+            <Button
+              className="rounded-full"
+              onClick={() => router.push('/self-journaling/new')}
+            >
               Write now
             </Button>
           </div>
         ) : (
           entries.map((entry, i) => (
-            <article key={entry.id} className="bg-card rounded-2xl border border-border p-5 flex flex-col gap-4">
+            <article
+              key={entry.id}
+              className="bg-card rounded-2xl border border-border p-5 flex flex-col gap-4"
+            >
               <div className="flex items-center justify-between">
                 <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
                   Entry {i + 1}
                 </span>
                 <span className="text-xs text-muted-foreground">
-                  {new Date(entry.createdAt).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}
+                  {new Date(entry.createdAt).toLocaleTimeString('en-US', {
+                    hour: '2-digit',
+                    minute: '2-digit',
+                  })}
                 </span>
               </div>
 
@@ -127,7 +98,9 @@ export default function JournalDatePage() {
                     <div key={idx} className="flex flex-col gap-2">
                       {prompt.heading && (
                         <div className="border-l-4 border-primary pl-3 py-1.5 bg-primary/5 rounded-r-md">
-                          <p className="text-sm font-semibold text-primary">{prompt.heading}</p>
+                          <p className="text-sm font-semibold text-primary">
+                            {prompt.heading}
+                          </p>
                         </div>
                       )}
                       <p className="text-sm text-foreground whitespace-pre-wrap leading-relaxed ml-1">
@@ -140,6 +113,21 @@ export default function JournalDatePage() {
                 <p className="text-sm text-foreground whitespace-pre-wrap leading-relaxed">
                   {entry.entry}
                 </p>
+              )}
+
+              {(entry.emotion || entry.stressLevel) && (
+                <div className="flex gap-3 pt-2 border-t border-border">
+                  {entry.emotion && (
+                    <span className="text-xs text-muted-foreground">
+                      Mood: {entry.emotion}/5
+                    </span>
+                  )}
+                  {entry.stressLevel && (
+                    <span className="text-xs text-muted-foreground">
+                      Stress: {entry.stressLevel}/5
+                    </span>
+                  )}
+                </div>
               )}
             </article>
           ))
