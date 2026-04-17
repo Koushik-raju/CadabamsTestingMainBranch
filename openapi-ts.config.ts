@@ -1,7 +1,8 @@
 import "dotenv/config";
 import { defineConfig } from "@hey-api/openapi-ts";
+import { BACKEND_URL } from "./config/env";
 
-const BACKEND_V2_URL = process.env.NEXT_PUBLIC_BACKEND_URL! + "/docs-json";
+const BACKEND_V2_URL = BACKEND_URL! + "/docs-json";
 
 export default defineConfig([
   {

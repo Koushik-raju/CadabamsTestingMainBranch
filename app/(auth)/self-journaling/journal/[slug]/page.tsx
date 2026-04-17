@@ -35,8 +35,7 @@
  *   getJournalVisual()            — lib/journal-visual.ts
  *   BackButton                    — components/shared/navigation/back-button.tsx
  *
- * LAST UPDATED: 2026-04-17 — Fixed description rendering (plain string), added cadence badges,
- *   removed aiPrompt, removed tag-gating, fixed hooks async pattern.
+ * LAST UPDATED: 2026-04-17 — Guard cadence/estimatedMinutes with typeof check (SDK types them as object, not string/number).
  */
 'use client';
 
@@ -284,13 +283,13 @@ export default function JournalDetailPage({
 
           {/* Cadence + tags */}
           <div className="flex flex-wrap gap-2">
-            {sub.recommendedCadence && (
+            {typeof sub.recommendedCadence === 'string' && sub.recommendedCadence && (
               <div className="flex items-center gap-1.5 bg-primary/10 text-primary rounded-full px-3 py-1">
                 <CalendarDays className="w-3.5 h-3.5" />
                 <span className="text-xs font-medium">{sub.recommendedCadence}</span>
               </div>
             )}
-            {sub.estimatedMinutes && (
+            {typeof sub.estimatedMinutes === 'number' && sub.estimatedMinutes > 0 && (
               <div className="flex items-center gap-1.5 bg-muted text-muted-foreground rounded-full px-3 py-1">
                 <Clock className="w-3.5 h-3.5" />
                 <span className="text-xs font-medium">~{sub.estimatedMinutes} min</span>
@@ -446,13 +445,13 @@ export default function JournalDetailPage({
 
         {/* Cadence + time badges */}
         <div className="flex flex-wrap gap-2">
-          {sub.recommendedCadence && (
+          {typeof sub.recommendedCadence === 'string' && sub.recommendedCadence && (
             <div className="flex items-center gap-1.5 bg-primary/10 text-primary rounded-full px-3 py-1">
               <CalendarDays className="w-3.5 h-3.5" />
               <span className="text-xs font-medium">{sub.recommendedCadence}</span>
             </div>
           )}
-          {sub.estimatedMinutes && (
+          {typeof sub.estimatedMinutes === 'number' && sub.estimatedMinutes > 0 && (
             <div className="flex items-center gap-1.5 bg-muted text-muted-foreground rounded-full px-3 py-1">
               <Clock className="w-3.5 h-3.5" />
               <span className="text-xs font-medium">~{sub.estimatedMinutes} min</span>

@@ -34,8 +34,7 @@
  *   Tabs, TabsList, TabsTrigger, TabsContent — shadcn/ui tabs
  *   getJournalVisual()         — lib/journal-visual.ts — unique gradient+icon per title
  *
- * LAST UPDATED: 2026-04-17 — Sub-journal card taps navigate to /self-journaling/journal/[slug]
- *   instead of opening a bottom sheet. Bottom sheet removed; detail page handles subscription.
+ * LAST UPDATED: 2026-04-17 — Added handleStartWriting to fix missing function used by Write Again button.
  */
 'use client';
 
@@ -124,6 +123,10 @@ export default function CategoryDetailPage() {
   const grouped = useMemo(() => groupByDate(categoryEntries), [categoryEntries]);
 
   const isLoading = catLoading || entriesLoading;
+
+  function handleStartWriting(sub: { slug: string }) {
+    router.push(`/self-journaling/journal/${encodeURIComponent(sub.slug)}`);
+  }
 
   // ---- Loading state ----
   if (catLoading) {
