@@ -1,3 +1,33 @@
+/**
+ * FILE: app/(auth)/assessments/[id]/page.tsx
+ *
+ * PURPOSE:
+ *   Assessment form page — renders a multi-step question wizard for a single
+ *   assessment, collects answers, and submits them via the SDK.
+ *
+ * LOGIC OVERVIEW:
+ *   - Fetches assessment detail via useAssessmentById(id).
+ *   - Maps SDK AssessmentQuestionResponseDto questions into the local Question
+ *     shape expected by QuestionRenderer; keyValue is narrowed with a runtime
+ *     type guard instead of a blind cast.
+ *   - Tracks per-step answers in a Record<string, AnswerValue> state map.
+ *   - On final step, calls submitAssessment and transitions to a result screen.
+ *
+ * KEY VARIABLES / PROPS / EXPORTS:
+ *   assessmentId   — route param, identifies the assessment to fetch
+ *   questions      — memoized array of Question objects derived from SDK data
+ *   answers        — Record<stepKey, AnswerValue> collected across steps
+ *   currentStep    — index into questions array
+ *   isStepComplete — whether the current step's answer satisfies the validator
+ *
+ * DEPENDENCIES:
+ *   useAssessmentById      — SWR hook wrapping cmsAssessmentsControllerFindOne
+ *   submitAssessment       — SDK call to patientAssessmentsControllerCreateCompletion
+ *   QuestionRenderer       — renders question UI by type
+ *
+ * LAST UPDATED: 2026-04-17 — replace keyValue blind cast with runtime type guard
+ */
+
 'use client';
 
 import { useState, use, useMemo, useEffect, useRef } from 'react';
@@ -40,7 +70,11 @@ export default function AssessmentFormPage({ params }: { params: Promise<{ id: s
       smileys: q.smileys,
       text: q.text ?? undefined,
       count: q.count ?? undefined,
-      keyValue: q.keyValue as string | Record<string, string> | undefined,
+      keyValue: typeof q.keyValue === 'string'
+        ? q.keyValue
+        : q.keyValue !== null && typeof q.keyValue === 'object'
+          ? (q.keyValue as Record<string, string>)
+          : undefined,
       prompt: q.prompt ?? undefined,
       answer: q.answer ?? undefined,
       questions: q.questions ?? undefined,

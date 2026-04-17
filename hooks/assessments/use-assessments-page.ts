@@ -1,3 +1,36 @@
+/**
+ * FILE: hooks/assessments/use-assessments-page.ts
+ *
+ * PURPOSE:
+ *   SWR hooks and mapping logic for the assessments listing page and assigned
+ *   assessments. Transforms raw SDK DTOs into typed AssessmentItem shapes for
+ *   use by page components.
+ *
+ * LOGIC OVERVIEW:
+ *   - extractString / extractNumber: safely pull plain values from Strapi v5
+ *     rich-text objects (which arrive as { [key: string]: unknown } | null).
+ *   - mapAssessment: converts AssessmentResponseDto → AssessmentItem; no casts
+ *     needed because extractString/extractNumber accept unknown directly.
+ *   - useAssessmentsPage: infinite SWR hook over cmsAssessmentsControllerFindAll.
+ *   - useAssignedAssessments: SWR hook over patientsControllerGetAssessments
+ *     which returns a passthrough { [key: string]: unknown }[] — coercions there
+ *     are unavoidable until the SDK types that endpoint properly.
+ *
+ * KEY VARIABLES / PROPS / EXPORTS:
+ *   AssessmentItem          — mapped assessment shape used by page components
+ *   AssignedAssessmentItem  — mapped shape for lead-assigned assessments
+ *   mapAssessment           — DTO → AssessmentItem converter (exported for reuse)
+ *   useAssessmentsPage      — infinite paginated hook
+ *   useAssignedAssessments  — hook for a lead's assigned assessments
+ *
+ * DEPENDENCIES:
+ *   cmsAssessmentsControllerFindAll     — SDK: fetch published assessments
+ *   patientsControllerGetAssessments    — SDK: fetch lead-assigned assessments
+ *
+ * LAST UPDATED: 2026-04-17 — remove unnecessary as unknown casts; add runtime
+ *   element-level guards on q.questions / q.answers array casts
+ */
+
 import useSWR from 'swr';
 import useSWRInfinite from 'swr/infinite';
 import {
@@ -115,63 +148,63 @@ export interface StrapiPage {
 // ---------------------------------------------------------------------------
 
 export function mapAssessment(item: AssessmentResponseDto): AssessmentItem {
-  const labelStr = extractString(item.label as unknown);
+  const labelStr = extractString(item.label);
   const titleStr = item.title || labelStr || '';
 
   return {
     id: item.id,
     title:
-      extractString(item.landingTitle?.title as unknown) ||
+      extractString(item.landingTitle?.title) ||
       labelStr ||
       titleStr,
     description:
-      extractString(item.description as unknown) ||
-      extractString(item.landingTitle?.landingDescription as unknown),
+      extractString(item.description) ||
+      extractString(item.landingTitle?.landingDescription),
     category: item.category ?? [],
     label: labelStr,
-    hint: extractString(item.hint as unknown),
-    image: extractString(item.image as unknown),
-    citationText: extractString(item.citationText as unknown),
+    hint: extractString(item.hint),
+    image: extractString(item.image),
+    citationText: extractString(item.citationText),
     status: item.status,
     visibleToAll: item.visibleToAll ?? false,
     forJourney: item.forJourney ?? false,
     landingTitle: item.landingTitle
       ? {
-          title: extractString(item.landingTitle.title as unknown),
-          landingDescription: extractString(
-            item.landingTitle.landingDescription as unknown
-          ),
-          minutes: extractNumber(item.landingTitle.minutes as unknown),
-          numberOfQuestion: extractString(
-            item.landingTitle.numberOfQuestion as unknown
-          ),
-          badgeText: extractString(item.landingTitle.badgeText as unknown),
-          actionLabel: extractString(item.landingTitle.actionLabel as unknown),
+          title: extractString(item.landingTitle.title),
+          landingDescription: extractString(item.landingTitle.landingDescription),
+          minutes: extractNumber(item.landingTitle.minutes),
+          numberOfQuestion: extractString(item.landingTitle.numberOfQuestion),
+          badgeText: extractString(item.landingTitle.badgeText),
+          actionLabel: extractString(item.landingTitle.actionLabel),
           points: (item.landingTitle.points ?? []).map((p) => ({
             id: p.id,
-            icon: extractString(p.icon as unknown),
-            item: extractString(p.item as unknown),
+            icon: extractString(p.icon),
+            item: extractString(p.item),
           })),
         }
       : null,
     Questions: (item.Questions ?? []).map((q) => ({
       id: q.id,
-      type: extractString(q.type as unknown) ?? 'mcq',
-      title: extractString(q.title as unknown) ?? '',
-      subtitle: extractString(q.subtitle as unknown),
-      hint: extractString(q.hint as unknown),
-      continueLabel: extractString(q.continueLabel as unknown),
+      type: extractString(q.type) ?? 'mcq',
+      title: extractString(q.title) ?? '',
+      subtitle: extractString(q.subtitle),
+      hint: extractString(q.hint),
+      continueLabel: extractString(q.continueLabel),
       order: q.order ?? 0,
       smileys: q.smileys ?? [],
-      count: extractNumber(q.count as unknown),
-      label: extractString(q.label as unknown),
-      prompt: extractString(q.prompt as unknown),
-      choice: extractString(q.choice as unknown),
-      answer: extractString(q.answer as unknown),
-      text: extractString(q.text as unknown),
-      keyValue: q.keyValue && typeof q.keyValue === 'object' ? q.keyValue : extractString(q.keyValue as unknown),
-      questions: Array.isArray(q.questions) ? q.questions as Array<{ question: string }> : null,
-      answers: Array.isArray(q.answers) ? q.answers as Array<{ answer: string }> : null,
+      count: extractNumber(q.count),
+      label: extractString(q.label),
+      prompt: extractString(q.prompt),
+      choice: extractString(q.choice),
+      answer: extractString(q.answer),
+      text: extractString(q.text),
+      keyValue: q.keyValue && typeof q.keyValue === 'object' ? q.keyValue : extractString(q.keyValue),
+      questions: Array.isArray(q.questions)
+        ? q.questions.filter((e): e is { question: string } => typeof (e as Record<string, unknown>)?.question === 'string')
+        : null,
+      answers: Array.isArray(q.answers)
+        ? q.answers.filter((e): e is { answer: string } => typeof (e as Record<string, unknown>)?.answer === 'string')
+        : null,
       options: (q.options ?? []).map((o, i) => ({
         id: `${q.id}-opt-${i}`,
         label: o.label,
