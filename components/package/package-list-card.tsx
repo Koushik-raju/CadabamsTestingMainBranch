@@ -1,3 +1,27 @@
+/**
+ * FILE: components/package/package-list-card.tsx
+ *
+ * PURPOSE:
+ *   Compact list-row card for a booked package. Used in the packages list page
+ *   to display a user's purchased packages in a grouped-list layout.
+ *
+ * LOGIC OVERVIEW:
+ *   - Receives a BookedPackageDto and renders package name (from many2one tuple),
+ *     cost, date, and stage badge.
+ *   - Tapping navigates to /packages/:booked_package_id.
+ *   - Package initials (up to 2 words) are shown in an avatar circle.
+ *   - Stage badge label/icon/color is derived from getStageBadge().
+ *
+ * KEY VARIABLES / PROPS / EXPORTS:
+ *   pkg             — BookedPackageDto from SDK
+ *   PackageListCard — default exported row card component
+ *
+ * DEPENDENCIES:
+ *   BookedPackageDto  — from @/sdk/backend-v2
+ *   odooTuple         — from @/lib/odoo (safe many2one tuple access)
+ *
+ * LAST UPDATED: 2026-04-17 — added odooTuple guard for package_id many2one field
+ */
 'use client';
 
 import { useRouter } from 'next/navigation';
@@ -5,6 +29,7 @@ import { IndianRupee, Calendar, Package, Clock, CheckCircle, PlayCircle } from '
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
 import type { BookedPackageDto } from '@/sdk/backend-v2';
+import { odooTuple } from '@/lib/odoo';
 
 interface PackageListCardProps {
   pkg: BookedPackageDto;
@@ -26,7 +51,7 @@ function getStageBadge(stage: string) {
 export function PackageListCard({ pkg }: PackageListCardProps) {
   const router = useRouter();
   const { label, className, Icon } = getStageBadge(pkg.package_stage);
-  const packageName = String(pkg.package_id?.[1] ?? 'Package');
+  const packageName = String(odooTuple(pkg.package_id, 1) ?? 'Package');
 
   const initials = packageName
     .split(' ')

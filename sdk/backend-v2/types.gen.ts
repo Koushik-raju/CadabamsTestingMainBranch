@@ -317,9 +317,12 @@ export type SlotBookingResponseDto = {
      */
     consultation_type: string;
     /**
-     * Consultation type relation [id, name] or false
+     * Consultation type relation. Odoo many2one [id, display_name] tuple, or false if not set
      */
-    consultation_type_id: Array<unknown> | null;
+    consultation_type_id: [
+        number | string,
+        number | string
+    ] | false | null;
     /**
      * Start datetime
      */
@@ -333,29 +336,47 @@ export type SlotBookingResponseDto = {
      */
     duration: number;
     /**
-     * Doctor relation [id, name] or false
+     * Doctor relation. Odoo many2one [id, display_name] tuple, or false if not set
      */
-    doctor_id: Array<unknown> | null;
+    doctor_id: [
+        number | string,
+        number | string
+    ] | false | null;
     /**
-     * Lead relation [id, name] or false
+     * Lead relation. Odoo many2one [id, display_name] tuple, or false if not set
      */
-    lead_id: Array<unknown> | null;
+    lead_id: [
+        number | string,
+        number | string
+    ] | false | null;
     /**
-     * Campus relation [id, name] or false
+     * Campus relation. Odoo many2one [id, display_name] tuple, or false if not set
      */
-    campus_id: Array<unknown> | null;
+    campus_id: [
+        number | string,
+        number | string
+    ] | false | null;
     /**
-     * Sub-campus relation [id, name] or false
+     * Sub-campus relation. Odoo many2one [id, display_name] tuple, or false if not set
      */
-    sub_campus_id: Array<unknown> | null;
+    sub_campus_id: [
+        number | string,
+        number | string
+    ] | false | null;
     /**
-     * Speciality relation [id, name] or false
+     * Speciality relation. Odoo many2one [id, display_name] tuple, or false if not set
      */
-    speciality_id: Array<unknown> | null;
+    speciality_id: [
+        number | string,
+        number | string
+    ] | false | null;
     /**
-     * Original slot relation [id, name] or false
+     * Original slot relation. Odoo many2one [id, display_name] tuple, or false if not set
      */
-    slot_id: Array<unknown> | null;
+    slot_id: [
+        number | string,
+        number | string
+    ] | false | null;
     /**
      * Caller name
      */
@@ -385,21 +406,33 @@ export type SlotBookingResponseDto = {
      */
     zegocloud_uuid: string | null;
     /**
-     * Booked package relation [id, name] or false
+     * Booked package relation. Odoo many2one [id, display_name] tuple, or false if not set
      */
-    booked_package_name: Array<unknown> | null;
+    booked_package_name: [
+        number | string,
+        number | string
+    ] | false | null;
     /**
-     * Product relation [id, name] or false
+     * Product relation. Odoo many2one [id, display_name] tuple, or false if not set
      */
-    product_id: Array<unknown> | null;
+    product_id: [
+        number | string,
+        number | string
+    ] | false | null;
     /**
-     * Sale order relation [id, name] or false
+     * Sale order relation. Odoo many2one [id, display_name] tuple, or false if not set
      */
-    sale_id: Array<unknown> | null;
+    sale_id: [
+        number | string,
+        number | string
+    ] | false | null;
     /**
-     * Invoice relation [id, name] or false
+     * Invoice relation. Odoo many2one [id, display_name] tuple, or false if not set
      */
-    invoice_id: Array<unknown> | null;
+    invoice_id: [
+        number | string,
+        number | string
+    ] | false | null;
     /**
      * Number of invoices attached
      */
@@ -450,9 +483,12 @@ export type SlotDetailDto = {
      */
     id: number;
     /**
-     * Doctor relation [id, name] tuple or false
+     * Doctor relation. Odoo many2one [id, display_name] tuple, or false if not set
      */
-    doctor: Array<unknown> | null;
+    doctor: [
+        number | string,
+        number | string
+    ] | false | null;
     /**
      * Doctor profile image URL
      */
@@ -466,13 +502,19 @@ export type SlotDetailDto = {
      */
     stop_datetime: string;
     /**
-     * Speciality relation [id, name] tuple or false
+     * Speciality relation. Odoo many2one [id, display_name] tuple, or false if not set
      */
-    speciality_id: Array<unknown> | null;
+    speciality_id: [
+        number | string,
+        number | string
+    ] | false | null;
     /**
-     * Consultation type relation [id, name] tuple or false
+     * Consultation type relation. Odoo many2one [id, display_name] tuple, or false if not set
      */
-    consultation_type_ids: Array<unknown> | null;
+    consultation_type_ids: [
+        number | string,
+        number | string
+    ] | false | null;
     /**
      * Campus database ID
      */
@@ -482,9 +524,12 @@ export type SlotDetailDto = {
      */
     sub_campus_id: number | null;
     /**
-     * Product relation [id, name] tuple or false
+     * Product relation. Odoo many2one [id, display_name] tuple, or false if not set
      */
-    product_id: Array<unknown> | null;
+    product_id: [
+        number | string,
+        number | string
+    ] | false | null;
     /**
      * Availability status
      */
@@ -513,13 +558,19 @@ export type BookedPackageLineDto = {
      */
     sequence_no: number;
     /**
-     * Product relation [id, name] tuple or false
+     * Product relation. Odoo many2one [id, display_name] tuple, or false if not set
      */
-    product_id: Array<unknown> | null;
+    product_id: [
+        number | string,
+        number | string
+    ] | false | null;
     /**
-     * Speciality relation [id, name] tuple or false
+     * Speciality relation. Odoo many2one [id, display_name] tuple, or false if not set
      */
-    speciality_id: Array<unknown> | null;
+    speciality_id: [
+        number | string,
+        number | string
+    ] | false | null;
     /**
      * Subtotal after discount
      */
@@ -720,11 +771,9 @@ export type BookAppointmentResponseDto = {
         [key: string]: unknown;
     } | null;
     /**
-     * Tuple: [BookAppointmentData, httpStatus]. BookAppointmentData key is "slot.booking".
+     * Array of booking wrappers. Each element has a "slot.booking" key containing the created/updated record.
      */
-    result: Array<{
-        [key: string]: unknown;
-    }>;
+    result: Array<BookAppointmentDataDto>;
 };
 
 export type RescheduleAppointmentDto = {
@@ -820,6 +869,10 @@ export type PackageResponseDto = {
      */
     package_name: string;
     /**
+     * CMS journey identifier linking this package to a wellness journey
+     */
+    journey_id: string | null;
+    /**
      * IDs of product lines included in this package
      */
     package_product_ids: Array<number>;
@@ -828,9 +881,12 @@ export type PackageResponseDto = {
      */
     amount_total: number;
     /**
-     * Service relation [id, name] tuple or false
+     * Service relation. Odoo many2one [id, display_name] tuple, or false if not set
      */
-    service_id: Array<unknown> | null;
+    service_id: [
+        number | string,
+        number | string
+    ] | false | null;
 };
 
 export type PackageProductLineDto = {
@@ -839,9 +895,12 @@ export type PackageProductLineDto = {
      */
     id: number;
     /**
-     * Product relation [id, name] tuple or false
+     * Product relation. Odoo many2one [id, display_name] tuple, or false if not set
      */
-    product_id: Array<unknown> | null;
+    product_id: [
+        number | string,
+        number | string
+    ] | false | null;
     /**
      * Sequence/order number within the package
      */
@@ -870,17 +929,23 @@ export type BookedPackageDto = {
      */
     lead_id: number;
     /**
-     * Package relation [id, name] tuple or false
+     * Package relation. Odoo many2one [id, display_name] tuple, or false if not set
      */
-    package_id: Array<unknown> | null;
+    package_id: [
+        number | string,
+        number | string
+    ] | false | null;
     /**
      * Current package stage
      */
     package_stage: 'booked' | 'confirm' | 'in_progress' | 'done';
     /**
-     * Campus relation [id, name] tuple or false
+     * Campus relation. Odoo many2one [id, display_name] tuple, or false if not set
      */
-    campus_id: Array<unknown> | null;
+    campus_id: [
+        number | string,
+        number | string
+    ] | false | null;
     /**
      * Caller / guardian name
      */
@@ -925,9 +990,12 @@ export type ProductResponseDto = {
      */
     lst_price: number;
     /**
-     * Speciality relation [id, name] tuple or false
+     * Speciality relation. Odoo many2one [id, display_name] tuple, or false if not set
      */
-    speciality_id: Array<unknown> | null;
+    speciality_id: [
+        number | string,
+        number | string
+    ] | false | null;
 };
 
 export type BookPackageDto = {
@@ -942,6 +1010,8 @@ export type BookPackageDto = {
 export type BookPackageResultDto = {
     booking_id: number;
     message: string;
+    campus_id: number;
+    lead_id: number;
 };
 
 export type BookedPackageProductLineDto = {
@@ -954,9 +1024,12 @@ export type BookedPackageProductLineDto = {
      */
     sequence_no: number;
     /**
-     * Product relation [id, name] tuple or false
+     * Product relation. Odoo many2one [id, display_name] tuple, or false if not set
      */
-    product_id: Array<unknown> | null;
+    product_id: [
+        number | string,
+        number | string
+    ] | false | null;
     /**
      * Unit price
      */
@@ -9989,6 +10062,18 @@ export type CmsAssessmentsControllerFindAllData = {
         status?: 'ALL' | 'DRAFT' | 'PUBLISHED';
         sortBy?: string;
         sortOrder?: 'asc' | 'desc';
+        /**
+         * Filter by category slug
+         */
+        category?: string;
+        /**
+         * Only assessments whose own citationText is non-null
+         */
+        hasAssessmentCitation?: boolean;
+        /**
+         * Only assessments that have at least one question with non-null citationText
+         */
+        hasQuestionCitation?: boolean;
     };
     url: '/api/v1/cms/assessments';
 };

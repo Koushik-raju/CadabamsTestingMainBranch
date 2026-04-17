@@ -1,3 +1,33 @@
+/**
+ * FILE: app/(auth)/packages/browse/[package_id]/page.tsx
+ *
+ * PURPOSE:
+ *   Detail page for an available (purchasable) package. Shows the package
+ *   hero, pricing, session count, and an expandable list of included services
+ *   grouped by product name. Provides a Proceed CTA that saves the package
+ *   to sessionStorage and navigates to the booking flow.
+ *
+ * LOGIC OVERVIEW:
+ *   - Reads :package_id from useParams(); matches against useAvailablePackages().
+ *   - usePackageProductDetails(numericId) fetches product lines for this package.
+ *   - Product line service names are read from many2one product_id tuple via odooTuple.
+ *   - Lines are grouped by product name with session counts.
+ *   - handleProceed() serialises the package to sessionStorage then routes to /packages/book/:id.
+ *   - Hero gradient is derived from getPackagePalette(pkg.id).
+ *
+ * KEY VARIABLES / PROPS / EXPORTS:
+ *   packageId   — string from useParams
+ *   pkg         — PackageResponseDto found from useAvailablePackages
+ *   lines       — PackageProductLineDto[] from usePackageProductDetails
+ *   PackageBrowsePage — default exported page
+ *
+ * DEPENDENCIES:
+ *   useAvailablePackages, usePackageProductDetails  — from @/hooks/use-packages
+ *   odooTuple                                       — from @/lib/odoo (safe many2one tuple access)
+ *   PackageResponseDto                              — from @/sdk/backend-v2
+ *
+ * LAST UPDATED: 2026-04-17 — added odooTuple guard for product_id many2one field
+ */
 'use client';
 
 import { Suspense } from 'react';
@@ -18,6 +48,7 @@ import { useAvailablePackages, usePackageProductDetails } from '@/hooks/use-pack
 import { getPackagePalette } from '@/lib/package-colors';
 import { cn } from '@/lib/utils';
 import type { PackageResponseDto } from '@/sdk/backend-v2';
+import { odooTuple } from '@/lib/odoo';
 
 function storeSelectedPackage(pkg: PackageResponseDto) {
   if (typeof sessionStorage !== 'undefined') {
@@ -134,7 +165,7 @@ function PackageDetailContent({ packageId }: { packageId: string }) {
           {/* What's included */}
           {lines.length > 0 && (() => {
             const groups = lines.reduce<{ name: string; count: number }[]>((acc, line) => {
-              const name = String(line.product_id?.[1] ?? '');
+              const name = String(odooTuple(line.product_id, 1) ?? '');
               const existing = acc.find((g) => g.name === name);
               if (existing) { existing.count++; } else { acc.push({ name, count: 1 }); }
               return acc;

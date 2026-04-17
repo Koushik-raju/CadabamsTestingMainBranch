@@ -1,3 +1,31 @@
+/**
+ * FILE: app/(auth)/packages/page.tsx
+ *
+ * PURPOSE:
+ *   Main packages list page. Shows the user's purchased (managed) packages in a
+ *   horizontal scroll strip, a featured available package hero card, and a
+ *   searchable list of all available packages.
+ *
+ * LOGIC OVERVIEW:
+ *   - useManagedPackages() fetches booked packages; rendered as horizontal PurchasedPackageCard strip.
+ *   - useAvailablePackages() fetches purchasable packages; rendered via FeaturedPackageCard + PackageDiscoveryCard list.
+ *   - Search input filters available packages by name client-side.
+ *   - PurchasedPackageCard reads package name from the many2one package_id tuple via odooTuple.
+ *   - Tapping a purchased package navigates to /packages/:booked_package_id.
+ *   - Tapping an available package navigates to /packages/browse/:id.
+ *
+ * KEY VARIABLES / PROPS / EXPORTS:
+ *   PackagesPage         — default exported page component
+ *   PurchasedPackageCard — internal horizontal card for booked packages
+ *   STAGE_CONFIG         — per-stage gradient/icon/badge config
+ *
+ * DEPENDENCIES:
+ *   useAvailablePackages, useManagedPackages  — from @/hooks/use-packages
+ *   FeaturedPackageCard, PackageDiscoveryCard — from @/components/package/
+ *   odooTuple                                 — from @/lib/odoo (safe many2one tuple access)
+ *
+ * LAST UPDATED: 2026-04-17 — added odooTuple guard for package_id many2one field
+ */
 'use client';
 
 import { useState, useMemo, Suspense } from 'react';
@@ -23,6 +51,7 @@ import { useAvailablePackages, useManagedPackages } from '@/hooks/use-packages';
 import { getPackagePalette } from '@/lib/package-colors';
 import { cn } from '@/lib/utils';
 import type { BookedPackageDto } from '@/sdk/backend-v2';
+import { odooTuple } from '@/lib/odoo';
 
 // Per-stage visual config
 const STAGE_CONFIG: Record<string, { label: string; Icon: React.ElementType; cardGradient: string; badgeCn: string }> = {
@@ -63,7 +92,7 @@ function fallbackConfig(stage: string) {
 
 function PurchasedPackageCard({ pkg }: { pkg: BookedPackageDto }) {
   const router = useRouter();
-  const packageName = String(pkg.package_id?.[1] ?? 'Package');
+  const packageName = String(odooTuple(pkg.package_id, 1) ?? 'Package');
   const initials = packageName
     .split(' ')
     .slice(0, 2)

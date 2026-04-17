@@ -1,3 +1,28 @@
+/**
+ * FILE: components/package/booked-package-card.tsx
+ *
+ * PURPOSE:
+ *   Detail card for a booked package. Shows package name, cost, date, stage badge,
+ *   and an optional Pay Now button for packages in the 'booked' stage.
+ *
+ * LOGIC OVERVIEW:
+ *   - Receives BookedPackageDto and an optional onPayNow callback.
+ *   - Package name is extracted from the many2one package_id tuple via odooTuple.
+ *   - Stage badge (icon + label) is derived from getStageConfig().
+ *   - Pay Now button only renders when stage === 'booked' and onPayNow is provided.
+ *
+ * KEY VARIABLES / PROPS / EXPORTS:
+ *   pkg             — BookedPackageDto from SDK
+ *   onPayNow        — optional callback fired when Pay Now is tapped
+ *   paymentLoading  — controls button disabled/loading state
+ *   BookedPackageCard — exported component
+ *
+ * DEPENDENCIES:
+ *   BookedPackageDto  — from @/sdk/backend-v2
+ *   odooTuple         — from @/lib/odoo (safe many2one tuple access)
+ *
+ * LAST UPDATED: 2026-04-17 — added odooTuple guard for package_id many2one field
+ */
 'use client';
 
 import { Card, CardContent } from '@/components/ui/card';
@@ -15,6 +40,7 @@ import {
   CreditCard,
 } from 'lucide-react';
 import type { BookedPackageDto } from '@/sdk/backend-v2';
+import { odooTuple } from '@/lib/odoo';
 
 interface BookedPackageCardProps {
   pkg: BookedPackageDto;
@@ -55,7 +81,7 @@ export function BookedPackageCard({
         {/* Header */}
         <div className="flex items-start justify-between gap-2">
           <h3 className="font-semibold text-foreground text-sm leading-snug flex-1 min-w-0 line-clamp-2">
-            {String(pkg.package_id?.[1] ?? 'Package')}
+            {String(odooTuple(pkg.package_id, 1) ?? 'Package')}
           </h3>
           <Badge variant={stageConfig.variant} className="shrink-0 text-xs gap-1">
             <StageIcon className="w-3 h-3" />

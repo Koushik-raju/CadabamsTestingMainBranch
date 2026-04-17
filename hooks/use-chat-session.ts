@@ -41,6 +41,7 @@
  *
  * LAST UPDATED: 2026-04-16 — removed SWR caching for messages (always fetch fresh)
  */
+/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
 import { useState, useCallback, useRef, useEffect } from "react";
@@ -62,9 +63,16 @@ function parseMessages(raw: any[]): UIMessage[] {
       if (part.type === "text" && part.text) {
         parts.push({ type: "text", text: part.text });
       } else if (part.type === "reasoning") {
-        parts.push({ type: "reasoning", text: part.reasoning || "", details: part.details });
+        parts.push({
+          type: "reasoning",
+          text: part.reasoning || "",
+          details: part.details,
+        });
       } else if (part.type === "tool-invocation") {
-        parts.push({ type: "tool-invocation", toolInvocation: part.toolInvocation });
+        parts.push({
+          type: "tool-invocation",
+          toolInvocation: part.toolInvocation,
+        });
       }
     }
 
@@ -72,7 +80,8 @@ function parseMessages(raw: any[]): UIMessage[] {
       parts.push({ type: "text", text: msg.content.content });
     }
 
-    const createdAt = msg.createdAt instanceof Date ? msg.createdAt : new Date(msg.createdAt);
+    const createdAt =
+      msg.createdAt instanceof Date ? msg.createdAt : new Date(msg.createdAt);
 
     return { id: msg.id, role: msg.role, parts, createdAt } as UIMessage;
   });
@@ -114,10 +123,10 @@ export function useChatSession({ threadId, resourceId }: UseChatSessionProps) {
       pageRef.current = 0;
       try {
         const client = await createMastraClient();
-        const result = await client.listThreadMessages(threadId, {
+        const result = (await client.listThreadMessages(threadId, {
           agentId: CONFIG.MASTRA_AGENT_ID,
           requestContext: { page: 0, perPage: PER_PAGE },
-        }) as any;
+        })) as any;
         if (!cancelled) {
           setHistoricalMessages(parseMessages(result.messages || []));
           hasMoreRef.current = result?.hasMore ?? false;
@@ -134,7 +143,9 @@ export function useChatSession({ threadId, resourceId }: UseChatSessionProps) {
     }
 
     loadInitial();
-    return () => { cancelled = true; };
+    return () => {
+      cancelled = true;
+    };
   }, [threadId]);
 
   const loadMore = useCallback(async () => {
@@ -143,13 +154,13 @@ export function useChatSession({ threadId, resourceId }: UseChatSessionProps) {
     try {
       const client = await createMastraClient();
       const nextOffset = (pageRef.current + 1) * PER_PAGE;
-      const result = await client.listThreadMessages(threadId, {
-        agentId: MASTRA_AGENT_ID,
+      const result = (await client.listThreadMessages(threadId, {
+        agentId: CONFIG.MASTRA_AGENT_ID,
         requestContext: { page: nextOffset, perPage: PER_PAGE },
-      }) as any;
+      })) as any;
       const loaded = parseMessages(result.messages || []);
       if (loaded.length > 0) {
-        setHistoricalMessages(prev => [...loaded, ...prev]);
+        setHistoricalMessages((prev) => [...loaded, ...prev]);
         pageRef.current += 1;
       }
       hasMoreRef.current = result?.hasMore ?? false;
@@ -164,7 +175,11 @@ export function useChatSession({ threadId, resourceId }: UseChatSessionProps) {
   const [text, setText] = useState("");
   const { mutate: globalMutate } = useSWRConfig();
 
-  const { messages: liveMessages, sendMessage: sendChatMessage, status } = useChat({
+  const {
+    messages: liveMessages,
+    sendMessage: sendChatMessage,
+    status,
+  } = useChat({
     transport: new DefaultChatTransport({
       api: CONFIG.MASTRA_BACKEND_URL,
     }),

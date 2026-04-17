@@ -1,3 +1,28 @@
+/**
+ * FILE: components/package/package-card.tsx
+ *
+ * PURPOSE:
+ *   Card for a purchasable package. Shown in the packages browse page, displaying
+ *   package name, total cost, session count, and a preview of included services.
+ *
+ * LOGIC OVERVIEW:
+ *   - Receives PackageResponseDto and optional PackageProductLineDto[].
+ *   - Product line service names are extracted from the many2one product_id tuple.
+ *   - Previews up to 3 services; shows "+N more" for overflow.
+ *   - Book Package button triggers the onBook callback.
+ *
+ * KEY VARIABLES / PROPS / EXPORTS:
+ *   pkg           — PackageResponseDto from SDK
+ *   productLines  — optional array of PackageProductLineDto for services preview
+ *   onBook        — callback fired when Book Package is tapped
+ *   PackageCard   — exported component
+ *
+ * DEPENDENCIES:
+ *   PackageResponseDto, PackageProductLineDto  — from @/sdk/backend-v2
+ *   odooTuple                                  — from @/lib/odoo (safe many2one tuple access)
+ *
+ * LAST UPDATED: 2026-04-17 — added odooTuple guard for product_id many2one field
+ */
 'use client';
 
 import { Card, CardContent } from '@/components/ui/card';
@@ -6,6 +31,7 @@ import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { IndianRupee, Layers, Star, CheckCircle2 } from 'lucide-react';
 import type { PackageResponseDto, PackageProductLineDto } from '@/sdk/backend-v2';
+import { odooTuple } from '@/lib/odoo';
 
 interface PackageCardProps {
   pkg: PackageResponseDto;
@@ -67,7 +93,7 @@ export function PackageCard({ pkg, productLines, onBook }: PackageCardProps) {
                 <li key={line.id} className="flex items-center gap-2">
                   <CheckCircle2 className="w-3 h-3 text-primary shrink-0" />
                   <span className="text-xs text-foreground truncate">
-                    {String(line.product_id?.[1] ?? '')}
+                    {String(odooTuple(line.product_id, 1) ?? '')}
                   </span>
                 </li>
               ))}

@@ -1,3 +1,35 @@
+/**
+ * FILE: app/(auth)/packages/[id]/page.tsx
+ *
+ * PURPOSE:
+ *   Detail page for a booked (managed) package. Shows package identity, cost,
+ *   patient/campus details, session progress, and a Pay Now action for pending
+ *   payment packages.
+ *
+ * LOGIC OVERVIEW:
+ *   - Reads :id from params; finds the matching package in useManagedPackages().
+ *   - Package name extracted from many2one package_id tuple via odooTuple.
+ *   - Campus name extracted from many2one campus_id tuple.
+ *   - Session lines (BookedPackageLineDto[]) show product name, speciality,
+ *     status badge, and sequence number.
+ *   - handlePayNow() calls initiatePackagePayment() and redirects to the payment URL.
+ *   - Gradient hero header color is derived from getPackagePalette(booked_package_id).
+ *
+ * KEY VARIABLES / PROPS / EXPORTS:
+ *   id          — booked_package_id from URL params
+ *   pkg         — BookedPackageDto found from useManagedPackages
+ *   payLoading  — tracks payment initiation state
+ *   payError    — holds payment error message
+ *   PackageDetailPage — default exported page
+ *
+ * DEPENDENCIES:
+ *   useManagedPackages, initiatePackagePayment  — from @/hooks/use-packages
+ *   useAuth                                     — from @/hooks/use-auth
+ *   odooTuple                                   — from @/lib/odoo (safe many2one tuple access)
+ *   BookedPackageLineDto                        — from @/sdk/backend-v2
+ *
+ * LAST UPDATED: 2026-04-17 — added odooTuple guard for campus_id, package_id, product_id many2one fields
+ */
 'use client';
 
 import { useState, use } from 'react';
@@ -30,6 +62,7 @@ import { useManagedPackages, initiatePackagePayment } from '@/hooks/use-packages
 import { useAuth } from '@/hooks/use-auth';
 import { getPackagePalette } from '@/lib/package-colors';
 import type { BookedPackageLineDto } from '@/sdk/backend-v2';
+import { odooTuple } from '@/lib/odoo';
 
 function getStageMeta(stage: string): { label: string; Icon: React.ElementType } {
   switch (stage) {
@@ -85,7 +118,7 @@ export default function PackageDetailPage({ params }: { params: Promise<{ id: st
       const payData = await initiatePackagePayment({
         leadBookedPackageId: Number(pkg.booked_package_id),
         leadId: Number(user.lead_id),
-        campusId: Number(pkg.campus_id?.[0] ?? 0),
+        campusId: Number(odooTuple(pkg.campus_id, 0) ?? 0),
       });
       window.location.href = payData.result.short_url;
     } catch (err: unknown) {
@@ -127,8 +160,8 @@ export default function PackageDetailPage({ params }: { params: Promise<{ id: st
 
   const palette = getPackagePalette(pkg.booked_package_id);
   const { label, Icon } = getStageMeta(pkg.package_stage);
-  const packageName = String(pkg.package_id?.[1] ?? 'Package');
-  const campusName = pkg.campus_id ? String(pkg.campus_id?.[1] ?? '') : '';
+  const packageName = String(odooTuple(pkg.package_id, 1) ?? 'Package');
+  const campusName = String(odooTuple(pkg.campus_id, 1) ?? '');
   const lines: BookedPackageLineDto[] = pkg.lines ?? [];
   const doneCount = lines.filter((l) => l.status === 'done').length;
 
@@ -275,7 +308,7 @@ export default function PackageDetailPage({ params }: { params: Promise<{ id: st
                     </div>
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-medium text-foreground truncate">
-                        {String(line.product_id?.[1] ?? '')}
+                        {String(odooTuple(line.product_id, 1) ?? '')}
                       </p>
                       {line.speciality_id && (
                         <div className="flex items-center gap-1 mt-0.5">
