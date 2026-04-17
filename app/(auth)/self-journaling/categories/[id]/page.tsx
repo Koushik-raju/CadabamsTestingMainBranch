@@ -17,8 +17,8 @@
  *      detail bottom sheet with a "Start Writing" CTA.
  *   6. "My Entries" tab — entries grouped by date in grouped Cards with Separator
  *      rows; each row has a "Write Again" button to re-enter the same sub-journal.
- *   7. Long AI prompts (>1000 chars) are stored in sessionStorage to avoid URL
- *      length limits before navigating to /self-journaling/new.
+ *   7. Tapping a sub-journal or "Write Again" navigates to /self-journaling/new?slug=<slug>
+ *      — the new page resolves all data (title, aiPrompt) by slug independently.
  *
  * KEY VARIABLES / PROPS / EXPORTS:
  *   categoryId       — string ID from route params
@@ -34,14 +34,14 @@
  *   Tabs, TabsList, TabsTrigger, TabsContent — shadcn/ui tabs
  *   getJournalVisual()         — lib/journal-visual.ts — unique gradient+icon per title
  *
- * LAST UPDATED: 2026-04-17 — Unique gradient+icon tiles per sub-journal; My Entries
- *   tab with Write Again; BackButton; grouped Card+Separator rows.
+ * LAST UPDATED: 2026-04-17 — Sub-journal card taps navigate to /self-journaling/journal/[slug]
+ *   instead of opening a bottom sheet. Bottom sheet removed; detail page handles subscription.
  */
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useMemo } from 'react';
 import { useRouter, useParams } from 'next/navigation';
-import { Pencil, BookOpen, X, RotateCcw } from 'lucide-react';
+import { Pencil, BookOpen, RotateCcw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Card, CardContent } from '@/components/ui/card';
@@ -49,7 +49,7 @@ import { Separator } from '@/components/ui/separator';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { BackButton } from '@/components/shared/navigation/back-button';
 import { useJournalingCategories, useSelfJournalingEntries } from '@/hooks/use-journaling';
-import type { SubJournalingItem, SelfJournalingEntry } from '@/hooks/use-journaling';
+import type { SelfJournalingEntry } from '@/hooks/use-journaling';
 import { cn } from '@/lib/utils';
 import { getJournalVisual } from '@/lib/journal-visual';
 
@@ -104,7 +104,6 @@ export default function CategoryDetailPage() {
   const categoryId = params.id as string;
   const { categories, isLoading: catLoading } = useJournalingCategories();
   const { entries: allEntries, isLoading: entriesLoading } = useSelfJournalingEntries();
-  const [selectedSub, setSelectedSub] = useState<SubJournalingItem | null>(null);
 
   const category = useMemo(
     () => categories.find((c) => c.id === categoryId),
@@ -123,22 +122,6 @@ export default function CategoryDetailPage() {
   );
 
   const grouped = useMemo(() => groupByDate(categoryEntries), [categoryEntries]);
-
-  const handleStartWriting = (sub: SubJournalingItem) => {
-    if (sub.aiPrompt && sub.aiPrompt.length > 1000) {
-      sessionStorage.setItem('pending_ai_prompt', sub.aiPrompt);
-    }
-    const p = new URLSearchParams({
-      title: sub.title,
-      subJournalId: sub.id,
-      categoryId,
-      slug: sub.slug,
-    });
-    if (sub.aiPrompt && sub.aiPrompt.length <= 1000) {
-      p.set('aiPrompt', sub.aiPrompt);
-    }
-    router.push(`/self-journaling/new?${p.toString()}`);
-  };
 
   const isLoading = catLoading || entriesLoading;
 
@@ -225,7 +208,7 @@ export default function CategoryDetailPage() {
                   return (
                     <button
                       key={sub.id}
-                      onClick={() => setSelectedSub(sub)}
+                      onClick={() => router.push(`/self-journaling/journal/${encodeURIComponent(sub.slug)}`)}
                       className="bg-card border border-border rounded-2xl overflow-hidden text-left shadow-sm hover:shadow-xl transition-all duration-300 hover:-translate-y-1 active:scale-[0.97] group"
                     >
                       {/* Gradient image area */}
@@ -372,90 +355,6 @@ export default function CategoryDetailPage() {
           </TabsContent>
         </Tabs>
       </div>
-
-      {/* Sub-journal Detail Modal */}
-      {selectedSub && (
-        <div
-          className="fixed inset-0 z-50 bg-foreground/50 flex items-end justify-center"
-          onClick={() => setSelectedSub(null)}
-        >
-          <div
-            className="bg-background w-full max-w-lg rounded-t-3xl max-h-[85vh] overflow-y-auto animate-in slide-in-from-bottom duration-300"
-            onClick={(e) => e.stopPropagation()}
-          >
-            {/* Modal Header */}
-            <div className="sticky top-0 bg-background z-10 flex items-center justify-between px-5 pt-5 pb-3 border-b border-border">
-              <h2 className="text-lg font-bold text-foreground">{selectedSub.title}</h2>
-              <Button
-                variant="ghost"
-                size="icon"
-                className="rounded-full"
-                onClick={() => setSelectedSub(null)}
-              >
-                <X className="w-5 h-5" />
-              </Button>
-            </div>
-
-            {/* Modal visual */}
-            {(() => {
-              const { gradient, Icon: ModalIcon } = getJournalVisual(selectedSub.title);
-              return (
-                <div className={cn(
-                  'mx-5 mt-5 aspect-[16/8] bg-gradient-to-br rounded-2xl flex items-center justify-center relative overflow-hidden mb-4',
-                  gradient,
-                )}>
-                  <div className="absolute -top-8 -right-8 w-32 h-32 rounded-full bg-white/10" />
-                  <div className="absolute -bottom-10 -left-6 w-40 h-40 rounded-full bg-white/5" />
-                  {selectedSub.icon ? (
-                    <span className="text-5xl relative z-10">{selectedSub.icon}</span>
-                  ) : (
-                    <ModalIcon className="w-12 h-12 text-white/90 relative z-10" />
-                  )}
-                </div>
-              );
-            })()}
-
-            {/* Description */}
-            {selectedSub.description && (
-              <div className="px-5 mb-4">
-                <p className="text-sm text-foreground whitespace-pre-wrap leading-relaxed">
-                  {selectedSub.description}
-                </p>
-              </div>
-            )}
-
-            {/* Cadence info */}
-            {selectedSub.recommendedCadence && (
-              <div className="mx-5 mb-4 bg-muted rounded-xl p-3">
-                <p className="text-xs text-muted-foreground">
-                  <span className="font-semibold">Recommended: </span>
-                  {selectedSub.recommendedCadence.replace(/_/g, ' ')}
-                </p>
-              </div>
-            )}
-
-            {/* Info box */}
-            <div className="mx-5 mb-6 bg-primary/5 border border-primary/20 rounded-xl p-4">
-              <p className="text-sm text-foreground/80 text-center">
-                Prepare to share your thoughts through this guided reflection
-              </p>
-            </div>
-
-            {/* Start Writing Button */}
-            <div className="px-5 pb-8">
-              <Button
-                className="w-full rounded-full h-12 text-base font-semibold"
-                onClick={() => {
-                  setSelectedSub(null);
-                  handleStartWriting(selectedSub);
-                }}
-              >
-                Start Writing
-              </Button>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }

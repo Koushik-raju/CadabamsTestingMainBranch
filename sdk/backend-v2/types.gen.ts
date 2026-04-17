@@ -2562,6 +2562,111 @@ export type UpdateJournalEntryDto = {
     prompts?: Array<JournalPromptDto>;
 };
 
+export type SubscriptionResponseDto = {
+    id: string;
+    subJournalingId: string;
+    slug: string;
+    subscribedAt: string;
+};
+
+export type SubscriptionWithTitleResponseDto = {
+    id: string;
+    subJournalingId: string;
+    slug: string;
+    title: string;
+    subscribedAt: string;
+};
+
+export type SubscriptionListResponseDto = {
+    items: Array<SubscriptionWithTitleResponseDto>;
+    total: number;
+};
+
+export type SetReminderDto = {
+    hour: number;
+    minute: number;
+    /**
+     * IANA timezone string (e.g. Asia/Kolkata)
+     */
+    timezone: string;
+};
+
+export type ReminderResponseDto = {
+    id: string;
+    subscriptionId: string;
+    hour: number;
+    minute: number;
+    timezone: string;
+};
+
+export type UpdateReminderDto = {
+    hour?: number;
+    minute?: number;
+    timezone?: string;
+};
+
+export type WeekDayDto = {
+    date: string;
+    hasEntry: boolean;
+};
+
+export type StreakResponseDto = {
+    currentStreak: number;
+    longestStreak: number;
+    totalEntries: number;
+    weekDays: Array<WeekDayDto>;
+};
+
+export type SubJournalDetailResponseDto = {
+    id: string;
+    slug: string;
+    title: string;
+    description: {
+        [key: string]: unknown;
+    } | null;
+    icon: {
+        [key: string]: unknown;
+    } | null;
+    aiPrompt: {
+        [key: string]: unknown;
+    } | null;
+    recommendedCadence: {
+        [key: string]: unknown;
+    } | null;
+    estimatedMinutes: {
+        [key: string]: unknown;
+    } | null;
+    tags: Array<string>;
+    status: 'DRAFT' | 'PUBLISHED';
+};
+
+export type SubJournalEntryPromptDto = {
+    heading: {
+        [key: string]: unknown;
+    } | null;
+    text: {
+        [key: string]: unknown;
+    } | null;
+};
+
+export type SubJournalEntryDto = {
+    id: string;
+    title: {
+        [key: string]: unknown;
+    } | null;
+    entry: {
+        [key: string]: unknown;
+    } | null;
+    prompts: Array<SubJournalEntryPromptDto> | null;
+    createdAt: string;
+    updatedAt: string;
+};
+
+export type SubJournalEntryListResponseDto = {
+    items: Array<SubJournalEntryDto>;
+    total: number;
+};
+
 export type EnrollJourneyDto = {
     /**
      * CMS journey documentId to enroll in
@@ -4196,6 +4301,89 @@ export type CmsOverviewResponseDto = {
      * Runtime information
      */
     runtime: CmsRuntimeOverviewDto;
+};
+
+export type RegisterTokenDto = {
+    /**
+     * FCM registration token from the device
+     */
+    token: string;
+    deviceType: 'IOS' | 'ANDROID' | 'WEB';
+    /**
+     * CRM lead ID (patients only)
+     */
+    leadId?: string;
+    /**
+     * Internal doctor ID (doctors only)
+     */
+    doctorId?: string;
+};
+
+export type FcmTokenResponseDto = {
+    id: string;
+    userSub: string;
+    userRole: 'ADMIN' | 'DOCTOR' | 'STAFF' | 'PATIENT';
+    token: string;
+    deviceType: 'IOS' | 'ANDROID' | 'WEB';
+    leadId?: {
+        [key: string]: unknown;
+    } | null;
+    doctorId?: {
+        [key: string]: unknown;
+    } | null;
+    createdAt: string;
+};
+
+export type FcmTokenListResponseDto = {
+    items: Array<FcmTokenResponseDto>;
+    total: number;
+};
+
+export type SendNotificationDto = {
+    /**
+     * JWT sub of the target user
+     */
+    userSub: string;
+    title: string;
+    body: string;
+    /**
+     * Optional key-value data payload for deep-linking
+     */
+    data?: {
+        [key: string]: string;
+    };
+};
+
+export type NotificationSendResultDto = {
+    sent: number;
+    failed: number;
+    logIds: Array<string>;
+};
+
+export type NotificationLogResponseDto = {
+    id: string;
+    userSub: string;
+    sentByUserId: string;
+    title: string;
+    body: string;
+    data: {
+        [key: string]: unknown;
+    } | null;
+    status: 'SENT' | 'FAILED';
+    fcmMessageId?: {
+        [key: string]: unknown;
+    } | null;
+    errorMessage?: {
+        [key: string]: unknown;
+    } | null;
+    sentAt: string;
+};
+
+export type NotificationLogListResponseDto = {
+    items: Array<NotificationLogResponseDto>;
+    total: number;
+    page: number;
+    pageSize: number;
 };
 
 export type AppControllerGetRootData = {
@@ -9421,6 +9609,148 @@ export type JournalingControllerGetFailuresResponses = {
 
 export type JournalingControllerGetFailuresResponse = JournalingControllerGetFailuresResponses[keyof JournalingControllerGetFailuresResponses];
 
+export type JournalingSubscriptionsControllerUnsubscribeData = {
+    body?: never;
+    path: {
+        slug: string;
+    };
+    query?: never;
+    url: '/api/v1/journaling/subscriptions/{slug}';
+};
+
+export type JournalingSubscriptionsControllerUnsubscribeResponses = {
+    200: {
+        [key: string]: unknown;
+    };
+};
+
+export type JournalingSubscriptionsControllerUnsubscribeResponse = JournalingSubscriptionsControllerUnsubscribeResponses[keyof JournalingSubscriptionsControllerUnsubscribeResponses];
+
+export type JournalingSubscriptionsControllerSubscribeData = {
+    body?: never;
+    path: {
+        slug: string;
+    };
+    query?: never;
+    url: '/api/v1/journaling/subscriptions/{slug}';
+};
+
+export type JournalingSubscriptionsControllerSubscribeResponses = {
+    201: SubscriptionResponseDto;
+};
+
+export type JournalingSubscriptionsControllerSubscribeResponse = JournalingSubscriptionsControllerSubscribeResponses[keyof JournalingSubscriptionsControllerSubscribeResponses];
+
+export type JournalingSubscriptionsControllerListSubscriptionsData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/api/v1/journaling/subscriptions';
+};
+
+export type JournalingSubscriptionsControllerListSubscriptionsResponses = {
+    200: SubscriptionListResponseDto;
+};
+
+export type JournalingSubscriptionsControllerListSubscriptionsResponse = JournalingSubscriptionsControllerListSubscriptionsResponses[keyof JournalingSubscriptionsControllerListSubscriptionsResponses];
+
+export type JournalingSubscriptionsControllerDeleteReminderData = {
+    body?: never;
+    path: {
+        slug: string;
+    };
+    query?: never;
+    url: '/api/v1/journaling/subscriptions/{slug}/reminder';
+};
+
+export type JournalingSubscriptionsControllerDeleteReminderResponses = {
+    200: {
+        [key: string]: unknown;
+    };
+};
+
+export type JournalingSubscriptionsControllerDeleteReminderResponse = JournalingSubscriptionsControllerDeleteReminderResponses[keyof JournalingSubscriptionsControllerDeleteReminderResponses];
+
+export type JournalingSubscriptionsControllerUpdateReminderData = {
+    body: UpdateReminderDto;
+    path: {
+        slug: string;
+    };
+    query?: never;
+    url: '/api/v1/journaling/subscriptions/{slug}/reminder';
+};
+
+export type JournalingSubscriptionsControllerUpdateReminderResponses = {
+    200: ReminderResponseDto;
+};
+
+export type JournalingSubscriptionsControllerUpdateReminderResponse = JournalingSubscriptionsControllerUpdateReminderResponses[keyof JournalingSubscriptionsControllerUpdateReminderResponses];
+
+export type JournalingSubscriptionsControllerUpsertReminderData = {
+    body: SetReminderDto;
+    path: {
+        slug: string;
+    };
+    query?: never;
+    url: '/api/v1/journaling/subscriptions/{slug}/reminder';
+};
+
+export type JournalingSubscriptionsControllerUpsertReminderResponses = {
+    201: ReminderResponseDto;
+};
+
+export type JournalingSubscriptionsControllerUpsertReminderResponse = JournalingSubscriptionsControllerUpsertReminderResponses[keyof JournalingSubscriptionsControllerUpsertReminderResponses];
+
+export type JournalingSubscriptionsControllerGetStreakData = {
+    body?: never;
+    path: {
+        slug: string;
+    };
+    query?: never;
+    url: '/api/v1/journaling/subscriptions/{slug}/streak';
+};
+
+export type JournalingSubscriptionsControllerGetStreakResponses = {
+    200: StreakResponseDto;
+};
+
+export type JournalingSubscriptionsControllerGetStreakResponse = JournalingSubscriptionsControllerGetStreakResponses[keyof JournalingSubscriptionsControllerGetStreakResponses];
+
+export type JournalingSubscriptionsControllerGetSubJournalData = {
+    body?: never;
+    path: {
+        slug: string;
+    };
+    query?: never;
+    url: '/api/v1/journaling/sub-journalings/{slug}';
+};
+
+export type JournalingSubscriptionsControllerGetSubJournalResponses = {
+    200: SubJournalDetailResponseDto;
+};
+
+export type JournalingSubscriptionsControllerGetSubJournalResponse = JournalingSubscriptionsControllerGetSubJournalResponses[keyof JournalingSubscriptionsControllerGetSubJournalResponses];
+
+export type JournalingSubscriptionsControllerGetSubJournalEntriesData = {
+    body?: never;
+    path: {
+        slug: string;
+    };
+    query?: {
+        /**
+         * Target userId (required for admin/staff/doctor)
+         */
+        userId?: string;
+    };
+    url: '/api/v1/journaling/sub-journalings/{slug}/entries';
+};
+
+export type JournalingSubscriptionsControllerGetSubJournalEntriesResponses = {
+    200: SubJournalEntryListResponseDto;
+};
+
+export type JournalingSubscriptionsControllerGetSubJournalEntriesResponse = JournalingSubscriptionsControllerGetSubJournalEntriesResponses[keyof JournalingSubscriptionsControllerGetSubJournalEntriesResponses];
+
 export type JourneysControllerListMineData = {
     body?: never;
     path: {
@@ -10491,3 +10821,79 @@ export type CmsMonitoringControllerOverviewResponses = {
 };
 
 export type CmsMonitoringControllerOverviewResponse = CmsMonitoringControllerOverviewResponses[keyof CmsMonitoringControllerOverviewResponses];
+
+export type NotificationsControllerListTokensData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/api/v1/notifications/tokens';
+};
+
+export type NotificationsControllerListTokensResponses = {
+    200: FcmTokenListResponseDto;
+};
+
+export type NotificationsControllerListTokensResponse = NotificationsControllerListTokensResponses[keyof NotificationsControllerListTokensResponses];
+
+export type NotificationsControllerRegisterTokenData = {
+    body: RegisterTokenDto;
+    path?: never;
+    query?: never;
+    url: '/api/v1/notifications/tokens';
+};
+
+export type NotificationsControllerRegisterTokenResponses = {
+    201: FcmTokenResponseDto;
+};
+
+export type NotificationsControllerRegisterTokenResponse = NotificationsControllerRegisterTokenResponses[keyof NotificationsControllerRegisterTokenResponses];
+
+export type NotificationsControllerDeleteTokenData = {
+    body?: never;
+    path: {
+        id: string;
+    };
+    query?: never;
+    url: '/api/v1/notifications/tokens/{id}';
+};
+
+export type NotificationsControllerDeleteTokenResponses = {
+    200: {
+        [key: string]: unknown;
+    };
+};
+
+export type NotificationsControllerDeleteTokenResponse = NotificationsControllerDeleteTokenResponses[keyof NotificationsControllerDeleteTokenResponses];
+
+export type NotificationsControllerSendNotificationData = {
+    body: SendNotificationDto;
+    path?: never;
+    query?: never;
+    url: '/api/v1/notifications/send';
+};
+
+export type NotificationsControllerSendNotificationResponses = {
+    200: NotificationSendResultDto;
+};
+
+export type NotificationsControllerSendNotificationResponse = NotificationsControllerSendNotificationResponses[keyof NotificationsControllerSendNotificationResponses];
+
+export type NotificationsControllerGetLogData = {
+    body?: never;
+    path?: never;
+    query: {
+        /**
+         * JWT sub of the user to query logs for
+         */
+        userSub: string;
+        page?: number;
+        pageSize?: number;
+    };
+    url: '/api/v1/notifications/log';
+};
+
+export type NotificationsControllerGetLogResponses = {
+    200: NotificationLogListResponseDto;
+};
+
+export type NotificationsControllerGetLogResponse = NotificationsControllerGetLogResponses[keyof NotificationsControllerGetLogResponses];

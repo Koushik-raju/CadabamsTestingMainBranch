@@ -1,20 +1,22 @@
-'use client';
+"use client";
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback } from "react";
 import {
   crmControllerFetchAppointmentDetails,
   crmControllerCancelAppointment,
   type SlotDetailDto,
-} from '@/sdk/backend-v2';
-import { useAuth } from '@/hooks/shared/auth/use-auth';
+} from "@/sdk/backend-v2";
+import { useAuth } from "@/hooks/shared/auth/use-auth";
 
 export type { SlotDetailDto };
 
-const ONE_YEAR_AGO = new Date(Date.now() - 365 * 24 * 60 * 60 * 1000).toISOString();
+const ONE_YEAR_AGO = new Date(
+  Date.now() - 365 * 24 * 60 * 60 * 1000,
+).toISOString();
 
 function isUpcoming(apt: SlotDetailDto): boolean {
   const status = apt.availability?.toLowerCase();
-  if (status === 'cancelled' || status === 'completed') return false;
+  if (status === "cancelled" || status === "completed") return false;
   return new Date(apt.start_datetime) >= new Date();
 }
 
@@ -36,21 +38,33 @@ export function useAppointments() {
       });
       setAll(res.data ?? []);
     } catch (err) {
-      setError(err instanceof Error ? err : new Error('Failed to load appointments'));
+      setError(
+        err instanceof Error ? err : new Error("Failed to load appointments"),
+      );
     } finally {
       setIsLoading(false);
     }
   }, [leadId]);
 
-  useEffect(() => { fetch(); }, [fetch]);
+  useEffect(() => {
+    fetch();
+  }, [fetch]);
 
   return {
-    upcoming: all.filter(isUpcoming).sort(
-      (a, b) => new Date(a.start_datetime).getTime() - new Date(b.start_datetime).getTime()
-    ),
-    past: all.filter((a) => !isUpcoming(a)).sort(
-      (a, b) => new Date(b.start_datetime).getTime() - new Date(a.start_datetime).getTime()
-    ),
+    upcoming: all
+      .filter(isUpcoming)
+      .sort(
+        (a, b) =>
+          new Date(a.start_datetime).getTime() -
+          new Date(b.start_datetime).getTime(),
+      ),
+    past: all
+      .filter((a) => !isUpcoming(a))
+      .sort(
+        (a, b) =>
+          new Date(b.start_datetime).getTime() -
+          new Date(a.start_datetime).getTime(),
+      ),
     isLoading,
     error,
     refetch: fetch,
@@ -75,19 +89,30 @@ export function useAppointmentById(id: number | null) {
       });
       setAppointment((res.data ?? []).find((a) => a.id === id) ?? null);
     } catch (err) {
-      setError(err instanceof Error ? err : new Error('Failed to load appointment'));
+      setError(
+        err instanceof Error ? err : new Error("Failed to load appointment"),
+      );
     } finally {
       setIsLoading(false);
     }
   }, [leadId, id]);
 
-  useEffect(() => { fetch(); }, [fetch]);
+  useEffect(() => {
+    fetch();
+  }, [fetch]);
 
   return { appointment, isLoading, error, refetch: fetch };
 }
 
-export async function cancelAppointment(appointmentId: number, reason: string): Promise<void> {
+export async function cancelAppointment(
+  appointmentId: number,
+  reason: string,
+): Promise<void> {
   await crmControllerCancelAppointment({
-    body: { appointment_id: appointmentId, medium_id: 5, cancel_reason: reason },
+    body: {
+      appointment_id: appointmentId,
+      medium_id: 5,
+      cancel_reason: reason,
+    },
   });
 }

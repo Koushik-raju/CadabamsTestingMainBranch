@@ -21,7 +21,7 @@
  * DEPENDENCIES:
  *   None — pure string-returning functions, no imports.
  *
- * LAST UPDATED: 2026-04-16 — added threadsKey for chat thread list
+ * LAST UPDATED: 2026-04-17 — added journal subscription/streak/detail/entries keys
  */
 export function authMeKey(): string {
   return '/auth/me';
@@ -172,4 +172,20 @@ export function enrolledJourneysKey(): string {
 
 export function threadsKey(resourceId: string): readonly ['threads', string] {
   return ['threads', resourceId] as const;
+}
+
+export function journalSubscriptionsKey(): string {
+  return '/journaling/subscriptions';
+}
+
+export function journalSubDetailKey(slug: string): string {
+  return `/journaling/sub-journalings/${slug}`;
+}
+
+export function journalStreakKey(slug: string): string {
+  return `/journaling/subscriptions/${slug}/streak`;
+}
+
+export function journalSubEntriesKey(slug: string): string {
+  return `/journaling/sub-journalings/${slug}/entries`;
 }
