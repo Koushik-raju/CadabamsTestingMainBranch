@@ -5,6 +5,17 @@ frontend:
       commands:
         - npm install -g pnpm
         - pnpm install --frozen-lockfile
+        # Write NEXT_PUBLIC_* vars into .env.production so Next.js bakes
+        # them into the client bundle at build time.
+        - |
+          cat > .env.production <<EOF
+          NEXT_PUBLIC_ENV=${NEXT_PUBLIC_ENV}
+          NEXT_PUBLIC_BACKEND_URL=${NEXT_PUBLIC_BACKEND_URL}
+          NEXT_PUBLIC_ZEGO_URL=${NEXT_PUBLIC_ZEGO_URL}
+          NEXT_PUBLIC_RAZORPAY_KEY_ID=${NEXT_PUBLIC_RAZORPAY_KEY_ID}
+          NEXT_PUBLIC_MASTRA_BACKEND_URL=${NEXT_PUBLIC_MASTRA_BACKEND_URL}
+          NEXT_PUBLIC_MASTRA_AGENT_ID=${NEXT_PUBLIC_MASTRA_AGENT_ID}
+          EOF
     build:
       commands:
         - pnpm run build
