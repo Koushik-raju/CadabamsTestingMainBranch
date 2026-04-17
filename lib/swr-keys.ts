@@ -77,9 +77,6 @@ export function selfJournalingKey(): string {
   return '/self-journaling';
 }
 
-export function selfJournalingEntryKey(entryId: number | string): string {
-  return `/self-journaling/${entryId}`;
-}
 
 export function appointmentsKey(): string {
   return '/appointments';
