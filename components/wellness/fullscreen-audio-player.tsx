@@ -1,3 +1,30 @@
+/**
+ * FILE: components/wellness/fullscreen-audio-player.tsx
+ *
+ * PURPOSE:
+ *   Fullscreen overlay audio/video player for Mindful Minutes tracks.
+ *   Renders as a portal, covering the entire screen with playback controls.
+ *
+ * LOGIC OVERVIEW:
+ *   1. Mounts into document.body via ReactDOM.createPortal.
+ *   2. Manages play/pause, seek, mute, skip-back/forward (15s), and track navigation.
+ *   3. If the track URL is a video file, renders a <video> element; otherwise <audio>.
+ *   4. Auto-advances to the next track on end; locks body scroll while open.
+ *   5. Slide-in entrance animation via isVisible state toggled on mount.
+ *
+ * KEY VARIABLES / PROPS / EXPORTS:
+ *   audios         — array of MindfulMinuteAudio tracks to play
+ *   initialIndex   — which track to start on
+ *   onClose        — callback when user dismisses the player
+ *   onTrackChange  — optional callback fired whenever the active track changes
+ *   currentTrack   — derived from audios[currentIndex]
+ *
+ * DEPENDENCIES:
+ *   MindfulMinuteAudio (hooks/wellness/use-mindful-minutes)
+ *   Slider, Button (shadcn/ui)
+ *
+ * LAST UPDATED: 2026-04-17 — removed category display (not in MindfulMinuteAudio type)
+ */
 'use client';
 
 import { useState, useRef, useEffect, useCallback } from 'react';
@@ -264,9 +291,6 @@ export function FullscreenAudioPlayer({
           <h2 className="text-2xl font-extrabold text-white leading-tight line-clamp-2">
             {currentTrack.title}
           </h2>
-          {currentTrack.category && (
-            <p className="text-white/60 text-sm mt-1 font-semibold">{currentTrack.category}</p>
-          )}
           {/* Track counter */}
           <p className="text-white/40 text-xs mt-1">
             {currentIndex + 1} / {audios.length}
