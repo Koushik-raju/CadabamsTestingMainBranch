@@ -1386,6 +1386,24 @@ export type VideoRoomResponseDto = {
     slot_id: number;
 };
 
+export type PrescriptionItemDto = {
+    id: number;
+    name: string;
+    source: string;
+    create_date: string;
+    download_url: string;
+};
+
+export type PrescriptionGroupDto = {
+    database: string;
+    data: Array<PrescriptionItemDto>;
+};
+
+export type PrescriptionFetchResponseDto = {
+    status: 'success' | 'error';
+    prescriptions: Array<PrescriptionGroupDto>;
+};
+
 export type PatientListResponseDto = {
     /**
      * List of patients from CRM (passthrough)
@@ -3395,8 +3413,178 @@ export type UpdateMindfulMinuteDto = {
     audioIds?: Array<string>;
 };
 
-export type CreateJournalingDto = {
-    [key: string]: unknown;
+export type SelfJournalingPromptDto = {
+    /**
+     * Prompt heading / question
+     */
+    heading?: string;
+    /**
+     * User response text
+     */
+    text?: string;
+};
+
+export type CreateSelfJournalingDto = {
+    /**
+     * Journal title
+     */
+    title?: {
+        [key: string]: unknown;
+    };
+    /**
+     * Stress level (1-5)
+     */
+    stressLevel?: number;
+    /**
+     * CRM lead ID
+     */
+    leadId?: number;
+    /**
+     * Combined journal entry text
+     */
+    entry?: {
+        [key: string]: unknown;
+    };
+    /**
+     * Emotion score (1-5)
+     */
+    emotion?: number;
+    /**
+     * Stressor categories
+     */
+    stressors?: {
+        [key: string]: unknown;
+    };
+    /**
+     * Structured prompt responses
+     */
+    prompts?: Array<SelfJournalingPromptDto>;
+    /**
+     * Sub-journaling template ID used
+     */
+    subJournalingId?: {
+        [key: string]: unknown;
+    };
+};
+
+export type SelfJournalingResponseDto = {
+    /**
+     * Unique identifier
+     */
+    id: string;
+    /**
+     * Journal title
+     */
+    title?: {
+        [key: string]: unknown;
+    };
+    /**
+     * Stress level (1-5)
+     */
+    stressLevel?: number;
+    /**
+     * Lead ID
+     */
+    leadId?: number;
+    /**
+     * Journal entry text
+     */
+    entry?: {
+        [key: string]: unknown;
+    };
+    /**
+     * Emotion score (1-5)
+     */
+    emotion?: number;
+    /**
+     * Stressors
+     */
+    stressors?: {
+        [key: string]: unknown;
+    };
+    /**
+     * Structured prompt responses
+     */
+    prompts?: Array<{
+        heading?: string;
+        text?: string;
+    }>;
+    /**
+     * Sub-journaling template ID used
+     */
+    subJournalingId?: {
+        [key: string]: unknown;
+    };
+    /**
+     * Record creation timestamp
+     */
+    createdAt?: string;
+    /**
+     * Record last update timestamp
+     */
+    updatedAt?: string;
+};
+
+export type SelfJournalingListResponseDto = {
+    /**
+     * List of SelfJournaling records
+     */
+    data: Array<SelfJournalingResponseDto>;
+    /**
+     * Total count
+     */
+    total?: number;
+    /**
+     * Current limit
+     */
+    limit?: number;
+    /**
+     * Current offset
+     */
+    offset?: number;
+};
+
+export type UpdateSelfJournalingDto = {
+    /**
+     * Journal title
+     */
+    title?: {
+        [key: string]: unknown;
+    };
+    /**
+     * Stress level (1-5)
+     */
+    stressLevel?: number;
+    /**
+     * CRM lead ID
+     */
+    leadId?: number;
+    /**
+     * Combined journal entry text
+     */
+    entry?: {
+        [key: string]: unknown;
+    };
+    /**
+     * Emotion score (1-5)
+     */
+    emotion?: number;
+    /**
+     * Stressor categories
+     */
+    stressors?: {
+        [key: string]: unknown;
+    };
+    /**
+     * Structured prompt responses
+     */
+    prompts?: Array<SelfJournalingPromptDto>;
+    /**
+     * Sub-journaling template ID used
+     */
+    subJournalingId?: {
+        [key: string]: unknown;
+    };
 };
 
 export type SubJournalingResponseDto = {
@@ -3470,6 +3658,33 @@ export type SubJournalingResponseDto = {
     updatedAt?: string;
 };
 
+export type SubJournalingListResponseDto = {
+    /**
+     * List of SubJournaling records
+     */
+    data: Array<SubJournalingResponseDto>;
+    /**
+     * Total count
+     */
+    total?: number;
+    /**
+     * Current limit
+     */
+    limit?: number;
+    /**
+     * Current offset
+     */
+    offset?: number;
+};
+
+export type UpdateSubJournalingDto = {
+    [key: string]: unknown;
+};
+
+export type CreateJournalingDto = {
+    [key: string]: unknown;
+};
+
 export type JournalingResponseDto = {
     /**
      * Unique identifier
@@ -3528,106 +3743,11 @@ export type JournalingListResponseDto = {
     offset?: number;
 };
 
-export type UpdateJournalingDto = {
-    [key: string]: unknown;
-};
-
 export type CreateSubJournalingDto = {
     [key: string]: unknown;
 };
 
-export type SubJournalingListResponseDto = {
-    /**
-     * List of SubJournaling records
-     */
-    data: Array<SubJournalingResponseDto>;
-    /**
-     * Total count
-     */
-    total?: number;
-    /**
-     * Current limit
-     */
-    limit?: number;
-    /**
-     * Current offset
-     */
-    offset?: number;
-};
-
-export type UpdateSubJournalingDto = {
-    [key: string]: unknown;
-};
-
-export type CreateSelfJournalingDto = {
-    [key: string]: unknown;
-};
-
-export type SelfJournalingResponseDto = {
-    /**
-     * Unique identifier
-     */
-    id: string;
-    /**
-     * Journal title
-     */
-    title?: {
-        [key: string]: unknown;
-    };
-    /**
-     * Stress level (1-5)
-     */
-    stressLevel?: number;
-    /**
-     * Lead ID
-     */
-    leadId?: number;
-    /**
-     * Journal entry text
-     */
-    entry?: {
-        [key: string]: unknown;
-    };
-    /**
-     * Emotion score (1-5)
-     */
-    emotion?: number;
-    /**
-     * Stressors
-     */
-    stressors?: {
-        [key: string]: unknown;
-    };
-    /**
-     * Record creation timestamp
-     */
-    createdAt?: string;
-    /**
-     * Record last update timestamp
-     */
-    updatedAt?: string;
-};
-
-export type SelfJournalingListResponseDto = {
-    /**
-     * List of SelfJournaling records
-     */
-    data: Array<SelfJournalingResponseDto>;
-    /**
-     * Total count
-     */
-    total?: number;
-    /**
-     * Current limit
-     */
-    limit?: number;
-    /**
-     * Current offset
-     */
-    offset?: number;
-};
-
-export type UpdateSelfJournalingDto = {
+export type UpdateJournalingDto = {
     [key: string]: unknown;
 };
 
@@ -5051,6 +5171,21 @@ export type CrmControllerGetConsultationHistoryResponses = {
 };
 
 export type CrmControllerGetConsultationHistoryResponse = CrmControllerGetConsultationHistoryResponses[keyof CrmControllerGetConsultationHistoryResponses];
+
+export type CrmControllerGetPrescriptionsData = {
+    body?: never;
+    path: {
+        leadId: number;
+    };
+    query?: never;
+    url: '/api/v1/crm/prescriptions/{leadId}';
+};
+
+export type CrmControllerGetPrescriptionsResponses = {
+    200: PrescriptionFetchResponseDto;
+};
+
+export type CrmControllerGetPrescriptionsResponse = CrmControllerGetPrescriptionsResponses[keyof CrmControllerGetPrescriptionsResponses];
 
 export type PatientsControllerGetAllData = {
     body?: never;
@@ -9883,184 +10018,23 @@ export type CmsMindfulMinutesControllerUnpublishResponses = {
 
 export type CmsMindfulMinutesControllerUnpublishResponse = CmsMindfulMinutesControllerUnpublishResponses[keyof CmsMindfulMinutesControllerUnpublishResponses];
 
-export type CmsJournalingControllerGetJournalingsData = {
-    body?: never;
-    path?: never;
-    query?: never;
-    url: '/api/v1/cms/journaling';
-};
-
-export type CmsJournalingControllerGetJournalingsResponses = {
-    200: JournalingListResponseDto;
-};
-
-export type CmsJournalingControllerGetJournalingsResponse = CmsJournalingControllerGetJournalingsResponses[keyof CmsJournalingControllerGetJournalingsResponses];
-
-export type CmsJournalingControllerCreateJournalingData = {
-    body: CreateJournalingDto;
-    path?: never;
-    query?: never;
-    url: '/api/v1/cms/journaling';
-};
-
-export type CmsJournalingControllerCreateJournalingResponses = {
-    201: JournalingResponseDto;
-};
-
-export type CmsJournalingControllerCreateJournalingResponse = CmsJournalingControllerCreateJournalingResponses[keyof CmsJournalingControllerCreateJournalingResponses];
-
-export type CmsJournalingControllerDeleteJournalingData = {
-    body?: never;
-    path: {
-        id: string;
-    };
-    query?: never;
-    url: '/api/v1/cms/journaling/{id}';
-};
-
-export type CmsJournalingControllerDeleteJournalingResponses = {
-    200: JournalingResponseDto;
-};
-
-export type CmsJournalingControllerDeleteJournalingResponse = CmsJournalingControllerDeleteJournalingResponses[keyof CmsJournalingControllerDeleteJournalingResponses];
-
-export type CmsJournalingControllerGetJournalingByIdData = {
-    body?: never;
-    path: {
-        id: string;
-    };
-    query?: never;
-    url: '/api/v1/cms/journaling/{id}';
-};
-
-export type CmsJournalingControllerGetJournalingByIdResponses = {
-    200: JournalingResponseDto;
-};
-
-export type CmsJournalingControllerGetJournalingByIdResponse = CmsJournalingControllerGetJournalingByIdResponses[keyof CmsJournalingControllerGetJournalingByIdResponses];
-
-export type CmsJournalingControllerUpdateJournalingData = {
-    body: UpdateJournalingDto;
-    path: {
-        id: string;
-    };
-    query?: never;
-    url: '/api/v1/cms/journaling/{id}';
-};
-
-export type CmsJournalingControllerUpdateJournalingResponses = {
-    200: JournalingResponseDto;
-};
-
-export type CmsJournalingControllerUpdateJournalingResponse = CmsJournalingControllerUpdateJournalingResponses[keyof CmsJournalingControllerUpdateJournalingResponses];
-
-export type CmsJournalingControllerUnpublishJournalingData = {
-    body?: never;
-    path: {
-        id: string;
-    };
-    query?: never;
-    url: '/api/v1/cms/journaling/{id}/unpublish';
-};
-
-export type CmsJournalingControllerUnpublishJournalingResponses = {
-    200: JournalingResponseDto;
-};
-
-export type CmsJournalingControllerUnpublishJournalingResponse = CmsJournalingControllerUnpublishJournalingResponses[keyof CmsJournalingControllerUnpublishJournalingResponses];
-
-export type CmsJournalingControllerCreateSubJournalingData = {
-    body: CreateSubJournalingDto;
-    path: {
-        journalingId: string;
-    };
-    query?: never;
-    url: '/api/v1/cms/journaling/{journalingId}/sub';
-};
-
-export type CmsJournalingControllerCreateSubJournalingResponses = {
-    201: SubJournalingResponseDto;
-};
-
-export type CmsJournalingControllerCreateSubJournalingResponse = CmsJournalingControllerCreateSubJournalingResponses[keyof CmsJournalingControllerCreateSubJournalingResponses];
-
-export type CmsJournalingControllerGetSubJournalingsData = {
-    body?: never;
-    path?: never;
-    query?: never;
-    url: '/api/v1/cms/journaling/sub';
-};
-
-export type CmsJournalingControllerGetSubJournalingsResponses = {
-    200: SubJournalingListResponseDto;
-};
-
-export type CmsJournalingControllerGetSubJournalingsResponse = CmsJournalingControllerGetSubJournalingsResponses[keyof CmsJournalingControllerGetSubJournalingsResponses];
-
-export type CmsJournalingControllerDeleteSubJournalingData = {
-    body?: never;
-    path: {
-        id: string;
-    };
-    query?: never;
-    url: '/api/v1/cms/journaling/sub/{id}';
-};
-
-export type CmsJournalingControllerDeleteSubJournalingResponses = {
-    200: SubJournalingResponseDto;
-};
-
-export type CmsJournalingControllerDeleteSubJournalingResponse = CmsJournalingControllerDeleteSubJournalingResponses[keyof CmsJournalingControllerDeleteSubJournalingResponses];
-
-export type CmsJournalingControllerGetSubJournalingByIdData = {
-    body?: never;
-    path: {
-        id: string;
-    };
-    query?: never;
-    url: '/api/v1/cms/journaling/sub/{id}';
-};
-
-export type CmsJournalingControllerGetSubJournalingByIdResponses = {
-    200: SubJournalingResponseDto;
-};
-
-export type CmsJournalingControllerGetSubJournalingByIdResponse = CmsJournalingControllerGetSubJournalingByIdResponses[keyof CmsJournalingControllerGetSubJournalingByIdResponses];
-
-export type CmsJournalingControllerUpdateSubJournalingData = {
-    body: UpdateSubJournalingDto;
-    path: {
-        id: string;
-    };
-    query?: never;
-    url: '/api/v1/cms/journaling/sub/{id}';
-};
-
-export type CmsJournalingControllerUpdateSubJournalingResponses = {
-    200: SubJournalingResponseDto;
-};
-
-export type CmsJournalingControllerUpdateSubJournalingResponse = CmsJournalingControllerUpdateSubJournalingResponses[keyof CmsJournalingControllerUpdateSubJournalingResponses];
-
-export type CmsJournalingControllerUnpublishSubJournalingData = {
-    body?: never;
-    path: {
-        id: string;
-    };
-    query?: never;
-    url: '/api/v1/cms/journaling/sub/{id}/unpublish';
-};
-
-export type CmsJournalingControllerUnpublishSubJournalingResponses = {
-    200: SubJournalingResponseDto;
-};
-
-export type CmsJournalingControllerUnpublishSubJournalingResponse = CmsJournalingControllerUnpublishSubJournalingResponses[keyof CmsJournalingControllerUnpublishSubJournalingResponses];
-
 export type CmsJournalingControllerGetSelfJournalingsData = {
     body?: never;
     path?: never;
-    query?: never;
+    query?: {
+        /**
+         * Page size
+         */
+        limit?: number;
+        /**
+         * Offset
+         */
+        offset?: number;
+        /**
+         * Filter by CRM lead ID
+         */
+        leadId?: number;
+    };
     url: '/api/v1/cms/journaling/self';
 };
 
@@ -10127,6 +10101,223 @@ export type CmsJournalingControllerUpdateSelfJournalingResponses = {
 };
 
 export type CmsJournalingControllerUpdateSelfJournalingResponse = CmsJournalingControllerUpdateSelfJournalingResponses[keyof CmsJournalingControllerUpdateSelfJournalingResponses];
+
+export type CmsJournalingControllerGetSubJournalingsData = {
+    body?: never;
+    path?: never;
+    query?: {
+        /**
+         * Page size
+         */
+        limit?: number;
+        /**
+         * Offset
+         */
+        offset?: number;
+        /**
+         * Search term
+         */
+        search?: string;
+        /**
+         * Filter by status
+         */
+        status?: 'DRAFT' | 'PUBLISHED' | 'ALL';
+    };
+    url: '/api/v1/cms/journaling/sub';
+};
+
+export type CmsJournalingControllerGetSubJournalingsResponses = {
+    200: SubJournalingListResponseDto;
+};
+
+export type CmsJournalingControllerGetSubJournalingsResponse = CmsJournalingControllerGetSubJournalingsResponses[keyof CmsJournalingControllerGetSubJournalingsResponses];
+
+export type CmsJournalingControllerCreateSubJournalingDirectData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/api/v1/cms/journaling/sub';
+};
+
+export type CmsJournalingControllerCreateSubJournalingDirectResponses = {
+    201: SubJournalingResponseDto;
+};
+
+export type CmsJournalingControllerCreateSubJournalingDirectResponse = CmsJournalingControllerCreateSubJournalingDirectResponses[keyof CmsJournalingControllerCreateSubJournalingDirectResponses];
+
+export type CmsJournalingControllerDeleteSubJournalingData = {
+    body?: never;
+    path: {
+        id: string;
+    };
+    query?: never;
+    url: '/api/v1/cms/journaling/sub/{id}';
+};
+
+export type CmsJournalingControllerDeleteSubJournalingResponses = {
+    200: SubJournalingResponseDto;
+};
+
+export type CmsJournalingControllerDeleteSubJournalingResponse = CmsJournalingControllerDeleteSubJournalingResponses[keyof CmsJournalingControllerDeleteSubJournalingResponses];
+
+export type CmsJournalingControllerGetSubJournalingByIdData = {
+    body?: never;
+    path: {
+        id: string;
+    };
+    query?: never;
+    url: '/api/v1/cms/journaling/sub/{id}';
+};
+
+export type CmsJournalingControllerGetSubJournalingByIdResponses = {
+    200: SubJournalingResponseDto;
+};
+
+export type CmsJournalingControllerGetSubJournalingByIdResponse = CmsJournalingControllerGetSubJournalingByIdResponses[keyof CmsJournalingControllerGetSubJournalingByIdResponses];
+
+export type CmsJournalingControllerUpdateSubJournalingData = {
+    body: UpdateSubJournalingDto;
+    path: {
+        id: string;
+    };
+    query?: never;
+    url: '/api/v1/cms/journaling/sub/{id}';
+};
+
+export type CmsJournalingControllerUpdateSubJournalingResponses = {
+    200: SubJournalingResponseDto;
+};
+
+export type CmsJournalingControllerUpdateSubJournalingResponse = CmsJournalingControllerUpdateSubJournalingResponses[keyof CmsJournalingControllerUpdateSubJournalingResponses];
+
+export type CmsJournalingControllerUnpublishSubJournalingData = {
+    body?: never;
+    path: {
+        id: string;
+    };
+    query?: never;
+    url: '/api/v1/cms/journaling/sub/{id}/unpublish';
+};
+
+export type CmsJournalingControllerUnpublishSubJournalingResponses = {
+    200: SubJournalingResponseDto;
+};
+
+export type CmsJournalingControllerUnpublishSubJournalingResponse = CmsJournalingControllerUnpublishSubJournalingResponses[keyof CmsJournalingControllerUnpublishSubJournalingResponses];
+
+export type CmsJournalingControllerGetJournalingsData = {
+    body?: never;
+    path?: never;
+    query?: {
+        /**
+         * Page size
+         */
+        limit?: number;
+        /**
+         * Offset
+         */
+        offset?: number;
+        /**
+         * Filter by status
+         */
+        status?: 'DRAFT' | 'PUBLISHED' | 'ALL';
+    };
+    url: '/api/v1/cms/journaling';
+};
+
+export type CmsJournalingControllerGetJournalingsResponses = {
+    200: JournalingListResponseDto;
+};
+
+export type CmsJournalingControllerGetJournalingsResponse = CmsJournalingControllerGetJournalingsResponses[keyof CmsJournalingControllerGetJournalingsResponses];
+
+export type CmsJournalingControllerCreateJournalingData = {
+    body: CreateJournalingDto;
+    path?: never;
+    query?: never;
+    url: '/api/v1/cms/journaling';
+};
+
+export type CmsJournalingControllerCreateJournalingResponses = {
+    201: JournalingResponseDto;
+};
+
+export type CmsJournalingControllerCreateJournalingResponse = CmsJournalingControllerCreateJournalingResponses[keyof CmsJournalingControllerCreateJournalingResponses];
+
+export type CmsJournalingControllerUnpublishJournalingData = {
+    body?: never;
+    path: {
+        id: string;
+    };
+    query?: never;
+    url: '/api/v1/cms/journaling/{id}/unpublish';
+};
+
+export type CmsJournalingControllerUnpublishJournalingResponses = {
+    200: JournalingResponseDto;
+};
+
+export type CmsJournalingControllerUnpublishJournalingResponse = CmsJournalingControllerUnpublishJournalingResponses[keyof CmsJournalingControllerUnpublishJournalingResponses];
+
+export type CmsJournalingControllerCreateSubJournalingData = {
+    body: CreateSubJournalingDto;
+    path: {
+        journalingId: string;
+    };
+    query?: never;
+    url: '/api/v1/cms/journaling/{journalingId}/sub';
+};
+
+export type CmsJournalingControllerCreateSubJournalingResponses = {
+    201: SubJournalingResponseDto;
+};
+
+export type CmsJournalingControllerCreateSubJournalingResponse = CmsJournalingControllerCreateSubJournalingResponses[keyof CmsJournalingControllerCreateSubJournalingResponses];
+
+export type CmsJournalingControllerDeleteJournalingData = {
+    body?: never;
+    path: {
+        id: string;
+    };
+    query?: never;
+    url: '/api/v1/cms/journaling/{id}';
+};
+
+export type CmsJournalingControllerDeleteJournalingResponses = {
+    200: JournalingResponseDto;
+};
+
+export type CmsJournalingControllerDeleteJournalingResponse = CmsJournalingControllerDeleteJournalingResponses[keyof CmsJournalingControllerDeleteJournalingResponses];
+
+export type CmsJournalingControllerGetJournalingByIdData = {
+    body?: never;
+    path: {
+        id: string;
+    };
+    query?: never;
+    url: '/api/v1/cms/journaling/{id}';
+};
+
+export type CmsJournalingControllerGetJournalingByIdResponses = {
+    200: JournalingResponseDto;
+};
+
+export type CmsJournalingControllerGetJournalingByIdResponse = CmsJournalingControllerGetJournalingByIdResponses[keyof CmsJournalingControllerGetJournalingByIdResponses];
+
+export type CmsJournalingControllerUpdateJournalingData = {
+    body: UpdateJournalingDto;
+    path: {
+        id: string;
+    };
+    query?: never;
+    url: '/api/v1/cms/journaling/{id}';
+};
+
+export type CmsJournalingControllerUpdateJournalingResponses = {
+    200: JournalingResponseDto;
+};
+
+export type CmsJournalingControllerUpdateJournalingResponse = CmsJournalingControllerUpdateJournalingResponses[keyof CmsJournalingControllerUpdateJournalingResponses];
 
 export type CmsJourneysControllerListData = {
     body?: never;

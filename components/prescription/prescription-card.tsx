@@ -2,110 +2,78 @@
  * FILE: components/prescription/prescription-card.tsx
  *
  * PURPOSE:
- *   Renders a single prescription as a card with metadata and a View Details action.
+ *   Renders a single prescription as a list row inside a grouped card.
  *
  * LOGIC OVERVIEW:
- *   Displays prescription name, date, doctor, and medicine count from the SDK type.
- *   Renders a status badge derived from the prescription state field.
- *   Calls onView when the user taps "View Details".
+ *   Displays a gradient PDF icon tile, prescription name, and formatted date.
+ *   Renders a "Download PDF" button that opens download_url in a new tab.
+ *   Falls back to a disabled state when no download_url is present.
  *
  * KEY VARIABLES / PROPS / EXPORTS:
- *   prescription — SDK Prescription object to display
- *   index        — fallback for display name when prescription has no name
- *   onView       — callback to navigate to the prescription detail view
+ *   prescription — PrescriptionItemDto from the CRM SDK
+ *   index        — used for fallback display name
+ *   onDownload   — callback that opens the prescription PDF
  *
  * DEPENDENCIES:
- *   @/types/package — Prescription type
- *   dayjs           — date formatting
+ *   @/sdk/backend-v2 — PrescriptionItemDto type
+ *   dayjs            — date formatting
  *
- * LAST UPDATED: 2026-04-17 — removed download button (no SDK endpoint for PDF download)
+ * LAST UPDATED: 2026-04-17 — redesign as grouped list row with clear Download PDF CTA
  */
 'use client';
 
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Separator } from '@/components/ui/separator';
-import { CalendarDays, User2, Eye, Pill, AlertCircle } from 'lucide-react';
+import { Download, FileText } from 'lucide-react';
+import { cn } from '@/lib/utils';
 import dayjs from 'dayjs';
-import type { Prescription } from '@/types/package';
+import type { PrescriptionItemDto } from '@/sdk/backend-v2';
 
 interface PrescriptionCardProps {
-  prescription: Prescription;
+  prescription: PrescriptionItemDto;
   index: number;
-  onView: () => void;
+  onDownload: () => void;
 }
 
-function getStateBadgeVariant(state?: string): 'default' | 'secondary' | 'destructive' | 'outline' {
-  switch (state?.toLowerCase()) {
-    case 'active':
-      return 'default';
-    case 'expired':
-      return 'destructive';
-    case 'pending':
-      return 'outline';
-    default:
-      return 'secondary';
-  }
-}
-
-export function PrescriptionCard({ prescription, index, onView }: PrescriptionCardProps) {
-  const displayName = prescription.display_name ?? prescription.name ?? `Prescription #${index + 1}`;
+export function PrescriptionCard({ prescription, index, onDownload }: PrescriptionCardProps) {
+  const displayName = prescription.name || `Prescription #${index + 1}`;
+  const hasDownload = Boolean(prescription.download_url);
 
   return (
-    <Card className="border-border bg-card hover:shadow-md transition-shadow">
-      <CardHeader className="pb-2">
-        <div className="flex items-start justify-between gap-2">
-          <CardTitle className="text-base font-semibold text-foreground leading-snug flex-1 min-w-0">
-            {displayName}
-          </CardTitle>
-          {prescription.state && (
-            <Badge variant={getStateBadgeVariant(prescription.state)} className="shrink-0 capitalize text-xs">
-              {prescription.state}
-            </Badge>
-          )}
-        </div>
-      </CardHeader>
+    <div className="flex items-center gap-3 py-3 transition-colors hover:bg-muted/50 active:bg-muted">
+      {/* Gradient PDF icon tile */}
+      <div className={cn(
+        'relative w-11 h-11 rounded-2xl bg-gradient-to-br flex-shrink-0',
+        'flex items-center justify-center overflow-hidden shadow-sm',
+        'from-red-500 to-rose-600',
+      )}>
+        <div className="absolute -top-2 -right-2 w-7 h-7 rounded-full bg-white/10" />
+        <FileText className="w-5 h-5 text-white" />
+      </div>
 
-      <CardContent className="space-y-3">
-        <div className="space-y-2">
-          {prescription.date && (
-            <div className="flex items-center gap-2 text-sm text-muted-foreground">
-              <CalendarDays className="w-4 h-4 shrink-0" />
-              <span>{dayjs(prescription.date).format('DD MMM YYYY')}</span>
-            </div>
-          )}
-          {prescription.doctor && (
-            <div className="flex items-center gap-2 text-sm text-muted-foreground">
-              <User2 className="w-4 h-4 shrink-0" />
-              <span>{prescription.doctor[1]}</span>
-            </div>
-          )}
-          {prescription.prescription_line && prescription.prescription_line.length > 0 && (
-            <div className="flex items-center gap-2 text-sm text-muted-foreground">
-              <Pill className="w-4 h-4 shrink-0" />
-              <span>
-                {prescription.prescription_line.length}{' '}
-                {prescription.prescription_line.length === 1 ? 'medicine' : 'medicines'} prescribed
-              </span>
-            </div>
-          )}
-        </div>
-
-        {!prescription.prescription_line?.length && (
-          <div className="flex items-center gap-2 p-2 rounded-md bg-muted text-muted-foreground text-xs">
-            <AlertCircle className="w-3.5 h-3.5 shrink-0" />
-            No medicines listed
-          </div>
+      {/* Name + date */}
+      <div className="flex-1 min-w-0">
+        <p className="text-sm font-medium text-foreground truncate">{displayName}</p>
+        {prescription.create_date && (
+          <p className="text-xs text-muted-foreground mt-0.5">
+            {dayjs(prescription.create_date).format('DD MMM YYYY')}
+          </p>
         )}
+        {prescription.source && (
+          <p className="text-xs text-muted-foreground truncate">{prescription.source}</p>
+        )}
+      </div>
 
-        <Separator />
-
-        <Button size="sm" className="w-full gap-1.5" onClick={onView}>
-          <Eye className="w-3.5 h-3.5" />
-          View Details
-        </Button>
-      </CardContent>
-    </Card>
+      {/* Download CTA */}
+      <Button
+        size="sm"
+        variant={hasDownload ? 'default' : 'outline'}
+        disabled={!hasDownload}
+        onClick={onDownload}
+        className="flex-shrink-0 gap-1.5 rounded-xl text-xs"
+      >
+        <Download className="w-3.5 h-3.5" />
+        Download PDF
+      </Button>
+    </div>
   );
 }

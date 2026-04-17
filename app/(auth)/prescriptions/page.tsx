@@ -1,48 +1,82 @@
+/**
+ * FILE: app/(auth)/prescriptions/page.tsx
+ *
+ * PURPOSE:
+ *   Displays the current patient's prescription list fetched from the CRM SDK.
+ *
+ * LOGIC OVERVIEW:
+ *   1. Calls usePrescriptions() to fetch a flat PrescriptionItemDto[] via SWR.
+ *   2. Renders loading skeletons, error alert, empty state, or grouped list card.
+ *   3. On "Download PDF" tap, opens the prescription's download_url in a new tab.
+ *
+ * KEY VARIABLES / PROPS / EXPORTS:
+ *   prescriptions — PrescriptionItemDto[] from usePrescriptions hook
+ *   handleDownload — opens download_url for the tapped prescription
+ *
+ * DEPENDENCIES:
+ *   usePrescriptions — SWR hook backed by crmControllerGetPrescriptions
+ *   PrescriptionCard — renders a single prescription row
+ *   BackButton       — shared back navigation component
+ *
+ * LAST UPDATED: 2026-04-17 — grouped list card layout; skeleton loading; Download PDF CTA
+ */
+
 'use client';
 
-import { useRouter } from 'next/navigation';
 import { BackButton } from '@/components/shared/navigation/back-button';
 import { PrescriptionCard } from '@/components/prescription/prescription-card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
+import { Separator } from '@/components/ui/separator';
+import { Skeleton } from '@/components/ui/skeleton';
 import { ClipboardList, AlertCircle } from 'lucide-react';
 import { usePrescriptions } from '@/hooks/prescriptions/use-prescriptions';
+import { useRouter } from 'next/navigation';
 import dayjs from 'dayjs';
-import type { Prescription } from '@/types/package';
+import type { PrescriptionItemDto } from '@/sdk/backend-v2';
 
 export default function PrescriptionsPage() {
   const router = useRouter();
   const { prescriptions, isLoading, error, mutate } = usePrescriptions();
 
-  const handleView = (prescription: Prescription) => {
-    if (prescription.prescription_line && prescription.prescription_line.length > 0) {
-      const ids = prescription.prescription_line.join(',');
-      router.push(`/prescription-overview?lineItems=${ids}`);
-    } else {
-      router.push('/prescription-overview');
+  const handleDownload = (prescription: PrescriptionItemDto) => {
+    if (prescription.download_url) {
+      window.open(prescription.download_url, '_blank');
     }
   };
 
   return (
     <div className="min-h-screen bg-background pb-24">
       {/* Header */}
-      <div className="px-4 pt-5 pb-4">
-        <div className="flex items-center gap-3 mb-1">
-          <BackButton fallback="/home" />
-          <div>
-            <h1 className="text-xl font-bold text-foreground">My Prescriptions</h1>
-            <p className="text-sm text-muted-foreground">{dayjs().format('ddd, DD MMM YYYY')}</p>
-          </div>
+      <div className="flex items-center gap-2 px-4 pt-5 pb-3">
+        <BackButton fallback="/home" />
+        <div className="flex-1">
+          <h1 className="text-lg font-bold text-foreground">My Prescriptions</h1>
+          <p className="text-xs text-muted-foreground">{dayjs().format('ddd, DD MMM YYYY')}</p>
         </div>
       </div>
 
-      <div className="px-4 space-y-4">
-        {/* Loading */}
+      <div className="px-4">
+        {/* Loading skeletons */}
         {isLoading && (
-          <div className="flex flex-col items-center justify-center py-16 gap-3">
-            <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin" />
-            <p className="text-sm text-muted-foreground">Loading prescriptions...</p>
-          </div>
+          <Card>
+            <CardContent className="py-0 px-3">
+              {Array.from({ length: 4 }).map((_, i) => (
+                <div key={i}>
+                  <div className="flex items-center gap-3 py-3">
+                    <Skeleton className="w-11 h-11 rounded-2xl flex-shrink-0" />
+                    <div className="flex-1 space-y-1.5">
+                      <Skeleton className="h-3.5 w-2/3 rounded" />
+                      <Skeleton className="h-3 w-1/3 rounded" />
+                    </div>
+                    <Skeleton className="w-28 h-8 rounded-xl" />
+                  </div>
+                  {i < 3 && <Separator />}
+                </div>
+              ))}
+            </CardContent>
+          </Card>
         )}
 
         {/* Error */}
@@ -60,13 +94,13 @@ export default function PrescriptionsPage() {
 
         {/* Empty */}
         {!isLoading && !error && prescriptions.length === 0 && (
-          <div className="flex flex-col items-center justify-center py-16 gap-4 text-center">
+          <div className="flex flex-col items-center justify-center py-24 gap-4 text-center">
             <div className="w-16 h-16 rounded-full bg-muted flex items-center justify-center">
               <ClipboardList className="w-8 h-8 text-muted-foreground" />
             </div>
             <div>
-              <h2 className="text-lg font-semibold text-foreground mb-1">No Prescriptions Found</h2>
-              <p className="text-sm text-muted-foreground max-w-xs">
+              <p className="font-semibold text-foreground">No Prescriptions Found</p>
+              <p className="text-sm text-muted-foreground mt-1 max-w-xs">
                 Your prescriptions will appear here after your doctor consultations.
               </p>
             </div>
@@ -76,18 +110,28 @@ export default function PrescriptionsPage() {
           </div>
         )}
 
-        {/* Prescription list */}
+        {/* Grouped prescription list */}
         {!isLoading && !error && prescriptions.length > 0 && (
-          <div className="space-y-3">
-            {prescriptions.map((prescription, index) => (
-              <PrescriptionCard
-                key={prescription.id ?? index}
-                prescription={prescription}
-                index={index}
-                onView={() => handleView(prescription)}
-              />
-            ))}
-          </div>
+          <section className="mb-5">
+            <div className="flex items-center justify-between mb-3">
+              <h2 className="text-base font-bold text-foreground">Prescriptions</h2>
+              <span className="text-xs text-muted-foreground">{prescriptions.length} total</span>
+            </div>
+            <Card>
+              <CardContent className="py-0 px-3">
+                {prescriptions.map((prescription, index) => (
+                  <div key={prescription.id ?? index}>
+                    <PrescriptionCard
+                      prescription={prescription}
+                      index={index}
+                      onDownload={() => handleDownload(prescription)}
+                    />
+                    {index < prescriptions.length - 1 && <Separator />}
+                  </div>
+                ))}
+              </CardContent>
+            </Card>
+          </section>
         )}
       </div>
     </div>
