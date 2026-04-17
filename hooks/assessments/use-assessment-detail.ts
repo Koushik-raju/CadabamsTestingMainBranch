@@ -146,12 +146,18 @@ export async function submitAssessment(
 ): Promise<void> {
   const answerRows = Object.entries(answers).map(([questionKey, value]) => {
     const v = value as Record<string, unknown>;
+    // Serialize answer value — arrays get JSON-stringified, scalars get String()
+    let answerValue: string;
+    const raw = v?.selected ?? v?.text ?? v?.value ?? v?.level ?? v?.subAnswers ?? '';
+    if (Array.isArray(raw) || (typeof raw === 'object' && raw !== null)) {
+      answerValue = JSON.stringify(raw);
+    } else {
+      answerValue = String(raw);
+    }
     return {
       questionKey,
       questionText: (v?.questionText as string) ?? undefined,
-      answerValue: String(
-        v?.selected ?? v?.text ?? v?.value ?? ''
-      ),
+      answerValue,
     };
   });
 

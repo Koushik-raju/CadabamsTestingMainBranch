@@ -35,9 +35,16 @@ export default function AssessmentFormPage({ params }: { params: Promise<{ id: s
       label: q.label ?? undefined,
       type: q.type,
       description: q.subtitle ?? undefined,
-      options: q.options?.map((o) => ({ id: o.id, option: o.label, value: o.value })),
+      options: q.options?.map((o) => ({ id: o.id, option: o.label, label: o.label, value: o.value })),
       subtitle: q.subtitle ?? undefined,
       smileys: q.smileys,
+      text: q.text ?? undefined,
+      count: q.count ?? undefined,
+      keyValue: q.keyValue as string | Record<string, string> | undefined,
+      prompt: q.prompt ?? undefined,
+      answer: q.answer ?? undefined,
+      questions: q.questions ?? undefined,
+      answers: q.answers ?? undefined,
     }));
   }, [assessment?.Questions]);
 
@@ -47,15 +54,38 @@ export default function AssessmentFormPage({ params }: { params: Promise<{ id: s
     const initial: Record<string, AnswerValue> = {};
     questions.forEach((q, index) => {
       const key = `q_${q.id}_step_${index}`;
-      const type = q.type || '';
-      if (type === 'smiley' || q.smileys?.length) {
+      const raw = q.type || '';
+      // Normalize the type the same way as QuestionRenderer
+      const isSmiley = raw === 'smiley' || raw.includes('smiley') || !!q.smileys?.length;
+      const isMood = raw === 'mood_selector' || raw.includes('mood-selector') || raw.includes('mood_selector');
+      const isLevel = raw === 'level_selector' || raw.includes('level-selector') || raw.includes('level_selector');
+      const isBubble = raw === 'bubble_selector' || raw.includes('bubble-selector') || raw.includes('bubble_selector');
+      const isDot = raw === 'dot_chooser' || raw.includes('dot-chooser') || raw.includes('dot_chooser');
+      const isIndicator = raw === 'indicator' || raw.includes('indicator');
+      const isViewText = raw === 'view_text' || raw.includes('view-text') || raw.includes('view_text');
+      const isAgreement = raw === 'agreement' || raw.includes('agreement');
+      const isGenerate = raw === 'generate' || raw.includes('generate');
+      const isQa = raw === 'qa' || raw.includes('.qa');
+      const isQaWithSubs = isQa && Array.isArray(q.questions) && q.questions.length > 0;
+      const isYesNo = raw === 'yes_no' || raw.includes('yes') || raw.includes('no');
+      const isText = raw === 'text' || raw.includes('text') || raw.includes('speech');
+
+      if (isSmiley || isMood) {
         initial[key] = { selected: 2 };
-      } else if (type === 'yes_no') {
-        initial[key] = { selected: '' };
-      } else if (type === 'mcq') {
-        initial[key] = { selected: '' };
-      } else if (type === 'text') {
+      } else if (isLevel) {
+        initial[key] = { level: 0 };
+      } else if (isBubble || isDot) {
+        initial[key] = { selected: [] as string[] };
+      } else if (isIndicator) {
+        initial[key] = { value: 50 };
+      } else if (isViewText || isAgreement || isGenerate) {
+        initial[key] = {};
+      } else if (isQaWithSubs) {
+        initial[key] = { subAnswers: {} };
+      } else if (isQa || isText) {
         initial[key] = { text: '' };
+      } else if (isYesNo) {
+        initial[key] = { selected: '' };
       } else {
         initial[key] = { selected: '' };
       }
@@ -68,18 +98,28 @@ export default function AssessmentFormPage({ params }: { params: Promise<{ id: s
     const q = questions[currentStep];
     const key = `q_${q.id}_step_${currentStep}`;
     const ans = answers[key];
-    const type = q.type || '';
+    const raw = q.type || '';
 
-    if (type === 'smiley' || (q.smileys && q.smileys.length > 0)) {
+    // These types are always complete (informational, have defaults, or user can proceed freely)
+    const alwaysComplete = ['smiley', 'mood_selector', 'level_selector', 'indicator',
+      'view_text', 'agreement', 'generate', 'rating', 'qa'];
+    const isAlwaysComplete = alwaysComplete.includes(raw)
+      || raw.includes('smiley') || raw.includes('mood-selector') || raw.includes('level-selector')
+      || raw.includes('indicator') || raw.includes('view-text') || raw.includes('agreement')
+      || raw.includes('generate') || raw.includes('.qa')
+      || (q.smileys && q.smileys.length > 0);
+
+    if (isAlwaysComplete) {
       setIsStepComplete(true);
-    } else if (type === 'yes_no') {
-      setIsStepComplete(!!((ans as { selected?: string })?.selected));
-    } else if (type === 'mcq') {
-      setIsStepComplete(!!((ans as { selected?: string })?.selected));
-    } else if (type === 'text') {
+    } else if (raw === 'text' || raw.includes('text') || raw.includes('speech')) {
       setIsStepComplete(((ans as { text?: string })?.text || '').trim().length > 0);
+    } else if (raw === 'bubble_selector' || raw.includes('bubble-selector') || raw.includes('bubble_selector')
+      || raw === 'dot_chooser' || raw.includes('dot-chooser') || raw.includes('dot_chooser')) {
+      const arr = (ans as { selected?: string[] })?.selected;
+      setIsStepComplete(Array.isArray(arr) && arr.length > 0);
     } else {
-      setIsStepComplete(true);
+      // mcq, yes_no, and other string-selected types
+      setIsStepComplete(!!((ans as { selected?: string })?.selected));
     }
   }, [currentStep, answers, questions]);
 
@@ -221,6 +261,8 @@ export default function AssessmentFormPage({ params }: { params: Promise<{ id: s
   const progress = Math.round(((currentStep + 1) / questions.length) * 100);
   const currentQuestion = questions[currentStep] as Question;
   const isLastStep = currentStep === questions.length - 1;
+  const currentType = currentQuestion?.type || '';
+  const isGenerateStep = currentType === 'generate' || currentType.includes('generate');
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
@@ -258,19 +300,25 @@ export default function AssessmentFormPage({ params }: { params: Promise<{ id: s
           answer={answers[currentKey] ?? {}}
           onChange={handleAnswer}
           onComplete={handleComplete}
+          assessmentTitle={isGenerateStep ? (assessment?.title || '') : undefined}
+          allQuestions={isGenerateStep ? questions : undefined}
+          allAnswers={isGenerateStep ? answers : undefined}
+          onFinish={isGenerateStep ? handleSubmit : undefined}
         />
       </div>
 
-      {/* Continue button */}
-      <div className="px-5 pb-8 pt-3 border-t border-border bg-card">
-        <Button
-          className="w-full bg-primary hover:bg-primary/90 text-white font-semibold h-14 rounded-2xl text-base disabled:opacity-40"
-          disabled={!isStepComplete || submitting}
-          onClick={handleNext}
-        >
-          {submitting ? 'Submitting...' : isLastStep ? 'Submit Assessment' : 'Continue →'}
-        </Button>
-      </div>
+      {/* Continue button — hidden on generate steps (they manage their own buttons) */}
+      {!isGenerateStep && (
+        <div className="px-5 pb-8 pt-3 border-t border-border bg-card">
+          <Button
+            className="w-full bg-primary hover:bg-primary/90 text-white font-semibold h-14 rounded-2xl text-base disabled:opacity-40"
+            disabled={!isStepComplete || submitting}
+            onClick={handleNext}
+          >
+            {submitting ? 'Submitting...' : isLastStep ? 'Submit Assessment' : 'Continue →'}
+          </Button>
+        </div>
+      )}
     </div>
   );
 }
