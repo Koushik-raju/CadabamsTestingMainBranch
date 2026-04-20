@@ -1,7 +1,8 @@
 'use client';
 
+import Link from 'next/link';
 import { Card, CardContent } from '@/components/ui/card';
-import { ChevronRight, Clock3, CalendarClock, HelpCircle } from 'lucide-react';
+import { ChevronRight, Clock3, CalendarClock, HelpCircle, FileText } from 'lucide-react';
 import type { AssessmentItem } from '@/hooks/use-assessments';
 import { getCategoryInfo } from './assessment-category';
 
@@ -57,7 +58,6 @@ export function AssessmentGridCard({ assessment, onClick }: AssessmentCardProps)
   const minutes = assessment.landingTitle?.minutes;
   const questionCount = assessment.landingTitle?.numberOfQuestion || assessment.Questions?.length;
   const description = assessment.description || assessment.landingTitle?.landingDescription;
-  const hasFooter = !!(minutes || questionCount);
 
   return (
     <div
@@ -96,23 +96,30 @@ export function AssessmentGridCard({ assessment, onClick }: AssessmentCardProps)
         </p>
       )}
 
-      {/* Footer: time + questions */}
-      {hasFooter && (
-        <div className="flex items-center gap-3 mt-3 pt-3 border-t border-black/[0.07] relative z-10">
-          {minutes != null && (
-            <span className={`flex items-center gap-1 text-[11px] font-medium ${textColor}`}>
-              <Clock3 className="w-3 h-3" />
-              {minutes} min
-            </span>
-          )}
-          {questionCount && (
-            <span className={`flex items-center gap-1 text-[11px] font-medium ${textColor}`}>
-              <HelpCircle className="w-3 h-3" />
-              {questionCount} Questions
-            </span>
-          )}
-        </div>
-      )}
+      {/* Footer: time + questions + reports link */}
+      <div className="flex items-center gap-3 mt-3 pt-3 border-t border-black/[0.07] relative z-10">
+        {minutes != null && (
+          <span className={`flex items-center gap-1 text-[11px] font-medium ${textColor}`}>
+            <Clock3 className="w-3 h-3" />
+            {minutes} min
+          </span>
+        )}
+        {questionCount && (
+          <span className={`flex items-center gap-1 text-[11px] font-medium ${textColor}`}>
+            <HelpCircle className="w-3 h-3" />
+            {questionCount} Questions
+          </span>
+        )}
+        <Link
+          href={`/assessments/${assessment.id}/reports`}
+          onClick={(e) => e.stopPropagation()}
+          aria-label="View previous reports"
+          className={`ml-auto flex items-center gap-1 text-[11px] font-semibold ${textColor} bg-white/70 hover:bg-white px-2 py-1 rounded-full transition-colors`}
+        >
+          <FileText className="w-3 h-3" />
+          Reports
+        </Link>
+      </div>
     </div>
   );
 }

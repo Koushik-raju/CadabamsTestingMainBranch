@@ -3,6 +3,7 @@ import {
   cmsAssessmentsControllerFindOne,
   patientAssessmentsControllerListMine,
   patientAssessmentsControllerCreateCompletion,
+  patientAssessmentsAnalysisControllerAnalyze,
 } from '@/sdk/backend-v2';
 import type { CompletionResponseDto } from '@/sdk/backend-v2';
 import { assessmentByIdKey, assessmentSubmissionsKey } from '@/lib/swr-keys';
@@ -143,7 +144,7 @@ export async function submitAssessment(
   leadId: string,
   assessmentId: string,
   answers: Record<string, unknown>
-): Promise<void> {
+): Promise<string> {
   const answerRows = Object.entries(answers).map(([questionKey, value]) => {
     const v = value as Record<string, unknown>;
     // Serialize answer value — arrays get JSON-stringified, scalars get String()
@@ -161,7 +162,7 @@ export async function submitAssessment(
     };
   });
 
-  await patientAssessmentsControllerCreateCompletion({
+  const res = await patientAssessmentsControllerCreateCompletion({
     path: { campus: 'cadabams' },
     body: {
       assessmentKey: assessmentId,
@@ -169,4 +170,21 @@ export async function submitAssessment(
       answers: answerRows,
     },
   });
+  if (res.error) throw new Error(JSON.stringify(res.error));
+  if (!res.data?.id) throw new Error('Completion response missing id');
+  return res.data.id;
+}
+
+// ---------------------------------------------------------------------------
+// Analyze a stored completion via backend LLM endpoint
+// ---------------------------------------------------------------------------
+
+export async function analyzeAssessmentCompletion(
+  completionId: string
+): Promise<string> {
+  const res = await patientAssessmentsAnalysisControllerAnalyze({
+    path: { completionId },
+  });
+  if (res.error) throw new Error(JSON.stringify(res.error));
+  return res.data?.result ?? '';
 }

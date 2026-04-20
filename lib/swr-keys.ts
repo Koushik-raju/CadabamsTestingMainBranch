@@ -21,7 +21,7 @@
  * DEPENDENCIES:
  *   None — pure string-returning functions, no imports.
  *
- * LAST UPDATED: 2026-04-17 — added journal subscription/streak/detail/entries keys
+ * LAST UPDATED: 2026-04-20 — added assessmentReportsKey for per-assessment analyses list
  */
 export function authMeKey(): string {
   return '/auth/me';
@@ -43,6 +43,10 @@ export function assessmentSubmissionsKey(leadId: number | string, assessmentId?:
   return assessmentId !== undefined
     ? `/assessment-submissions/${leadId}/${assessmentId}`
     : `/assessment-submissions/${leadId}`;
+}
+
+export function assessmentReportsKey(assessmentId: number | string): string {
+  return `/assessment-reports/${assessmentId}`;
 }
 
 export function journeyEnrollmentKey(journeyId: number | string): string {

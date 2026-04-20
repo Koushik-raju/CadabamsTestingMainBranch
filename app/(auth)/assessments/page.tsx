@@ -47,16 +47,6 @@ const DURATION_OPTIONS: { value: Duration; label: string; sub: string }[] = [
   { value: 'long',   label: 'Long',   sub: '> 10 min' },
 ];
 
-function hasValidDescription(a: AssessmentItem): boolean {
-  if (a.citationText == null) return false;
-  const desc = (a.description || a.landingTitle?.landingDescription || '').trimStart();
-  if (!desc) return false;
-  if (desc[0] === '(') return false;
-  if (desc.includes('Gratitude Question')) return false;
-  if (desc.includes('Reflection Question')) return false;
-  return true;
-}
-
 function applySort(items: AssessmentItem[], sort: SortBy): AssessmentItem[] {
   if (sort === 'alpha')
     return [...items].sort((a, b) => a.title.localeCompare(b.title));
@@ -168,15 +158,13 @@ export default function AssessmentsPage() {
   // ─── Processed browse list (sort + duration, client-side) ─────────────────
   const isFiltering = !!(serverCategory || debouncedSearch);
 
-  const browseItems = useMemo(() => {
-    console.log('[PAGE:1] allAssessments total', allAssessments.length, 'isLoadingBrowse', isLoadingBrowse);
-    const withDesc = allAssessments.slice(1).filter(hasValidDescription);
-    console.log('[PAGE:2] after hasValidDescription', withDesc.length, '(dropped', allAssessments.length - 1 - withDesc.length, ')');
-    return applyDuration(applySort(withDesc, sortBy), activeDuration);
-  }, [allAssessments, sortBy, activeDuration, isLoadingBrowse]);
+  const browseItems = useMemo(
+    () => applyDuration(applySort(allAssessments.slice(1), sortBy), activeDuration),
+    [allAssessments, sortBy, activeDuration]
+  );
 
   const filteredItems = useMemo(
-    () => applyDuration(applySort((isFiltering ? filteredData ?? [] : []).filter(hasValidDescription), sortBy), activeDuration),
+    () => applyDuration(applySort(isFiltering ? filteredData ?? [] : [], sortBy), activeDuration),
     [filteredData, isFiltering, sortBy, activeDuration]
   );
 

@@ -1,3 +1,38 @@
+/**
+ * FILE: components/shared/questions/answer-selectors/generate.tsx
+ *
+ * PURPOSE:
+ *   Terminal step of an assessment wizard. Lets the user trigger an AI analysis
+ *   of their completed responses, renders loading / error / result states, and
+ *   exposes a Finish button that returns control to the parent.
+ *
+ * LOGIC OVERVIEW:
+ *   - On mount, calls onComplete() so the wizard's footer is hidden (this step
+ *     owns its own CTAs).
+ *   - When the user taps "Generate Summary", calls the parent-supplied
+ *     onGenerate() which is expected to (a) persist the completion and (b)
+ *     invoke the backend analyze endpoint, returning a markdown string.
+ *   - Stores the returned text, renders it via react-markdown, and calls
+ *     onGenerated so the parent can cache it if needed.
+ *   - Errors surface in an error state with a Try Again button.
+ *
+ * KEY VARIABLES / PROPS / EXPORTS:
+ *   title        — heading for the result view
+ *   onGenerate   — async callback returning the markdown analysis. Parent is
+ *                  responsible for creating the CompletionResponseDto and
+ *                  calling patientAssessmentsAnalysisControllerAnalyze.
+ *   onComplete   — notifies wizard this step manages its own footer
+ *   onGenerated  — optional hook fired with the generated text
+ *   onFinish     — called when the user taps Finish
+ *   status       — local state machine: idle | generating | done | error
+ *
+ * DEPENDENCIES:
+ *   react-markdown — renders the markdown result
+ *   lucide-react   — iconography
+ *
+ * LAST UPDATED: 2026-04-20 — migrate off /api/assessment-completion to SDK
+ *   analyze endpoint via parent-supplied onGenerate callback.
+ */
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
@@ -5,29 +40,15 @@ import { Sparkles, Bot, RotateCcw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import Markdown from 'react-markdown';
 
-interface AssessmentQuestion {
-  id: string | number;
-  title?: string;
-  question?: string;
-  label?: string;
-  type?: string;
-  options?: Array<{ label?: string; value?: string; option?: string }>;
-  questions?: Array<{ question: string }>;
-  answers?: Array<{ answer: string }>;
-}
-
 interface GenerateProps {
   title?: string;
-  prompt?: string;
-  assessmentTitle?: string;
-  assessmentQuestions?: AssessmentQuestion[];
-  assessmentAnswers?: Record<string, unknown>;
+  onGenerate: () => Promise<string>;
   onComplete: () => void;
   onGenerated?: (text: string) => void;
   onFinish: () => void;
 }
 
-export function Generate({ title, prompt, assessmentTitle, assessmentQuestions, assessmentAnswers, onComplete, onGenerated, onFinish }: GenerateProps) {
+export function Generate({ title, onGenerate, onComplete, onGenerated, onFinish }: GenerateProps) {
   const [status, setStatus] = useState<'idle' | 'generating' | 'done' | 'error'>('idle');
   const [result, setResult] = useState('');
   const [error, setError] = useState('');
@@ -41,30 +62,7 @@ export function Generate({ title, prompt, assessmentTitle, assessmentQuestions, 
     setStatus('generating');
     setError('');
     try {
-      // Build the prompt exactly like the old frontend:
-      // "{prompt} Assessment: {questions} Answer: {answers}"
-      const assessmentData = (assessmentQuestions || []).map((q) => ({
-        title: q.title || q.question || q.label || '',
-        type: q.type,
-        options: q.options,
-        questions: q.questions,
-        answers: q.answers,
-      }));
-
-      const userPrompt = prompt
-        ? `${prompt} Assessment: ${JSON.stringify(assessmentData)} Answer: ${JSON.stringify(assessmentAnswers || {})}`
-        : `Assessment Name: ${assessmentTitle || 'Unknown'} Assessment: ${JSON.stringify(assessmentData)} Answer: ${JSON.stringify(assessmentAnswers || {})}`;
-
-      const res = await fetch('/api/assessment-completion', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ prompt: userPrompt }),
-      });
-
-      if (!res.ok) throw new Error('Failed to generate report');
-
-      const data = await res.json();
-      const text = data?.result || data?.content || data?.text || '';
+      const text = await onGenerate();
       setResult(text);
       setStatus('done');
       onGenerated?.(text);
@@ -72,7 +70,7 @@ export function Generate({ title, prompt, assessmentTitle, assessmentQuestions, 
       setError(err instanceof Error ? err.message : 'Something went wrong');
       setStatus('error');
     }
-  }, [prompt, assessmentTitle, assessmentQuestions, assessmentAnswers, onGenerated]);
+  }, [onGenerate, onGenerated]);
 
   // Idle state — ready to generate
   if (status === 'idle') {

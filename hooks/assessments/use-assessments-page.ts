@@ -27,8 +27,8 @@
  *   cmsAssessmentsControllerFindAll     — SDK: fetch published assessments
  *   patientsControllerGetAssessments    — SDK: fetch lead-assigned assessments
  *
- * LAST UPDATED: 2026-04-17 — remove unnecessary as unknown casts; add runtime
- *   element-level guards on q.questions / q.answers array casts
+ * LAST UPDATED: 2026-04-20 — pass publicView=true to cmsAssessmentsControllerFindAll
+ *   and drop client-side citationText filter; server handles the public-view gate.
  */
 
 import useSWR from 'swr';
@@ -296,13 +296,16 @@ export function useAssessments() {
     (pageIndex: number) => [assessmentsKey(), pageIndex * PAGE_SIZE, PAGE_SIZE],
     async ([, offset]) => {
       const res = await cmsAssessmentsControllerFindAll({
-        query: { limit: PAGE_SIZE, offset: offset as number, status: 'PUBLISHED' },
+        query: {
+          limit: PAGE_SIZE,
+          offset: offset as number,
+          status: 'PUBLISHED',
+          publicView: true,
+        },
       });
       if (res.error) throw new Error(JSON.stringify(res.error));
       const data = res.data;
-      const items = (data?.items ?? [])
-        .filter((item) => item.citationText != null)
-        .map(mapAssessment);
+      const items = (data?.items ?? []).map(mapAssessment);
       return {
         items,
         pagination: data?.pagination ?? { total: 0, limit: PAGE_SIZE, offset: offset as number },
@@ -341,12 +344,12 @@ export function useFilteredAssessments({
           offset: 0,
           status: 'PUBLISHED',
           search: search ?? undefined,
+          publicView: true,
         },
       });
       if (res.error) throw new Error(JSON.stringify(res.error));
       return (res.data?.items ?? [])
         .filter((item) => {
-          if (item.citationText == null) return false;
           if (category && category !== 'All') {
             return (item.category ?? []).some(
               (c: string) => c.toLowerCase() === category.toLowerCase()

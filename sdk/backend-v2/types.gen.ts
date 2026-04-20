@@ -2242,6 +2242,45 @@ export type MigrationStatusResponseDto = {
     };
 };
 
+export type AssessmentAnalysisDto = {
+    /**
+     * Analysis row id
+     */
+    id: string;
+    /**
+     * AssessmentCompletion id this analysis belongs to
+     */
+    completionId: string;
+    /**
+     * Owning patient userId (copied from completion)
+     */
+    userId?: {
+        [key: string]: unknown;
+    } | null;
+    /**
+     * Campus slug (copied from completion)
+     */
+    campus: string;
+    /**
+     * LLM-generated markdown narrative analyzing the assessment
+     */
+    result: string;
+    /**
+     * Model identifier used
+     */
+    model: string;
+    createdAt: string;
+    updatedAt: string;
+};
+
+export type AssessmentAnalysisListResponseDto = {
+    items: Array<AssessmentAnalysisDto>;
+    /**
+     * Total number of rows
+     */
+    total: number;
+};
+
 export type WorksheetSubmissionListResponseDto = {
     /**
      * List of worksheet submissions
@@ -9080,6 +9119,49 @@ export type PatientAssessmentsControllerGetFailuresResponses = {
 
 export type PatientAssessmentsControllerGetFailuresResponse = PatientAssessmentsControllerGetFailuresResponses[keyof PatientAssessmentsControllerGetFailuresResponses];
 
+export type PatientAssessmentsAnalysisControllerAnalyzeData = {
+    body?: never;
+    path: {
+        completionId: string;
+    };
+    query?: never;
+    url: '/api/v1/patient-assessments/analyze/{completionId}';
+};
+
+export type PatientAssessmentsAnalysisControllerAnalyzeResponses = {
+    200: AssessmentAnalysisDto;
+};
+
+export type PatientAssessmentsAnalysisControllerAnalyzeResponse = PatientAssessmentsAnalysisControllerAnalyzeResponses[keyof PatientAssessmentsAnalysisControllerAnalyzeResponses];
+
+export type PatientAssessmentsAnalysisControllerListData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/api/v1/patient-assessments/analyses';
+};
+
+export type PatientAssessmentsAnalysisControllerListResponses = {
+    200: AssessmentAnalysisListResponseDto;
+};
+
+export type PatientAssessmentsAnalysisControllerListResponse = PatientAssessmentsAnalysisControllerListResponses[keyof PatientAssessmentsAnalysisControllerListResponses];
+
+export type PatientAssessmentsAnalysisControllerGetByIdData = {
+    body?: never;
+    path: {
+        id: string;
+    };
+    query?: never;
+    url: '/api/v1/patient-assessments/analyses/{id}';
+};
+
+export type PatientAssessmentsAnalysisControllerGetByIdResponses = {
+    200: AssessmentAnalysisDto;
+};
+
+export type PatientAssessmentsAnalysisControllerGetByIdResponse = PatientAssessmentsAnalysisControllerGetByIdResponses[keyof PatientAssessmentsAnalysisControllerGetByIdResponses];
+
 export type WorksheetSubmissionsControllerListAllData = {
     body?: never;
     path: {
@@ -10074,6 +10156,10 @@ export type CmsAssessmentsControllerFindAllData = {
          * Only assessments that have at least one question with non-null citationText
          */
         hasQuestionCitation?: boolean;
+        /**
+         * Frontend/public view — hide items without a valid description/citation
+         */
+        publicView?: boolean;
     };
     url: '/api/v1/cms/assessments';
 };

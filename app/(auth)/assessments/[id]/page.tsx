@@ -11,21 +11,32 @@
  *     shape expected by QuestionRenderer; keyValue is narrowed with a runtime
  *     type guard instead of a blind cast.
  *   - Tracks per-step answers in a Record<string, AnswerValue> state map.
- *   - On final step, calls submitAssessment and transitions to a result screen.
+ *   - Generate steps call handleGenerate, which persists the completion via
+ *     submitAssessment (once) and then fetches the LLM markdown via
+ *     analyzeAssessmentCompletion.
+ *   - On final step (or Finish tap from the generate step), handleSubmit
+ *     transitions to the "submitted" screen; the completion is only POSTed
+ *     once thanks to submittedCompletionIdRef.
  *
  * KEY VARIABLES / PROPS / EXPORTS:
- *   assessmentId   — route param, identifies the assessment to fetch
- *   questions      — memoized array of Question objects derived from SDK data
- *   answers        — Record<stepKey, AnswerValue> collected across steps
- *   currentStep    — index into questions array
- *   isStepComplete — whether the current step's answer satisfies the validator
+ *   assessmentId               — route param, identifies the assessment to fetch
+ *   questions                  — memoized array of Question objects derived from SDK data
+ *   answers                    — Record<stepKey, AnswerValue> collected across steps
+ *   currentStep                — index into questions array
+ *   isStepComplete             — whether the current step's answer satisfies the validator
+ *   submittedCompletionIdRef   — set once the CompletionResponseDto is created, used to
+ *                                skip a duplicate POST from handleSubmit
+ *   persistCompletion          — memoized-once submit helper returning the completion id
+ *   handleGenerate             — submits + analyzes; returns markdown for <Generate>
  *
  * DEPENDENCIES:
- *   useAssessmentById      — SWR hook wrapping cmsAssessmentsControllerFindOne
- *   submitAssessment       — SDK call to patientAssessmentsControllerCreateCompletion
- *   QuestionRenderer       — renders question UI by type
+ *   useAssessmentById             — SWR hook wrapping cmsAssessmentsControllerFindOne
+ *   submitAssessment              — SDK call to patientAssessmentsControllerCreateCompletion
+ *   analyzeAssessmentCompletion   — SDK call to patientAssessmentsAnalysisControllerAnalyze
+ *   QuestionRenderer              — renders question UI by type
  *
- * LAST UPDATED: 2026-04-17 — replace keyValue blind cast with runtime type guard
+ * LAST UPDATED: 2026-04-20 — migrate assessment analysis off the removed
+ *   /api/assessment-completion Next route to the SDK analyze endpoint.
  */
 
 'use client';
@@ -37,7 +48,11 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { BackButton } from '@/components/shared/navigation/back-button';
 import { QuestionRenderer, type Question, type AnswerValue } from '@/components/shared/questions/question-renderer';
 import { ChevronLeft, CheckCircle2, AlertCircle, Sparkles } from 'lucide-react';
-import { useAssessmentById, submitAssessment } from '@/hooks/assessments/use-assessment-detail';
+import {
+  useAssessmentById,
+  submitAssessment,
+  analyzeAssessmentCompletion,
+} from '@/hooks/assessments/use-assessment-detail';
 import { useAuth } from '@/hooks/shared/auth/use-auth';
 
 export default function AssessmentFormPage({ params }: { params: Promise<{ id: string }> }) {
@@ -52,6 +67,9 @@ export default function AssessmentFormPage({ params }: { params: Promise<{ id: s
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  // Completion id once persisted — tracked to avoid a second submit when the
+  // generate step has already created the CompletionResponseDto.
+  const submittedCompletionIdRef = useRef<string | null>(null);
 
   const { data: assessmentData, isLoading, error: fetchError } = useAssessmentById(assessmentId);
 
@@ -181,21 +199,32 @@ export default function AssessmentFormPage({ params }: { params: Promise<{ id: s
     if (currentStep > 0) setCurrentStep((s) => s - 1);
   };
 
+  const persistCompletion = async (): Promise<string> => {
+    if (submittedCompletionIdRef.current) return submittedCompletionIdRef.current;
+    const leadId = user?.lead_id ? String(user.lead_id) : '';
+    const formattedAnswers: Record<string, unknown> = {};
+    questions.forEach((q, index) => {
+      const key = `q_${q.id}_step_${index}`;
+      formattedAnswers[key] = {
+        ...answers[key],
+        questionText: q.title || q.label || 'Unknown Question',
+      };
+    });
+    const id = await submitAssessment(leadId, assessmentId, formattedAnswers);
+    submittedCompletionIdRef.current = id;
+    return id;
+  };
+
   const handleSubmit = async () => {
+    // If the generate step already persisted the completion, just show the
+    // submitted screen — no second POST.
+    if (submittedCompletionIdRef.current) {
+      setSubmitted(true);
+      return;
+    }
     setSubmitting(true);
     try {
-      const leadId = user?.lead_id ? String(user.lead_id) : '';
-
-      const formattedAnswers: Record<string, unknown> = {};
-      questions.forEach((q, index) => {
-        const key = `q_${q.id}_step_${index}`;
-        formattedAnswers[key] = {
-          ...answers[key],
-          questionText: q.title || q.label || 'Unknown Question',
-        };
-      });
-
-      await submitAssessment(leadId, assessmentId, formattedAnswers);
+      await persistCompletion();
       setSubmitted(true);
     } catch (err) {
       console.error('Error submitting assessment:', err);
@@ -203,6 +232,11 @@ export default function AssessmentFormPage({ params }: { params: Promise<{ id: s
     } finally {
       setSubmitting(false);
     }
+  };
+
+  const handleGenerate = async (): Promise<string> => {
+    const completionId = await persistCompletion();
+    return analyzeAssessmentCompletion(completionId);
   };
 
   if (isLoading) {
@@ -334,9 +368,7 @@ export default function AssessmentFormPage({ params }: { params: Promise<{ id: s
           answer={answers[currentKey] ?? {}}
           onChange={handleAnswer}
           onComplete={handleComplete}
-          assessmentTitle={isGenerateStep ? (assessment?.title || '') : undefined}
-          allQuestions={isGenerateStep ? questions : undefined}
-          allAnswers={isGenerateStep ? answers : undefined}
+          onGenerate={isGenerateStep ? handleGenerate : undefined}
           onFinish={isGenerateStep ? handleSubmit : undefined}
         />
       </div>
