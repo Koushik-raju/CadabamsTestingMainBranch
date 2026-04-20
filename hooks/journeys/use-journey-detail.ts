@@ -29,7 +29,7 @@
  *   journeysControllerCompleteDay   — advance to next day
  *   SWR (useSWR, globalMutate)
  *
- * LAST UPDATED: 2026-04-16 — added useEnrolledJourneys for My Journeys section on list page
+ * LAST UPDATED: 2026-04-20 — derive JourneyProgress.lastUpdated from newest task.completedAt (enrollment.lastUpdated is often null)
  */
 import useSWR, { mutate as globalMutate } from 'swr';
 import {
@@ -72,6 +72,44 @@ export interface JourneyProgress {
 
 function mapEnrollment(dto: PatientJourneyResponseDto): JourneyProgress {
   const gamification = dto.gamification as Record<string, unknown> | null;
+  const tasks = dto.tasks ?? [];
+  // Derive lastUpdated from the newest task.completedAt so cooldown/stale logic
+  // works even when the enrollment DTO doesn't populate its own lastUpdated field.
+  const latestTaskCompletedAt = tasks.reduce<string | null>((latest, t) => {
+    if (!t.completedAt) return latest;
+    if (!latest || new Date(t.completedAt).getTime() > new Date(latest).getTime()) return t.completedAt;
+    return latest;
+  }, null);
+  // Prefer the newest of (enrollment.lastUpdated, enrollment.lastCompletedDate,
+  // max(task.completedAt), enrollment.updatedAt). If we always chose task.completedAt,
+  // an enrollment that advanced days but completed no new tasks would stay "stale"
+  // forever and re-fire the 24h auto-advance on every mount — that's how we ended
+  // up with currentDay values like 11 and 91.
+  const candidates: Array<string | null | undefined> = [
+    dto.lastUpdated,
+    dto.lastCompletedDate,
+    latestTaskCompletedAt,
+    dto.updatedAt,
+  ];
+  const newestCandidate = candidates.reduce<string | null>((acc, c) => {
+    if (!c) return acc;
+    if (!acc || new Date(c).getTime() > new Date(acc).getTime()) return c;
+    return acc;
+  }, null);
+  const lastUpdated = newestCandidate ?? new Date().toISOString();
+  console.log('[use-journey-detail] mapEnrollment', {
+    journeyId: dto.journeyId,
+    enrollmentId: dto.id,
+    dto_currentDay: dto.currentDay,
+    dto_lastUpdated: dto.lastUpdated,
+    dto_lastCompletedDate: dto.lastCompletedDate,
+    dto_updatedAt: dto.updatedAt,
+    task_count: tasks.length,
+    task_taskIds: tasks.map(t => t.taskId),
+    task_completedAts: tasks.map(t => t.completedAt),
+    derived_latestTaskCompletedAt: latestTaskCompletedAt,
+    derived_lastUpdated: lastUpdated,
+  });
   return {
     enrollmentId: dto.id,
     journeyId: dto.journeyId,
@@ -83,9 +121,9 @@ function mapEnrollment(dto: PatientJourneyResponseDto): JourneyProgress {
     gems: (gamification?.gems as number) ?? 0,
     isPremium: false,
     progress: dto.progress ?? 0,
-    completedNodeIds: (dto.tasks ?? []).map((t) => t.taskId),
+    completedNodeIds: tasks.map((t) => t.taskId),
     startDate: dto.startDate ?? new Date().toISOString(),
-    lastUpdated: dto.lastUpdated ?? new Date().toISOString(),
+    lastUpdated,
     isActive: dto.isActive,
   };
 }
@@ -171,20 +209,61 @@ export async function advanceCurrentDay(
   _mobile: string,
   journeyId: string
 ): Promise<void> {
-  // Get enrollment first to find enrollmentId and currentDay
+  console.log('[advanceCurrentDay] start', { journeyId });
+  const key = journeyEnrollmentKey(journeyId);
+  const completedAt = new Date().toISOString();
+
   const res = await journeysControllerGetByJourneyId({
     path: { campus: 'cadabams', journeyId },
   });
-  if (res.error || !res.data) return;
+  if (res.error || !res.data) {
+    console.warn('[advanceCurrentDay] pre-fetch failed', { journeyId, error: res.error });
+    return;
+  }
 
   const currentDay = res.data.currentDay ?? 1;
-
-  await journeysControllerCompleteDay({
-    path: { campus: 'cadabams', id: res.data.id },
-    body: { dayNumber: currentDay + 1, completedAt: new Date().toISOString() },
+  const nextDay = currentDay + 1;
+  console.log('[advanceCurrentDay] server state', {
+    enrollmentId: res.data.id,
+    server_currentDay: currentDay,
+    nextDay,
+    server_lastUpdated: res.data.lastUpdated,
+    server_task_count: res.data.tasks?.length ?? 0,
   });
 
-  await globalMutate(journeyEnrollmentKey(journeyId));
+  // Optimistically bump currentDay so the UI unlocks the next day instantly
+  // and doesn't flash back to the previous day during revalidation.
+  await globalMutate<JourneyProgress | null>(
+    key,
+    (current) => {
+      const next = current ? { ...current, currentDay: nextDay, lastUpdated: completedAt } : current;
+      console.log('[advanceCurrentDay] optimistic cache write', {
+        prev_currentDay: current?.currentDay,
+        next_currentDay: next?.currentDay,
+        prev_lastUpdated: current?.lastUpdated,
+        next_lastUpdated: next?.lastUpdated,
+      });
+      return next;
+    },
+    { revalidate: false }
+  );
+
+  try {
+    console.log('[advanceCurrentDay] POST completeDay', { enrollmentId: res.data.id, nextDay, completedAt });
+    const postRes = await journeysControllerCompleteDay({
+      path: { campus: 'cadabams', id: res.data.id },
+      body: { dayNumber: nextDay, completedAt },
+    });
+    if (postRes.error) throw new Error(JSON.stringify(postRes.error));
+    console.log('[advanceCurrentDay] ✓ POST completeDay succeeded', { response: postRes.data });
+  } catch (err) {
+    console.error('[advanceCurrentDay] ✗ POST completeDay failed — rolling back', err);
+    await globalMutate(key); // rollback via revalidation
+    throw err;
+  }
+
+  console.log('[advanceCurrentDay] background revalidate');
+  globalMutate(key);
 }
 
 export async function updateNodeProgress(
@@ -193,16 +272,67 @@ export async function updateNodeProgress(
   nodeId: string,
   _totalNodes: number
 ): Promise<void> {
-  // Get enrollment to find enrollmentId
-  const res = await journeysControllerGetByJourneyId({
-    path: { campus: 'cadabams', journeyId },
-  });
-  if (res.error || !res.data) return;
+  console.log('[updateNodeProgress] start', { journeyId, nodeId });
+  const key = journeyEnrollmentKey(journeyId);
+  const completedAt = new Date().toISOString();
 
-  await journeysControllerCompleteTask({
-    path: { campus: 'cadabams', id: res.data.id },
-    body: { taskId: nodeId, completedAt: new Date().toISOString() },
-  });
+  // Optimistic update — keeps the node marked done while the server commits,
+  // so the UI doesn't flash complete → locked before the revalidate lands.
+  await globalMutate<JourneyProgress | null>(
+    key,
+    (current) => {
+      if (!current) {
+        console.log('[updateNodeProgress] optimistic skipped — no cached progress');
+        return current;
+      }
+      if (current.completedNodeIds.includes(nodeId)) {
+        console.log('[updateNodeProgress] optimistic — nodeId already present, bumping lastUpdated only', {
+          nodeId, prev_lastUpdated: current.lastUpdated, next_lastUpdated: completedAt,
+        });
+        return { ...current, lastUpdated: completedAt };
+      }
+      const nextIds = [...current.completedNodeIds, nodeId];
+      console.log('[updateNodeProgress] optimistic — appending nodeId', {
+        nodeId,
+        prev_completed_count: current.completedNodeIds.length,
+        next_completed_count: nextIds.length,
+        prev_lastUpdated: current.lastUpdated,
+        next_lastUpdated: completedAt,
+      });
+      return {
+        ...current,
+        completedNodeIds: nextIds,
+        lastUpdated: completedAt,
+      };
+    },
+    { revalidate: false }
+  );
 
-  await globalMutate(journeyEnrollmentKey(journeyId));
+  try {
+    const res = await journeysControllerGetByJourneyId({
+      path: { campus: 'cadabams', journeyId },
+    });
+    if (res.error || !res.data) {
+      console.warn('[updateNodeProgress] pre-fetch failed', { error: res.error });
+      await globalMutate(key);
+      return;
+    }
+
+    console.log('[updateNodeProgress] POST completeTask', {
+      enrollmentId: res.data.id, nodeId, completedAt,
+    });
+    const postRes = await journeysControllerCompleteTask({
+      path: { campus: 'cadabams', id: res.data.id },
+      body: { taskId: nodeId, completedAt },
+    });
+    if (postRes.error) throw new Error(JSON.stringify(postRes.error));
+    console.log('[updateNodeProgress] ✓ POST completeTask succeeded', { nodeId, response: postRes.data });
+  } catch (err) {
+    console.error('[updateNodeProgress] ✗ POST completeTask failed — rolling back', { nodeId, err });
+    await globalMutate(key);
+    throw err;
+  }
+
+  console.log('[updateNodeProgress] background revalidate', { nodeId });
+  globalMutate(key);
 }

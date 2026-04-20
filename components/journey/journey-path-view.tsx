@@ -25,7 +25,7 @@
  *   useJourneyProgress, subscribeToJourney, updateNodeProgress, advanceCurrentDay
  *   PathChain, JourneyTaskActionSheet, JourneyUnitTasksSheet
  *
- * LAST UPDATED: 2026-04-16 — fix navigateToTask/getTaskTitle/getIsMandatory to use ID arrays; add redirectTo param; route book tasks to /consult/find-therapist
+ * LAST UPDATED: 2026-04-20 — add 30-min cooldown before next-day unlock with countdown banner
  */
 'use client';
 
@@ -170,17 +170,118 @@ export function JourneyPathView({ journey, progress, mobile, journeyId }: Journe
   const todayDone  = currentDayNodes.filter(n => completedIds.has(n.nodeId)).length;
   const todayTotal = currentDayNodes.length;
 
-  // Advance to next day when current day is fully done AND it's a new calendar day
+  // Unlock rules for the next day:
+  //   1. Finished today's tasks + 30 min passed since last task → advance.
+  //   2. More than 24 h since last task activity → advance regardless of completion
+  //      (user skipped a day; don't strand them on yesterday's incomplete list).
+  const COOLDOWN_MS = 30 * 60 * 1000;
+  const STALE_MS    = 24 * 60 * 60 * 1000;
+  const lastUpdatedMs = progress?.lastUpdated ? new Date(progress.lastUpdated).getTime() : 0;
+  const isLastDay = currentDayIdx >= steps.length - 1;
+
+  const [now, setNow] = useState(() => Date.now());
+  const msSinceLastTask = lastUpdatedMs > 0 ? now - lastUpdatedMs : 0;
+
+  const staleUnlock    = isSubscribed && !isLastDay && lastUpdatedMs > 0 && msSinceLastTask >= STALE_MS;
+  const cooldownActive = isSubscribed && currentDayAllDone && !isLastDay && lastUpdatedMs > 0 && !staleUnlock;
+
   useEffect(() => {
-    if (!isSubscribed || !mobile || !currentDayAllDone) return;
-    if (currentDayIdx >= steps.length - 1) return; // already on last step
-    const todayStr       = new Date().toISOString().split('T')[0];
-    const lastUpdatedStr = progress?.lastUpdated
-      ? new Date(progress.lastUpdated).toISOString().split('T')[0]
-      : todayStr;
-    if (todayStr <= lastUpdatedStr) return; // same day — don't advance yet
-    advanceCurrentDay(mobile, journeyId).catch(console.error);
-  }, [isSubscribed, mobile, currentDayAllDone, currentDayIdx, steps.length, journeyId, progress?.lastUpdated]);
+    if (!cooldownActive) return;
+    const remaining = COOLDOWN_MS - (Date.now() - lastUpdatedMs);
+    if (remaining <= 0) { setNow(Date.now()); return; }
+    const id = setInterval(() => setNow(Date.now()), 1000);
+    return () => clearInterval(id);
+  }, [cooldownActive, lastUpdatedMs, COOLDOWN_MS]);
+
+  const cooldownRemainingMs = cooldownActive ? Math.max(0, COOLDOWN_MS - msSinceLastTask) : 0;
+  const cooldownReady = !cooldownActive || cooldownRemainingMs === 0;
+  const showCooldownBanner = cooldownActive && cooldownRemainingMs > 0;
+
+  function formatCountdown(ms: number): string {
+    const total = Math.ceil(ms / 1000);
+    const mm = Math.floor(total / 60).toString().padStart(2, '0');
+    const ss = (total % 60).toString().padStart(2, '0');
+    return `${mm}:${ss}`;
+  }
+
+  // Advance to the next day when either unlock rule is met.
+  // Guard: only fire once per (journeyId, fromDay) pair, otherwise a stale
+  // lastUpdated on the server causes the effect to re-fire after each
+  // revalidation and the day counter thrashes.
+  const advancedFromRef = useRef<string | null>(null);
+  const fromDay = progress?.currentDay ?? 0;
+
+  // ───────────────────────── debug logging ─────────────────────────
+  // Logs snapshot every render so you can trace state transitions in the console.
+  console.log('[journey-path-view] render snapshot', {
+    journeyId,
+    isSubscribed,
+    mobile: mobile ? `${mobile.slice(0, 3)}…` : null,
+    stepsCount: steps.length,
+    progress_currentDay: progress?.currentDay,
+    currentDayIdx,
+    fromDay,
+    isLastDay,
+    totalNodes,
+    currentDayNodeIds: currentDayNodes.map(n => n.nodeId),
+    completedNodeIds: Array.from(completedIds),
+    todayDone,
+    todayTotal,
+    currentDayAllDone,
+    allComplete,
+    progress_lastUpdated: progress?.lastUpdated ?? null,
+    lastUpdatedMs,
+    lastUpdatedISO: lastUpdatedMs ? new Date(lastUpdatedMs).toISOString() : null,
+    now,
+    nowISO: new Date(now).toISOString(),
+    msSinceLastTask,
+    msSinceLastTaskHuman: lastUpdatedMs ? `${(msSinceLastTask / 1000 / 60).toFixed(2)} min` : 'n/a',
+    COOLDOWN_MS,
+    STALE_MS,
+    staleUnlock,
+    cooldownActive,
+    cooldownRemainingMs,
+    cooldownReady,
+    showCooldownBanner,
+    activeNodeId,
+    advancedFromRef: advancedFromRef.current,
+  });
+
+  useEffect(() => {
+    if (!isSubscribed || !mobile || isLastDay) {
+      console.log('[journey-path-view] advance-effect skipped (preconditions)', {
+        isSubscribed, mobile: !!mobile, isLastDay,
+      });
+      return;
+    }
+    const canAdvanceFromCompletion = currentDayAllDone && cooldownReady;
+    if (!canAdvanceFromCompletion && !staleUnlock) {
+      console.log('[journey-path-view] advance-effect skipped (neither rule met)', {
+        currentDayAllDone, cooldownReady, staleUnlock, cooldownRemainingMs,
+      });
+      return;
+    }
+    const guardKey = `${journeyId}:${fromDay}`;
+    if (advancedFromRef.current === guardKey) {
+      console.log('[journey-path-view] advance-effect skipped (guard already fired)', { guardKey });
+      return;
+    }
+    advancedFromRef.current = guardKey;
+    console.log('[journey-path-view] → advanceCurrentDay()', {
+      guardKey,
+      reason: staleUnlock ? 'STALE_24H' : 'COOLDOWN_DONE',
+      currentDayAllDone,
+      cooldownReady,
+      staleUnlock,
+      msSinceLastTaskHuman: lastUpdatedMs ? `${(msSinceLastTask / 1000 / 60).toFixed(2)} min` : 'n/a',
+    });
+    advanceCurrentDay(mobile, journeyId)
+      .then(() => console.log('[journey-path-view] ✓ advanceCurrentDay resolved', { guardKey }))
+      .catch((e) => {
+        advancedFromRef.current = null; // allow retry on failure
+        console.error('[journey-path-view] ✗ advanceCurrentDay failed', { guardKey, error: e });
+      });
+  }, [isSubscribed, mobile, currentDayAllDone, cooldownReady, staleUnlock, isLastDay, journeyId, fromDay, cooldownRemainingMs, lastUpdatedMs, msSinceLastTask]);
 
   const isPaidFreePreview = isSubscribed && (journey.isPremium ?? false) && !progress?.isPremium;
 
@@ -206,8 +307,9 @@ export function JourneyPathView({ journey, progress, mobile, journeyId }: Journe
       return firstIncomplete?.nodeId === nodeId ? 'default' : 'locked';
     }
 
-    // Previous days — always completed (or locked if somehow missed)
-    if (stepIdx < currentDayIdx) return completedIds.has(nodeId) ? 'completed' : 'locked';
+    // Previous days — completed stays completed, skipped stays open so the user
+    // can go back and finish it. Never lock anything before the active day.
+    if (stepIdx < currentDayIdx) return completedIds.has(nodeId) ? 'completed' : 'default';
 
     // Future days — always locked regardless of completion
     if (stepIdx > currentDayIdx) return 'locked';
@@ -439,8 +541,37 @@ export function JourneyPathView({ journey, progress, mobile, journeyId }: Journe
         </div>
       )}
 
-      {/* Today banner */}
-      {isSubscribed && activeStep && !allComplete && (
+      {/* Sticky "day complete" cooldown banner — styled like the premium banner.
+          top-14 sits just under the page's sticky app bar (which is top-0 z-20). */}
+      {showCooldownBanner && (
+        <div className="sticky top-14 z-30 mx-4 mt-3 rounded-2xl overflow-hidden border border-emerald-200 shadow-lg">
+          <div className="bg-gradient-to-br from-emerald-500 to-teal-600 px-4 py-3 flex items-start gap-3">
+            <div className="relative w-11 h-11 rounded-2xl bg-gradient-to-br from-emerald-400 to-teal-500 flex-shrink-0 flex items-center justify-center shadow-sm">
+              <div className="absolute -top-2 -right-2 w-7 h-7 rounded-full bg-white/10" />
+              <Clock className="w-5 h-5 text-white" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-bold text-white">Day complete</p>
+              <p className="text-xs text-white/80 mt-0.5 leading-snug">
+                Great work — take a break. Next day unlocks soon.
+              </p>
+            </div>
+            <div className="text-right flex-shrink-0">
+              <p className="text-xl font-extrabold text-white leading-none tabular-nums">
+                {formatCountdown(cooldownRemainingMs)}
+              </p>
+              <p className="text-[10px] text-white/70 uppercase tracking-wider mt-0.5">remaining</p>
+            </div>
+          </div>
+          <div className="bg-card px-4 py-2.5 flex items-center justify-between">
+            <p className="text-xs text-muted-foreground">Day {currentDayIdx + 1} done · Day {currentDayIdx + 2} unlocks next</p>
+            <span className="text-xs font-bold text-emerald-600">{todayDone}/{todayTotal} tasks</span>
+          </div>
+        </div>
+      )}
+
+      {/* Today banner (default state) */}
+      {isSubscribed && activeStep && !allComplete && !showCooldownBanner && (
         <div
           className="mx-4 mt-3 mb-0 rounded-2xl px-4 py-3 flex items-center gap-3"
           style={{ background: 'hsl(var(--primary) / 0.08)', border: '1px solid hsl(var(--primary) / 0.14)' }}
