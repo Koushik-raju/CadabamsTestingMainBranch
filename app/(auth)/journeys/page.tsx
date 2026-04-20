@@ -2,9 +2,9 @@
  * FILE: app/(auth)/journeys/page.tsx
  *
  * PURPOSE:
- *   Two-tab journeys page: "Explore" shows the discovery catalogue (featured hero +
- *   2-col quick picks, premium-first, enrolled journeys filtered out); "My Journeys"
- *   shows the user's enrolled journeys as a full-width vertical list.
+ *   Two-tab journeys page: "Explore" shows the discovery catalogue (swipable
+ *   featured carousel + 2-col quick picks); "My Journeys" shows the user's
+ *   enrolled journeys as a full-width vertical list.
  *
  * LOGIC OVERVIEW:
  *   1. Fetch all published journeys (useJourneys) and user enrollments (useEnrolledJourneys).
@@ -12,27 +12,31 @@
  *   3. enrichedEnrollments merges enrollment data with CMS name/icon/isPremium/totalDays.
  *   4. enrolledIds Set is used to filter enrolled journeys out of the discovery list.
  *   5. Discovery list is filtered by search + category, then sorted premium-first.
- *   6. Two tabs: "explore" (default) and "mine". Tab trigger shows enrollment count badge.
- *   7. "My Journeys" tab: vertical JourneyCard list, skeleton loading, empty state with CTA.
+ *   6. featuredSlides: if the user has enrollments they fill the carousel with
+ *      "In Progress" badge + Day X/Y + "Continue →" CTA; otherwise the top 5
+ *      sorted discovery journeys fill it with "Trending" + "Start Now →".
+ *   7. quickPicks skips the 5 items already in the trending carousel to avoid
+ *      duplicates; when enrolled journeys feed the carousel it uses items 0–9.
+ *   8. Two tabs: "explore" (default) and "mine". Tab trigger shows enrollment count badge.
  *
  * KEY VARIABLES / PROPS / EXPORTS:
  *   activeTab           — 'explore' | 'mine'; controls which tab is visible
  *   enrichedEnrollments — JourneyProgress[] merged with CMS data for display
  *   enrolledIds         — Set<string> of journeyIds already enrolled
  *   sortedFiltered      — discovery list after filter + premium-first sort
- *   featuredJourney     — first item in sortedFiltered; shown as hero card
- *   quickPicks          — items 1–10 in sortedFiltered; shown as 2-col grid
+ *   featuredSlides      — FeaturedSlide[] fed into FeaturedJourneyCarousel
+ *   quickPicks          — items shown in the 2-col grid, offset to skip carousel items
  *
  * DEPENDENCIES:
  *   useJourneys()           — hooks/journeys/use-journeys-page.ts
  *   useEnrolledJourneys()   — hooks/journeys/use-journey-detail.ts
  *   JourneyCard             — components/journey/journey-card.tsx
- *   FeaturedJourneyCard     — components/journey/featured-journey-card.tsx
+ *   FeaturedJourneyCarousel — components/journey/featured-journey-carousel.tsx
  *   JourneyDiscoveryCard    — components/journey/journey-discovery-card.tsx
  *   CategoryChips           — components/journey/category-chips.tsx
  *   shadcn Tabs             — components/ui/tabs.tsx
  *
- * LAST UPDATED: 2026-04-16 — redesigned to two-tab layout (Explore / My Journeys)
+ * LAST UPDATED: 2026-04-20 — swipable featured carousel (enrolled first, else trending)
  */
 'use client';
 
@@ -46,13 +50,17 @@ import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { RecommendationBanner } from '@/components/journey/recommendation-banner';
 import { CategoryChips } from '@/components/journey/category-chips';
-import { FeaturedJourneyCard } from '@/components/journey/featured-journey-card';
+import {
+  FeaturedJourneyCarousel,
+  type FeaturedSlide,
+} from '@/components/journey/featured-journey-carousel';
 import { JourneyDiscoveryCard } from '@/components/journey/journey-discovery-card';
 import { JourneyCard } from '@/components/journey/journey-card';
 import { useJourneys } from '@/hooks/journeys/use-journeys-page';
 import { useEnrolledJourneys } from '@/hooks/journeys/use-journey-detail';
 import { useAuth } from '@/hooks/shared/auth/use-auth';
 import { extractJourneyName, extractJourneyDescription } from '@/types/journey';
+import { fixImageUrl } from '@/lib/utils';
 import { BackButton } from '@/components/shared/navigation/back-button';
 
 // Firebase-based assessment category lookup removed — now always returns null
@@ -141,8 +149,36 @@ function JourneysInner() {
     });
   }, [journeys, enrolledIds, search, activeCategory]);
 
-  const featuredJourney = sortedFiltered[0] ?? null;
-  const quickPicks = sortedFiltered.slice(1, 11);
+  // Build featured carousel slides: enrolled journeys take priority; otherwise
+  // top 5 from the sorted discovery list.
+  const featuredSlides: FeaturedSlide[] = useMemo(() => {
+    if (enrichedEnrollments.length > 0) {
+      return enrichedEnrollments.map((e) => ({
+        key: e.enrollmentId,
+        id: e.journeyId,
+        name: e.name,
+        description: '',
+        imageUrl: fixImageUrl(e.icon),
+        dayCount: e.totalDays,
+        badgeLabel: 'In Progress',
+        ctaLabel: 'Continue →',
+        progress: { currentDay: e.currentDay, totalDays: e.totalDays },
+      }));
+    }
+    return sortedFiltered.slice(0, 5).map((j) => ({
+      key: j.id,
+      id: j.id,
+      name: extractJourneyName(j.name),
+      description: extractJourneyDescription(j.description),
+      imageUrl: fixImageUrl(j.icon),
+      dayCount: j.steps?.length ?? 30,
+    }));
+  }, [enrichedEnrollments, sortedFiltered]);
+
+  const hasEnrolled = enrichedEnrollments.length > 0;
+  const quickPicks = hasEnrolled
+    ? sortedFiltered.slice(0, 10)
+    : sortedFiltered.slice(5, 15);
 
   const recommendedCount = useMemo(() => {
     if (!recommendedCategory) return 0;
@@ -239,8 +275,8 @@ function JourneysInner() {
               </h2>
               {isLoading ? (
                 <Skeleton className="w-full h-[220px] rounded-2xl" />
-              ) : featuredJourney ? (
-                <FeaturedJourneyCard journey={featuredJourney} />
+              ) : featuredSlides.length > 0 ? (
+                <FeaturedJourneyCarousel slides={featuredSlides} />
               ) : (
                 <p className="text-sm text-muted-foreground py-4 text-center">
                   No journeys found.
