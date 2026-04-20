@@ -42,109 +42,6 @@ export const DOCTORS: DoctorListing[] = ([
         7
       ],
       [
-        "Mental Retardation",
-        12
-      ],
-      [
-        "Mood Disorders",
-        13
-      ],
-      [
-        "Obsessive-Compulsive Disorder",
-        14
-      ],
-      [
-        "Personality Disorder",
-        15
-      ],
-      [
-        "ocd",
-        34
-      ],
-      [
-        "Drug addiction",
-        36
-      ],
-      [
-        "Alcohol Addiction",
-        37
-      ],
-      [
-        "Depression",
-        38
-      ]
-    ],
-    "image": "https://crm.cadabams.com/image/86368",
-    "speciality_id": [
-      1,
-      "Consultant Psychiatrist"
-    ],
-    "id": 86368,
-    "language_preference": [
-      [
-        "English",
-        71
-      ],
-      [
-        "Hindi",
-        76
-      ],
-      [
-        "Kannada",
-        78
-      ]
-    ],
-    "city": [
-      [
-        "Bengaluru",
-        1
-      ]
-    ],
-    "name": "DR PRAKRUTHI N",
-    "book_package": false,
-    "area": [
-      [
-        "Whitefield Bengaluru",
-        4
-      ]
-    ],
-    "cns_preference": [
-      [
-        "tDCS",
-        10
-      ]
-    ],
-    "book_package_id": null,
-    "age_preference": [
-      [
-        "Adult Cases",
-        7
-      ],
-      [
-        "Geriatric Cases",
-        11
-      ]
-    ]
-  },
-  {
-    "illness_treated": [
-      [
-        "Addiction",
-        1
-      ],
-      [
-        "ADHD",
-        2
-      ],
-      [
-        "Anxiety",
-        3
-      ],
-      [
-        "Dementia",
-        7
-      ],
-      [
         "Dual Diagnosis",
         8
       ],
@@ -262,6 +159,165 @@ export const DOCTORS: DoctorListing[] = ([
       [
         "Adolescent Cases",
         12
+      ]
+    ]
+  },
+  {
+    "illness_treated": [
+      [
+        "Addiction",
+        1
+      ],
+      [
+        "ADHD",
+        2
+      ],
+      [
+        "Anxiety",
+        3
+      ],
+      [
+        "Dementia",
+        7
+      ],
+      [
+        "Eating Disorders",
+        9
+      ],
+      [
+        "Learning Disability",
+        11
+      ],
+      [
+        "Mental Retardation",
+        12
+      ],
+      [
+        "Mood Disorders",
+        13
+      ],
+      [
+        "Obsessive-Compulsive Disorder",
+        14
+      ],
+      [
+        "Personality Disorder",
+        15
+      ],
+      [
+        "Psychosis",
+        16
+      ],
+      [
+        "Relationship Issues",
+        17
+      ],
+      [
+        "Stress ",
+        19
+      ],
+      [
+        "Trauma",
+        20
+      ],
+      [
+        "Family issues",
+        27
+      ],
+      [
+        "Schizophrenia",
+        32
+      ],
+      [
+        "bipolar",
+        33
+      ],
+      [
+        "ocd",
+        34
+      ],
+      [
+        "Alzheimer's",
+        35
+      ],
+      [
+        "Drug addiction",
+        36
+      ],
+      [
+        "Alcohol Addiction",
+        37
+      ],
+      [
+        "Depression",
+        38
+      ],
+      [
+        "ketamine",
+        39
+      ]
+    ],
+    "image": "https://crm.cadabams.com/image/5345",
+    "speciality_id": [
+      1,
+      "Consultant Psychiatrist"
+    ],
+    "id": 5345,
+    "language_preference": [
+      [
+        "English",
+        71
+      ],
+      [
+        "Hindi",
+        76
+      ],
+      [
+        "Kannada",
+        78
+      ],
+      [
+        "Tamil",
+        114
+      ]
+    ],
+    "city": [
+      [
+        "Bengaluru",
+        1
+      ]
+    ],
+    "name": "Dr. Priya Raghvan",
+    "book_package": false,
+    "area": [
+      [
+        "J P Nagar - Bengaluru",
+        1
+      ]
+    ],
+    "cns_preference": [
+      [
+        "RTMS",
+        7
+      ],
+      [
+        "ECT",
+        12
+      ]
+    ],
+    "book_package_id": null,
+    "age_preference": [
+      [
+        "Adult Cases",
+        7
+      ],
+      [
+        "Corporate Mental Health (EAP)",
+        10
+      ],
+      [
+        "Geriatric Cases",
+        11
       ]
     ]
   },
@@ -1013,165 +1069,6 @@ export const DOCTORS: DoctorListing[] = ([
       [
         "Adolescent Cases",
         12
-      ]
-    ]
-  },
-  {
-    "illness_treated": [
-      [
-        "Addiction",
-        1
-      ],
-      [
-        "ADHD",
-        2
-      ],
-      [
-        "Anxiety",
-        3
-      ],
-      [
-        "Dementia",
-        7
-      ],
-      [
-        "Eating Disorders",
-        9
-      ],
-      [
-        "Learning Disability",
-        11
-      ],
-      [
-        "Mental Retardation",
-        12
-      ],
-      [
-        "Mood Disorders",
-        13
-      ],
-      [
-        "Obsessive-Compulsive Disorder",
-        14
-      ],
-      [
-        "Personality Disorder",
-        15
-      ],
-      [
-        "Psychosis",
-        16
-      ],
-      [
-        "Relationship Issues",
-        17
-      ],
-      [
-        "Stress ",
-        19
-      ],
-      [
-        "Trauma",
-        20
-      ],
-      [
-        "Family issues",
-        27
-      ],
-      [
-        "Schizophrenia",
-        32
-      ],
-      [
-        "bipolar",
-        33
-      ],
-      [
-        "ocd",
-        34
-      ],
-      [
-        "Alzheimer's",
-        35
-      ],
-      [
-        "Drug addiction",
-        36
-      ],
-      [
-        "Alcohol Addiction",
-        37
-      ],
-      [
-        "Depression",
-        38
-      ],
-      [
-        "ketamine",
-        39
-      ]
-    ],
-    "image": "https://crm.cadabams.com/image/5345",
-    "speciality_id": [
-      1,
-      "Consultant Psychiatrist"
-    ],
-    "id": 5345,
-    "language_preference": [
-      [
-        "English",
-        71
-      ],
-      [
-        "Hindi",
-        76
-      ],
-      [
-        "Kannada",
-        78
-      ],
-      [
-        "Tamil",
-        114
-      ]
-    ],
-    "city": [
-      [
-        "Bengaluru",
-        1
-      ]
-    ],
-    "name": "Dr. Priya Raghvan",
-    "book_package": false,
-    "area": [
-      [
-        "J P Nagar - Bengaluru",
-        1
-      ]
-    ],
-    "cns_preference": [
-      [
-        "RTMS",
-        7
-      ],
-      [
-        "ECT",
-        12
-      ]
-    ],
-    "book_package_id": null,
-    "age_preference": [
-      [
-        "Adult Cases",
-        7
-      ],
-      [
-        "Corporate Mental Health (EAP)",
-        10
-      ],
-      [
-        "Geriatric Cases",
-        11
       ]
     ]
   },
@@ -3971,7 +3868,7 @@ export const DOCTORS: DoctorListing[] = ([
         29
       ]
     ],
-    "image": null,
+    "image": "https://crm.cadabams.com/image/8738",
     "speciality_id": [
       2,
       "Clinical Psychologist"
@@ -7017,6 +6914,265 @@ export const DOCTORS: DoctorListing[] = ([
         2
       ],
       [
+        "Anxiety",
+        3
+      ],
+      [
+        "Autism Spectrum Disorder",
+        4
+      ],
+      [
+        "Dementia",
+        7
+      ],
+      [
+        "Learning Disability",
+        11
+      ],
+      [
+        "Trauma",
+        20
+      ],
+      [
+        "Schizophrenia",
+        32
+      ],
+      [
+        "bipolar",
+        33
+      ],
+      [
+        "ocd",
+        34
+      ],
+      [
+        "Alzheimer's",
+        35
+      ],
+      [
+        "Depression",
+        38
+      ]
+    ],
+    "image": "https://crm.cadabams.com/image/83092",
+    "speciality_id": [
+      6,
+      "Occupational Therapist"
+    ],
+    "id": 83092,
+    "language_preference": [
+      [
+        "English",
+        71
+      ],
+      [
+        "Hindi",
+        76
+      ],
+      [
+        "Malayalam",
+        97
+      ]
+    ],
+    "city": [
+      [
+        "Bengaluru",
+        1
+      ]
+    ],
+    "name": "Tirzah Johnson",
+    "book_package": false,
+    "area": [
+      [
+        "Kanakapura Road - Bengaluru",
+        2
+      ]
+    ],
+    "cns_preference": [
+      [
+        "School Wellness",
+        9
+      ]
+    ],
+    "book_package_id": null,
+    "age_preference": [
+      [
+        "Adult Cases",
+        7
+      ],
+      [
+        "Child Cases (7-12 years)",
+        8
+      ],
+      [
+        "Child Cases (Less than 7 years)",
+        9
+      ]
+    ]
+  },
+  {
+    "illness_treated": [
+      [
+        "ADHD",
+        2
+      ],
+      [
+        "Autism Spectrum Disorder",
+        4
+      ],
+      [
+        "Conduct Disorder",
+        6
+      ],
+      [
+        "Learning Disability",
+        11
+      ],
+      [
+        "Developmental delay ",
+        25
+      ]
+    ],
+    "image": "https://crm.cadabams.com/image/87418",
+    "speciality_id": [
+      6,
+      "Occupational Therapist"
+    ],
+    "id": 87418,
+    "language_preference": [
+      [
+        "English",
+        71
+      ],
+      [
+        "Hindi",
+        76
+      ]
+    ],
+    "city": [
+      [
+        "Bengaluru",
+        1
+      ]
+    ],
+    "name": "TAHERA MUSTAFA ARSIWALA",
+    "book_package": false,
+    "area": [
+      [
+        "J P Nagar - Bengaluru",
+        1
+      ]
+    ],
+    "cns_preference": null,
+    "book_package_id": null,
+    "age_preference": [
+      [
+        "Adult Cases",
+        7
+      ],
+      [
+        "Child Cases (7-12 years)",
+        8
+      ],
+      [
+        "Adolescent Cases",
+        12
+      ]
+    ]
+  },
+  {
+    "illness_treated": [
+      [
+        "ADHD",
+        2
+      ],
+      [
+        "Autism Spectrum Disorder",
+        4
+      ],
+      [
+        "Cerebral Palsy",
+        5
+      ],
+      [
+        "Conduct Disorder",
+        6
+      ],
+      [
+        "Learning Disability",
+        11
+      ],
+      [
+        "Mental Retardation",
+        12
+      ],
+      [
+        "Developmental delay ",
+        25
+      ]
+    ],
+    "image": "https://crm.cadabams.com/image/53755",
+    "speciality_id": [
+      6,
+      "Occupational Therapist"
+    ],
+    "id": 53755,
+    "language_preference": [
+      [
+        "English",
+        71
+      ],
+      [
+        "Hindi",
+        76
+      ],
+      [
+        "Kannada",
+        78
+      ]
+    ],
+    "city": [
+      [
+        "Bengaluru",
+        1
+      ]
+    ],
+    "name": "Ms Sangeetha",
+    "book_package": false,
+    "area": [
+      [
+        "J P Nagar - Bengaluru",
+        1
+      ]
+    ],
+    "cns_preference": null,
+    "book_package_id": null,
+    "age_preference": [
+      [
+        "Adult Cases",
+        7
+      ],
+      [
+        "Child Cases (7-12 years)",
+        8
+      ],
+      [
+        "Child Cases (Less than 7 years)",
+        9
+      ],
+      [
+        "Adolescent Cases",
+        12
+      ]
+    ]
+  },
+  {
+    "illness_treated": [
+      [
+        "ADHD",
+        2
+      ],
+      [
         "Autism Spectrum Disorder",
         4
       ],
@@ -7119,12 +7275,12 @@ export const DOCTORS: DoctorListing[] = ([
         25
       ]
     ],
-    "image": "https://crm.cadabams.com/image/63307",
+    "image": "https://crm.cadabams.com/image/44848",
     "speciality_id": [
-      9,
-      "Pediatric Physiotherapist"
+      7,
+      "Speech therapist"
     ],
-    "id": 63307,
+    "id": 44848,
     "language_preference": [
       [
         "English",
@@ -7133,12 +7289,26 @@ export const DOCTORS: DoctorListing[] = ([
       [
         "Hindi",
         76
+      ],
+      [
+        "Kannada",
+        78
       ]
     ],
-    "city": null,
-    "name": "Dr Snehil ",
+    "city": [
+      [
+        "Bengaluru",
+        1
+      ]
+    ],
+    "name": "Ms Lirisha Seema Dsouza",
     "book_package": false,
-    "area": null,
+    "area": [
+      [
+        "Kalyan Nagar Bengaluru",
+        5
+      ]
+    ],
     "cns_preference": null,
     "book_package_id": null,
     "age_preference": [
@@ -7159,32 +7329,28 @@ export const DOCTORS: DoctorListing[] = ([
   {
     "illness_treated": [
       [
-        "ADHD",
-        2
-      ],
-      [
-        "Anxiety",
-        3
-      ],
-      [
-        "Autism Spectrum Disorder",
-        4
-      ],
-      [
         "Learning Disability",
         11
       ],
       [
-        "Stress ",
-        19
+        "Developmental delay ",
+        25
+      ],
+      [
+        "Speech delay",
+        42
+      ],
+      [
+        "⁠Speech and language disorders",
+        46
       ]
     ],
-    "image": "https://crm.cadabams.com/image/23312",
+    "image": "https://crm.cadabams.com/image/87097",
     "speciality_id": [
-      8,
-      "Behavior therapist "
+      7,
+      "Speech therapist"
     ],
-    "id": 23312,
+    "id": 87097,
     "language_preference": [
       [
         "English",
@@ -7193,6 +7359,18 @@ export const DOCTORS: DoctorListing[] = ([
       [
         "Hindi",
         76
+      ],
+      [
+        "Kannada",
+        78
+      ],
+      [
+        "Tamil",
+        114
+      ],
+      [
+        "Telugu",
+        116
       ]
     ],
     "city": [
@@ -7201,7 +7379,7 @@ export const DOCTORS: DoctorListing[] = ([
         1
       ]
     ],
-    "name": "Archana Sagar Kwatra",
+    "name": "GANESH RAJ G",
     "book_package": false,
     "area": [
       [
@@ -7223,171 +7401,6 @@ export const DOCTORS: DoctorListing[] = ([
       [
         "Adolescent Cases",
         12
-      ]
-    ]
-  },
-  {
-    "illness_treated": [
-      [
-        "ADHD",
-        2
-      ],
-      [
-        "Autism Spectrum Disorder",
-        4
-      ]
-    ],
-    "image": "https://crm.cadabams.com/image/83090",
-    "speciality_id": [
-      8,
-      "Behavior therapist "
-    ],
-    "id": 83090,
-    "language_preference": [
-      [
-        "English",
-        71
-      ],
-      [
-        "Hindi",
-        76
-      ],
-      [
-        "Malayalam",
-        97
-      ],
-      [
-        "Tamil",
-        114
-      ]
-    ],
-    "city": [
-      [
-        "Bengaluru",
-        1
-      ]
-    ],
-    "name": "Anuja P Varghese",
-    "book_package": false,
-    "area": [
-      [
-        "Kanakapura Road - Bengaluru",
-        2
-      ]
-    ],
-    "cns_preference": null,
-    "book_package_id": null,
-    "age_preference": [
-      [
-        "Child Cases (7-12 years)",
-        8
-      ],
-      [
-        "Adolescent Cases",
-        12
-      ]
-    ]
-  },
-  {
-    "illness_treated": [
-      [
-        "ADHD",
-        2
-      ],
-      [
-        "Anxiety",
-        3
-      ],
-      [
-        "Autism Spectrum Disorder",
-        4
-      ],
-      [
-        "Dementia",
-        7
-      ],
-      [
-        "Learning Disability",
-        11
-      ],
-      [
-        "Trauma",
-        20
-      ],
-      [
-        "Schizophrenia",
-        32
-      ],
-      [
-        "bipolar",
-        33
-      ],
-      [
-        "ocd",
-        34
-      ],
-      [
-        "Alzheimer's",
-        35
-      ],
-      [
-        "Depression",
-        38
-      ]
-    ],
-    "image": "https://crm.cadabams.com/image/83092",
-    "speciality_id": [
-      6,
-      "Occupational Therapist"
-    ],
-    "id": 83092,
-    "language_preference": [
-      [
-        "English",
-        71
-      ],
-      [
-        "Hindi",
-        76
-      ],
-      [
-        "Malayalam",
-        97
-      ]
-    ],
-    "city": [
-      [
-        "Bengaluru",
-        1
-      ]
-    ],
-    "name": "Tirzah Johnson",
-    "book_package": false,
-    "area": [
-      [
-        "Kanakapura Road - Bengaluru",
-        2
-      ]
-    ],
-    "cns_preference": [
-      [
-        "School Wellness",
-        9
-      ]
-    ],
-    "book_package_id": null,
-    "age_preference": [
-      [
-        "Adult Cases",
-        7
-      ],
-      [
-        "Child Cases (7-12 years)",
-        8
-      ],
-      [
-        "Child Cases (Less than 7 years)",
-        9
       ]
     ]
   },
@@ -7500,12 +7513,86 @@ export const DOCTORS: DoctorListing[] = ([
         25
       ]
     ],
-    "image": "https://crm.cadabams.com/image/63308",
+    "image": "https://crm.cadabams.com/image/60625",
     "speciality_id": [
-      10,
-      "Special educator"
+      7,
+      "Speech therapist"
     ],
-    "id": 63308,
+    "id": 60625,
+    "language_preference": [
+      [
+        "English",
+        71
+      ],
+      [
+        "Hindi",
+        76
+      ],
+      [
+        "Kannada",
+        78
+      ]
+    ],
+    "city": [
+      [
+        "Bengaluru",
+        1
+      ]
+    ],
+    "name": "Ms. Rashmi R",
+    "book_package": false,
+    "area": [
+      [
+        "Kanakapura Road - Bengaluru",
+        2
+      ]
+    ],
+    "cns_preference": null,
+    "book_package_id": null,
+    "age_preference": [
+      [
+        "Child Cases (7-12 years)",
+        8
+      ],
+      [
+        "Child Cases (Less than 7 years)",
+        9
+      ],
+      [
+        "Adolescent Cases",
+        12
+      ]
+    ]
+  },
+  {
+    "illness_treated": [
+      [
+        "ADHD",
+        2
+      ],
+      [
+        "Anxiety",
+        3
+      ],
+      [
+        "Autism Spectrum Disorder",
+        4
+      ],
+      [
+        "Learning Disability",
+        11
+      ],
+      [
+        "Stress ",
+        19
+      ]
+    ],
+    "image": "https://crm.cadabams.com/image/23312",
+    "speciality_id": [
+      8,
+      "Behavior therapist "
+    ],
+    "id": 23312,
     "language_preference": [
       [
         "English",
@@ -7516,10 +7603,222 @@ export const DOCTORS: DoctorListing[] = ([
         76
       ]
     ],
-    "city": null,
-    "name": "Ms Pramna",
+    "city": [
+      [
+        "Bengaluru",
+        1
+      ]
+    ],
+    "name": "Archana Sagar Kwatra",
     "book_package": false,
-    "area": null,
+    "area": [
+      [
+        "J P Nagar - Bengaluru",
+        1
+      ]
+    ],
+    "cns_preference": null,
+    "book_package_id": null,
+    "age_preference": [
+      [
+        "Child Cases (7-12 years)",
+        8
+      ],
+      [
+        "Child Cases (Less than 7 years)",
+        9
+      ],
+      [
+        "Adolescent Cases",
+        12
+      ]
+    ]
+  },
+  {
+    "illness_treated": [
+      [
+        "ADHD",
+        2
+      ],
+      [
+        "Autism Spectrum Disorder",
+        4
+      ],
+      [
+        "Learning Disability",
+        11
+      ],
+      [
+        "Stress ",
+        19
+      ]
+    ],
+    "image": "https://crm.cadabams.com/image/65385",
+    "speciality_id": [
+      8,
+      "Behavior therapist "
+    ],
+    "id": 65385,
+    "language_preference": [
+      [
+        "English",
+        71
+      ],
+      [
+        "Hindi",
+        76
+      ],
+      [
+        "Telugu",
+        116
+      ]
+    ],
+    "city": [
+      [
+        "Bengaluru",
+        1
+      ]
+    ],
+    "name": "Brinda Sridhar",
+    "book_package": false,
+    "area": [
+      [
+        "Kalyan Nagar Bengaluru",
+        5
+      ]
+    ],
+    "cns_preference": null,
+    "book_package_id": null,
+    "age_preference": [
+      [
+        "Child Cases (7-12 years)",
+        8
+      ],
+      [
+        "Child Cases (Less than 7 years)",
+        9
+      ],
+      [
+        "Adolescent Cases",
+        12
+      ]
+    ]
+  },
+  {
+    "illness_treated": [
+      [
+        "ADHD",
+        2
+      ],
+      [
+        "Autism Spectrum Disorder",
+        4
+      ]
+    ],
+    "image": "https://crm.cadabams.com/image/83090",
+    "speciality_id": [
+      8,
+      "Behavior therapist "
+    ],
+    "id": 83090,
+    "language_preference": [
+      [
+        "English",
+        71
+      ],
+      [
+        "Hindi",
+        76
+      ],
+      [
+        "Malayalam",
+        97
+      ],
+      [
+        "Tamil",
+        114
+      ]
+    ],
+    "city": [
+      [
+        "Bengaluru",
+        1
+      ]
+    ],
+    "name": "Anuja P Varghese",
+    "book_package": false,
+    "area": [
+      [
+        "Kanakapura Road - Bengaluru",
+        2
+      ]
+    ],
+    "cns_preference": null,
+    "book_package_id": null,
+    "age_preference": [
+      [
+        "Child Cases (7-12 years)",
+        8
+      ],
+      [
+        "Adolescent Cases",
+        12
+      ]
+    ]
+  },
+  {
+    "illness_treated": [
+      [
+        "ADHD",
+        2
+      ],
+      [
+        "Autism Spectrum Disorder",
+        4
+      ],
+      [
+        "Learning Disability",
+        11
+      ]
+    ],
+    "image": "https://crm.cadabams.com/image/65384",
+    "speciality_id": [
+      8,
+      "Behavior therapist "
+    ],
+    "id": 65384,
+    "language_preference": [
+      [
+        "English",
+        71
+      ],
+      [
+        "Hindi",
+        76
+      ],
+      [
+        "Kannada",
+        78
+      ],
+      [
+        "Telugu",
+        116
+      ]
+    ],
+    "city": [
+      [
+        "Bengaluru",
+        1
+      ]
+    ],
+    "name": "Sudati Krishna",
+    "book_package": false,
+    "area": [
+      [
+        "J P Nagar - Bengaluru",
+        1
+      ]
+    ],
     "cns_preference": null,
     "book_package_id": null,
     "age_preference": [
@@ -7564,12 +7863,12 @@ export const DOCTORS: DoctorListing[] = ([
         25
       ]
     ],
-    "image": "https://crm.cadabams.com/image/44848",
+    "image": "https://crm.cadabams.com/image/63307",
     "speciality_id": [
-      7,
-      "Speech therapist"
+      9,
+      "Pediatric Physiotherapist"
     ],
-    "id": 44848,
+    "id": 63307,
     "language_preference": [
       [
         "English",
@@ -7578,26 +7877,12 @@ export const DOCTORS: DoctorListing[] = ([
       [
         "Hindi",
         76
-      ],
-      [
-        "Kannada",
-        78
       ]
     ],
-    "city": [
-      [
-        "Bengaluru",
-        1
-      ]
-    ],
-    "name": "Ms Lirisha Seema Dsouza",
+    "city": null,
+    "name": "Dr Snehil ",
     "book_package": false,
-    "area": [
-      [
-        "Kalyan Nagar Bengaluru",
-        5
-      ]
-    ],
+    "area": null,
     "cns_preference": null,
     "book_package_id": null,
     "age_preference": [
@@ -7692,32 +7977,24 @@ export const DOCTORS: DoctorListing[] = ([
   {
     "illness_treated": [
       [
-        "Personality Disorder",
-        15
+        "ADHD",
+        2
       ],
       [
-        "Psychosis",
-        16
+        "Autism Spectrum Disorder",
+        4
       ],
       [
-        "Relationship Issues",
-        17
-      ],
-      [
-        "Stress ",
-        19
-      ],
-      [
-        "Academic issues",
-        21
+        "Learning Disability",
+        11
       ]
     ],
-    "image": "https://crm.cadabams.com/image/41666",
+    "image": "https://crm.cadabams.com/image/87283",
     "speciality_id": [
-      12,
-      "Family Therapist"
+      10,
+      "Special educator"
     ],
-    "id": 41666,
+    "id": 87283,
     "language_preference": [
       [
         "English",
@@ -7726,10 +8003,6 @@ export const DOCTORS: DoctorListing[] = ([
       [
         "Hindi",
         76
-      ],
-      [
-        "Marathi",
-        99
       ]
     ],
     "city": [
@@ -7738,12 +8011,12 @@ export const DOCTORS: DoctorListing[] = ([
         1
       ]
     ],
-    "name": "ASHWINI DAGDUSING RAJPUT",
+    "name": "Ms. Sakshi Sharma",
     "book_package": false,
     "area": [
       [
-        "J P Nagar - Bengaluru",
-        1
+        "Kanakapura Road - Bengaluru",
+        2
       ]
     ],
     "cns_preference": [
@@ -7755,72 +8028,6 @@ export const DOCTORS: DoctorListing[] = ([
     "book_package_id": null,
     "age_preference": [
       [
-        "Adult Cases",
-        7
-      ],
-      [
-        "Adolescent Cases",
-        12
-      ]
-    ]
-  },
-  {
-    "illness_treated": [
-      [
-        "ADHD",
-        2
-      ],
-      [
-        "Autism Spectrum Disorder",
-        4
-      ],
-      [
-        "Learning Disability",
-        11
-      ],
-      [
-        "Stress ",
-        19
-      ]
-    ],
-    "image": "https://crm.cadabams.com/image/65385",
-    "speciality_id": [
-      8,
-      "Behavior therapist "
-    ],
-    "id": 65385,
-    "language_preference": [
-      [
-        "English",
-        71
-      ],
-      [
-        "Hindi",
-        76
-      ],
-      [
-        "Telugu",
-        116
-      ]
-    ],
-    "city": [
-      [
-        "Bengaluru",
-        1
-      ]
-    ],
-    "name": "Brinda Sridhar",
-    "book_package": false,
-    "area": [
-      [
-        "Kalyan Nagar Bengaluru",
-        5
-      ]
-    ],
-    "cns_preference": null,
-    "book_package_id": null,
-    "age_preference": [
-      [
         "Child Cases (7-12 years)",
         8
       ],
@@ -7861,12 +8068,12 @@ export const DOCTORS: DoctorListing[] = ([
         25
       ]
     ],
-    "image": "https://crm.cadabams.com/image/60625",
+    "image": "https://crm.cadabams.com/image/63308",
     "speciality_id": [
-      7,
-      "Speech therapist"
+      10,
+      "Special educator"
     ],
-    "id": 60625,
+    "id": 63308,
     "language_preference": [
       [
         "English",
@@ -7875,26 +8082,12 @@ export const DOCTORS: DoctorListing[] = ([
       [
         "Hindi",
         76
-      ],
-      [
-        "Kannada",
-        78
       ]
     ],
-    "city": [
-      [
-        "Bengaluru",
-        1
-      ]
-    ],
-    "name": "Ms. Rashmi R",
+    "city": null,
+    "name": "Ms Pramna",
     "book_package": false,
-    "area": [
-      [
-        "Kanakapura Road - Bengaluru",
-        2
-      ]
-    ],
+    "area": null,
     "cns_preference": null,
     "book_package_id": null,
     "age_preference": [
@@ -7909,233 +8102,6 @@ export const DOCTORS: DoctorListing[] = ([
       [
         "Adolescent Cases",
         12
-      ]
-    ]
-  },
-  {
-    "illness_treated": [
-      [
-        "ADHD",
-        2
-      ],
-      [
-        "Autism Spectrum Disorder",
-        4
-      ],
-      [
-        "Learning Disability",
-        11
-      ]
-    ],
-    "image": "https://crm.cadabams.com/image/65384",
-    "speciality_id": [
-      8,
-      "Behavior therapist "
-    ],
-    "id": 65384,
-    "language_preference": [
-      [
-        "English",
-        71
-      ],
-      [
-        "Hindi",
-        76
-      ],
-      [
-        "Kannada",
-        78
-      ],
-      [
-        "Telugu",
-        116
-      ]
-    ],
-    "city": [
-      [
-        "Bengaluru",
-        1
-      ]
-    ],
-    "name": "Sudati Krishna",
-    "book_package": false,
-    "area": [
-      [
-        "J P Nagar - Bengaluru",
-        1
-      ]
-    ],
-    "cns_preference": null,
-    "book_package_id": null,
-    "age_preference": [
-      [
-        "Child Cases (7-12 years)",
-        8
-      ],
-      [
-        "Child Cases (Less than 7 years)",
-        9
-      ],
-      [
-        "Adolescent Cases",
-        12
-      ]
-    ]
-  },
-  {
-    "illness_treated": [
-      [
-        "Addiction",
-        1
-      ],
-      [
-        "Dementia",
-        7
-      ],
-      [
-        "Personality Disorder",
-        15
-      ],
-      [
-        "Schizophrenia",
-        32
-      ],
-      [
-        "bipolar",
-        33
-      ],
-      [
-        "ocd",
-        34
-      ],
-      [
-        "Alzheimer's",
-        35
-      ]
-    ],
-    "image": "https://crm.cadabams.com/image/8829",
-    "speciality_id": [
-      12,
-      "Family Therapist"
-    ],
-    "id": 8829,
-    "language_preference": [
-      [
-        "English",
-        71
-      ],
-      [
-        "Hindi",
-        76
-      ],
-      [
-        "Kannada",
-        78
-      ],
-      [
-        "Marathi",
-        99
-      ],
-      [
-        "Telugu",
-        116
-      ]
-    ],
-    "city": [
-      [
-        "Bengaluru",
-        1
-      ]
-    ],
-    "name": "DR SWARUPA M U",
-    "book_package": false,
-    "area": [
-      [
-        "J P Nagar - Bengaluru",
-        1
-      ]
-    ],
-    "cns_preference": [
-      [
-        "tDCS",
-        10
-      ],
-      [
-        "ECT",
-        12
-      ]
-    ],
-    "book_package_id": null,
-    "age_preference": [
-      [
-        "Adult Cases",
-        7
-      ],
-      [
-        "Geriatric Cases",
-        11
-      ],
-      [
-        "Adolescent Cases",
-        12
-      ]
-    ]
-  },
-  {
-    "illness_treated": [
-      [
-        "Dementia",
-        7
-      ],
-      [
-        "Alzheimer's",
-        35
-      ]
-    ],
-    "image": "https://crm.cadabams.com/image/73833",
-    "speciality_id": [
-      13,
-      "Consultant Geriatrician"
-    ],
-    "id": 73833,
-    "language_preference": [
-      [
-        "English",
-        71
-      ],
-      [
-        "Hindi",
-        76
-      ],
-      [
-        "Kannada",
-        78
-      ]
-    ],
-    "city": [
-      [
-        "Mysore",
-        3
-      ]
-    ],
-    "name": "Dr Shilpa Avarebeel",
-    "book_package": false,
-    "area": [
-      [
-        "Niveditha nagar - Mysore",
-        7
-      ]
-    ],
-    "cns_preference": null,
-    "book_package_id": null,
-    "age_preference": [
-      [
-        "Adult Cases",
-        7
-      ],
-      [
-        "Geriatric Cases",
-        11
       ]
     ]
   },
@@ -8154,40 +8120,20 @@ export const DOCTORS: DoctorListing[] = ([
         5
       ],
       [
-        "Conduct Disorder",
-        6
-      ],
-      [
-        "Learning Disability",
-        11
-      ],
-      [
-        "Mental Retardation",
-        12
-      ],
-      [
         "Developmental delay ",
         25
       ]
     ],
-    "image": "https://crm.cadabams.com/image/53755",
+    "image": "https://crm.cadabams.com/image/86710",
     "speciality_id": [
-      6,
-      "Occupational Therapist"
+      10,
+      "Special educator"
     ],
-    "id": 53755,
+    "id": 86710,
     "language_preference": [
       [
         "English",
         71
-      ],
-      [
-        "Hindi",
-        76
-      ],
-      [
-        "Kannada",
-        78
       ]
     ],
     "city": [
@@ -8196,7 +8142,7 @@ export const DOCTORS: DoctorListing[] = ([
         1
       ]
     ],
-    "name": "Ms Sangeetha",
+    "name": "MEGHANA CLEMENTINE",
     "book_package": false,
     "area": [
       [
@@ -8207,10 +8153,6 @@ export const DOCTORS: DoctorListing[] = ([
     "cns_preference": null,
     "book_package_id": null,
     "age_preference": [
-      [
-        "Adult Cases",
-        7
-      ],
       [
         "Child Cases (7-12 years)",
         8
