@@ -183,6 +183,18 @@ function JourneysInner() {
       </header>
 
       <main className="flex-1 pb-24">
+        <div className="px-4 mb-4">
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+            <Input
+              placeholder="Search journeys..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="pl-9 rounded-xl"
+            />
+          </div>
+        </div>
+
         {recommendedCategory && recommendedCount > 0 && (
           <div className="px-4 mb-3">
             <RecommendationBanner
@@ -227,18 +239,6 @@ function JourneysInner() {
             </div>
           )
         )}
-
-        <div className="px-4 mb-5">
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-            <Input
-              placeholder="Search journeys..."
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              className="pl-9 rounded-xl"
-            />
-          </div>
-        </div>
 
         <div className="px-4">
           {(isLoading || quickPicks.length > 0) && (
