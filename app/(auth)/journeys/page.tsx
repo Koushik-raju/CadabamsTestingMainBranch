@@ -271,7 +271,7 @@ function JourneysInner() {
             {/* Featured Journey */}
             <section className="mb-6">
               <h2 className="text-base font-bold text-foreground mb-3">
-                Featured Journey
+                {hasEnrolled ? 'Your Journeys' : 'Featured Journey'}
               </h2>
               {isLoading ? (
                 <Skeleton className="w-full h-[220px] rounded-2xl" />
