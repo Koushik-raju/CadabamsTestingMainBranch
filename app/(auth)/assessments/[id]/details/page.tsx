@@ -177,6 +177,13 @@ export default function AssessmentDetailsPage({
           Start Assessment
           <ChevronRight className="w-5 h-5 ml-1" />
         </Button>
+        <button
+          type="button"
+          onClick={() => router.push(`/assessments/${assessmentId}/reports`)}
+          className="mt-2 w-full text-center text-[11px] text-muted-foreground/70 hover:text-muted-foreground transition-colors"
+        >
+          View all reports
+        </button>
       </div>
     </div>
   );

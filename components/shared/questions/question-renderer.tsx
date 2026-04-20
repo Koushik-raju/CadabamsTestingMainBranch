@@ -75,8 +75,6 @@ interface QuestionRendererProps {
   answer: AnswerValue;
   onChange: (value: AnswerValue) => void;
   onComplete: (complete: boolean) => void;
-  /** Callback the generate step uses to persist the completion and fetch the LLM analysis markdown */
-  onGenerate?: () => Promise<string>;
   /** Called when the generate component finishes (submit + redirect) */
   onFinish?: () => void;
 }
@@ -132,7 +130,7 @@ function parseKeyValue(kv?: string | Record<string, string>): Record<string, str
   try { return JSON.parse(kv); } catch { return undefined; }
 }
 
-export function QuestionRenderer({ question, answer, onChange, onComplete, onGenerate, onFinish }: QuestionRendererProps) {
+export function QuestionRenderer({ question, answer, onChange, onComplete, onFinish }: QuestionRendererProps) {
   const qType = getQuestionType(question);
   const qLabel = getQuestionLabel(question);
   const options: McqOption[] = question.Questions || question.options?.map(o => ({ option: o.option || o.label || o.value, id: o.id })) || [];
@@ -306,7 +304,6 @@ export function QuestionRenderer({ question, answer, onChange, onComplete, onGen
       return (
         <Generate
           title={qLabel}
-          onGenerate={onGenerate || (async () => '')}
           onComplete={() => onComplete(true)}
           onFinish={onFinish || (() => {})}
         />

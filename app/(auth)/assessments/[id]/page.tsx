@@ -11,12 +11,14 @@
  *     shape expected by QuestionRenderer; keyValue is narrowed with a runtime
  *     type guard instead of a blind cast.
  *   - Tracks per-step answers in a Record<string, AnswerValue> state map.
- *   - Generate steps call handleGenerate, which persists the completion via
- *     submitAssessment (once) and then fetches the LLM markdown via
- *     analyzeAssessmentCompletion.
- *   - On final step (or Finish tap from the generate step), handleSubmit
- *     transitions to the "submitted" screen; the completion is only POSTed
+ *   - The generate wizard step no longer runs the LLM; it just shows a
+ *     "View Report" button that invokes handleSubmit. The actual analyze call
+ *     lives on /assessments/[id]/generate/[completionId].
+ *   - On final step (or View Report tap from the generate step), handleSubmit
+ *     routes to /assessments/[id]/result; the completion is only POSTed
  *     once thanks to submittedCompletionIdRef.
+ *   - A "Past Reports" link in the header links to /assessments/[id]/reports
+ *     so users can view prior reports without leaving the wizard.
  *
  * KEY VARIABLES / PROPS / EXPORTS:
  *   assessmentId               — route param, identifies the assessment to fetch
@@ -27,31 +29,28 @@
  *   submittedCompletionIdRef   — set once the CompletionResponseDto is created, used to
  *                                skip a duplicate POST from handleSubmit
  *   persistCompletion          — memoized-once submit helper returning the completion id
- *   handleGenerate             — submits + analyzes; returns markdown for <Generate>
  *
  * DEPENDENCIES:
  *   useAssessmentById             — SWR hook wrapping cmsAssessmentsControllerFindOne
  *   submitAssessment              — SDK call to patientAssessmentsControllerCreateCompletion
- *   analyzeAssessmentCompletion   — SDK call to patientAssessmentsAnalysisControllerAnalyze
  *   QuestionRenderer              — renders question UI by type
  *
- * LAST UPDATED: 2026-04-20 — migrate assessment analysis off the removed
- *   /api/assessment-completion Next route to the SDK analyze endpoint.
+ * LAST UPDATED: 2026-04-20 — add Past Reports header link.
  */
 
 'use client';
 
 import { useState, use, useMemo, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { BackButton } from '@/components/shared/navigation/back-button';
 import { QuestionRenderer, type Question, type AnswerValue } from '@/components/shared/questions/question-renderer';
-import { ChevronLeft, CheckCircle2, AlertCircle, Sparkles } from 'lucide-react';
+import { ChevronLeft, AlertCircle, FileText } from 'lucide-react';
 import {
   useAssessmentById,
   submitAssessment,
-  analyzeAssessmentCompletion,
 } from '@/hooks/assessments/use-assessment-detail';
 import { useAuth } from '@/hooks/shared/auth/use-auth';
 
@@ -65,7 +64,6 @@ export default function AssessmentFormPage({ params }: { params: Promise<{ id: s
   const [currentStep, setCurrentStep] = useState(0);
   const [isStepComplete, setIsStepComplete] = useState(false);
   const [submitting, setSubmitting] = useState(false);
-  const [submitted, setSubmitted] = useState(false);
   const [error, setError] = useState<string | null>(null);
   // Completion id once persisted — tracked to avoid a second submit when the
   // generate step has already created the CompletionResponseDto.
@@ -216,27 +214,22 @@ export default function AssessmentFormPage({ params }: { params: Promise<{ id: s
   };
 
   const handleSubmit = async () => {
-    // If the generate step already persisted the completion, just show the
-    // submitted screen — no second POST.
+    // Persist the completion (once) and route to the generate page for that
+    // specific completionId, which hosts the "Generate Report" CTA.
     if (submittedCompletionIdRef.current) {
-      setSubmitted(true);
+      router.push(`/assessments/${assessmentId}/generate/${submittedCompletionIdRef.current}`);
       return;
     }
     setSubmitting(true);
     try {
-      await persistCompletion();
-      setSubmitted(true);
+      const completionId = await persistCompletion();
+      router.push(`/assessments/${assessmentId}/generate/${completionId}`);
     } catch (err) {
       console.error('Error submitting assessment:', err);
       setError('Failed to submit assessment. Please try again.');
     } finally {
       setSubmitting(false);
     }
-  };
-
-  const handleGenerate = async (): Promise<string> => {
-    const completionId = await persistCompletion();
-    return analyzeAssessmentCompletion(completionId);
   };
 
   if (isLoading) {
@@ -269,48 +262,6 @@ export default function AssessmentFormPage({ params }: { params: Promise<{ id: s
         <Button className="mt-4" variant="outline" onClick={() => router.back()}>
           Go Back
         </Button>
-      </div>
-    );
-  }
-
-  if (submitted) {
-    return (
-      <div className="min-h-screen bg-background flex flex-col">
-        {/* Full orange progress bar */}
-        <div className="h-1.5 w-full bg-primary" />
-
-        <div className="flex items-center px-3 py-3">
-          <button
-            onClick={() => router.push('/assessments')}
-            className="w-9 h-9 flex items-center justify-center rounded-full hover:bg-muted transition-colors"
-          >
-            <span className="text-xl text-foreground leading-none">×</span>
-          </button>
-        </div>
-
-        <div className="flex-1 flex flex-col items-center justify-center p-6 text-center">
-          <div className="w-20 h-20 rounded-full bg-primary/10 flex items-center justify-center mb-6">
-            <CheckCircle2 className="w-10 h-10 text-primary" />
-          </div>
-          <h2 className="text-2xl font-bold text-foreground mb-3">Assessment Complete</h2>
-          <p className="text-sm text-muted-foreground mb-8 max-w-xs">
-            You&apos;ve answered all questions. We&apos;re ready to compile your personalized insights.
-          </p>
-          <div className="bg-muted rounded-2xl p-4 mb-8 max-w-sm w-full flex items-start gap-3">
-            <Sparkles className="w-4 h-4 text-primary flex-shrink-0 mt-0.5" />
-            <p className="text-xs text-muted-foreground text-left leading-relaxed">
-              AI-Generated Report — This report is generated using artificial intelligence based on
-              your responses. It is for informational purposes only and does not replace professional
-              medical advice.
-            </p>
-          </div>
-          <Button
-            className="w-full max-w-sm bg-primary hover:bg-primary/90 text-white font-semibold h-14 rounded-2xl text-base"
-            onClick={() => router.push(`/assessments/${assessmentId}/analysis`)}
-          >
-            GENERATE REPORT →
-          </Button>
-        </div>
       </div>
     );
   }
@@ -351,6 +302,14 @@ export default function AssessmentFormPage({ params }: { params: Promise<{ id: s
             Step {currentStep + 1} of {questions.length}
           </p>
         </div>
+        <Link
+          href={`/assessments/${assessmentId}/reports`}
+          aria-label="View past reports"
+          className="flex items-center gap-1.5 text-[11px] font-semibold text-foreground bg-muted hover:bg-muted/80 px-2.5 py-1.5 rounded-full transition-colors"
+        >
+          <FileText className="w-3 h-3" />
+          Past Reports
+        </Link>
       </div>
 
       {/* Orange progress bar */}
@@ -368,7 +327,6 @@ export default function AssessmentFormPage({ params }: { params: Promise<{ id: s
           answer={answers[currentKey] ?? {}}
           onChange={handleAnswer}
           onComplete={handleComplete}
-          onGenerate={isGenerateStep ? handleGenerate : undefined}
           onFinish={isGenerateStep ? handleSubmit : undefined}
         />
       </div>
