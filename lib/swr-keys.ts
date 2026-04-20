@@ -53,6 +53,10 @@ export function journeyEnrollmentKey(journeyId: number | string): string {
   return `/journey-enrollment/${journeyId}`;
 }
 
+export function gamificationKey(): string {
+  return '/me/gamification';
+}
+
 export function packagesKey(): string {
   return '/packages';
 }

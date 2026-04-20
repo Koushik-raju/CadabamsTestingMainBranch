@@ -1,33 +1,44 @@
+/**
+ * FILE: app/(auth)/journeys/[id]/details/page.tsx
+ *
+ * PURPOSE:
+ *   Enrolled journey details page. Renders the path view once the CMS journey
+ *   structure and the user's enrollment record are both loaded.
+ *
+ * LOGIC OVERVIEW:
+ *   Resolves the journey id, fetches CMS detail + enrollment via SWR hooks.
+ *   The GET enrollment endpoint auto-enrolls non-premium journeys server-side,
+ *   so this page does not need to call subscribeToJourney explicitly.
+ *
+ * KEY VARIABLES / PROPS / EXPORTS:
+ *   journey     — CMS JourneyItem
+ *   progress    — PatientJourneyResponseDto | null
+ *   isSubscribed — derived from `progress`
+ *
+ * DEPENDENCIES:
+ *   useJourneyDetail, useJourneyProgress — hooks/journeys/use-journey-detail
+ *   JourneyPathView — components/journey/journey-path-view
+ *
+ * LAST UPDATED: 2026-04-20 — drop client-side auto-subscribe (server auto-enrolls on GET)
+ */
 'use client';
 
-import { use, useEffect } from 'react';
+import { use } from 'react';
 import { Suspense } from 'react';
 import { MoreVertical } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { BackButton } from '@/components/shared/navigation/back-button';
 import { JourneyPathView } from '@/components/journey/journey-path-view';
-import { useJourneyDetail, useJourneyProgress, subscribeToJourney } from '@/hooks/journeys/use-journey-detail';
-import { useAuth } from '@/hooks/shared/auth/use-auth';
+import { useJourneyDetail, useJourneyProgress } from '@/hooks/journeys/use-journey-detail';
 import { extractJourneyName } from '@/types/journey';
 
 interface PageProps { params: Promise<{ id: string }> }
 
 function DetailsContent({ params }: PageProps) {
-  const { id }    = use(params);
-  const { user }  = useAuth();
-  const mobile = (
-    ((user as Record<string, unknown>)?.caller_mobile as string | undefined) ??
-    ((user as Record<string, unknown>)?.phone_number as string | undefined)
-  )?.replace(/\D/g, '') ?? null;
+  const { id } = use(params);
 
   const { journey,  isLoading }           = useJourneyDetail(id);
   const { progress, isLoading: progLoad } = useJourneyProgress(id);
-
-  // Auto-subscribe free journeys on first visit
-  useEffect(() => {
-    if (!journey || journey.isPremium || progress || !mobile) return;
-    subscribeToJourney(mobile, journey).catch(console.error);
-  }, [journey, progress, mobile]);
 
   if (isLoading || progLoad) {
     return (
@@ -79,11 +90,9 @@ function DetailsContent({ params }: PageProps) {
         )}
       </div>
 
-      {/* All path logic lives here */}
       <JourneyPathView
         journey={journey}
         progress={progress}
-        mobile={mobile}
         journeyId={id}
       />
     </div>

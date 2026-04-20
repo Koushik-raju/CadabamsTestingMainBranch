@@ -9,21 +9,23 @@ interface PathStatsRowProps {
 
 export function PathStatsRow({ progress }: PathStatsRowProps) {
   const pct = progress.progress ?? 0;
+  const streak = progress.gamification?.streak ?? 0;
+  const xp = progress.gamification?.xp ?? 0;
 
   return (
     <div className="flex items-center justify-between px-4 py-2 bg-card border-b border-border">
       {/* Streak */}
       <div className="flex items-center gap-1.5">
         <Flame className="w-4 h-4 text-primary" />
-        <span className="text-sm font-bold text-foreground">{progress.streak}</span>
+        <span className="text-sm font-bold text-foreground">{streak}</span>
         <span className="text-[10px] text-muted-foreground">Streak</span>
       </div>
 
-      {/* Gems */}
+      {/* XP */}
       <div className="flex items-center gap-1.5">
         <Gem className="w-4 h-4 text-primary" />
-        <span className="text-sm font-bold text-foreground">{progress.gems}</span>
-        <span className="text-[10px] text-muted-foreground">Gems</span>
+        <span className="text-sm font-bold text-foreground">{xp}</span>
+        <span className="text-[10px] text-muted-foreground">XP</span>
       </div>
 
       {/* Circular progress */}

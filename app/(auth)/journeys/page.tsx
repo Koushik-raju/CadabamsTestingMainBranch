@@ -92,13 +92,15 @@ function JourneysInner() {
     () =>
       enrollments.map((e) => {
         const cms = journeyMap.get(e.journeyId);
-        if (!cms) return e;
+        const displayName = e.name || (cms ? extractJourneyName(cms.name) : '');
         return {
-          ...e,
-          name: e.name || extractJourneyName(cms.name),
-          icon: e.icon ?? cms.icon ?? undefined,
-          isPremium: cms.isPremium,
-          totalDays: e.totalDays || cms.steps.length,
+          enrollmentId: e.id,
+          journeyId: e.journeyId,
+          name: displayName,
+          icon: cms?.icon ?? undefined,
+          isPremium: cms?.isPremium ?? false,
+          currentDay: e.currentDay ?? 1,
+          totalDays: e.totalDays ?? cms?.steps.length ?? 0,
         };
       }),
     [enrollments, journeyMap]

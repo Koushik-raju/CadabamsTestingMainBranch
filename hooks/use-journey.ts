@@ -1,10 +1,12 @@
-// Re-exports from new feature-scoped locations — consumers should update imports
+// Re-exports from feature-scoped locations — consumers should update imports.
 export { useJourneys } from '@/hooks/journeys/use-journeys-page';
 export {
   useJourneyDetail,
   useJourneyProgress,
+  useEnrolledJourneys,
+  useGamification,
   subscribeToJourney,
-  advanceCurrentDay,
+  tickJourney,
   updateNodeProgress,
   type JourneyProgress,
 } from '@/hooks/journeys/use-journey-detail';

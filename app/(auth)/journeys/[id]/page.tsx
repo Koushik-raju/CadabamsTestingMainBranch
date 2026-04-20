@@ -156,7 +156,7 @@ function JourneyLandingContent({ params }: PageProps) {
     }
     setSubscribing(true);
     try {
-      await subscribeToJourney(mobile, journey!);
+      await subscribeToJourney(journey!);
       hapticMedium();
       router.push(`/journeys/${id}/details`);
     } catch (e) {

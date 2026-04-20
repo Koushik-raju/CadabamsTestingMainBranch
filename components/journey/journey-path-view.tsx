@@ -2,30 +2,31 @@
  * FILE: components/journey/journey-path-view.tsx
  *
  * PURPOSE:
- *   Main orchestrator component for the enrolled-journey path view.
- *   Renders the StatsBar, premium banners, today-progress banner, the zigzag
- *   PathChain, and various bottom sheets (task action, unit tasks, premium upsell).
+ *   Renders the enrolled-journey path view. All unlock / cooldown / streak logic
+ *   is now server-owned — this component reads per-task `state` and the
+ *   enrollment's `nextDayUnlocksAt` directly and renders accordingly.
  *
  * LOGIC OVERVIEW:
- *   1. Flattens all steps into allNodes to track completion and active state.
- *   2. getVariant() determines each node's state: completed / active / locked / default.
- *   3. navigateToTask() routes based on task ID arrays and boolean flags, with
- *      a redirectTo query param pointing back to this page.
- *   4. handleNodeTap() opens the action sheet; handleContinue() navigates to active task.
- *   5. markNodeDone() calls updateNodeProgress() and triggers XP animation.
- *   6. Auto-advances to next day via advanceCurrentDay() when current day is done.
+ *   1. Flattens CMS steps into nodes, keyed by composite "stepId-taskId" for React.
+ *   2. Looks up each task's server state (locked/available/active/completed)
+ *      from enrollment.tasks by plain taskId — maps it to NodeVariant.
+ *   3. Navigates using task.destinationPath (plus a redirectTo back to details).
+ *   4. On mount (when subscribed) fires tickJourney() — the server idempotently
+ *      advances the day if the cooldown has elapsed.
+ *   5. If nextDayUnlocksAt is in the future, shows a sticky countdown banner and
+ *      re-ticks when it hits zero.
+ *   6. markNodeDone and action-sheet onOpen send the plain taskId.
  *
  * KEY VARIABLES / PROPS / EXPORTS:
- *   journey        — JourneyItem with steps and task data
- *   progress       — JourneyProgress enrollment record (null if not subscribed)
- *   mobile         — user's mobile number for API calls
- *   journeyId      — string ID of the journey (from URL params)
+ *   journey        — CMS JourneyItem (content structure)
+ *   progress       — PatientJourneyResponseDto (null if unsubscribed)
+ *   journeyId      — route param id
  *
  * DEPENDENCIES:
- *   useJourneyProgress, subscribeToJourney, updateNodeProgress, advanceCurrentDay
+ *   subscribeToJourney, updateNodeProgress, tickJourney — hooks/journeys/use-journey-detail
  *   PathChain, JourneyTaskActionSheet, JourneyUnitTasksSheet
  *
- * LAST UPDATED: 2026-04-20 — add 30-min cooldown before next-day unlock with countdown banner
+ * LAST UPDATED: 2026-04-20 — migrate to server-owned task state + tick endpoint
  */
 'use client';
 
@@ -39,29 +40,36 @@ import { PathChain, getTaskType, type PathChainNode, type ChainItem } from './pa
 import { XpFloat } from './xp-float';
 import { JourneyTaskActionSheet, type TaskActionSheetData } from './journey-task-action-sheet';
 import { JourneyUnitTasksSheet, type UnitTask } from './journey-unit-tasks-sheet';
-import { getTypeColor } from './path-node';
 import type { NodeVariant } from './path-node';
 import {
-  Sheet, SheetContent, SheetHeader, SheetTitle,
+  Sheet, SheetContent, SheetTitle,
 } from '@/components/ui/sheet';
 import {
-  useJourneyProgress, subscribeToJourney, updateNodeProgress, advanceCurrentDay,
+  subscribeToJourney, updateNodeProgress, tickJourney,
+  type JourneyProgress,
 } from '@/hooks/journeys/use-journey-detail';
-import type { JourneyProgress } from '@/hooks/journeys/use-journey-detail';
 import { hapticLight, hapticMedium, hapticSuccess, hapticWarning } from '@/lib/haptics';
 import { extractJourneyName, extractJourneyDescription } from '@/types/journey';
-import type { JourneyItem, JourneyTask, JourneyAudio, JourneyRichText } from '@/types/journey';
+import type { JourneyItem, JourneyTask } from '@/types/journey';
 import { fixImageUrl } from '@/lib/utils';
+import type { EnrollmentTaskDto } from '@/sdk/backend-v2';
 
 // ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
 
-function richText(rt: unknown): string {
-  if (!rt || !Array.isArray(rt)) return '';
-  return (rt as JourneyRichText[])
-    .map(b => (b.children ?? []).map(c => c.text ?? (c.children ?? []).map(n => n.text ?? '').join('')).join(''))
-    .join('\n').trim();
+function mapState(state: EnrollmentTaskDto['state']): NodeVariant {
+  if (state === 'completed') return 'completed';
+  if (state === 'active') return 'active';
+  if (state === 'locked') return 'locked';
+  return 'default'; // 'available'
+}
+
+function formatCountdown(ms: number): string {
+  const total = Math.max(0, Math.ceil(ms / 1000));
+  const mm = Math.floor(total / 60).toString().padStart(2, '0');
+  const ss = (total % 60).toString().padStart(2, '0');
+  return `${mm}:${ss}`;
 }
 
 // ---------------------------------------------------------------------------
@@ -70,16 +78,18 @@ function richText(rt: unknown): string {
 
 function StatsBar({ progress }: { progress: JourneyProgress }) {
   const pct = progress.progress ?? 0;
+  const streak = progress.gamification?.streak ?? 0;
+  const xp = progress.gamification?.xp ?? 0;
   return (
     <div className="flex items-center justify-between px-5 py-2.5 bg-card/80 backdrop-blur-sm border-b border-border">
       <div className="flex items-center gap-1.5">
         <Flame className="w-4 h-4 text-orange-500" />
-        <span className="text-sm font-extrabold text-foreground">{progress.streak}</span>
+        <span className="text-sm font-extrabold text-foreground">{streak}</span>
         <span className="text-[10px] text-muted-foreground">Streak</span>
       </div>
       <div className="flex items-center gap-1.5">
         <Zap className="w-4 h-4 text-amber-500" />
-        <span className="text-sm font-extrabold text-foreground">{progress.gems}</span>
+        <span className="text-sm font-extrabold text-foreground">{xp}</span>
         <span className="text-[10px] text-muted-foreground">XP</span>
       </div>
       <div className="flex items-center gap-1.5">
@@ -107,7 +117,6 @@ function StatsBar({ progress }: { progress: JourneyProgress }) {
 interface JourneyPathViewProps {
   journey: JourneyItem;
   progress: JourneyProgress | null;
-  mobile: string | null;
   journeyId: string;
 }
 
@@ -115,14 +124,20 @@ interface JourneyPathViewProps {
 // Component
 // ---------------------------------------------------------------------------
 
-export function JourneyPathView({ journey, progress, mobile, journeyId }: JourneyPathViewProps) {
+export function JourneyPathView({ journey, progress, journeyId }: JourneyPathViewProps) {
   const router       = useRouter();
   const isSubscribed = !!progress;
   const steps        = journey.steps ?? [];
   const dayCount     = steps.reduce((a, s) => a + (s.tasks?.length ?? 0), 0);
   const months       = Math.max(1, Math.round(steps.length / 30));
 
-  const completedIds   = new Set(progress?.completedNodeIds ?? []);
+  // Server-owned task state lookup (plain taskId -> EnrollmentTaskDto).
+  const taskStateById = useMemo(() => {
+    const map = new Map<string, EnrollmentTaskDto>();
+    progress?.tasks?.forEach((t) => map.set(t.taskId, t));
+    return map;
+  }, [progress]);
+
   const [subscribing, setSubscribing]             = useState(false);
   const [premiumSheetOpen, setPremiumSheetOpen]   = useState(false);
   const [showXpFloat, setShowXpFloat]             = useState(false);
@@ -133,192 +148,58 @@ export function JourneyPathView({ journey, progress, mobile, journeyId }: Journe
 
   const xpTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  // Flat list of all nodes across all steps
-  const allNodes = useMemo(() => steps.flatMap((step, si) =>
-    (step.tasks ?? []).map((task, ti) => ({ nodeId: `${step.id}-${task.id}`, stepIdx: si, taskIdx: ti, task }))
-  ), [steps]);
-
-  const totalNodes = allNodes.length;
-
-  // Current day index (0-based) gated by progress.currentDay — never advances past last step
-  const currentDayIdx = isSubscribed
-    ? Math.min((progress!.currentDay ?? 1) - 1, steps.length - 1)
-    : 0;
-
-  // Nodes belonging to the current day
-  const currentDayNodes = useMemo(
-    () => allNodes.filter(n => n.stepIdx === currentDayIdx),
-    [allNodes, currentDayIdx]
-  );
-
-  // First incomplete node within the current day only
-  const activeNodeId = isSubscribed
-    ? (currentDayNodes.find(n => !completedIds.has(n.nodeId))?.nodeId ?? null)
-    : null;
-
-  const allComplete = isSubscribed && totalNodes > 0 &&
-    allNodes.every(n => completedIds.has(n.nodeId));
-
-  const currentDayAllDone = currentDayNodes.length > 0 &&
-    currentDayNodes.every(n => completedIds.has(n.nodeId));
-
-  // Today banner uses currentDayIdx
-  const activeStep      = steps[currentDayIdx];
+  const currentDay = progress?.currentDay ?? 1;
+  const currentDayIdx = Math.min(Math.max(0, currentDay - 1), Math.max(0, steps.length - 1));
+  const activeStep = steps[currentDayIdx];
   const activeStepTitle = activeStep
     ? (typeof activeStep.title === 'string' ? activeStep.title : extractJourneyName(activeStep.title as never))
     : '';
-  const todayDone  = currentDayNodes.filter(n => completedIds.has(n.nodeId)).length;
-  const todayTotal = currentDayNodes.length;
 
-  // Unlock rules for the next day:
-  //   1. Finished today's tasks + 30 min passed since last task → advance.
-  //   2. More than 24 h since last task activity → advance regardless of completion
-  //      (user skipped a day; don't strand them on yesterday's incomplete list).
-  const COOLDOWN_MS = 30 * 60 * 1000;
-  const STALE_MS    = 24 * 60 * 60 * 1000;
-  const lastUpdatedMs = progress?.lastUpdated ? new Date(progress.lastUpdated).getTime() : 0;
-  const isLastDay = currentDayIdx >= steps.length - 1;
+  const currentDayTasks = progress?.tasks?.filter((t) => t.dayNumber === (currentDay as unknown)) ?? [];
+  const todayTotal = currentDayTasks.length;
+  const todayDone  = currentDayTasks.filter((t) => t.state === 'completed').length;
 
+  const allComplete = !!progress?.isCompleted;
+  const isPaidFreePreview = isSubscribed && (journey.isPremium ?? false) && !progress?.canAccessPremium;
+
+  // Server-driven day advance — fire once on mount and once more when the
+  // countdown hits zero. The endpoint is idempotent.
+  const tickedRef = useRef(false);
+  useEffect(() => {
+    if (!progress || tickedRef.current) return;
+    tickedRef.current = true;
+    tickJourney(progress.id, journeyId).catch(console.error);
+  }, [progress, journeyId]);
+
+  // Countdown banner driven by server-provided nextDayUnlocksAt.
+  const nextUnlockMs = progress?.nextDayUnlocksAt ? new Date(progress.nextDayUnlocksAt).getTime() : 0;
   const [now, setNow] = useState(() => Date.now());
-  const msSinceLastTask = lastUpdatedMs > 0 ? now - lastUpdatedMs : 0;
-
-  const staleUnlock    = isSubscribed && !isLastDay && lastUpdatedMs > 0 && msSinceLastTask >= STALE_MS;
-  const cooldownActive = isSubscribed && currentDayAllDone && !isLastDay && lastUpdatedMs > 0 && !staleUnlock;
+  const cooldownRemainingMs = nextUnlockMs > 0 ? Math.max(0, nextUnlockMs - now) : 0;
+  const showCooldownBanner = isSubscribed && !allComplete && nextUnlockMs > now;
 
   useEffect(() => {
-    if (!cooldownActive) return;
-    const remaining = COOLDOWN_MS - (Date.now() - lastUpdatedMs);
-    if (remaining <= 0) { setNow(Date.now()); return; }
+    if (!showCooldownBanner) return;
     const id = setInterval(() => setNow(Date.now()), 1000);
     return () => clearInterval(id);
-  }, [cooldownActive, lastUpdatedMs, COOLDOWN_MS]);
+  }, [showCooldownBanner]);
 
-  const cooldownRemainingMs = cooldownActive ? Math.max(0, COOLDOWN_MS - msSinceLastTask) : 0;
-  const cooldownReady = !cooldownActive || cooldownRemainingMs === 0;
-  const showCooldownBanner = cooldownActive && cooldownRemainingMs > 0;
-
-  function formatCountdown(ms: number): string {
-    const total = Math.ceil(ms / 1000);
-    const mm = Math.floor(total / 60).toString().padStart(2, '0');
-    const ss = (total % 60).toString().padStart(2, '0');
-    return `${mm}:${ss}`;
-  }
-
-  // Advance to the next day when either unlock rule is met.
-  // Guard: only fire once per (journeyId, fromDay) pair, otherwise a stale
-  // lastUpdated on the server causes the effect to re-fire after each
-  // revalidation and the day counter thrashes.
-  const advancedFromRef = useRef<string | null>(null);
-  const fromDay = progress?.currentDay ?? 0;
-
-  // ───────────────────────── debug logging ─────────────────────────
-  // Logs snapshot every render so you can trace state transitions in the console.
-  console.log('[journey-path-view] render snapshot', {
-    journeyId,
-    isSubscribed,
-    mobile: mobile ? `${mobile.slice(0, 3)}…` : null,
-    stepsCount: steps.length,
-    progress_currentDay: progress?.currentDay,
-    currentDayIdx,
-    fromDay,
-    isLastDay,
-    totalNodes,
-    currentDayNodeIds: currentDayNodes.map(n => n.nodeId),
-    completedNodeIds: Array.from(completedIds),
-    todayDone,
-    todayTotal,
-    currentDayAllDone,
-    allComplete,
-    progress_lastUpdated: progress?.lastUpdated ?? null,
-    lastUpdatedMs,
-    lastUpdatedISO: lastUpdatedMs ? new Date(lastUpdatedMs).toISOString() : null,
-    now,
-    nowISO: new Date(now).toISOString(),
-    msSinceLastTask,
-    msSinceLastTaskHuman: lastUpdatedMs ? `${(msSinceLastTask / 1000 / 60).toFixed(2)} min` : 'n/a',
-    COOLDOWN_MS,
-    STALE_MS,
-    staleUnlock,
-    cooldownActive,
-    cooldownRemainingMs,
-    cooldownReady,
-    showCooldownBanner,
-    activeNodeId,
-    advancedFromRef: advancedFromRef.current,
-  });
-
+  // When the countdown reaches zero, re-tick so the server flips the state.
   useEffect(() => {
-    if (!isSubscribed || !mobile || isLastDay) {
-      console.log('[journey-path-view] advance-effect skipped (preconditions)', {
-        isSubscribed, mobile: !!mobile, isLastDay,
-      });
-      return;
-    }
-    const canAdvanceFromCompletion = currentDayAllDone && cooldownReady;
-    if (!canAdvanceFromCompletion && !staleUnlock) {
-      console.log('[journey-path-view] advance-effect skipped (neither rule met)', {
-        currentDayAllDone, cooldownReady, staleUnlock, cooldownRemainingMs,
-      });
-      return;
-    }
-    const guardKey = `${journeyId}:${fromDay}`;
-    if (advancedFromRef.current === guardKey) {
-      console.log('[journey-path-view] advance-effect skipped (guard already fired)', { guardKey });
-      return;
-    }
-    advancedFromRef.current = guardKey;
-    console.log('[journey-path-view] → advanceCurrentDay()', {
-      guardKey,
-      reason: staleUnlock ? 'STALE_24H' : 'COOLDOWN_DONE',
-      currentDayAllDone,
-      cooldownReady,
-      staleUnlock,
-      msSinceLastTaskHuman: lastUpdatedMs ? `${(msSinceLastTask / 1000 / 60).toFixed(2)} min` : 'n/a',
-    });
-    advanceCurrentDay(mobile, journeyId)
-      .then(() => console.log('[journey-path-view] ✓ advanceCurrentDay resolved', { guardKey }))
-      .catch((e) => {
-        advancedFromRef.current = null; // allow retry on failure
-        console.error('[journey-path-view] ✗ advanceCurrentDay failed', { guardKey, error: e });
-      });
-  }, [isSubscribed, mobile, currentDayAllDone, cooldownReady, staleUnlock, isLastDay, journeyId, fromDay, cooldownRemainingMs, lastUpdatedMs, msSinceLastTask]);
+    if (!progress) return;
+    if (nextUnlockMs === 0) return;
+    if (cooldownRemainingMs > 0) return;
+    tickJourney(progress.id, journeyId).catch(console.error);
+  }, [cooldownRemainingMs, nextUnlockMs, progress, journeyId]);
 
-  const isPaidFreePreview = isSubscribed && (journey.isPremium ?? false) && !progress?.isPremium;
-
-  function isAppointmentTask(task: JourneyTask): boolean {
-    return !!(task.showAppointments || task.showFirstBooking);
-  }
-
-  function getVariant(nodeId: string, stepIdx: number, taskIdx: number, task: JourneyTask): NodeVariant {
-    // Unsubscribed: only Day 1 static preview (no interactivity)
+  function getVariant(taskId: string, stepIdx: number, taskIdx: number): NodeVariant {
+    // Unsubscribed preview: Day 1 first-task active, rest default (non-interactive).
     if (!isSubscribed) {
       if (stepIdx === 0) return taskIdx === 0 ? 'active' : 'default';
       return 'locked';
     }
-
-    // Enrolled in paid journey but no premium package — Day 1 digital assets only
-    if (isPaidFreePreview) {
-      if (stepIdx > 0) return 'locked';
-      // Day 1: appointment tasks are locked, digital tasks follow normal sequence
-      if (isAppointmentTask(task)) return 'locked';
-      if (completedIds.has(nodeId)) return 'completed';
-      if (nodeId === activeNodeId) return 'active';
-      const firstIncomplete = currentDayNodes.find(n => !completedIds.has(n.nodeId) && !isAppointmentTask(n.task));
-      return firstIncomplete?.nodeId === nodeId ? 'default' : 'locked';
-    }
-
-    // Previous days — completed stays completed, skipped stays open so the user
-    // can go back and finish it. Never lock anything before the active day.
-    if (stepIdx < currentDayIdx) return completedIds.has(nodeId) ? 'completed' : 'default';
-
-    // Future days — always locked regardless of completion
-    if (stepIdx > currentDayIdx) return 'locked';
-
-    // Current day: sequential unlock within the day
-    if (completedIds.has(nodeId)) return 'completed';
-    if (nodeId === activeNodeId) return 'active';
-    const firstIncomplete = currentDayNodes.find(n => !completedIds.has(n.nodeId));
-    return firstIncomplete?.nodeId === nodeId ? 'default' : 'locked';
+    const entry = taskStateById.get(taskId);
+    if (!entry) return 'locked';
+    return mapState(entry.state);
   }
 
   function getIsMandatory(task: JourneyTask): boolean {
@@ -344,70 +225,21 @@ export function JourneyPathView({ journey, progress, mobile, journeyId }: Journe
     return labels[type] ?? '';
   }
 
-  function navigateToTask(task: JourneyTask) {
-    const redirectTo = encodeURIComponent(`/journeys/${journeyId}/details`);
-
-    // 1. Read task — content shown in-sheet, no page navigation
+  function navigateToTask(task: JourneyTask, taskId: string) {
+    // 'Read' tasks render content inline in the action sheet — no navigation.
     if (task.extraTaskTitle && task.extraTaskDescription?.length) return;
 
-    // 2. Assessments
-    if (task.assessmentIds?.length) {
-      router.push(`/assessments/${task.assessmentIds[0]}?journey=${journeyId}&redirectTo=${redirectTo}`);
-      return;
-    }
-    if (task.assessments?.length) {
-      router.push(`/assessments/${task.assessments[0].id}?journey=${journeyId}&redirectTo=${redirectTo}`);
-      return;
-    }
-
-    // 3. Worksheets
-    if (task.worksheetIds?.length) {
-      router.push(`/worksheet/${task.worksheetIds[0]}?redirectTo=${redirectTo}`);
-      return;
-    }
-    if (task.worksheets?.length) {
-      router.push(`/worksheet/${(task.worksheets[0] as { id: string }).id}?redirectTo=${redirectTo}`);
-      return;
-    }
-
-    // 4. Sub-journalings
-    if (task.subJournalingIds?.length) {
-      router.push(`/self-journaling/new?redirectTo=${redirectTo}`);
-      return;
-    }
-
-    // 5. Audios
-    if (task.audioIds?.length) {
-      router.push(`/wellness/mindful-minutes/${task.audioIds[0]}?redirectTo=${redirectTo}`);
-      return;
-    }
-    if (task.audios?.length) {
-      const audio = task.audios[0] as JourneyAudio;
-      router.push(`/wellness/mindful-minutes/${audio.mindfulMinuteId || audio.documentId || audio.id}?redirectTo=${redirectTo}`);
-      return;
-    }
-
-    // 6. Boolean-flag tasks
-    if (task.moodCheckIn) {
-      router.push(`/journeys/mood-check?journey=${journeyId}&redirectTo=${redirectTo}`);
-      return;
-    }
-    if (task.showAppointments || task.showFirstBooking) {
-      router.push(`/consult/find-therapist?redirectTo=${redirectTo}`);
-      return;
-    }
-    if (task.fillSelfJournal) {
-      router.push(`/self-journaling/new?redirectTo=${redirectTo}`);
-      return;
-    }
-
-    // Fallback for any remaining journal-type task with no specific target
-    router.push(`/self-journaling/new?redirectTo=${redirectTo}`);
+    const redirectTo = encodeURIComponent(`/journeys/${journeyId}/details`);
+    const entry = taskStateById.get(taskId);
+    const dest = entry?.destinationPath;
+    if (!dest) return;
+    const sep = dest.includes('?') ? '&' : '?';
+    router.push(`${dest}${sep}redirectTo=${redirectTo}`);
   }
 
-  async function markNodeDone(node: PathChainNode) {
-    if (!mobile || !isSubscribed) return;
-    await updateNodeProgress(mobile, journeyId, node.nodeId, totalNodes);
+  async function markNodeDone(taskId: string) {
+    if (!progress) return;
+    await updateNodeProgress(progress.id, journeyId, taskId);
     hapticSuccess();
     setActionSheetOpen(false);
     triggerXp();
@@ -422,8 +254,6 @@ export function JourneyPathView({ journey, progress, mobile, journeyId }: Journe
   function handleNodeTap(node: PathChainNode) {
     if (node.variant === 'locked') {
       hapticWarning();
-      // Show upsell sheet for any locked node when in paid free preview,
-      // or for locked premium steps on fully enrolled users
       if (isPaidFreePreview || (node.isPremiumStep && isSubscribed)) {
         setPremiumSheetOpen(true);
       }
@@ -434,17 +264,10 @@ export function JourneyPathView({ journey, progress, mobile, journeyId }: Journe
     setActionSheetOpen(true);
   }
 
-  function handleContinue() {
-    if (!activeNodeId) return;
-    const n = allNodes.find(n => n.nodeId === activeNodeId);
-    if (n) navigateToTask(n.task);
-  }
-
   async function handleSubscribe() {
-    if (!mobile) { router.push('/auth/login'); return; }
     setSubscribing(true);
     try {
-      await subscribeToJourney(mobile, journey);
+      await subscribeToJourney(journey);
       hapticMedium();
     } catch (e) { console.error(e); }
     finally { setSubscribing(false); }
@@ -455,18 +278,23 @@ export function JourneyPathView({ journey, progress, mobile, journeyId }: Journe
     if (!step) return;
     const raw   = typeof step.title === 'string' ? step.title : extractJourneyName(step.title as never);
     const title = raw.replace(/^Day\s*\d+\s*[:\-·]?\s*/i, '').trim() || raw;
-    const tasks: UnitTask[] = (step.tasks ?? []).map((task, ti) => ({
-      title: getTaskTitle(task),
-      type: getTaskType(task),
-      isLocked: getVariant(`${step.id}-${task.id}`, stepIdx, ti, task) === 'locked',
-      isCompleted: getVariant(`${step.id}-${task.id}`, stepIdx, ti, task) === 'completed',
-      task,
-    }));
+    const tasks: UnitTask[] = (step.tasks ?? []).map((task, ti) => {
+      const variant = getVariant(task.id, stepIdx, ti);
+      return {
+        title: getTaskTitle(task),
+        type: getTaskType(task),
+        isLocked: variant === 'locked',
+        isCompleted: variant === 'completed',
+        task,
+      };
+    });
     setUnitTasksData({ title: `Day ${stepIdx + 1}: ${title}`, tasks });
     setUnitTasksOpen(true);
   }
 
-  // Build flat ChainItem list: headers + nodes in sequence
+  // Build flat ChainItem list: headers + nodes in sequence.
+  // nodeId is a composite purely for React key stability — the SDK only ever
+  // sees the plain taskId.
   const chainItems: ChainItem[] = [];
   steps.forEach((step, stepIdx) => {
     const raw       = typeof step.title === 'string' ? step.title : extractJourneyName(step.title as never);
@@ -480,18 +308,13 @@ export function JourneyPathView({ journey, progress, mobile, journeyId }: Journe
       onClick: () => openUnitTasks(stepIdx),
     });
 
-    // Locked hint row for non-subscribed days 2+
-    if (!isSubscribed && stepIdx > 0) {
-      // We'll render this in the header, not as a separate chain item
-    }
-
     (step.tasks ?? []).forEach((task, ti) => {
       const nodeId = `${step.id}-${task.id}`;
       chainItems.push({
         kind: 'node',
         node: {
           task,
-          variant: getVariant(nodeId, stepIdx, ti, task),
+          variant: getVariant(task.id, stepIdx, ti),
           taskType: getTaskType(task),
           nodeId,
           taskTitle: getTaskTitle(task),
@@ -541,8 +364,7 @@ export function JourneyPathView({ journey, progress, mobile, journeyId }: Journe
         </div>
       )}
 
-      {/* Sticky "day complete" cooldown banner — styled like the premium banner.
-          top-14 sits just under the page's sticky app bar (which is top-0 z-20). */}
+      {/* Sticky "day complete" cooldown banner — driven by server nextDayUnlocksAt */}
       {showCooldownBanner && (
         <div className="sticky top-14 z-30 mx-4 mt-3 rounded-2xl overflow-hidden border border-emerald-200 shadow-lg">
           <div className="bg-gradient-to-br from-emerald-500 to-teal-600 px-4 py-3 flex items-start gap-3">
@@ -615,7 +437,7 @@ export function JourneyPathView({ journey, progress, mobile, journeyId }: Journe
         </div>
 
         {/* Premium locked wall */}
-        {isSubscribed && journey.isPremium && !progress?.isPremium && (
+        {isSubscribed && journey.isPremium && !progress?.canAccessPremium && (
           <div className="flex flex-col items-center gap-2 py-8">
             <div className="w-12 h-12 rounded-full bg-muted flex items-center justify-center">
               <Lock className="w-5 h-5 text-muted-foreground/50" />
@@ -657,15 +479,18 @@ export function JourneyPathView({ journey, progress, mobile, journeyId }: Journe
           setActionSheetOpen(false);
           if (!actionSheetData) return;
           const { node, isActive } = actionSheetData;
-          if (isSubscribed && mobile && isActive) {
-            updateNodeProgress(mobile, journeyId, node.nodeId, totalNodes).then(() => {
+          const task = node.task as JourneyTask;
+          if (isSubscribed && progress && isActive) {
+            updateNodeProgress(progress.id, journeyId, task.id).then(() => {
               hapticSuccess();
               triggerXp();
             });
           }
-          navigateToTask(node.task as JourneyTask);
+          navigateToTask(task, task.id);
         }}
-        onMarkDone={() => actionSheetData && markNodeDone(actionSheetData.node)}
+        onMarkDone={() =>
+          actionSheetData && markNodeDone((actionSheetData.node.task as JourneyTask).id)
+        }
       />
 
       {/* Unit tasks sheet */}
@@ -674,7 +499,10 @@ export function JourneyPathView({ journey, progress, mobile, journeyId }: Journe
         onClose={() => setUnitTasksOpen(false)}
         unitTitle={unitTasksData?.title ?? ''}
         tasks={unitTasksData?.tasks ?? []}
-        onTaskTap={(item) => { setUnitTasksOpen(false); navigateToTask(item.task); }}
+        onTaskTap={(item) => {
+          setUnitTasksOpen(false);
+          navigateToTask(item.task, item.task.id);
+        }}
       />
 
       {/* Premium / subscribe sheet */}

@@ -2779,6 +2779,13 @@ export type SubJournalEntryListResponseDto = {
     total: number;
 };
 
+export type GamificationDto = {
+    streak: number;
+    xp: number;
+    longestStreak: number;
+    lastActivityAt: string | null;
+};
+
 export type EnrollJourneyDto = {
     /**
      * CMS journey documentId to enroll in
@@ -2786,79 +2793,67 @@ export type EnrollJourneyDto = {
     journeyId: string;
 };
 
-export type JourneyDayProgressResponseDto = {
-    id: string;
-    enrollmentId: string;
-    dayNumber: number;
-    completed: boolean;
-    completedAt?: string | null;
-    unlocked: boolean;
-    unlockTime?: string | null;
-    available: boolean;
-    date?: string | null;
-    lastUpdated?: string | null;
+export type JourneyTaskKind = 'AUDIO' | 'ASSESSMENT' | 'WORKSHEET' | 'VIDEO' | 'JOURNAL' | 'SUB_JOURNAL' | 'MOOD' | 'APPOINTMENT' | 'CONSULT_BOOKING' | 'OTHER';
+
+export type EnrollmentTaskDto = {
+    /**
+     * JourneyTaskCompletion.id — null if not started
+     */
+    id: string | null;
+    /**
+     * CmsJourneyStepTask.id — plain id, not composite
+     */
+    taskId: string;
+    stepId: string;
+    dayNumber: number | null;
+    kind: JourneyTaskKind;
+    title: string | null;
+    state: 'locked' | 'available' | 'active' | 'completed';
+    /**
+     * Server-built destination path for this task
+     */
+    destinationPath: string;
+    completedAt: string | null;
 };
 
-export type JourneyTaskCompletionResponseDto = {
-    id: string;
-    enrollmentId: string;
-    taskId: string;
-    dayNumber?: number | null;
-    taskType?: string | null;
-    title?: string | null;
+export type EnrollmentDayDto = {
+    dayNumber: number;
     completed: boolean;
-    completedAt?: string | null;
-    documentId?: string | null;
-    journeyId?: string | null;
-    difficulty?: string | null;
-    required?: boolean | null;
-    elapsedMs?: number | null;
-    metadata: {
-        [key: string]: unknown;
-    } | null;
+    completedAt: string | null;
+    summary: string | null;
+    moodBefore: number | null;
+    moodAfter: number | null;
 };
 
 export type PatientJourneyResponseDto = {
     id: string;
-    userId?: string | null;
-    patientRef: string;
+    userId: string;
     campus: string;
     journeyId: string;
-    name?: string | null;
-    icon?: string | null;
+    name: string | null;
+    icon: string | null;
     progress: number;
     currentDay: number;
-    totalDays?: number | null;
+    totalDays: number | null;
     isActive: boolean;
-    startDate?: string | null;
-    lastCompletedDate?: string | null;
-    streakBroken: boolean;
-    descriptionJson: {
-        [key: string]: unknown;
-    } | null;
-    assessmentData: {
-        [key: string]: unknown;
-    } | null;
-    summaries: {
-        [key: string]: unknown;
-    } | null;
-    gamification: {
-        [key: string]: unknown;
-    } | null;
-    userData: {
-        [key: string]: unknown;
-    } | null;
-    dateAdded?: string | null;
-    lastUpdated?: string | null;
-    rawPayload: {
-        [key: string]: unknown;
-    } | null;
-    source: string;
-    legacyId?: string | null;
-    createdAt: string;
-    updatedAt: string;
-    days?: Array<JourneyDayProgressResponseDto>;
-    tasks?: Array<JourneyTaskCompletionResponseDto>;
+    /**
+     * True when completedAt is non-null
+     */
+    isCompleted: boolean;
+    /**
+     * Journey unlocked for this user
+     */
+    canAccessPremium: boolean;
+    startDate: string | null;
+    lastCompletedDate: string | null;
+    nextDayUnlocksAt: string | null;
+    /**
+     * Enrollment.updatedAt
+     */
+    lastUpdated: string;
+    tasks: Array<EnrollmentTaskDto>;
+    days: Array<EnrollmentDayDto>;
+    gamification: GamificationDto;
 };
 
 export type PatientJourneyListResponseDto = {
@@ -2870,28 +2865,32 @@ export type PatientJourneyListResponseDto = {
 
 export type CompleteTaskDto = {
     /**
-     * CMS task / document id
+     * CmsJourneyStepTask.id — plain id (not composite "<stepId>-<taskId>")
      */
     taskId: string;
     dayNumber?: number;
-    taskType?: string;
-    title?: string;
-    documentId?: string;
-    difficulty?: string;
-    required?: boolean;
-    elapsedMs?: number;
-    metadata?: {
-        [key: string]: unknown;
-    };
-    completedAt?: string;
+};
+
+export type CompleteTaskResponseDto = {
+    enrollment: PatientJourneyResponseDto;
+    /**
+     * True when this task was already marked done (request was a no-op)
+     */
+    alreadyCompleted: boolean;
 };
 
 export type CompleteDayDto = {
     /**
-     * Day number to mark completed
+     * Day number to mark completed (1 ≤ dayNumber ≤ totalDays)
      */
     dayNumber: number;
-    completedAt?: string;
+    moodBefore?: number;
+    moodAfter?: number;
+    summary?: string;
+};
+
+export type CompleteDayResponseDto = {
+    enrollment: PatientJourneyResponseDto;
 };
 
 export type CreateAssessmentLandingPagePointDto = {
@@ -9906,16 +9905,24 @@ export type JournalingSubscriptionsControllerGetSubJournalEntriesResponses = {
 
 export type JournalingSubscriptionsControllerGetSubJournalEntriesResponse = JournalingSubscriptionsControllerGetSubJournalEntriesResponses[keyof JournalingSubscriptionsControllerGetSubJournalEntriesResponses];
 
+export type JourneysControllerGetMyGamificationData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/api/v1/me/gamification';
+};
+
+export type JourneysControllerGetMyGamificationResponses = {
+    200: GamificationDto;
+};
+
+export type JourneysControllerGetMyGamificationResponse = JourneysControllerGetMyGamificationResponses[keyof JourneysControllerGetMyGamificationResponses];
+
 export type JourneysControllerListMineData = {
     body?: never;
-    path: {
-        /**
-         * Campus slug
-         */
-        campus: 'cadabams' | 'whitefield' | 'mysore' | 'mindtalk';
-    };
+    path?: never;
     query?: never;
-    url: '/api/v1/{campus}/journeys/enrollments';
+    url: '/api/v1/me/journeys/enrollments';
 };
 
 export type JourneysControllerListMineResponses = {
@@ -9926,14 +9933,9 @@ export type JourneysControllerListMineResponse = JourneysControllerListMineRespo
 
 export type JourneysControllerEnrollData = {
     body: EnrollJourneyDto;
-    path: {
-        /**
-         * Campus slug
-         */
-        campus: 'cadabams' | 'whitefield' | 'mysore' | 'mindtalk';
-    };
+    path?: never;
     query?: never;
-    url: '/api/v1/{campus}/journeys/enrollments';
+    url: '/api/v1/me/journeys/enrollments';
 };
 
 export type JourneysControllerEnrollResponses = {
@@ -9945,14 +9947,10 @@ export type JourneysControllerEnrollResponse = JourneysControllerEnrollResponses
 export type JourneysControllerGetEnrollmentData = {
     body?: never;
     path: {
-        /**
-         * Campus slug
-         */
-        campus: 'cadabams' | 'whitefield' | 'mysore' | 'mindtalk';
         id: string;
     };
     query?: never;
-    url: '/api/v1/{campus}/journeys/enrollments/{id}';
+    url: '/api/v1/me/journeys/enrollments/{id}';
 };
 
 export type JourneysControllerGetEnrollmentResponses = {
@@ -9961,17 +9959,58 @@ export type JourneysControllerGetEnrollmentResponses = {
 
 export type JourneysControllerGetEnrollmentResponse = JourneysControllerGetEnrollmentResponses[keyof JourneysControllerGetEnrollmentResponses];
 
+export type JourneysControllerCompleteTaskData = {
+    body: CompleteTaskDto;
+    path: {
+        id: string;
+    };
+    query?: never;
+    url: '/api/v1/me/journeys/enrollments/{id}/complete-task';
+};
+
+export type JourneysControllerCompleteTaskResponses = {
+    200: CompleteTaskResponseDto;
+};
+
+export type JourneysControllerCompleteTaskResponse = JourneysControllerCompleteTaskResponses[keyof JourneysControllerCompleteTaskResponses];
+
+export type JourneysControllerCompleteDayData = {
+    body: CompleteDayDto;
+    path: {
+        id: string;
+    };
+    query?: never;
+    url: '/api/v1/me/journeys/enrollments/{id}/complete-day';
+};
+
+export type JourneysControllerCompleteDayResponses = {
+    200: CompleteDayResponseDto;
+};
+
+export type JourneysControllerCompleteDayResponse = JourneysControllerCompleteDayResponses[keyof JourneysControllerCompleteDayResponses];
+
+export type JourneysControllerTickData = {
+    body?: never;
+    path: {
+        id: string;
+    };
+    query?: never;
+    url: '/api/v1/me/journeys/enrollments/{id}/tick';
+};
+
+export type JourneysControllerTickResponses = {
+    200: PatientJourneyResponseDto;
+};
+
+export type JourneysControllerTickResponse = JourneysControllerTickResponses[keyof JourneysControllerTickResponses];
+
 export type JourneysControllerGetByJourneyIdData = {
     body?: never;
     path: {
-        /**
-         * Campus slug
-         */
-        campus: 'cadabams' | 'whitefield' | 'mysore' | 'mindtalk';
         journeyId: string;
     };
     query?: never;
-    url: '/api/v1/{campus}/journeys/by-journey/{journeyId}';
+    url: '/api/v1/me/journeys/{journeyId}';
 };
 
 export type JourneysControllerGetByJourneyIdResponses = {
@@ -9980,61 +10019,18 @@ export type JourneysControllerGetByJourneyIdResponses = {
 
 export type JourneysControllerGetByJourneyIdResponse = JourneysControllerGetByJourneyIdResponses[keyof JourneysControllerGetByJourneyIdResponses];
 
-export type JourneysControllerCompleteTaskData = {
-    body: CompleteTaskDto;
-    path: {
-        /**
-         * Campus slug
-         */
-        campus: 'cadabams' | 'whitefield' | 'mysore' | 'mindtalk';
-        id: string;
-    };
-    query?: never;
-    url: '/api/v1/{campus}/journeys/enrollments/{id}/complete-task';
-};
-
-export type JourneysControllerCompleteTaskResponses = {
-    200: JourneyTaskCompletionResponseDto;
-};
-
-export type JourneysControllerCompleteTaskResponse = JourneysControllerCompleteTaskResponses[keyof JourneysControllerCompleteTaskResponses];
-
-export type JourneysControllerCompleteDayData = {
-    body: CompleteDayDto;
-    path: {
-        /**
-         * Campus slug
-         */
-        campus: 'cadabams' | 'whitefield' | 'mysore' | 'mindtalk';
-        id: string;
-    };
-    query?: never;
-    url: '/api/v1/{campus}/journeys/enrollments/{id}/complete-day';
-};
-
-export type JourneysControllerCompleteDayResponses = {
-    200: PatientJourneyResponseDto;
-};
-
-export type JourneysControllerCompleteDayResponse = JourneysControllerCompleteDayResponses[keyof JourneysControllerCompleteDayResponses];
-
-export type JourneysControllerListAllData = {
+export type JourneysAdminControllerListAllData = {
     body?: never;
-    path: {
-        /**
-         * Campus slug
-         */
-        campus: 'cadabams' | 'whitefield' | 'mysore' | 'mindtalk';
-    };
+    path?: never;
     query?: {
+        /**
+         * Filter by campus slug (admin only)
+         */
+        campus?: string;
         /**
          * Filter by CMS journeyId
          */
         journeyId?: string;
-        /**
-         * Filter by patientRef (mobile)
-         */
-        patientRef?: string;
         /**
          * Filter by Postgres userId
          */
@@ -10054,28 +10050,23 @@ export type JourneysControllerListAllData = {
         page?: number;
         pageSize?: number;
     };
-    url: '/api/v1/{campus}/journeys/admin/enrollments';
+    url: '/api/v1/admin/journeys/enrollments';
 };
 
-export type JourneysControllerListAllResponses = {
+export type JourneysAdminControllerListAllResponses = {
     200: PatientJourneyListResponseDto;
 };
 
-export type JourneysControllerListAllResponse = JourneysControllerListAllResponses[keyof JourneysControllerListAllResponses];
+export type JourneysAdminControllerListAllResponse = JourneysAdminControllerListAllResponses[keyof JourneysAdminControllerListAllResponses];
 
-export type JourneysControllerGetStatsData = {
+export type JourneysAdminControllerGetStatsData = {
     body?: never;
-    path: {
-        /**
-         * Campus slug
-         */
-        campus: 'cadabams' | 'whitefield' | 'mysore' | 'mindtalk';
-    };
+    path?: never;
     query?: never;
-    url: '/api/v1/{campus}/journeys/admin/stats';
+    url: '/api/v1/admin/journeys/stats';
 };
 
-export type JourneysControllerGetStatsResponses = {
+export type JourneysAdminControllerGetStatsResponses = {
     /**
      * Aggregate engagement stats
      */
@@ -10084,55 +10075,7 @@ export type JourneysControllerGetStatsResponses = {
     };
 };
 
-export type JourneysControllerGetStatsResponse = JourneysControllerGetStatsResponses[keyof JourneysControllerGetStatsResponses];
-
-export type JourneysControllerGetMigrationStatusData = {
-    body?: never;
-    path: {
-        /**
-         * Campus slug
-         */
-        campus: 'cadabams' | 'whitefield' | 'mysore' | 'mindtalk';
-    };
-    query?: never;
-    url: '/api/v1/{campus}/journeys/admin/migration-status';
-};
-
-export type JourneysControllerGetMigrationStatusResponses = {
-    /**
-     * Migration run summary
-     */
-    200: {
-        [key: string]: unknown;
-    };
-};
-
-export type JourneysControllerGetMigrationStatusResponse = JourneysControllerGetMigrationStatusResponses[keyof JourneysControllerGetMigrationStatusResponses];
-
-export type JourneysControllerGetFailuresData = {
-    body?: never;
-    path: {
-        /**
-         * Campus slug
-         */
-        campus: 'cadabams' | 'whitefield' | 'mysore' | 'mindtalk';
-    };
-    query?: {
-        limit?: number;
-    };
-    url: '/api/v1/{campus}/journeys/admin/migration-failures';
-};
-
-export type JourneysControllerGetFailuresResponses = {
-    /**
-     * Failed migration log entries
-     */
-    200: Array<{
-        [key: string]: unknown;
-    }>;
-};
-
-export type JourneysControllerGetFailuresResponse = JourneysControllerGetFailuresResponses[keyof JourneysControllerGetFailuresResponses];
+export type JourneysAdminControllerGetStatsResponse = JourneysAdminControllerGetStatsResponses[keyof JourneysAdminControllerGetStatsResponses];
 
 export type CmsAssessmentsControllerFindAllData = {
     body?: never;
