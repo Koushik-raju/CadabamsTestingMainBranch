@@ -1,3 +1,27 @@
+/**
+ * FILE: components/assessment/assignments-list.tsx
+ *
+ * PURPOSE:
+ *   Renders a grouped list card of AssignedAssessmentItems (patient's completed
+ *   assessment completions). Each row shows an icon tile, assessment title, status
+ *   badge, and chevron; tapping a row fires onItemClick for navigation.
+ *
+ * LOGIC OVERVIEW:
+ *   - Receives a flat items array and an onItemClick callback.
+ *   - Maps items into grouped Card rows separated by <Separator>.
+ *   - Uses item.id (unique completion UUID) as the React key to avoid collisions
+ *     when a patient has multiple completions for the same assessment template.
+ *
+ * KEY VARIABLES / PROPS / EXPORTS:
+ *   items        — AssignedAssessmentItem[] to render
+ *   onItemClick  — called with the clicked item; parent handles navigation
+ *
+ * DEPENDENCIES:
+ *   AssignedAssessmentItem — from hooks/use-assessments
+ *
+ * LAST UPDATED: 2026-04-21 — use item.id as React key (fix duplicate-key error
+ *   when patient has multiple completions for the same assessment template)
+ */
 'use client';
 
 import { Card, CardContent } from '@/components/ui/card';
@@ -17,7 +41,7 @@ export function AssignmentsList({ items, onItemClick }: AssignmentsListProps) {
     <Card>
       <CardContent className="py-0 px-4">
         {items.map((item, i) => (
-          <div key={item.documentId || String(item.id)}>
+          <div key={String(item.id)}>
             <div
               className="flex items-center gap-3 py-3 cursor-pointer transition-colors hover:bg-muted/50 active:bg-muted rounded-lg"
               onClick={() => onItemClick(item)}
