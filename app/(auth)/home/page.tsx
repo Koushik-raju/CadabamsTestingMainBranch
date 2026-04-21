@@ -26,15 +26,15 @@
  * LAST UPDATED: 2026-04-17 — add appointments + prescriptions quick action routes
  */
 
-'use client';
+"use client";
 
-import { useRouter } from 'next/navigation';
-import { HomeHeader } from '@/components/home/home-header';
-import { SupportSection } from '@/components/home/support-section';
-import { QuickActions } from '@/components/home/quick-actions';
-import { UpcomingSession } from '@/components/home/upcoming-session';
-import { JourneySection } from '@/components/home/journey-section';
-import { useHomePage } from '@/hooks/home/use-home-page';
+import { useRouter } from "next/navigation";
+import { HomeHeader } from "@/components/home/home-header";
+import { SupportSection } from "@/components/home/support-section";
+import { QuickActions } from "@/components/home/quick-actions";
+import { UpcomingSession } from "@/components/home/upcoming-session";
+import { JourneySection } from "@/components/home/journey-section";
+import { useHomePage } from "@/hooks/home/use-home-page";
 
 export default function HomePage() {
   const router = useRouter();
@@ -42,51 +42,51 @@ export default function HomePage() {
 
   const handleAction = (type: string, subtype?: string) => {
     switch (type) {
-      case 'quick_action':
+      case "quick_action":
         switch (subtype) {
-          case 'appointments':
-            router.push('/consult/appointments');
+          case "appointments":
+            router.push("/consult/appointments");
             break;
-          case 'therapist':
-            router.push('/consult/find-therapist');
+          case "therapist":
+            router.push("/consult/find-therapist");
             break;
-          case 'match':
-            router.push('/consult/find-therapist');
+          case "match":
+            router.push("/consult/find-therapist");
             break;
-          case 'assessment':
-            router.push('/assessments');
+          case "assessment":
+            router.push("/assessments");
             break;
-          case 'journey':
-            router.push('/journeys');
+          case "journey":
+            router.push("/journeys");
             break;
-          case 'journal':
-            router.push('/self-journaling');
+          case "journal":
+            router.push("/self-journaling");
             break;
-          case 'breathe':
-            router.push('/wellness/resources');
+          case "breathe":
+            router.push("/wellness/resources");
             break;
-          case 'packages':
-            router.push('/packages');
+          case "packages":
+            router.push("/packages");
             break;
-          case 'mindful-minutes':
-            router.push('/wellness/mindful-minutes');
+          case "mindful-minutes":
+            router.push("/wellness/mindful-minutes");
             break;
-          case 'chat':
-            router.push('/chat');
+          case "chat":
+            router.push("/chat");
             break;
-          case 'videos':
-            router.push('/wellness/video');
+          case "videos":
+            router.push("/wellness/video");
             break;
-          case 'documents':
-            router.push('/documents');
+          case "documents":
+            router.push("/documents");
             break;
-          case 'prescriptions':
-            router.push('/prescriptions');
+          case "prescriptions":
+            router.push("/prescriptions");
             break;
         }
         break;
-      case 'join_session':
-        router.push('/consult/appointments');
+      case "join_session":
+        router.push("/consult/appointments");
         break;
     }
   };
@@ -94,23 +94,23 @@ export default function HomePage() {
   return (
     <div className="min-h-screen bg-background">
       <HomeHeader
-        onMoodClick={() => router.push('/assessment/avym73d4x6258t3ligurl56r')}
+        onMoodClick={() => router.push("/assessment/avym73d4x6258t3ligurl56r")}
       />
 
       {/* Main content — overlaps header by pulling up with negative margin */}
       <div className="relative mt-[-20px] pt-8 pb-20 bg-background rounded-t-2xl z-10 flex flex-col gap-0">
         <UpcomingSession
           appointments={appointments}
-          onJoin={() => handleAction('join_session')}
+          onJoin={() => handleAction("join_session")}
         />
 
         <SupportSection
-          onTalk={() => handleAction('quick_action', 'therapist')}
-          onMatch={() => handleAction('quick_action', 'match')}
+          onTalk={() => handleAction("quick_action", "therapist")}
+          onMatch={() => handleAction("quick_action", "match")}
         />
 
         <QuickActions
-          onActionClick={(type) => handleAction('quick_action', type)}
+          onActionClick={(type) => handleAction("quick_action", type)}
         />
 
         <JourneySection />
