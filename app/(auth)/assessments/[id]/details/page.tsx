@@ -1,3 +1,42 @@
+/**
+ * FILE: app/(auth)/assessments/[id]/details/page.tsx
+ *
+ * PURPOSE:
+ *   Landing/detail page for a single CMS assessment. Displays the hero image,
+ *   title, description, stats (duration and question count), benefit points,
+ *   and a "Start Assessment" CTA button.
+ *
+ * LOGIC OVERVIEW:
+ *   1. Extracts the assessment `id` from the dynamic route params via React `use()`.
+ *   2. Fetches the assessment record using `useAssessmentById(id)`.
+ *   3. Derives the hero image URL — prepends the CMS base URL if the path is relative.
+ *   4. Reads `landingTitle` sub-fields (numberOfQuestion, minutes, badgeText, points)
+ *      with safe fallbacks.
+ *   5. Renders a loading skeleton while data is in-flight, an error state on failure,
+ *      and the full detail view once data is available.
+ *   6. The fixed bottom bar contains a "Start Assessment" button (navigates to the
+ *      quiz page) and a "View all reports" link.
+ *
+ * KEY VARIABLES / PROPS / EXPORTS:
+ *   assessmentId   — dynamic route segment `[id]`, used as the fetch key
+ *   assessmentData — raw response from `useAssessmentById`; aliased as `assessment`
+ *   imageUrl       — resolved absolute URL for the hero image (memoised)
+ *   questionCount  — number of questions, from `landingTitle.numberOfQuestion` or
+ *                    `Questions.length`
+ *   durationMins   — estimated duration in minutes from `landingTitle.minutes`
+ *   badgeText      — optional badge label from `landingTitle.badgeText`
+ *   points         — array of benefit/feature points from `landingTitle.points`
+ *
+ * DEPENDENCIES:
+ *   useAssessmentById  — SWR hook wrapping the assessment detail SDK call
+ *   next/navigation    — `useRouter` for programmatic navigation
+ *   BackButton         — shared navigation component
+ *   shadcn/ui          — Button, Skeleton
+ *   lucide-react       — Clock, ListChecks, ChevronRight, CheckCircle2,
+ *                        ShieldCheck, AlertCircle
+ *
+ * LAST UPDATED: 2026-04-21 — add file header
+ */
 'use client';
 
 import { use, useMemo } from 'react';

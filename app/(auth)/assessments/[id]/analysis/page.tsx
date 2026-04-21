@@ -1,3 +1,38 @@
+/**
+ * FILE: app/(auth)/assessments/[id]/analysis/page.tsx
+ *
+ * PURPOSE:
+ *   Legacy assessment analysis page that displays a static AI-generated narrative
+ *   summary and overall score for a completed assessment, with a CTA to book an
+ *   appointment.
+ *
+ * LOGIC OVERVIEW:
+ *   1. Unwraps the dynamic `[id]` route param via React `use(params)`.
+ *   2. Derives `leadId` from the authenticated user via `useAuth`.
+ *   3. Calls `useAssessmentScoreSummary(leadId, assessmentId)` to fetch the score
+ *      summary and submission list for this assessment.
+ *   4. Shows a skeleton loading state while data is in flight.
+ *   5. Shows an error/unauthenticated state if the fetch fails or `leadId` is absent.
+ *   6. If no submissions exist, renders an empty state with a "Take Assessment" CTA.
+ *   7. If submissions exist, renders an AI badge, overall score heading (from
+ *      `scoreSummary.value`), a static narrative paragraph block, an AI disclaimer,
+ *      and a fixed-bottom "Book appointment" CTA button.
+ *
+ * KEY VARIABLES / PROPS / EXPORTS:
+ *   assessmentId     — assessment ID extracted from the URL params
+ *   leadId           — string lead ID derived from the authenticated user's `lead_id`
+ *   scoreSummary     — object returned by the hook containing the overall score `value`
+ *   submissions      — array of submission records; used to determine empty vs filled state
+ *   hasSubmissions   — boolean derived from `submissions`; gates the narrative vs empty-state render
+ *
+ * DEPENDENCIES:
+ *   useAssessmentScoreSummary  — SWR hook in hooks/assessments/use-assessment-detail
+ *   useAuth                    — authentication hook providing the current user
+ *   next/navigation useRouter  — for programmatic navigation (back, assessments list, booking)
+ *   lucide-react               — Sparkles, AlertCircle, ChevronRight, X icons
+ *
+ * LAST UPDATED: 2026-04-21 — add file header
+ */
 'use client';
 
 import { use, useMemo } from 'react';

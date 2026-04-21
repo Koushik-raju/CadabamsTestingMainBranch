@@ -1499,6 +1499,71 @@ export type PatientResponseDto = {
     };
 };
 
+export type CompletionAnswerDto = {
+    /**
+     * Question identifier
+     */
+    questionKey: string;
+    questionText?: string;
+    /**
+     * Answer value as string
+     */
+    answerValue: string;
+    answerLabel?: string;
+    /**
+     * Display order
+     */
+    order: number;
+};
+
+export type CompletionResponseDto = {
+    /**
+     * Unique completion ID
+     */
+    id: string;
+    /**
+     * External user/lead ID
+     */
+    userId?: string;
+    /**
+     * Firebase UID or patient reference
+     */
+    patientRef?: string;
+    /**
+     * Campus slug
+     */
+    campus: string;
+    /**
+     * Assessment template key
+     */
+    assessmentKey: string;
+    assessmentTitle?: string;
+    /**
+     * Computed total score
+     */
+    totalScore?: number;
+    maxScore?: number;
+    /**
+     * Severity band
+     */
+    severity?: string;
+    /**
+     * Completion timestamp
+     */
+    completedAt: string;
+    startedAt?: string;
+    /**
+     * Data source: app | rtdb | firestore
+     */
+    source: string;
+    createdAt: string;
+    updatedAt: string;
+    /**
+     * Answer rows
+     */
+    answers: Array<CompletionAnswerDto>;
+};
+
 export type ErpListResponseDto = {
     /**
      * List of records from ERP (passthrough)
@@ -2093,71 +2158,6 @@ export type HealthResponseDto = {
      * Database connectivity status
      */
     db: string;
-};
-
-export type CompletionAnswerDto = {
-    /**
-     * Question identifier
-     */
-    questionKey: string;
-    questionText?: string;
-    /**
-     * Answer value as string
-     */
-    answerValue: string;
-    answerLabel?: string;
-    /**
-     * Display order
-     */
-    order: number;
-};
-
-export type CompletionResponseDto = {
-    /**
-     * Unique completion ID
-     */
-    id: string;
-    /**
-     * External user/lead ID
-     */
-    userId?: string;
-    /**
-     * Firebase UID or patient reference
-     */
-    patientRef?: string;
-    /**
-     * Campus slug
-     */
-    campus: string;
-    /**
-     * Assessment template key
-     */
-    assessmentKey: string;
-    assessmentTitle?: string;
-    /**
-     * Computed total score
-     */
-    totalScore?: number;
-    maxScore?: number;
-    /**
-     * Severity band
-     */
-    severity?: string;
-    /**
-     * Completion timestamp
-     */
-    completedAt: string;
-    startedAt?: string;
-    /**
-     * Data source: app | rtdb | firestore
-     */
-    source: string;
-    createdAt: string;
-    updatedAt: string;
-    /**
-     * Answer rows
-     */
-    answers: Array<CompletionAnswerDto>;
 };
 
 export type AssessmentAnswerDto = {
@@ -5661,10 +5661,6 @@ export type PatientsControllerGetAssessmentsData = {
     body?: never;
     path: {
         /**
-         * Campus slug
-         */
-        campus: 'cadabams' | 'whitefield' | 'mysore' | 'mindtalk';
-        /**
          * Patient ID
          */
         patientId: string;
@@ -5674,7 +5670,7 @@ export type PatientsControllerGetAssessmentsData = {
 };
 
 export type PatientsControllerGetAssessmentsResponses = {
-    200: PatientListResponseDto;
+    200: Array<CompletionResponseDto>;
 };
 
 export type PatientsControllerGetAssessmentsResponse = PatientsControllerGetAssessmentsResponses[keyof PatientsControllerGetAssessmentsResponses];

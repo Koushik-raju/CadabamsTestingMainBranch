@@ -13,8 +13,9 @@
  *     needed because extractString/extractNumber accept unknown directly.
  *   - useAssessmentsPage: infinite SWR hook over cmsAssessmentsControllerFindAll.
  *   - useAssignedAssessments: SWR hook over patientsControllerGetAssessments
- *     which returns a passthrough { [key: string]: unknown }[] — coercions there
- *     are unavoidable until the SDK types that endpoint properly.
+ *     which now returns Array<CompletionResponseDto> directly (campus param
+ *     removed). Each completion is mapped to AssignedAssessmentItem using the
+ *     typed DTO fields — no coercions required.
  *
  * KEY VARIABLES / PROPS / EXPORTS:
  *   AssessmentItem          — mapped assessment shape used by page components
@@ -27,8 +28,8 @@
  *   cmsAssessmentsControllerFindAll     — SDK: fetch published assessments
  *   patientsControllerGetAssessments    — SDK: fetch lead-assigned assessments
  *
- * LAST UPDATED: 2026-04-20 — pass publicView=true to cmsAssessmentsControllerFindAll
- *   and drop client-side citationText filter; server handles the public-view gate.
+ * LAST UPDATED: 2026-04-21 — migrate useAssignedAssessments to CompletionResponseDto
+ *   (campus param removed, response is now array)
  */
 
 import useSWR from 'swr';
@@ -37,7 +38,7 @@ import {
   cmsAssessmentsControllerFindAll,
   patientsControllerGetAssessments,
 } from '@/sdk/backend-v2';
-import type { AssessmentResponseDto } from '@/sdk/backend-v2';
+import type { AssessmentResponseDto, CompletionResponseDto } from '@/sdk/backend-v2';
 import { assessmentsKey, assignedAssessmentsKey } from '@/lib/swr-keys';
 import { ASSESSMENT_CATEGORIES } from '@/components/assessment/assessment-category';
 
@@ -375,30 +376,23 @@ export function useAssignedAssessments(leadId: string | null) {
     leadId ? assignedAssessmentsKey(leadId) : null,
     async () => {
       const res = await patientsControllerGetAssessments({
-        path: { campus: 'cadabams', patientId: leadId! },
+        path: { patientId: leadId! },
       });
       if (res.error) throw new Error(JSON.stringify(res.error));
-      const items = res.data?.items ?? [];
+      const items = res.data ?? [];
       return items.map(
-        (assigned: Record<string, unknown>): AssignedAssessmentItem => {
-          const documentId = String(assigned.id || assigned.documentId || '');
-          return {
-            documentId,
-            id: assigned.id as string | number | undefined,
-            label: (assigned.title as string) || 'Untitled Assessment',
-            description: (assigned.description as string) || '',
-            category: assigned.category
-              ? Array.isArray(assigned.category)
-                ? (assigned.category as string[])
-                : [assigned.category as string]
-              : [],
-            assignedAt: assigned.assignedAt as string | undefined,
-            status: (assigned.status as string) || 'assigned',
-            forJourney: Boolean(assigned.forJourney),
-            isCompleted: Boolean(assigned.isCompleted),
-            lastUsed: (assigned.lastUsed as string) || '1970-01-01T00:00:00Z',
-          };
-        }
+        (completion: CompletionResponseDto): AssignedAssessmentItem => ({
+          documentId: completion.assessmentKey,
+          id: completion.id,
+          label: completion.assessmentTitle || completion.assessmentKey,
+          description: '',
+          category: [],
+          assignedAt: completion.completedAt,
+          status: 'completed',
+          isCompleted: true,
+          lastUsed: completion.completedAt,
+          forJourney: false,
+        })
       );
     }
   );

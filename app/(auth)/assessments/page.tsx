@@ -1,3 +1,60 @@
+/**
+ * FILE: app/(auth)/assessments/page.tsx
+ *
+ * PURPOSE:
+ *   Assessments listing page with two tabs: "Explore" (browse CMS assessments)
+ *   and "My Assessments" (patient's completed assessments via useAssignedAssessments).
+ *
+ * LOGIC OVERVIEW:
+ *   1. Renders a two-tab layout — "Explore" and "My Assessments".
+ *   2. Explore tab: fetches paginated CMS assessments via useAssessments() with
+ *      infinite scroll; supports keyword search (debounced 400 ms) and a
+ *      filter/sort bottom sheet (sort by featured/alpha/quickest, duration bucket,
+ *      category). Server-side filtering delegates to useFilteredAssessments when
+ *      a search term or category is active; client-side sort + duration filter
+ *      applied on top. First item in the unfiltered list is rendered as a
+ *      RecommendedAssessmentCard; the rest as AssessmentGridCards.
+ *   3. My Assessments tab: fetches the patient's completed assessments via
+ *      useAssignedAssessments(leadId), derived from the authenticated user's
+ *      lead_id. Shows a count badge on the tab trigger. Delegates rendering to
+ *      AssignmentsList; shows AssignmentsSkeleton while loading and
+ *      AssessmentEmptyState on empty results.
+ *   4. Active filter chips are shown below the search bar; each chip can be
+ *      individually dismissed. "Clear all" resets all filters at once.
+ *   5. Navigation: tapping a browse card routes to /assessments/:id/details;
+ *      tapping a completed assessment routes to /assessments/:documentId|:id.
+ *
+ * KEY VARIABLES / PROPS / EXPORTS:
+ *   activeTab            — controlled Tabs value ('browse' | 'assessments')
+ *   searchTerm           — raw search input value
+ *   debouncedSearch      — 400 ms debounced version used for API calls
+ *   sortBy               — applied sort selection (SortBy)
+ *   activeCategory       — applied category filter string
+ *   activeDuration       — applied duration bucket (Duration)
+ *   pendingSort/Category/Duration — draft values held while the filter sheet is open
+ *   allAssessments       — flattened SWR pages from useAssessments()
+ *   browseItems          — allAssessments[1..] with sort + duration applied
+ *   filteredItems        — server-filtered results with sort + duration applied
+ *   assignedAssessments  — patient's completed assessments from useAssignedAssessments
+ *   activeFilterCount    — number of non-default filters active (drives badge + icon state)
+ *   activeChips          — dismissible filter pill descriptors rendered below search bar
+ *   AssessmentsPage      — default export, the full page component
+ *
+ * DEPENDENCIES:
+ *   useAssessments()            — SWR infinite hook for paginated CMS assessments
+ *   useAssignedAssessments(id)  — SWR hook for patient's completed assessments
+ *   useFilteredAssessments()    — SWR hook for server-side search + category filtering
+ *   getDynamicCategories()      — derives category list from loaded assessments
+ *   useAuth()                   — provides authenticated user (lead_id)
+ *   BackButton                  — shared navigation back button
+ *   AssessmentGridCard / RecommendedAssessmentCard — CMS assessment card components
+ *   AssignmentsList             — renders list of completed assessments
+ *   BrowseSkeleton / AssignmentsSkeleton — loading skeletons
+ *   AssessmentEmptyState        — empty-state display
+ *   categoryMap                 — maps category string to icon + metadata
+ *
+ * LAST UPDATED: 2026-04-21 — add file header; My Assessments tab now shows patient completions
+ */
 'use client';
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
@@ -353,7 +410,7 @@ export default function AssessmentsPage() {
           {/* ── My Assessments tab ──────────────────────────────────────────── */}
           <TabsContent value="assessments" className="mt-0">
             <p className="text-sm text-muted-foreground my-4">
-              Your assigned assessments from your clinician.
+              Your completed assessments.
             </p>
             {isLoadingAssignments ? (
               <AssignmentsSkeleton />

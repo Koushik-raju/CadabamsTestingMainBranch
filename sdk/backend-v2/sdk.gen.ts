@@ -574,7 +574,7 @@ export const patientsControllerGetReports = <ThrowOnError extends boolean = fals
 });
 
 /**
- * Patient assessments
+ * Patient assessments (from Postgres AssessmentCompletion)
  */
 export const patientsControllerGetAssessments = <ThrowOnError extends boolean = false>(options: Options<PatientsControllerGetAssessmentsData, ThrowOnError>) => (options.client ?? client).get<PatientsControllerGetAssessmentsResponses, unknown, ThrowOnError>({
     responseType: 'json',

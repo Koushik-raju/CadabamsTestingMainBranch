@@ -1,3 +1,48 @@
+/**
+ * FILE: hooks/assessments/use-assessment-detail.ts
+ *
+ * PURPOSE:
+ *   Provides SWR hooks and async action helpers for fetching and submitting
+ *   assessment detail data, including individual assessment metadata,
+ *   past submissions, and score summaries.
+ *
+ * LOGIC OVERVIEW:
+ *   1. useAssessmentById(id) — fetches a single CMS assessment by ID via
+ *      cmsAssessmentsControllerFindOne and maps the raw response to AssessmentItem.
+ *   2. useAssessmentSubmissions(leadId, assessmentId) — fetches past completions
+ *      for the current patient via patientAssessmentsControllerListMine, sorts
+ *      them newest-first, and normalises each into AssessmentSubmission shape.
+ *   3. useAssessmentScoreSummary(leadId, assessmentId) — composes
+ *      useAssessmentSubmissions and runs deriveScoreSummary on the result to
+ *      produce a human-readable label/value pair for the latest submission.
+ *   4. submitAssessment(leadId, assessmentId, answers) — serialises question
+ *      answers and POSTs a new completion via
+ *      patientAssessmentsControllerCreateCompletion; returns the new completion id.
+ *   5. analyzeAssessmentCompletion(completionId) — calls the backend LLM analysis
+ *      endpoint via patientAssessmentsAnalysisControllerAnalyze and returns the
+ *      result string.
+ *
+ * KEY VARIABLES / PROPS / EXPORTS:
+ *   AssessmentItem          — re-exported mapped type for a single assessment
+ *   AssessmentSubmission    — normalised shape of a past completion record
+ *   useAssessmentById       — SWR hook; returns { data: AssessmentItem | null, isLoading, error }
+ *   useAssessmentSubmissions — SWR hook; returns { data: AssessmentSubmission[], isLoading, error }
+ *   useAssessmentScoreSummary — SWR hook; returns { scoreSummary, submissions, isLoading, error }
+ *   submitAssessment        — async action; returns new completion id string
+ *   analyzeAssessmentCompletion — async action; returns LLM analysis result string
+ *
+ * DEPENDENCIES:
+ *   swr                                          — data fetching and caching
+ *   cmsAssessmentsControllerFindOne              — SDK: fetch single CMS assessment
+ *   patientAssessmentsControllerListMine         — SDK: list patient completions
+ *   patientAssessmentsControllerCreateCompletion — SDK: create new completion
+ *   patientAssessmentsAnalysisControllerAnalyze  — SDK: trigger LLM analysis
+ *   assessmentByIdKey, assessmentSubmissionsKey  — SWR cache key factories
+ *   mapAssessment                                — mapper from use-assessments-page
+ *
+ * LAST UPDATED: 2026-04-21 — add file header
+ */
+
 import useSWR, { useSWRConfig } from 'swr';
 import {
   cmsAssessmentsControllerFindOne,
