@@ -35,7 +35,7 @@
  *   emoji-picker-react          — emoji picker UI
  *   Web Speech API              — browser-native mic transcription
  *
- * LAST UPDATED: 2026-04-17 — Added mic (Web Speech API) and emoji picker;
+ * LAST UPDATED: 2026-04-21 — identity migration: createSelfJournalingEntry payload leadId → crmLeadId;
  *   removed ... header button; prompt heading reduced to text-xl.
  */
 'use client';
@@ -253,7 +253,7 @@ export function JournalWriter({ slug }: JournalWriterProps) {
     setIsSaving(true);
     try {
       await createSelfJournalingEntry({
-        leadId,
+        crmLeadId: leadId,
         title: sub?.title ?? allPrompts[0]?.heading ?? 'Journal Entry',
         entry: allPrompts.map((p) => `${p.heading}\n${p.text}`).join('\n\n'),
         prompts: allPrompts,

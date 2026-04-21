@@ -1,3 +1,39 @@
+/**
+ * FILE: hooks/use-journaling.ts
+ *
+ * PURPOSE:
+ *   SWR hooks and mutation helpers for the CMS self-journaling feature —
+ *   categories, user entries, and create/delete actions.
+ *
+ * LOGIC OVERVIEW:
+ *   1. useJournalingCategories — fetches published categories + sub-journalings
+ *      from GET /api/v1/cms/journaling via axios.
+ *   2. useSelfJournalingEntries — fetches the current user's entries from
+ *      GET /api/v1/cms/journaling/self?crmLeadId=N via axios.
+ *   3. useSelfJournalingEntry — fetches a single entry by ID.
+ *   4. createSelfJournalingEntry — POSTs to /api/v1/cms/journaling/self with
+ *      crmLeadId in the body, then revalidates the entries SWR key.
+ *   5. deleteSelfJournalingEntry — DELETEs by ID and revalidates.
+ *
+ * KEY VARIABLES / PROPS / EXPORTS:
+ *   JournalingCategory         — CMS category with sub-journalings
+ *   SubJournalingItem          — individual sub-journaling item
+ *   SelfJournalingEntry        — user entry shape returned by CMS
+ *   CreateSelfJournalingPayload — POST body; uses crmLeadId (number)
+ *   useJournalingCategories    — { categories, subJournalings, isLoading, error }
+ *   useSelfJournalingEntries   — { entries, total, isLoading, error, leadId }
+ *   useSelfJournalingEntry     — { entry, isLoading, error }
+ *   createSelfJournalingEntry  — async; returns created SelfJournalingEntry
+ *   deleteSelfJournalingEntry  — async; void
+ *
+ * DEPENDENCIES:
+ *   axios (cmsApi)     — direct HTTP to CMS endpoints (not SDK)
+ *   swr                — caching + revalidation
+ *   useAuth            — provides user.lead_id for crmLeadId
+ *
+ * LAST UPDATED: 2026-04-21 — identity migration: GET query param leadId →
+ *   crmLeadId; CreateSelfJournalingPayload.leadId → crmLeadId
+ */
 import useSWR, { mutate as globalMutate } from 'swr';
 import axios from 'axios';
 import { CONFIG } from '@/config/env';
@@ -72,7 +108,7 @@ async function fetchSelfJournalingEntries(
 ): Promise<{ items: SelfJournalingEntry[]; total: number }> {
   const { data } = await cmsApi.get<{ items?: SelfJournalingEntry[]; total?: number }>(
     '/api/v1/cms/journaling/self',
-    { params: { limit, offset: 0, leadId } },
+    { params: { limit, offset: 0, crmLeadId: leadId } },
   );
   return {
     items: data?.items ?? [],
@@ -164,7 +200,7 @@ export interface CreateSelfJournalingPayload {
   emotion?: number;
   stressLevel?: number;
   stressors?: string;
-  leadId: number;
+  crmLeadId: number;
   subJournalingId?: string;
 }
 
@@ -178,7 +214,7 @@ export async function createSelfJournalingEntry(
   );
 
   // Revalidate the entries list
-  await globalMutate(selfJournalingEntriesKey(payload.leadId));
+  await globalMutate(selfJournalingEntriesKey(payload.crmLeadId));
 
   return data;
 }

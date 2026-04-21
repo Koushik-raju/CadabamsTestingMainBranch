@@ -1523,13 +1523,42 @@ export type CompletionAnswerDto = {
      */
     order: number;
     /**
-     * Structured sub-answers for QA/matrix question types. questionText is populated when CMS question data is available.
+     * Structured sub-answers for QA/matrix question types
      */
     subAnswers?: Array<{
         key?: string;
         answer?: string;
-        questionText?: string;
     }>;
+};
+
+export type UserResponseQuestionDto = {
+    /**
+     * CMS question CUID extracted from questionKey
+     */
+    id?: string;
+    questionKey: string;
+    questionText?: string;
+    /**
+     * Sub-question key (derived from _step_N suffix or sub-answer key)
+     */
+    subQuestionKey?: string;
+    order: number;
+};
+
+export type UserResponseAnswerDto = {
+    /**
+     * Human-readable answer label
+     */
+    answerText?: string;
+    /**
+     * Raw answer value
+     */
+    answerValue?: string;
+};
+
+export type UserResponseItemDto = {
+    question: UserResponseQuestionDto;
+    answer: UserResponseAnswerDto;
 };
 
 export type CompletionResponseDto = {
@@ -1584,6 +1613,10 @@ export type CompletionResponseDto = {
      * Answer rows
      */
     answers: Array<CompletionAnswerDto>;
+    /**
+     * Flat question+answer pairs (sub-questions expanded into separate rows, view_text steps excluded)
+     */
+    userResponse: Array<UserResponseItemDto>;
 };
 
 export type ErpListResponseDto = {
@@ -2280,6 +2313,21 @@ export type AssessmentAnalysisListResponseDto = {
      * Total number of rows
      */
     total: number;
+    page: number;
+    pageSize: number;
+};
+
+export type PatchLeadAssignmentsDto = {
+    /**
+     * Bucket map (subset allowed): assessments, worksheets, audio, video, wellness, journeys. Merged with existing; new items replace same id/documentId.
+     */
+    assignments: {
+        [key: string]: unknown;
+    };
+    /**
+     * Optional metadata only (e.g. doctor home campus). Omitted = on create use JWT campus; on update leave unchanged.
+     */
+    campus?: string;
 };
 
 export type WorksheetSubmissionListResponseDto = {
@@ -2804,7 +2852,7 @@ export type EnrollmentDayDto = {
 
 export type PatientJourneyResponseDto = {
     id: string;
-    userId: string;
+    crmLeadId: string;
     campus: string;
     journeyId: string;
     name: string | null;
@@ -4401,23 +4449,22 @@ export type RegisterTokenDto = {
     /**
      * CRM lead ID (patients only)
      */
-    leadId?: string;
+    crmLeadId?: string;
     /**
-     * Internal doctor ID (doctors only)
+     * ERP doctor ID (doctors only)
      */
-    doctorId?: string;
+    erpDoctorId?: string;
 };
 
 export type FcmTokenResponseDto = {
     id: string;
-    userSub: string;
     userRole: 'ADMIN' | 'DOCTOR' | 'STAFF' | 'PATIENT';
     token: string;
     deviceType: 'IOS' | 'ANDROID' | 'WEB';
-    leadId?: {
+    crmLeadId?: {
         [key: string]: unknown;
     } | null;
-    doctorId?: {
+    erpDoctorId?: {
         [key: string]: unknown;
     } | null;
     createdAt: string;
@@ -4430,9 +4477,13 @@ export type FcmTokenListResponseDto = {
 
 export type SendNotificationDto = {
     /**
-     * JWT sub of the target user
+     * CRM lead ID of the target patient (provide crmLeadId or erpDoctorId)
      */
-    userSub: string;
+    crmLeadId?: string;
+    /**
+     * ERP doctor ID of the target doctor (provide crmLeadId or erpDoctorId)
+     */
+    erpDoctorId?: string;
     title: string;
     body: string;
     /**
@@ -4451,8 +4502,15 @@ export type NotificationSendResultDto = {
 
 export type NotificationLogResponseDto = {
     id: string;
-    userSub: string;
-    sentByUserId: string;
+    crmLeadId?: {
+        [key: string]: unknown;
+    } | null;
+    erpDoctorId?: {
+        [key: string]: unknown;
+    } | null;
+    sentByDoctorId?: {
+        [key: string]: unknown;
+    } | null;
     title: string;
     body: string;
     data: {
@@ -8948,7 +9006,7 @@ export type PatientAssessmentsControllerGetCompletionData = {
 
 export type PatientAssessmentsControllerGetCompletionResponses = {
     /**
-     * Completion with question/answer rows and metadata
+     * Single completion with answer rows
      */
     200: CompletionResponseDto;
 };
@@ -8969,9 +9027,9 @@ export type PatientAssessmentsControllerListAllData = {
          */
         assessmentKey?: string;
         /**
-         * Filter by Postgres userId (admin only)
+         * Filter by CRM lead ID (admin only)
          */
-        userId?: string;
+        crmLeadId?: string;
         /**
          * Filter by Firebase UID / patientRef (admin only)
          */
@@ -9047,6 +9105,8 @@ export type PatientAssessmentsAnalysisControllerListData = {
          * Filter analyses to a specific completion ID
          */
         completionId?: string;
+        page?: number;
+        pageSize?: number;
     };
     url: '/api/v1/patient-assessments/analyses';
 };
@@ -9071,6 +9131,57 @@ export type PatientAssessmentsAnalysisControllerGetByIdResponses = {
 };
 
 export type PatientAssessmentsAnalysisControllerGetByIdResponse = PatientAssessmentsAnalysisControllerGetByIdResponses[keyof PatientAssessmentsAnalysisControllerGetByIdResponses];
+
+export type LeadAssignmentsControllerGetOneData = {
+    body?: never;
+    path: {
+        crmLeadId: string;
+    };
+    query?: never;
+    url: '/api/v1/lead-assignments/{crmLeadId}';
+};
+
+export type LeadAssignmentsControllerGetOneResponses = {
+    /**
+     * Assignment row or empty defaults
+     */
+    200: unknown;
+};
+
+export type LeadAssignmentsControllerPatchMergeData = {
+    body: PatchLeadAssignmentsDto;
+    path: {
+        crmLeadId: string;
+    };
+    query?: never;
+    url: '/api/v1/lead-assignments/{crmLeadId}';
+};
+
+export type LeadAssignmentsControllerPatchMergeResponses = {
+    /**
+     * Updated assignment row
+     */
+    200: unknown;
+};
+
+export type PatientAssignedContentControllerListAssignedData = {
+    body?: never;
+    path?: never;
+    query?: {
+        /**
+         * If set, only return the row when its optional metadata campus matches (or is unset)
+         */
+        campus?: string;
+    };
+    url: '/api/v1/patient/assigned-content';
+};
+
+export type PatientAssignedContentControllerListAssignedResponses = {
+    /**
+     * crmLeadId from token; items has 0 or 1 entry
+     */
+    200: unknown;
+};
 
 export type WorksheetSubmissionsControllerListAllData = {
     body?: never;
@@ -9521,9 +9632,9 @@ export type JournalingControllerListAllData = {
     };
     query?: {
         /**
-         * Filter by Postgres userId (admin only)
+         * Filter by crmLeadId (admin only)
          */
-        userId?: string;
+        crmLeadId?: string;
         /**
          * Filter by patientRef / leadId (admin only)
          */
@@ -9843,9 +9954,9 @@ export type JourneysAdminControllerListAllData = {
          */
         journeyId?: string;
         /**
-         * Filter by Postgres userId
+         * Filter by CRM lead ID
          */
-        userId?: string;
+        crmLeadId?: string;
         /**
          * Only active enrollments
          */
@@ -10814,11 +10925,15 @@ export type NotificationsControllerSendNotificationResponse = NotificationsContr
 export type NotificationsControllerGetLogData = {
     body?: never;
     path?: never;
-    query: {
+    query?: {
         /**
-         * JWT sub of the user to query logs for
+         * CRM lead ID of the patient to query logs for
          */
-        userSub: string;
+        crmLeadId?: string;
+        /**
+         * ERP doctor ID to query logs for
+         */
+        erpDoctorId?: string;
         page?: number;
         pageSize?: number;
     };

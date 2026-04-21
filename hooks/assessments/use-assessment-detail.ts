@@ -39,8 +39,8 @@
  *   assessmentByIdKey, assessmentSubmissionsKey  — SWR cache key factories
  *   mapAssessment                                — mapper from use-assessments-page
  *
- * LAST UPDATED: 2026-04-21 — remove AssessmentSubmission custom type; hooks now return
- *   CompletionResponseDto[] directly; deriveScoreSummary uses scorePercentage + severity from DTO
+ * LAST UPDATED: 2026-04-21 — reverted useCompletionById to CompletionResponseDto;
+ *   CompletionDetailResponseDto removed from SDK, pending spec update for userResponse
  */
 
 import useSWR from 'swr';
