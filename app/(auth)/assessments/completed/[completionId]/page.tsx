@@ -32,9 +32,8 @@
  *   useAssessmentById  — hooks/assessments/use-assessment-detail
  *   BackButton         — shared navigation
  *
- * LAST UPDATED: 2026-04-21 — use answer.questionId for CMS lookup (no more questionKey parsing);
- *   use answer.subAnswers (structured) instead of JSON.parse(answerValue);
- *   use completion.scorePercentage instead of client-side percentage calc
+ * LAST UPDATED: 2026-04-21 — flatten Q&A into single divide-y list to remove double-padding gaps;
+ *   group title shown only when it changes across groups; sub-answers sorted by qa_N index
  */
 'use client';
 
@@ -42,6 +41,7 @@ import { use, useMemo } from 'react';
 import Link from 'next/link';
 import { Card, CardContent } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
+
 import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
 import { BackButton } from '@/components/shared/navigation/back-button';
@@ -147,7 +147,12 @@ export default function CompletedAssessmentPage({
       const items: AnswerItem[] = [];
       if (ans.subAnswers && ans.subAnswers.length > 0) {
         const subQuestions = cmsQ?.questions ?? [];
-        ans.subAnswers.forEach((sub, i) => {
+        const sorted = [...ans.subAnswers].sort((a, b) => {
+          const ai = parseInt((a.key ?? 'qa_0').replace('qa_', ''), 10);
+          const bi = parseInt((b.key ?? 'qa_0').replace('qa_', ''), 10);
+          return ai - bi;
+        });
+        sorted.forEach((sub, i) => {
           if (!sub.answer) return;
           const key = sub.key ?? `qa_${i}`;
           const idx = parseInt(key.replace('qa_', ''), 10);
@@ -233,41 +238,33 @@ export default function CompletedAssessmentPage({
           </CardContent>
         </Card>
 
-        {/* Q&A list — one card per question, answers grouped below */}
+        {/* Q&A list — flat item rows, group title shown only when it changes */}
         {questionGroups.length > 0 && (
           <section>
             <h2 className="text-base font-bold text-foreground mb-3">Your Responses</h2>
             <Card>
-              <CardContent className="py-0 px-4">
-                {questionGroups.map((group, gi) => (
-                  <div key={group.questionKey}>
-                    <div className="py-3.5">
-                      {/* Question title — rendered once per group */}
-                      <p className="text-sm font-medium text-foreground leading-snug">
-                        {group.title}
+              <CardContent className="py-2 px-4 divide-y divide-border">
+                {questionGroups.flatMap((group, gi) => {
+                  const prevTitle = gi > 0 ? questionGroups[gi - 1].title : null;
+                  const showTitle = group.title !== prevTitle;
+                  return group.items.map((item, ii) => (
+                    <div key={item.key} className="py-3">
+                      {showTitle && ii === 0 && (
+                        <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wide mb-2">
+                          {group.title}
+                        </p>
+                      )}
+                      {item.subLabel && (
+                        <p className="text-sm text-foreground leading-snug">
+                          {item.subLabel}
+                        </p>
+                      )}
+                      <p className="text-sm font-semibold text-primary leading-snug mt-1">
+                        {item.answer}
                       </p>
-                      {/* Answer items */}
-                      <div className="mt-2 space-y-1.5">
-                        {group.items.map((item) => (
-                          <div key={item.key} className="flex items-start justify-between gap-3">
-                            {item.subLabel ? (
-                              <p className="text-xs text-muted-foreground leading-snug flex-1">
-                                {item.subLabel}
-                              </p>
-                            ) : null}
-                            <p className={cn(
-                              'text-sm font-semibold text-primary leading-snug flex-shrink-0',
-                              !item.subLabel && 'mt-0',
-                            )}>
-                              {item.answer}
-                            </p>
-                          </div>
-                        ))}
-                      </div>
                     </div>
-                    {gi < questionGroups.length - 1 && <Separator />}
-                  </div>
-                ))}
+                  ));
+                })}
               </CardContent>
             </Card>
           </section>
