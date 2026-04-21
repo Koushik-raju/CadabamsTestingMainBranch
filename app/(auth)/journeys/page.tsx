@@ -97,7 +97,7 @@ function JourneysInner() {
           enrollmentId: e.id,
           journeyId: e.journeyId,
           name: displayName,
-          icon: cms?.icon ?? undefined,
+          icon: e.icon ?? cms?.icon ?? undefined,
           isPremium: cms?.isPremium ?? false,
           currentDay: e.currentDay ?? 1,
           totalDays: e.totalDays ?? cms?.steps.length ?? 0,

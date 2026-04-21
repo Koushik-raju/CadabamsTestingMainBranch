@@ -9,7 +9,6 @@ import { cn } from '@/lib/utils';
 import { fixImageUrl } from '@/lib/utils';
 import type { JourneyRichText } from '@/types/journey';
 import type { JourneyItem } from '@/types/journey';
-import Image from 'next/image';
 
 export type DiscoveryJourney = JourneyItem & {
   category?: string;
@@ -80,14 +79,12 @@ export function JourneyDiscoveryCard({
       )}
       onClick={handleClick}
     >
-      {/* eslint-disable-next-line @next/next/no-img-element */}
-      <CardHeader className="relative h-24 m-0 p-0 w-full bg-muted">
-        <Image
+      <CardHeader className="relative h-24 m-0 p-0 w-full bg-muted overflow-hidden">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
           src={imageUrl}
           alt={name}
-          className="absolute inset-0 w-full h-full object-cover m-0 p-0"
-          height={36}
-          width={208}
+          className="absolute inset-0 w-full h-full object-cover"
         />
         {isPremium && (
           <div className="absolute top-2 left-2">

@@ -6,6 +6,7 @@ const nextConfig: NextConfig = {
   images: {
     remotePatterns: [
       { protocol: 'https', hostname: 'strapi-bucket-mindtalk-cadabams.s3.ap-south-1.amazonaws.com' },
+      { protocol: 'https', hostname: 'cadabams-v2-storage.s3.ap-south-1.amazonaws.com' },
       { protocol: 'https', hostname: 'mindtalk-assets.s3.ap-south-1.amazonaws.com' },
       { protocol: 'https', hostname: 'mindtalkbuddy.com' },
       { protocol: 'https', hostname: 'admin.mindtalkbuddy.com' },
