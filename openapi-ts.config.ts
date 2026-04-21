@@ -11,7 +11,7 @@ export default defineConfig([
     plugins: [
       {
         name: "@hey-api/client-axios",
-        runtimeConfigPath: "@/api/backend-v2.ts",
+        runtimeConfigPath: "@/api/backend-v2",
       },
       "@hey-api/sdk",
     ],

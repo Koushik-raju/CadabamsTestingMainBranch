@@ -1523,11 +1523,12 @@ export type CompletionAnswerDto = {
      */
     order: number;
     /**
-     * Structured sub-answers for QA/matrix question types
+     * Structured sub-answers for QA/matrix question types. questionText is populated when CMS question data is available.
      */
     subAnswers?: Array<{
         key?: string;
         answer?: string;
+        questionText?: string;
     }>;
 };
 
@@ -1561,7 +1562,13 @@ export type CompletionResponseDto = {
     /**
      * Severity band
      */
-    severity?: string;
+    severity?: 'minimal' | 'mild' | 'moderate' | 'severe';
+    /**
+     * FK to CmsAssessment (null for legacy string keys)
+     */
+    cmsAssessmentId?: {
+        [key: string]: unknown;
+    };
     /**
      * Score as a percentage of maxScore (0–100)
      */
@@ -1571,10 +1578,6 @@ export type CompletionResponseDto = {
      */
     completedAt: string;
     startedAt?: string;
-    /**
-     * Data source: app | rtdb | firestore
-     */
-    source: string;
     createdAt: string;
     updatedAt: string;
     /**
@@ -2240,27 +2243,6 @@ export type AssessmentStatsResponseDto = {
     };
 };
 
-export type MigrationStatusResponseDto = {
-    /**
-     * UUID of the latest migration run
-     */
-    latestRunId?: {
-        [key: string]: unknown;
-    };
-    /**
-     * Timestamp of latest run
-     */
-    latestRunAt?: {
-        [key: string]: unknown;
-    };
-    /**
-     * Counts of migration records by status
-     */
-    byStatus: {
-        [key: string]: unknown;
-    };
-};
-
 export type AssessmentAnalysisDto = {
     /**
      * Analysis row id
@@ -2384,20 +2366,6 @@ export type WorksheetSubmissionResponseDto = {
      * When the file was uploaded
      */
     uploadedAt?: string;
-    /**
-     * Full original RTDB payload
-     */
-    rawPayload?: {
-        [key: string]: unknown;
-    };
-    /**
-     * Source of the submission (rtdb_worksheets | rtdb_worksheet_results | app)
-     */
-    source: 'rtdb_worksheets' | 'rtdb_worksheet_results' | 'app';
-    /**
-     * {leadId}/{timestamp} or {userId}/{timestamp} — idempotent key
-     */
-    legacyId?: string;
     /**
      * Timestamp when the submission was created
      */
@@ -2605,16 +2573,6 @@ export type JournalEntryResponseDto = {
      * Date and time when the entry was journaled
      */
     journaledAt: string;
-    /**
-     * Source of the entry ("app", "rtdb", or "rtdb_legacy")
-     */
-    source: string;
-    /**
-     * Legacy ID from RTDB migration ({leadId}/{pushId})
-     */
-    legacyId?: {
-        [key: string]: unknown;
-    } | null;
     /**
      * Timestamp when the entry was created
      */
@@ -8990,7 +8948,7 @@ export type PatientAssessmentsControllerGetCompletionData = {
 
 export type PatientAssessmentsControllerGetCompletionResponses = {
     /**
-     * Single completion with answer rows
+     * Completion with question/answer rows and metadata
      */
     200: CompletionResponseDto;
 };
@@ -9061,53 +9019,6 @@ export type PatientAssessmentsControllerGetStatsResponses = {
 };
 
 export type PatientAssessmentsControllerGetStatsResponse = PatientAssessmentsControllerGetStatsResponses[keyof PatientAssessmentsControllerGetStatsResponses];
-
-export type PatientAssessmentsControllerGetMigrationStatusData = {
-    body?: never;
-    path: {
-        /**
-         * Campus slug
-         */
-        campus: 'cadabams' | 'whitefield' | 'mysore' | 'mindtalk';
-    };
-    query?: never;
-    url: '/api/v1/{campus}/patient-assessments/admin/migration-status';
-};
-
-export type PatientAssessmentsControllerGetMigrationStatusResponses = {
-    /**
-     * Migration status summary
-     */
-    200: MigrationStatusResponseDto;
-};
-
-export type PatientAssessmentsControllerGetMigrationStatusResponse = PatientAssessmentsControllerGetMigrationStatusResponses[keyof PatientAssessmentsControllerGetMigrationStatusResponses];
-
-export type PatientAssessmentsControllerGetFailuresData = {
-    body?: never;
-    path: {
-        /**
-         * Campus slug
-         */
-        campus: 'cadabams' | 'whitefield' | 'mysore' | 'mindtalk';
-    };
-    query?: {
-        /**
-         * Maximum number of failed entries to return
-         */
-        limit?: number;
-    };
-    url: '/api/v1/{campus}/patient-assessments/admin/migration-failures';
-};
-
-export type PatientAssessmentsControllerGetFailuresResponses = {
-    /**
-     * Failed migration log entries
-     */
-    200: Array<CompletionResponseDto>;
-};
-
-export type PatientAssessmentsControllerGetFailuresResponse = PatientAssessmentsControllerGetFailuresResponses[keyof PatientAssessmentsControllerGetFailuresResponses];
 
 export type PatientAssessmentsAnalysisControllerAnalyzeData = {
     body?: never;
@@ -9186,10 +9097,6 @@ export type WorksheetSubmissionsControllerListAllData = {
          * Filter by documentId
          */
         documentId?: string;
-        /**
-         * Filter by source (rtdb_worksheets | rtdb_worksheet_results)
-         */
-        source?: string;
         /**
          * Filter submissions on or after this ISO date
          */
@@ -9335,54 +9242,6 @@ export type WorksheetSubmissionsControllerGetStatsResponses = {
 };
 
 export type WorksheetSubmissionsControllerGetStatsResponse = WorksheetSubmissionsControllerGetStatsResponses[keyof WorksheetSubmissionsControllerGetStatsResponses];
-
-export type WorksheetSubmissionsControllerGetMigrationStatusData = {
-    body?: never;
-    path: {
-        /**
-         * Campus slug
-         */
-        campus: 'cadabams' | 'whitefield' | 'mysore' | 'mindtalk';
-    };
-    query?: never;
-    url: '/api/v1/{campus}/worksheet-submissions/admin/migration-status';
-};
-
-export type WorksheetSubmissionsControllerGetMigrationStatusResponses = {
-    /**
-     * Latest run info and status counts
-     */
-    200: {
-        [key: string]: unknown;
-    };
-};
-
-export type WorksheetSubmissionsControllerGetMigrationStatusResponse = WorksheetSubmissionsControllerGetMigrationStatusResponses[keyof WorksheetSubmissionsControllerGetMigrationStatusResponses];
-
-export type WorksheetSubmissionsControllerGetMigrationFailuresData = {
-    body?: never;
-    path: {
-        /**
-         * Campus slug
-         */
-        campus: 'cadabams' | 'whitefield' | 'mysore' | 'mindtalk';
-    };
-    query?: {
-        limit?: number;
-    };
-    url: '/api/v1/{campus}/worksheet-submissions/admin/migration-failures';
-};
-
-export type WorksheetSubmissionsControllerGetMigrationFailuresResponses = {
-    /**
-     * Failed migration log entries with raw payload
-     */
-    200: Array<{
-        [key: string]: unknown;
-    }>;
-};
-
-export type WorksheetSubmissionsControllerGetMigrationFailuresResponse = WorksheetSubmissionsControllerGetMigrationFailuresResponses[keyof WorksheetSubmissionsControllerGetMigrationFailuresResponses];
 
 export type UserDocumentsControllerPresignUploadData = {
     body: UserDocumentPresignUploadDto;
@@ -9714,54 +9573,6 @@ export type JournalingControllerGetStatsResponses = {
 };
 
 export type JournalingControllerGetStatsResponse = JournalingControllerGetStatsResponses[keyof JournalingControllerGetStatsResponses];
-
-export type JournalingControllerGetMigrationStatusData = {
-    body?: never;
-    path: {
-        /**
-         * Campus slug
-         */
-        campus: 'cadabams' | 'whitefield' | 'mysore' | 'mindtalk';
-    };
-    query?: never;
-    url: '/api/v1/{campus}/journaling/admin/migration-status';
-};
-
-export type JournalingControllerGetMigrationStatusResponses = {
-    /**
-     * Migration status summary
-     */
-    200: {
-        [key: string]: unknown;
-    };
-};
-
-export type JournalingControllerGetMigrationStatusResponse = JournalingControllerGetMigrationStatusResponses[keyof JournalingControllerGetMigrationStatusResponses];
-
-export type JournalingControllerGetFailuresData = {
-    body?: never;
-    path: {
-        /**
-         * Campus slug
-         */
-        campus: 'cadabams' | 'whitefield' | 'mysore' | 'mindtalk';
-    };
-    query?: {
-        limit?: number;
-    };
-    url: '/api/v1/{campus}/journaling/admin/migration-failures';
-};
-
-export type JournalingControllerGetFailuresResponses = {
-    /**
-     * Failed migration log entries
-     */
-    200: Array<{
-        [key: string]: unknown;
-    }>;
-};
-
-export type JournalingControllerGetFailuresResponse = JournalingControllerGetFailuresResponses[keyof JournalingControllerGetFailuresResponses];
 
 export type JournalingSubscriptionsControllerUnsubscribeData = {
     body?: never;
