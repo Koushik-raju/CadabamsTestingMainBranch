@@ -882,7 +882,7 @@ export const sessionsControllerNextFollowup = <ThrowOnError extends boolean = fa
 /**
  * Slot bookings (query passthrough)
  */
-export const appointmentsControllerGetSlotBookings = <ThrowOnError extends boolean = false>(options: Options<AppointmentsControllerGetSlotBookingsData, ThrowOnError>) => (options.client ?? client).get<AppointmentsControllerGetSlotBookingsResponses, unknown, ThrowOnError>({
+export const appointmentsControllerGetSlotBookings = <ThrowOnError extends boolean = false>(options?: Options<AppointmentsControllerGetSlotBookingsData, ThrowOnError>) => (options?.client ?? client).get<AppointmentsControllerGetSlotBookingsResponses, unknown, ThrowOnError>({
     responseType: 'json',
     security: [{ scheme: 'bearer', type: 'http' }],
     url: '/api/v1/{campus}/appointments',
@@ -1694,7 +1694,7 @@ export const patientAssessmentsAnalysisControllerAnalyze = <ThrowOnError extends
 });
 
 /**
- * List stored assessment analyses. Patients: own only. Admin/Staff: all.
+ * List stored assessment analyses. Patients: own only. Admin/Staff: all. Filter by assessmentKey or completionId.
  */
 export const patientAssessmentsAnalysisControllerList = <ThrowOnError extends boolean = false>(options?: Options<PatientAssessmentsAnalysisControllerListData, ThrowOnError>) => (options?.client ?? client).get<PatientAssessmentsAnalysisControllerListResponses, unknown, ThrowOnError>({
     responseType: 'json',

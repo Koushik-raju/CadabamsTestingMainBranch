@@ -237,6 +237,10 @@ export type DoctorLoginDto = {
 
 export type DoctorLoginResponseDto = {
     /**
+     * JWT access token
+     */
+    accessToken: string;
+    /**
      * Access token TTL in seconds
      */
     expiresIn: number;
@@ -1504,6 +1508,10 @@ export type CompletionAnswerDto = {
      * Question identifier
      */
     questionKey: string;
+    /**
+     * CMS question CUID extracted from questionKey
+     */
+    questionId?: string;
     questionText?: string;
     /**
      * Answer value as string
@@ -1514,6 +1522,13 @@ export type CompletionAnswerDto = {
      * Display order
      */
     order: number;
+    /**
+     * Structured sub-answers for QA/matrix question types
+     */
+    subAnswers?: Array<{
+        key?: string;
+        answer?: string;
+    }>;
 };
 
 export type CompletionResponseDto = {
@@ -1547,6 +1562,10 @@ export type CompletionResponseDto = {
      * Severity band
      */
     severity?: string;
+    /**
+     * Score as a percentage of maxScore (0–100)
+     */
+    scorePercentage?: number;
     /**
      * Completion timestamp
      */
@@ -3064,6 +3083,7 @@ export type AssessmentLandingPageResponseDto = {
 };
 
 export type AssessmentQuestionOptionResponseDto = {
+    id: string;
     label: string;
     value: string;
 };
@@ -5770,10 +5790,6 @@ export type PatientsControllerGetCrmLeadByPhoneData = {
     body?: never;
     path: {
         /**
-         * Campus slug
-         */
-        campus: 'cadabams' | 'whitefield' | 'mysore' | 'mindtalk';
-        /**
          * Phone number
          */
         phone: string;
@@ -5791,10 +5807,6 @@ export type PatientsControllerGetCrmLeadByPhoneResponse = PatientsControllerGetC
 export type PatientsControllerGetCrmRemarksData = {
     body?: never;
     path: {
-        /**
-         * Campus slug
-         */
-        campus: 'cadabams' | 'whitefield' | 'mysore' | 'mindtalk';
         /**
          * CRM Lead ID
          */
@@ -6446,12 +6458,7 @@ export type SessionsControllerNextFollowupResponse = SessionsControllerNextFollo
 
 export type AppointmentsControllerGetSlotBookingsData = {
     body?: never;
-    path: {
-        /**
-         * Campus slug
-         */
-        campus: 'cadabams' | 'whitefield' | 'mysore' | 'mindtalk';
-    };
+    path?: never;
     query?: {
         /**
          * Odoo domain filter (JSON array string)
@@ -6524,10 +6531,6 @@ export type AppointmentsControllerBookPackageData = {
          * Appointment ID
          */
         id: number;
-        /**
-         * Campus slug
-         */
-        campus: 'cadabams' | 'whitefield' | 'mysore' | 'mindtalk';
     };
     query?: never;
     url: '/api/v1/{campus}/appointments/{id}/book-package';
@@ -6546,10 +6549,6 @@ export type AppointmentsControllerConfirmData = {
          * Appointment ID
          */
         id: number;
-        /**
-         * Campus slug
-         */
-        campus: 'cadabams' | 'whitefield' | 'mysore' | 'mindtalk';
     };
     query?: never;
     url: '/api/v1/{campus}/appointments/{id}/confirm';
@@ -6568,10 +6567,6 @@ export type AppointmentsControllerCheckinData = {
          * Appointment ID
          */
         id: number;
-        /**
-         * Campus slug
-         */
-        campus: 'cadabams' | 'whitefield' | 'mysore' | 'mindtalk';
     };
     query?: never;
     url: '/api/v1/{campus}/appointments/{id}/checkin';
@@ -9132,7 +9127,16 @@ export type PatientAssessmentsAnalysisControllerAnalyzeResponse = PatientAssessm
 export type PatientAssessmentsAnalysisControllerListData = {
     body?: never;
     path?: never;
-    query?: never;
+    query?: {
+        /**
+         * Filter analyses to a specific assessment key e.g. PHQ9
+         */
+        assessmentKey?: string;
+        /**
+         * Filter analyses to a specific completion ID
+         */
+        completionId?: string;
+    };
     url: '/api/v1/patient-assessments/analyses';
 };
 
@@ -10099,6 +10103,14 @@ export type CmsAssessmentsControllerFindAllData = {
          * Frontend/public view — hide items without a valid description/citation
          */
         publicView?: boolean;
+        /**
+         * Min duration in minutes (filters by landingTitle.minutes)
+         */
+        minMinutes?: number;
+        /**
+         * Max duration in minutes (filters by landingTitle.minutes)
+         */
+        maxMinutes?: number;
     };
     url: '/api/v1/cms/assessments';
 };
