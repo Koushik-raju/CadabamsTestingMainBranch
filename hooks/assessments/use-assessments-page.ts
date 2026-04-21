@@ -131,6 +131,9 @@ export interface AssignedAssessmentItem {
   isCompleted: boolean;
   lastUsed: string;
   forJourney: boolean;
+  severity?: string;
+  totalScore?: number;
+  maxScore?: number;
 }
 
 export interface AssessmentCategories {
@@ -392,6 +395,9 @@ export function useAssignedAssessments(leadId: string | null) {
           isCompleted: true,
           lastUsed: completion.completedAt,
           forJourney: false,
+          severity: completion.severity,
+          totalScore: completion.totalScore,
+          maxScore: completion.maxScore,
         })
       );
     }
