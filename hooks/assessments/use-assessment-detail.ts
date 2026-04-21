@@ -48,10 +48,11 @@ import {
   cmsAssessmentsControllerFindOne,
   patientAssessmentsControllerListMine,
   patientAssessmentsControllerCreateCompletion,
+  patientAssessmentsControllerGetCompletion,
   patientAssessmentsAnalysisControllerAnalyze,
 } from '@/sdk/backend-v2';
 import type { CompletionResponseDto } from '@/sdk/backend-v2';
-import { assessmentByIdKey, assessmentSubmissionsKey } from '@/lib/swr-keys';
+import { assessmentByIdKey, assessmentSubmissionsKey, completionByIdKey } from '@/lib/swr-keys';
 import { mapAssessment } from './use-assessments-page';
 import type { AssessmentItem } from './use-assessments-page';
 
@@ -232,4 +233,22 @@ export async function analyzeAssessmentCompletion(
   });
   if (res.error) throw new Error(JSON.stringify(res.error));
   return res.data?.result ?? '';
+}
+
+// ---------------------------------------------------------------------------
+// Fetch a single completion with all answers
+// ---------------------------------------------------------------------------
+
+export function useCompletionById(completionId: string | null) {
+  return useSWR(
+    completionId ? completionByIdKey(completionId) : null,
+    async (): Promise<CompletionResponseDto> => {
+      const res = await patientAssessmentsControllerGetCompletion({
+        path: { campus: 'cadabams', id: completionId! },
+      });
+      if (res.error) throw new Error(JSON.stringify(res.error));
+      if (!res.data) throw new Error('Completion not found');
+      return res.data;
+    }
+  );
 }

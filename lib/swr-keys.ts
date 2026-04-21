@@ -49,6 +49,10 @@ export function assessmentReportsKey(assessmentId: number | string): string {
   return `/assessment-reports/${assessmentId}`;
 }
 
+export function completionByIdKey(completionId: string): string {
+  return `/assessment-completions/${completionId}`;
+}
+
 export function journeyEnrollmentKey(journeyId: number | string): string {
   return `/journey-enrollment/${journeyId}`;
 }

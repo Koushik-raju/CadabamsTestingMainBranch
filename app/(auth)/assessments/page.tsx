@@ -35,7 +35,8 @@
  *   allAssessments       — flattened SWR pages from useAssessments()
  *   browseItems          — allAssessments[1..] with sort + duration applied
  *   filteredItems        — server-filtered results with sort + duration applied
- *   assignedAssessments  — patient's completed assessments from useAssignedAssessments
+ *   assignedAssessments  — raw completions from useAssignedAssessments
+ *   enrichedAssignments  — completions with CMS titles resolved from allAssessments lookup
  *   activeFilterCount    — number of non-default filters active (drives badge + icon state)
  *   activeChips          — dismissible filter pill descriptors rendered below search bar
  *   AssessmentsPage      — default export, the full page component
@@ -212,6 +213,17 @@ export default function AssessmentsPage() {
 
   const dynamicCategories = getDynamicCategories(allAssessments);
 
+  // Enrich completions with CMS titles — assessmentKey == CMS assessment id.
+  // Falls back to the raw label only when the browse data hasn't loaded yet.
+  const enrichedAssignments = useMemo(() => {
+    if (!assignedAssessments) return [];
+    const titleMap = new Map(allAssessments.map((a) => [a.id, a.title]));
+    return assignedAssessments.map((item) => ({
+      ...item,
+      label: titleMap.get(item.documentId) || item.label,
+    }));
+  }, [assignedAssessments, allAssessments]);
+
   // ─── Processed browse list (sort + duration, client-side) ─────────────────
   const isFiltering = !!(serverCategory || debouncedSearch);
 
@@ -246,7 +258,7 @@ export default function AssessmentsPage() {
   }, [activeTab, isLoadingBrowse, hasMore, setSize]);
 
   const handleOpenAssessment = (item: AssignedAssessmentItem) =>
-    router.push(`/assessments/${item.documentId || item.id}`);
+    router.push(`/assessments/completed/${item.id}`);
 
   const handleBrowseAssessment = (assessment: AssessmentItem) =>
     router.push(`/assessments/${assessment.id}/details`);
@@ -282,12 +294,12 @@ export default function AssessmentsPage() {
               <TabsTrigger value="browse">Explore</TabsTrigger>
               <TabsTrigger value="assessments" className="relative">
                 My Assessments
-                {assignedAssessments && assignedAssessments.length > 0 && (
+                {enrichedAssignments.length > 0 && (
                   <Badge
                     variant="secondary"
                     className="ml-1.5 text-[10px] px-1.5 py-0 min-w-[18px] h-[18px] flex items-center justify-center"
                   >
-                    {assignedAssessments.length}
+                    {enrichedAssignments.length}
                   </Badge>
                 )}
               </TabsTrigger>
@@ -414,8 +426,8 @@ export default function AssessmentsPage() {
             </p>
             {isLoadingAssignments ? (
               <AssignmentsSkeleton />
-            ) : assignedAssessments && assignedAssessments.length > 0 ? (
-              <AssignmentsList items={assignedAssessments} onItemClick={handleOpenAssessment} />
+            ) : enrichedAssignments.length > 0 ? (
+              <AssignmentsList items={enrichedAssignments} onItemClick={handleOpenAssessment} />
             ) : (
               <AssessmentEmptyState variant="no-assignments" />
             )}
