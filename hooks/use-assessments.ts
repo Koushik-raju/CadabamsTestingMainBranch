@@ -3,14 +3,10 @@ export {
   useAssessments,
   useFilteredAssessments,
   useAssignedAssessments,
-  categorizeAssessments,
   getDynamicCategories,
   mapAssessment,
   mapStrapiAssessment,
   type AssessmentItem,
-  type AssignedAssessmentItem,
-  type AssessmentCategories,
-  type StrapiPage,
 } from '@/hooks/assessments/use-assessments-page';
 
 export {
@@ -18,5 +14,4 @@ export {
   useAssessmentSubmissions,
   useAssessmentScoreSummary,
   submitAssessment,
-  type AssessmentSubmission,
 } from '@/hooks/assessments/use-assessment-detail';

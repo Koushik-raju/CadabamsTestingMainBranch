@@ -10,11 +10,11 @@
  *   1. useAssessmentById(id) — fetches a single CMS assessment by ID via
  *      cmsAssessmentsControllerFindOne and maps the raw response to AssessmentItem.
  *   2. useAssessmentSubmissions(leadId, assessmentId) — fetches past completions
- *      for the current patient via patientAssessmentsControllerListMine, sorts
- *      them newest-first, and normalises each into AssessmentSubmission shape.
+ *      for the current patient via patientAssessmentsControllerListMine (returned
+ *      completedAt DESC by backend). Returns CompletionResponseDto[] directly.
  *   3. useAssessmentScoreSummary(leadId, assessmentId) — composes
- *      useAssessmentSubmissions and runs deriveScoreSummary on the result to
- *      produce a human-readable label/value pair for the latest submission.
+ *      useAssessmentSubmissions and derives a human-readable label/value pair for
+ *      the latest submission using scorePercentage and severity from the DTO.
  *   4. submitAssessment(leadId, assessmentId, answers) — serialises question
  *      answers and POSTs a new completion via
  *      patientAssessmentsControllerCreateCompletion; returns the new completion id.
@@ -24,9 +24,8 @@
  *
  * KEY VARIABLES / PROPS / EXPORTS:
  *   AssessmentItem          — re-exported mapped type for a single assessment
- *   AssessmentSubmission    — normalised shape of a past completion record
  *   useAssessmentById       — SWR hook; returns { data: AssessmentItem | null, isLoading, error }
- *   useAssessmentSubmissions — SWR hook; returns { data: AssessmentSubmission[], isLoading, error }
+ *   useAssessmentSubmissions — SWR hook; returns { data: CompletionResponseDto[], isLoading, error }
  *   useAssessmentScoreSummary — SWR hook; returns { scoreSummary, submissions, isLoading, error }
  *   submitAssessment        — async action; returns new completion id string
  *   analyzeAssessmentCompletion — async action; returns LLM analysis result string
@@ -40,10 +39,11 @@
  *   assessmentByIdKey, assessmentSubmissionsKey  — SWR cache key factories
  *   mapAssessment                                — mapper from use-assessments-page
  *
- * LAST UPDATED: 2026-04-21 — add file header
+ * LAST UPDATED: 2026-04-21 — remove AssessmentSubmission custom type; hooks now return
+ *   CompletionResponseDto[] directly; deriveScoreSummary uses scorePercentage + severity from DTO
  */
 
-import useSWR, { useSWRConfig } from 'swr';
+import useSWR from 'swr';
 import {
   cmsAssessmentsControllerFindOne,
   patientAssessmentsControllerListMine,
@@ -58,51 +58,23 @@ import type { AssessmentItem } from './use-assessments-page';
 
 export type { AssessmentItem };
 
-export interface AssessmentSubmission {
-  id: string;
-  date: string;
-  assessmentKey: string;
-  totalScore?: number;
-  maxScore?: number;
-  severity?: string;
-  data: Record<string, unknown>;
-}
-
 // ---------------------------------------------------------------------------
-// Score summary derivation (retained for analysis page)
+// Score summary derivation
 // ---------------------------------------------------------------------------
 
 function deriveScoreSummary(
-  submissions: AssessmentSubmission[]
+  completions: CompletionResponseDto[]
 ): { label: string; value: string } | null {
-  if (submissions.length === 0) return null;
-  const latest = submissions[0];
-  const numericScores: number[] = [];
-  Object.entries(latest.data).forEach(([key, value]) => {
-    if (key === 'date' || key.startsWith('_')) return;
-    const entryData = value as Record<string, unknown>;
-    const selected = entryData?.selected;
-    if (typeof selected === 'number') numericScores.push(selected);
-  });
-
-  // If backend provides totalScore/maxScore, prefer that
-  if (typeof latest.totalScore === 'number' && typeof latest.maxScore === 'number' && latest.maxScore > 0) {
-    const percentage = Math.round((latest.totalScore / latest.maxScore) * 100);
-    const label = latest.severity
-      ? latest.severity.charAt(0).toUpperCase() + latest.severity.slice(1)
-      : percentage >= 80 ? 'High' : percentage >= 60 ? 'Moderate' : percentage >= 40 ? 'Low' : 'Very Low';
-    return { label, value: `${label} (${percentage}%)` };
-  }
-
-  if (numericScores.length === 0) return null;
-  const avg = numericScores.reduce((a, b) => a + b, 0) / numericScores.length;
-  const percentage = Math.round((avg / 5) * 100);
-  let label = 'Low';
-  if (percentage >= 80) label = 'High';
-  else if (percentage >= 60) label = 'Moderate';
-  else if (percentage >= 40) label = 'Low';
-  else label = 'Very Low';
-  return { label, value: `${label} (${percentage}%)` };
+  if (completions.length === 0) return null;
+  const latest = completions[0];
+  if (latest.severity == null && latest.scorePercentage == null) return null;
+  const label = latest.severity
+    ? latest.severity.charAt(0).toUpperCase() + latest.severity.slice(1)
+    : 'Completed';
+  const value = latest.scorePercentage != null
+    ? `${label} (${latest.scorePercentage}%)`
+    : label;
+  return { label, value };
 }
 
 // ---------------------------------------------------------------------------
@@ -132,34 +104,13 @@ export function useAssessmentSubmissions(
     leadId && assessmentId
       ? assessmentSubmissionsKey(leadId, assessmentId)
       : null,
-    async () => {
+    async (): Promise<CompletionResponseDto[]> => {
       const res = await patientAssessmentsControllerListMine({
         path: { campus: 'cadabams' },
         query: { assessmentKey: assessmentId! },
       });
       if (res.error) throw new Error(JSON.stringify(res.error));
-      const completions: CompletionResponseDto[] = res.data ?? [];
-      return completions
-        .sort(
-          (a, b) =>
-            new Date(b.completedAt).getTime() - new Date(a.completedAt).getTime()
-        )
-        .map(
-          (c): AssessmentSubmission => ({
-            id: c.id,
-            date: c.completedAt,
-            assessmentKey: c.assessmentKey,
-            totalScore: c.totalScore,
-            maxScore: c.maxScore,
-            severity: c.severity,
-            data: Object.fromEntries(
-              (c.answers ?? []).map((a) => [
-                a.questionKey,
-                { selected: a.answerValue, questionText: a.questionText },
-              ])
-            ),
-          })
-        );
+      return res.data ?? [];
     }
   );
 
@@ -193,7 +144,6 @@ export async function submitAssessment(
 ): Promise<string> {
   const answerRows = Object.entries(answers).map(([questionKey, value]) => {
     const v = value as Record<string, unknown>;
-    // Serialize answer value — arrays get JSON-stringified, scalars get String()
     let answerValue: string;
     const raw = v?.selected ?? v?.text ?? v?.value ?? v?.level ?? v?.subAnswers ?? '';
     if (Array.isArray(raw) || (typeof raw === 'object' && raw !== null)) {

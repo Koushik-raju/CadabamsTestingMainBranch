@@ -9,27 +9,32 @@
  * LOGIC OVERVIEW:
  *   - extractString / extractNumber: safely pull plain values from Strapi v5
  *     rich-text objects (which arrive as { [key: string]: unknown } | null).
- *   - mapAssessment: converts AssessmentResponseDto → AssessmentItem; no casts
- *     needed because extractString/extractNumber accept unknown directly.
- *   - useAssessmentsPage: infinite SWR hook over cmsAssessmentsControllerFindAll.
- *   - useAssignedAssessments: SWR hook over patientsControllerGetAssessments
- *     which now returns Array<CompletionResponseDto> directly (campus param
- *     removed). Each completion is mapped to AssignedAssessmentItem using the
- *     typed DTO fields — no coercions required.
+ *     Still required because AssessmentResponseDto / AssessmentQuestionResponseDto
+ *     fields remain typed as { [key: string]: unknown } in the generated SDK.
+ *   - mapAssessment: converts AssessmentResponseDto → AssessmentItem; uses
+ *     option.id directly from SDK (stable CUID, no longer synthesized).
+ *   - useAssessments: infinite SWR hook over cmsAssessmentsControllerFindAll.
+ *   - useFilteredAssessments: SWR hook that delegates search, category, sort,
+ *     and duration filtering entirely to the backend query params — no
+ *     client-side filter/sort logic.
+ *   - useAssignedAssessments: SWR hook over patientsControllerGetAssessments.
+ *     Returns CompletionResponseDto[] directly — no custom mapping type needed.
  *
  * KEY VARIABLES / PROPS / EXPORTS:
- *   AssessmentItem          — mapped assessment shape used by page components
- *   AssignedAssessmentItem  — mapped shape for lead-assigned assessments
+ *   AssessmentItem          — mapped assessment shape (flattened Strapi rich-text)
  *   mapAssessment           — DTO → AssessmentItem converter (exported for reuse)
- *   useAssessmentsPage      — infinite paginated hook
- *   useAssignedAssessments  — hook for a lead's assigned assessments
+ *   useAssessments          — infinite paginated hook
+ *   useFilteredAssessments  — server-filtered hook (search/category/sort/duration)
+ *   useAssignedAssessments  — hook for a lead's assigned completions (CompletionResponseDto[])
+ *   getDynamicCategories    — derives category list from loaded assessments
  *
  * DEPENDENCIES:
  *   cmsAssessmentsControllerFindAll     — SDK: fetch published assessments
  *   patientsControllerGetAssessments    — SDK: fetch lead-assigned assessments
  *
- * LAST UPDATED: 2026-04-21 — migrate useAssignedAssessments to CompletionResponseDto
- *   (campus param removed, response is now array)
+ * LAST UPDATED: 2026-04-21 — remove AssignedAssessmentItem/AssessmentCategories/StrapiPage/
+ *   categorizeAssessments (dead code or replaced by SDK types); useAssignedAssessments now
+ *   returns CompletionResponseDto[] directly
  */
 
 import useSWR from 'swr';
@@ -38,7 +43,7 @@ import {
   cmsAssessmentsControllerFindAll,
   patientsControllerGetAssessments,
 } from '@/sdk/backend-v2';
-import type { AssessmentResponseDto, CompletionResponseDto } from '@/sdk/backend-v2';
+import type { AssessmentResponseDto, AssessmentPaginationDto } from '@/sdk/backend-v2';
 import { assessmentsKey, assignedAssessmentsKey } from '@/lib/swr-keys';
 import { ASSESSMENT_CATEGORIES } from '@/components/assessment/assessment-category';
 
@@ -72,8 +77,9 @@ function extractNumber(val: unknown): number | null {
 }
 
 // ---------------------------------------------------------------------------
-// Types — kept for backward compatibility with pages/components; will be
-// replaced by SDK types in task 2.7
+// AssessmentItem — mapped shape with flattened Strapi rich-text fields.
+// AssessmentResponseDto fields are { [key: string]: unknown } in the SDK;
+// this type gives pages/components clean string | number | null values.
 // ---------------------------------------------------------------------------
 
 export interface AssessmentItem {
@@ -113,38 +119,10 @@ export interface AssessmentItem {
     answer: string | null;
     text: string | null;
     keyValue: string | Record<string, unknown> | null;
-    // assessment.qa nested sub-questions and shared answer options (JSON from backend)
     questions: Array<{ question: string }> | null;
     answers: Array<{ answer: string }> | null;
     options: Array<{ id: string; label: string; value: string; order: number }>;
   }>;
-}
-
-export interface AssignedAssessmentItem {
-  documentId: string;
-  id: string | number | undefined;
-  label: string;
-  description: string;
-  category: string[];
-  assignedAt: string | undefined;
-  status: string;
-  isCompleted: boolean;
-  lastUsed: string;
-  forJourney: boolean;
-  severity?: string;
-  totalScore?: number;
-  maxScore?: number;
-}
-
-export interface AssessmentCategories {
-  recommendedAssessment: AssessmentItem | null;
-  popularScreenings: AssessmentItem[];
-  personalGrowth: AssessmentItem[];
-}
-
-export interface StrapiPage {
-  items: AssessmentItem[];
-  pagination: { total: number; limit: number; offset: number };
 }
 
 // ---------------------------------------------------------------------------
@@ -210,7 +188,7 @@ export function mapAssessment(item: AssessmentResponseDto): AssessmentItem {
         ? q.answers.filter((e): e is { answer: string } => typeof (e as Record<string, unknown>)?.answer === 'string')
         : null,
       options: (q.options ?? []).map((o, i) => ({
-        id: `${q.id}-opt-${i}`,
+        id: o.id,
         label: o.label,
         value: o.value,
         order: i,
@@ -223,57 +201,8 @@ export function mapAssessment(item: AssessmentResponseDto): AssessmentItem {
 export const mapStrapiAssessment = mapAssessment;
 
 // ---------------------------------------------------------------------------
-// Categorization logic (unchanged)
+// getDynamicCategories — derives category list from loaded assessments
 // ---------------------------------------------------------------------------
-
-const CLINICAL_SCREENING_CATS = new Set([
-  'depression', 'anxiety', 'stress', 'sleep', 'mood-disorder',
-  'bipolar-disorder', 'ptsd', 'trauma', 'ocd', 'adhd', 'schizophrenia',
-  'psychosis', 'dementia', 'alzheimers', 'dual-diagnosis', 'personality-disorder',
-  'conduct-disorder', 'cerebral-palsy', 'intellectual-disability',
-  'developmental-delay', 'autism', 'learning-disability', 'perinatal-mental-health',
-  'drug-addiction', 'alcohol-addiction', 'addiction', 'eating-disorder',
-  'gender-identity-disorder',
-]);
-
-const PERSONAL_GROWTH_CATS = new Set([
-  'self-love', 'love', 'relationship-issues', 'family-issues',
-  'Relationship Beliefs', 'Rewiring Patterns', 'Self-Care Planning',
-  'Gaming Disorder', 'Addiction', 'general', 'Healthcare', 'Medical',
-  'AI', 'Dna', 'Sun',
-]);
-
-export function categorizeAssessments(
-  items: AssessmentItem[]
-): AssessmentCategories {
-  if (items.length === 0) {
-    return { recommendedAssessment: null, popularScreenings: [], personalGrowth: [] };
-  }
-  const recommended = items[0];
-  const rest = items.slice(1);
-  const popular: AssessmentItem[] = [];
-  const growth: AssessmentItem[] = [];
-  const unmatched: AssessmentItem[] = [];
-
-  for (const a of rest) {
-    const cats = a.category ?? [];
-    const isClinical = cats.some(
-      (c) => CLINICAL_SCREENING_CATS.has(c) || CLINICAL_SCREENING_CATS.has(c.toLowerCase())
-    );
-    const isGrowth = cats.some(
-      (c) => PERSONAL_GROWTH_CATS.has(c) || PERSONAL_GROWTH_CATS.has(c.toLowerCase())
-    );
-    if (isClinical) popular.push(a);
-    else if (isGrowth) growth.push(a);
-    else unmatched.push(a);
-  }
-  unmatched.forEach((a, i) => {
-    if (i % 2 === 0) popular.push(a);
-    else growth.push(a);
-  });
-
-  return { recommendedAssessment: recommended, popularScreenings: popular, personalGrowth: growth };
-}
 
 export function getDynamicCategories(assessments: AssessmentItem[]): string[] {
   const seen = new Set<string>();
@@ -295,10 +224,15 @@ export function getDynamicCategories(assessments: AssessmentItem[]): string[] {
 
 const PAGE_SIZE = 100;
 
+type AssessmentsPage = {
+  items: AssessmentItem[];
+  pagination: AssessmentPaginationDto;
+};
+
 export function useAssessments() {
   return useSWRInfinite(
     (pageIndex: number) => [assessmentsKey(), pageIndex * PAGE_SIZE, PAGE_SIZE],
-    async ([, offset]) => {
+    async ([, offset]): Promise<AssessmentsPage> => {
       const res = await cmsAssessmentsControllerFindAll({
         query: {
           limit: PAGE_SIZE,
@@ -309,11 +243,10 @@ export function useAssessments() {
       });
       if (res.error) throw new Error(JSON.stringify(res.error));
       const data = res.data;
-      const items = (data?.items ?? []).map(mapAssessment);
       return {
-        items,
+        items: (data?.items ?? []).map(mapAssessment),
         pagination: data?.pagination ?? { total: 0, limit: PAGE_SIZE, offset: offset as number },
-      } as StrapiPage;
+      };
     },
     {
       dedupingInterval: 600_000,
@@ -330,13 +263,30 @@ export function useAssessments() {
 export function useFilteredAssessments({
   search,
   category,
+  sortBy,
+  sortOrder,
+  minMinutes,
+  maxMinutes,
 }: {
   search?: string | null;
   category?: string | null;
+  sortBy?: string | null;
+  sortOrder?: 'asc' | 'desc' | null;
+  minMinutes?: number | null;
+  maxMinutes?: number | null;
 }) {
-  const isActive = !!(search || category);
+  const isActive = !!(search || category || sortBy || minMinutes != null || maxMinutes != null);
   const key = isActive
-    ? [assessmentsKey(), 'filtered', search ?? '', category ?? '']
+    ? [
+        assessmentsKey(),
+        'filtered',
+        search ?? '',
+        category ?? '',
+        sortBy ?? '',
+        sortOrder ?? '',
+        minMinutes ?? '',
+        maxMinutes ?? '',
+      ]
     : null;
 
   return useSWR(
@@ -347,21 +297,17 @@ export function useFilteredAssessments({
           limit: PAGE_SIZE,
           offset: 0,
           status: 'PUBLISHED',
-          search: search ?? undefined,
           publicView: true,
+          search: search ?? undefined,
+          category: (category && category !== 'All') ? category : undefined,
+          sortBy: sortBy ?? undefined,
+          sortOrder: sortOrder ?? undefined,
+          minMinutes: minMinutes ?? undefined,
+          maxMinutes: maxMinutes ?? undefined,
         },
       });
       if (res.error) throw new Error(JSON.stringify(res.error));
-      return (res.data?.items ?? [])
-        .filter((item) => {
-          if (category && category !== 'All') {
-            return (item.category ?? []).some(
-              (c: string) => c.toLowerCase() === category.toLowerCase()
-            );
-          }
-          return true;
-        })
-        .map(mapAssessment);
+      return (res.data?.items ?? []).map(mapAssessment);
     },
     {
       revalidateOnFocus: false,
@@ -382,24 +328,7 @@ export function useAssignedAssessments(leadId: string | null) {
         path: { patientId: leadId! },
       });
       if (res.error) throw new Error(JSON.stringify(res.error));
-      const items = res.data ?? [];
-      return items.map(
-        (completion: CompletionResponseDto): AssignedAssessmentItem => ({
-          documentId: completion.assessmentKey,
-          id: completion.id,
-          label: completion.assessmentTitle || completion.assessmentKey,
-          description: '',
-          category: [],
-          assignedAt: completion.completedAt,
-          status: 'completed',
-          isCompleted: true,
-          lastUsed: completion.completedAt,
-          forJourney: false,
-          severity: completion.severity,
-          totalScore: completion.totalScore,
-          maxScore: completion.maxScore,
-        })
-      );
+      return res.data ?? [];
     }
   );
 }

@@ -7,10 +7,12 @@
  *   report" used by the result page and a regenerate action.
  *
  * LOGIC OVERVIEW:
- *   - fetchAssessmentData: fetches patient's completions (filtered by
- *     assessmentKey) and their analyses in parallel, joining analyses whose
- *     completionId belongs to the completion set.
- *   - useAssessmentReports: returns the list sorted newest-first.
+ *   - fetchAssessmentData: fetches completions (filtered by assessmentKey) and
+ *     analyses (filtered by assessmentKey via query param) in parallel. Backend
+ *     returns both sets pre-filtered and completions sorted completedAt DESC.
+ *     Joins analyses whose completionId belongs to the completion set; analyses
+ *     sorted by createdAt DESC.
+ *   - useAssessmentReports: returns the joined list sorted newest-first.
  *   - useLatestAssessmentResult: derives the latest completion and, if present,
  *     its matching analysis. Exposes a regenerate() that re-runs the analyze
  *     endpoint (which upserts the stored row) and revalidates the cache.
@@ -22,12 +24,13 @@
  *   AssessmentReport                          — AssessmentAnalysisDto + completion
  *
  * DEPENDENCIES:
- *   patientAssessmentsAnalysisControllerList      — SDK: list stored analyses
+ *   patientAssessmentsAnalysisControllerList      — SDK: list stored analyses (filtered by assessmentKey)
  *   patientAssessmentsAnalysisControllerAnalyze   — SDK: run/re-run analysis
  *   patientAssessmentsControllerListMine          — SDK: list patient's completions
  *   assessmentReportsKey                          — SWR cache key factory
  *
- * LAST UPDATED: 2026-04-20 — add useLatestAssessmentResult with regenerate().
+ * LAST UPDATED: 2026-04-21 — pass assessmentKey to analyses endpoint; remove
+ *   client-side completion sort (backend returns completedAt DESC)
  */
 import { useState } from 'react';
 import useSWR from 'swr';
@@ -57,18 +60,20 @@ async function fetchAssessmentData(assessmentId: string): Promise<AssessmentRepo
       path: { campus: 'cadabams' },
       query: { assessmentKey: assessmentId },
     }),
-    patientAssessmentsAnalysisControllerList(),
+    patientAssessmentsAnalysisControllerList({
+      query: { assessmentKey: assessmentId },
+    }),
   ]);
   if (completionsRes.error) throw new Error(JSON.stringify(completionsRes.error));
   if (analysesRes.error) throw new Error(JSON.stringify(analysesRes.error));
 
-  const completions = (completionsRes.data ?? []).slice().sort(
-    (a, b) => new Date(b.completedAt).getTime() - new Date(a.completedAt).getTime()
-  );
+  // Backend returns completions sorted completedAt DESC — no client sort needed
+  const completions = completionsRes.data ?? [];
   const byId = new Map<string, CompletionResponseDto>(
     completions.map((c) => [c.id, c])
   );
   const analyses = analysesRes.data?.items ?? [];
+  // Filter to analyses belonging to this assessment's completions, sort by createdAt DESC
   const reports: AssessmentReport[] = analyses
     .filter((a) => byId.has(a.completionId))
     .map((a) => ({ ...a, completion: byId.get(a.completionId) }))

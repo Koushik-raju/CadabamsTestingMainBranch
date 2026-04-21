@@ -29,9 +29,8 @@
  *   BackButton                — shared navigation
  *   react-markdown            — renders report.result
  *
- * LAST UPDATED: 2026-04-20 — split Generate CTA into its own
- *   /assessments/[id]/generate/[completionId] route; this page now only
- *   renders an existing report (or redirects when none exists yet).
+ * LAST UPDATED: 2026-04-21 — narrow severity to 4-value enum; use scorePercentage
+ *   from DTO instead of client-side Math.round(totalScore/maxScore*100)
  */
 'use client';
 
@@ -144,8 +143,7 @@ export default function AssessmentResultPage({
             model={report.model}
             completedAt={completion.completedAt}
             severity={completion.severity ?? undefined}
-            totalScore={completion.totalScore ?? undefined}
-            maxScore={completion.maxScore ?? undefined}
+            scorePercentage={completion.scorePercentage ?? undefined}
             regenerateError={regenerateError}
           />
         )}
@@ -210,23 +208,18 @@ function ReportView({
   model,
   completedAt,
   severity,
-  totalScore,
-  maxScore,
+  scorePercentage,
   regenerateError,
 }: {
   assessmentId: string;
   report: string;
   model: string;
   completedAt: string;
-  severity?: string;
-  totalScore?: number;
-  maxScore?: number;
+  severity?: 'minimal' | 'mild' | 'moderate' | 'severe';
+  scorePercentage?: number;
   regenerateError: string | null;
 }) {
-  const pct =
-    typeof totalScore === 'number' && typeof maxScore === 'number' && maxScore > 0
-      ? Math.round((totalScore / maxScore) * 100)
-      : null;
+  const pct = scorePercentage ?? null;
 
   return (
     <div className="space-y-4">

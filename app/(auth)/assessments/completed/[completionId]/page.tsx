@@ -32,8 +32,9 @@
  *   useAssessmentById  — hooks/assessments/use-assessment-detail
  *   BackButton         — shared navigation
  *
- * LAST UPDATED: 2026-04-21 — fallback labels (Question N / Part N) when CMS IDs
- *   don't match; add Take Again CTA
+ * LAST UPDATED: 2026-04-21 — use answer.questionId for CMS lookup (no more questionKey parsing);
+ *   use answer.subAnswers (structured) instead of JSON.parse(answerValue);
+ *   use completion.scorePercentage instead of client-side percentage calc
  */
 'use client';
 
@@ -44,6 +45,7 @@ import { Separator } from '@/components/ui/separator';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
 import { BackButton } from '@/components/shared/navigation/back-button';
+import type { CompletionResponseDto } from '@/sdk/backend-v2';
 import {
   useCompletionById,
   useAssessmentById,
@@ -74,12 +76,11 @@ type QuestionGroup = {
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
-function getSeverityConfig(severity: string | undefined): SeverityConfig {
-  const s = severity?.toLowerCase();
-  if (s === 'minimal')  return { gradient: 'from-emerald-500 to-teal-600',  badgeBg: 'bg-emerald-100', badgeText: 'text-emerald-700', label: 'Minimal' };
-  if (s === 'mild')     return { gradient: 'from-sky-500 to-blue-600',       badgeBg: 'bg-sky-100',     badgeText: 'text-sky-700',     label: 'Mild' };
-  if (s === 'moderate') return { gradient: 'from-amber-400 to-orange-500',   badgeBg: 'bg-amber-100',   badgeText: 'text-amber-700',   label: 'Moderate' };
-  if (s === 'severe')   return { gradient: 'from-red-500 to-rose-600',       badgeBg: 'bg-red-100',     badgeText: 'text-red-700',     label: 'Severe' };
+function getSeverityConfig(severity: CompletionResponseDto['severity']): SeverityConfig {
+  if (severity === 'minimal')  return { gradient: 'from-emerald-500 to-teal-600',  badgeBg: 'bg-emerald-100', badgeText: 'text-emerald-700', label: 'Minimal' };
+  if (severity === 'mild')     return { gradient: 'from-sky-500 to-blue-600',       badgeBg: 'bg-sky-100',     badgeText: 'text-sky-700',     label: 'Mild' };
+  if (severity === 'moderate') return { gradient: 'from-amber-400 to-orange-500',   badgeBg: 'bg-amber-100',   badgeText: 'text-amber-700',   label: 'Moderate' };
+  if (severity === 'severe')   return { gradient: 'from-red-500 to-rose-600',       badgeBg: 'bg-red-100',     badgeText: 'text-red-700',     label: 'Severe' };
   return                        { gradient: 'from-violet-500 to-purple-600', badgeBg: 'bg-muted',       badgeText: 'text-muted-foreground', label: 'Completed' };
 }
 
@@ -92,13 +93,7 @@ function formatDate(iso: string): string {
   } catch { return iso; }
 }
 
-// "q_cmo00tmd807xlu8kyt74qyeld_step_0" → "cmo00tmd807xlu8kyt74qyeld"
-function parseQuestionId(questionKey: string): string {
-  const withoutPrefix = questionKey.startsWith('q_') ? questionKey.slice(2) : questionKey;
-  return withoutPrefix.split('_step_')[0];
-}
-
-// "q_xxx_step_3" → "Question 4"  (1-based)
+// "q_xxx_step_3" → "Question 4"  (1-based fallback when questionId has no CMS match)
 function fallbackQuestionLabel(questionKey: string): string {
   const match = questionKey.match(/_step_(\d+)$/);
   return match ? `Question ${parseInt(match[1], 10) + 1}` : 'Question';
@@ -137,38 +132,31 @@ export default function CompletedAssessmentPage({
   }, [assessment]);
 
   // Group answers by question — one QuestionGroup per answer row in the completion.
-  // QA-type steps (JSON answerValue) expand their sub-answers inside the group.
-  // view_text/empty rows are skipped.
+  // QA-type steps use answer.subAnswers (structured from backend); view_text/empty rows skipped.
   const questionGroups = useMemo((): QuestionGroup[] => {
     if (!completion) return [];
-    const sorted = [...completion.answers].sort((a, b) => a.order - b.order);
     const groups: QuestionGroup[] = [];
 
-    for (const ans of sorted) {
+    for (const ans of completion.answers) {
       if (!ans.answerValue || ans.answerValue.trim() === '') continue;
 
-      const qId = parseQuestionId(ans.questionKey);
-      const cmsQ = questionMap.get(qId);
+      // Use answer.questionId (CMS CUID) if present, else fall back to questionKey-based lookup
+      const cmsQ = ans.questionId ? questionMap.get(ans.questionId) : undefined;
       const title = cmsQ?.title || cmsQ?.label || fallbackQuestionLabel(ans.questionKey);
 
-      let parsed: Record<string, string> | null = null;
-      try {
-        const p = JSON.parse(ans.answerValue);
-        if (p && typeof p === 'object' && !Array.isArray(p)) parsed = p as Record<string, string>;
-      } catch { /* not JSON */ }
-
       const items: AnswerItem[] = [];
-      if (parsed) {
+      if (ans.subAnswers && ans.subAnswers.length > 0) {
         const subQuestions = cmsQ?.questions ?? [];
-        for (const [key, val] of Object.entries(parsed)) {
-          if (!val) continue;
+        ans.subAnswers.forEach((sub, i) => {
+          if (!sub.answer) return;
+          const key = sub.key ?? `qa_${i}`;
           const idx = parseInt(key.replace('qa_', ''), 10);
           items.push({
             key: `${ans.questionKey}_${key}`,
             subLabel: subQuestions[idx]?.question || readableSubLabel(key),
-            answer: val,
+            answer: sub.answer,
           });
-        }
+        });
       } else {
         items.push({ key: ans.questionKey, answer: ans.answerValue });
       }
@@ -180,12 +168,7 @@ export default function CompletedAssessmentPage({
   }, [completion, questionMap]);
 
   const config = getSeverityConfig(completion?.severity);
-  const pct =
-    typeof completion?.totalScore === 'number' &&
-    typeof completion?.maxScore === 'number' &&
-    completion.maxScore > 0
-      ? Math.round((completion.totalScore / completion.maxScore) * 100)
-      : null;
+  const pct = completion?.scorePercentage ?? null;
 
   if (isLoading) return <LoadingSkeleton />;
 

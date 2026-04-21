@@ -24,7 +24,7 @@
  *   BackButton             — standard navigation affordance
  *   react-markdown         — renders analysis.result markdown
  *
- * LAST UPDATED: 2026-04-20 — initial implementation for Reports CTA on assessment cards.
+ * LAST UPDATED: 2026-04-21 — use scorePercentage from DTO; narrow severity to enum
  */
 'use client';
 
@@ -123,12 +123,7 @@ function ReportRow({
   onToggle: () => void;
 }) {
   const severity = report.completion?.severity;
-  const totalScore = report.completion?.totalScore;
-  const maxScore = report.completion?.maxScore;
-  const pct =
-    typeof totalScore === 'number' && typeof maxScore === 'number' && maxScore > 0
-      ? Math.round((totalScore / maxScore) * 100)
-      : null;
+  const pct = report.completion?.scorePercentage ?? null;
 
   return (
     <div className="py-3">

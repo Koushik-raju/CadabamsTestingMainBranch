@@ -10,15 +10,16 @@
  *   2. Explore tab: fetches paginated CMS assessments via useAssessments() with
  *      infinite scroll; supports keyword search (debounced 400 ms) and a
  *      filter/sort bottom sheet (sort by featured/alpha/quickest, duration bucket,
- *      category). Server-side filtering delegates to useFilteredAssessments when
- *      a search term or category is active; client-side sort + duration filter
- *      applied on top. First item in the unfiltered list is rendered as a
- *      RecommendedAssessmentCard; the rest as AssessmentGridCards.
+ *      category). When any filter/sort is active, delegates to useFilteredAssessments
+ *      which passes all params (search, category, sortBy, sortOrder, minMinutes,
+ *      maxMinutes) to the backend — no client-side sort or filter logic. First item
+ *      in the unfiltered list is rendered as a RecommendedAssessmentCard; the rest
+ *      as AssessmentGridCards.
  *   3. My Assessments tab: fetches the patient's completed assessments via
  *      useAssignedAssessments(leadId), derived from the authenticated user's
- *      lead_id. Shows a count badge on the tab trigger. Delegates rendering to
- *      AssignmentsList; shows AssignmentsSkeleton while loading and
- *      AssessmentEmptyState on empty results.
+ *      lead_id. assessmentTitle is populated server-side — no catalog enrichment.
+ *      Shows a count badge on the tab trigger. Delegates rendering to AssignmentsList;
+ *      shows AssignmentsSkeleton while loading and AssessmentEmptyState on empty results.
  *   4. Active filter chips are shown below the search bar; each chip can be
  *      individually dismissed. "Clear all" resets all filters at once.
  *   5. Navigation: tapping a browse card routes to /assessments/:id/details;
@@ -33,10 +34,9 @@
  *   activeDuration       — applied duration bucket (Duration)
  *   pendingSort/Category/Duration — draft values held while the filter sheet is open
  *   allAssessments       — flattened SWR pages from useAssessments()
- *   browseItems          — allAssessments[1..] with sort + duration applied
- *   filteredItems        — server-filtered results with sort + duration applied
- *   assignedAssessments  — raw completions from useAssignedAssessments
- *   enrichedAssignments  — completions with CMS titles resolved from allAssessments lookup
+ *   browseItems          — allAssessments[1..] (unfiltered infinite-scroll list)
+ *   filteredItems        — server-filtered results (search/category/sort/duration via API)
+ *   assignedAssessments  — completions from useAssignedAssessments (assessmentTitle populated server-side)
  *   activeFilterCount    — number of non-default filters active (drives badge + icon state)
  *   activeChips          — dismissible filter pill descriptors rendered below search bar
  *   AssessmentsPage      — default export, the full page component
@@ -54,7 +54,8 @@
  *   AssessmentEmptyState        — empty-state display
  *   categoryMap                 — maps category string to icon + metadata
  *
- * LAST UPDATED: 2026-04-21 — add file header; My Assessments tab now shows patient completions
+ * LAST UPDATED: 2026-04-21 — remove client-side applySort/applyDuration/enrichedAssignments;
+ *   sort, duration, and category filters now pass through to server via useFilteredAssessments
  */
 'use client';
 
@@ -74,8 +75,8 @@ import {
   useFilteredAssessments,
   getDynamicCategories,
   type AssessmentItem,
-  type AssignedAssessmentItem,
 } from '@/hooks/assessments/use-assessments-page';
+import type { CompletionResponseDto } from '@/sdk/backend-v2';
 import {
   AssessmentGridCard,
   RecommendedAssessmentCard,
@@ -105,26 +106,17 @@ const DURATION_OPTIONS: { value: Duration; label: string; sub: string }[] = [
   { value: 'long',   label: 'Long',   sub: '> 10 min' },
 ];
 
-function applySort(items: AssessmentItem[], sort: SortBy): AssessmentItem[] {
-  if (sort === 'alpha')
-    return [...items].sort((a, b) => a.title.localeCompare(b.title));
-  if (sort === 'quick')
-    return [...items].sort(
-      (a, b) => (a.landingTitle?.minutes ?? 9999) - (b.landingTitle?.minutes ?? 9999)
-    );
-  return items;
+function toApiSort(sort: SortBy): { sortBy?: string; sortOrder?: 'asc' | 'desc' } {
+  if (sort === 'alpha') return { sortBy: 'title', sortOrder: 'asc' };
+  if (sort === 'quick') return { sortBy: 'minutes', sortOrder: 'asc' };
+  return {};
 }
 
-function applyDuration(items: AssessmentItem[], duration: Duration): AssessmentItem[] {
-  if (duration === 'all') return items;
-  return items.filter((a) => {
-    const m = a.landingTitle?.minutes ?? null;
-    if (m === null) return false;
-    if (duration === 'short')  return m < 5;
-    if (duration === 'medium') return m >= 5 && m <= 10;
-    if (duration === 'long')   return m > 10;
-    return true;
-  });
+function toApiDuration(duration: Duration): { minMinutes?: number; maxMinutes?: number } {
+  if (duration === 'short')  return { maxMinutes: 4 };
+  if (duration === 'medium') return { minMinutes: 5, maxMinutes: 10 };
+  if (duration === 'long')   return { minMinutes: 11 };
+  return {};
 }
 
 export default function AssessmentsPage() {
@@ -194,9 +186,17 @@ export default function AssessmentsPage() {
   const { data: assessmentPages, setSize, isLoading: isLoadingBrowse } = useAssessments();
 
   const serverCategory = activeCategory !== 'All' ? activeCategory : null;
+  const apiSort = toApiSort(sortBy);
+  const apiDuration = toApiDuration(activeDuration);
+  const isFiltering = !!(serverCategory || debouncedSearch || sortBy !== 'default' || activeDuration !== 'all');
+
   const { data: filteredData, isLoading: isLoadingFiltered } = useFilteredAssessments({
     search: debouncedSearch || null,
     category: serverCategory,
+    sortBy: apiSort.sortBy ?? null,
+    sortOrder: apiSort.sortOrder ?? null,
+    minMinutes: apiDuration.minMinutes ?? null,
+    maxMinutes: apiDuration.maxMinutes ?? null,
   });
 
   const allAssessments: AssessmentItem[] = useMemo(
@@ -213,29 +213,10 @@ export default function AssessmentsPage() {
 
   const dynamicCategories = getDynamicCategories(allAssessments);
 
-  // Enrich completions with CMS titles — assessmentKey == CMS assessment id.
-  // Falls back to the raw label only when the browse data hasn't loaded yet.
-  const enrichedAssignments = useMemo(() => {
-    if (!assignedAssessments) return [];
-    const titleMap = new Map(allAssessments.map((a) => [a.id, a.title]));
-    return assignedAssessments.map((item) => ({
-      ...item,
-      label: titleMap.get(item.documentId) || item.label,
-    }));
-  }, [assignedAssessments, allAssessments]);
-
-  // ─── Processed browse list (sort + duration, client-side) ─────────────────
-  const isFiltering = !!(serverCategory || debouncedSearch);
-
-  const browseItems = useMemo(
-    () => applyDuration(applySort(allAssessments.slice(1), sortBy), activeDuration),
-    [allAssessments, sortBy, activeDuration]
-  );
-
-  const filteredItems = useMemo(
-    () => applyDuration(applySort(isFiltering ? filteredData ?? [] : [], sortBy), activeDuration),
-    [filteredData, isFiltering, sortBy, activeDuration]
-  );
+  // Browse list for non-filtered state — first item is the featured card
+  const browseItems = allAssessments.slice(1);
+  // Filtered results come pre-sorted and pre-filtered from the server
+  const filteredItems = isFiltering ? filteredData ?? [] : [];
 
   // ─── Infinite scroll ──────────────────────────────────────────────────────
   useEffect(() => {
@@ -257,7 +238,7 @@ export default function AssessmentsPage() {
     };
   }, [activeTab, isLoadingBrowse, hasMore, setSize]);
 
-  const handleOpenAssessment = (item: AssignedAssessmentItem) =>
+  const handleOpenAssessment = (item: CompletionResponseDto) =>
     router.push(`/assessments/completed/${item.id}`);
 
   const handleBrowseAssessment = (assessment: AssessmentItem) =>
@@ -294,12 +275,12 @@ export default function AssessmentsPage() {
               <TabsTrigger value="browse">Explore</TabsTrigger>
               <TabsTrigger value="assessments" className="relative">
                 My Assessments
-                {enrichedAssignments.length > 0 && (
+                {(assignedAssessments?.length ?? 0) > 0 && (
                   <Badge
                     variant="secondary"
                     className="ml-1.5 text-[10px] px-1.5 py-0 min-w-[18px] h-[18px] flex items-center justify-center"
                   >
-                    {enrichedAssignments.length}
+                    {assignedAssessments!.length}
                   </Badge>
                 )}
               </TabsTrigger>
@@ -426,8 +407,8 @@ export default function AssessmentsPage() {
             </p>
             {isLoadingAssignments ? (
               <AssignmentsSkeleton />
-            ) : enrichedAssignments.length > 0 ? (
-              <AssignmentsList items={enrichedAssignments} onItemClick={handleOpenAssessment} />
+            ) : (assignedAssessments?.length ?? 0) > 0 ? (
+              <AssignmentsList items={assignedAssessments!} onItemClick={handleOpenAssessment} />
             ) : (
               <AssessmentEmptyState variant="no-assignments" />
             )}

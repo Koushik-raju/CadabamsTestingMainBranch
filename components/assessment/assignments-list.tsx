@@ -7,22 +7,22 @@
  *   completion date, severity badge, and score percentage.
  *
  * LOGIC OVERVIEW:
- *   - Receives items (AssignedAssessmentItem[]) and onItemClick callback.
+ *   - Receives items (CompletionResponseDto[]) and onItemClick callback.
  *   - Derives a severity config (gradient + label color) from item.severity.
- *   - Computes score percentage from totalScore / maxScore when both present.
- *   - Formats completedAt (assignedAt) into a short human-readable date.
+ *   - Uses item.scorePercentage directly from the DTO (computed server-side).
+ *   - Formats completedAt into a short human-readable date.
  *   - Renders rows inside a single grouped Card with Separator dividers.
  *   - Uses item.id (unique completion UUID) as the React key.
  *
  * KEY VARIABLES / PROPS / EXPORTS:
- *   items        — AssignedAssessmentItem[] to render
+ *   items        — CompletionResponseDto[] to render
  *   onItemClick  — called with the clicked item; parent handles navigation
  *
  * DEPENDENCIES:
- *   AssignedAssessmentItem — from hooks/use-assessments
+ *   CompletionResponseDto — from @/sdk/backend-v2
  *
- * LAST UPDATED: 2026-04-21 — redesign with gradient tiles, severity badges,
- *   score percentage, and completion date
+ * LAST UPDATED: 2026-04-21 — replace AssignedAssessmentItem with CompletionResponseDto;
+ *   use scorePercentage from DTO; use assessmentTitle field for display
  */
 'use client';
 
@@ -30,11 +30,11 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import { ChevronRight, ClipboardList } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import type { AssignedAssessmentItem } from '@/hooks/use-assessments';
+import type { CompletionResponseDto } from '@/sdk/backend-v2';
 
 interface AssignmentsListProps {
-  items: AssignedAssessmentItem[];
-  onItemClick: (item: AssignedAssessmentItem) => void;
+  items: CompletionResponseDto[];
+  onItemClick: (item: CompletionResponseDto) => void;
 }
 
 type SeverityConfig = {
@@ -44,17 +44,15 @@ type SeverityConfig = {
   label: string;
 };
 
-function getSeverityConfig(severity: string | undefined): SeverityConfig {
-  const s = severity?.toLowerCase();
-  if (s === 'minimal')  return { gradient: 'from-emerald-500 to-teal-600',   badgeBg: 'bg-emerald-100', badgeText: 'text-emerald-700', label: 'Minimal' };
-  if (s === 'mild')     return { gradient: 'from-sky-500 to-blue-600',        badgeBg: 'bg-sky-100',     badgeText: 'text-sky-700',     label: 'Mild' };
-  if (s === 'moderate') return { gradient: 'from-amber-400 to-orange-500',    badgeBg: 'bg-amber-100',   badgeText: 'text-amber-700',   label: 'Moderate' };
-  if (s === 'severe')   return { gradient: 'from-red-500 to-rose-600',        badgeBg: 'bg-red-100',     badgeText: 'text-red-700',     label: 'Severe' };
+function getSeverityConfig(severity: CompletionResponseDto['severity']): SeverityConfig {
+  if (severity === 'minimal')  return { gradient: 'from-emerald-500 to-teal-600',   badgeBg: 'bg-emerald-100', badgeText: 'text-emerald-700', label: 'Minimal' };
+  if (severity === 'mild')     return { gradient: 'from-sky-500 to-blue-600',        badgeBg: 'bg-sky-100',     badgeText: 'text-sky-700',     label: 'Mild' };
+  if (severity === 'moderate') return { gradient: 'from-amber-400 to-orange-500',    badgeBg: 'bg-amber-100',   badgeText: 'text-amber-700',   label: 'Moderate' };
+  if (severity === 'severe')   return { gradient: 'from-red-500 to-rose-600',        badgeBg: 'bg-red-100',     badgeText: 'text-red-700',     label: 'Severe' };
   return                        { gradient: 'from-violet-500 to-purple-600',  badgeBg: 'bg-muted',       badgeText: 'text-muted-foreground', label: 'Completed' };
 }
 
-function formatDate(iso: string | undefined): string {
-  if (!iso) return '';
+function formatDate(iso: string): string {
   try {
     return new Date(iso).toLocaleDateString(undefined, {
       day: 'numeric',
@@ -72,22 +70,18 @@ export function AssignmentsList({ items, onItemClick }: AssignmentsListProps) {
       <CardContent className="py-0 px-3">
         {items.map((item, i) => {
           const config = getSeverityConfig(item.severity);
-          const pct =
-            typeof item.totalScore === 'number' &&
-            typeof item.maxScore === 'number' &&
-            item.maxScore > 0
-              ? Math.round((item.totalScore / item.maxScore) * 100)
-              : null;
-          const date = formatDate(item.assignedAt);
+          const pct = item.scorePercentage ?? null;
+          const date = formatDate(item.completedAt);
+          const title = item.assessmentTitle ?? item.assessmentKey;
 
           return (
-            <div key={String(item.id)}>
+            <div key={item.id}>
               <div
                 className="flex items-start gap-3 py-3 transition-colors hover:bg-muted/50 active:bg-muted rounded-lg cursor-pointer"
                 onClick={() => onItemClick(item)}
                 role="button"
                 tabIndex={0}
-                aria-label={item.label}
+                aria-label={title}
                 onKeyDown={(e) => e.key === 'Enter' && onItemClick(item)}
               >
                 {/* Gradient icon tile */}
@@ -105,7 +99,7 @@ export function AssignmentsList({ items, onItemClick }: AssignmentsListProps) {
                 {/* Text block */}
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-medium text-foreground leading-snug truncate">
-                    {item.label}
+                    {title}
                   </p>
 
                   {date && (
