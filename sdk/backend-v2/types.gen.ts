@@ -2800,9 +2800,10 @@ export type EnrollJourneyDto = {
     journeyId: string;
 };
 
-export type JourneyTaskKind = 'AUDIO' | 'ASSESSMENT' | 'WORKSHEET' | 'VIDEO' | 'JOURNAL' | 'SUB_JOURNAL' | 'MOOD' | 'APPOINTMENT' | 'CONSULT_BOOKING' | 'OTHER';
-
-export type DerivedTaskKind = JourneyTaskKind | 'READ';
+/**
+ * Server-derived kind based on linked content; authoritative — do not re-derive client-side
+ */
+export type DerivedTaskKind = 'AUDIO' | 'ASSESSMENT' | 'WORKSHEET' | 'VIDEO' | 'JOURNAL' | 'SUB_JOURNAL' | 'MOOD' | 'APPOINTMENT' | 'CONSULT_BOOKING' | 'OTHER' | 'READ';
 
 export type EnrollmentTaskDto = {
     /**
@@ -2811,6 +2812,9 @@ export type EnrollmentTaskDto = {
     taskId: string;
     stepId: string;
     dayNumber: number | null;
+    /**
+     * Server-derived kind based on linked content; authoritative — do not re-derive client-side
+     */
     kind: DerivedTaskKind;
     title: string | null;
     state: 'locked' | 'available' | 'active' | 'completed';
@@ -2837,6 +2841,7 @@ export type PatientJourneyResponseDto = {
     journeyId: string;
     name: string | null;
     icon: string | null;
+    packageId: number | null;
     progress: number;
     currentDay: number;
     totalDays: number | null;
@@ -2874,24 +2879,45 @@ export type CompleteTaskDto = {
      */
     taskId: string;
     dayNumber?: number;
-    /** AssessmentCompletion.id — required when task kind is ASSESSMENT */
+    /**
+     * AssessmentCompletion.id — required when task kind is ASSESSMENT
+     */
     assessmentCompletionId?: string;
-    /** WorksheetSubmission.id — required when task kind is WORKSHEET */
+    /**
+     * WorksheetSubmission.id — required when task kind is WORKSHEET
+     */
     worksheetSubmissionId?: string;
-    /** CmsSelfJournaling.id — required when task kind is SUB_JOURNAL */
+    /**
+     * CmsSelfJournaling.id — required when task kind is SUB_JOURNAL
+     */
     selfJournalingId?: string;
-    /** JournalEntry.id — required when task kind is JOURNAL (or send selfJournalingId) */
+    /**
+     * JournalEntry.id — required when task kind is JOURNAL (or send selfJournalingId)
+     */
     journalEntryId?: string;
-    /** CmsAudio.id the patient listened to — required when task kind is AUDIO */
+    /**
+     * CmsAudio.id the patient listened to — required when task kind is AUDIO
+     */
     audioId?: string;
-    /** CmsVideo.id the patient watched — required when task kind is VIDEO */
+    /**
+     * CmsVideo.id the patient watched — required when task kind is VIDEO
+     */
     videoId?: string;
-    /** Required when task kind is MOOD (1..10) */
+    /**
+     * Required when task kind is MOOD
+     */
     moodBefore?: number;
+    /**
+     * Required when task kind is MOOD
+     */
     moodAfter?: number;
-    /** CRM appointment id — required when task kind is APPOINTMENT or CONSULT_BOOKING */
+    /**
+     * CRM appointment id — required when task kind is APPOINTMENT or CONSULT_BOOKING
+     */
     appointmentId?: string;
-    /** Free-text attestation — required when task kind is READ or OTHER */
+    /**
+     * Free-text attestation — required when task kind is READ or OTHER
+     */
     note?: string;
 };
 
@@ -4097,6 +4123,10 @@ export type CreateJourneyDto = {
     } | null;
     grade?: Array<string>;
     isPremium?: boolean;
+    /**
+     * CRM package ID this journey belongs to
+     */
+    packageId?: number | null;
     status: 'DRAFT' | 'PUBLISHED';
     achievements?: Array<JourneyAchievementDto>;
     steps?: Array<JourneyStepDto>;
@@ -4194,6 +4224,7 @@ export type JourneyResponseDto = {
     } | null;
     grade: Array<string>;
     isPremium: boolean;
+    packageId: number | null;
     inDraft: boolean;
     status: 'DRAFT' | 'PUBLISHED';
     createdAt: string;

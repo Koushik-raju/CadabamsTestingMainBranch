@@ -26,7 +26,7 @@
 
 import { use, useState, Suspense } from 'react';
 import { useRouter } from 'next/navigation';
-import { Sparkles, MoreVertical } from 'lucide-react';
+import { Sparkles, MoreVertical, Crown } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { BackButton } from '@/components/shared/navigation/back-button';
@@ -80,13 +80,20 @@ function DetailsContent({ params }: PageProps) {
   const name         = extractJourneyName(journey.name);
   const isSubscribed = !!progress;
 
+  // Premium journeys: enrollment happens automatically on the backend when
+  // the user purchases the linked package. The frontend must never call
+  // subscribeToJourney for premium — this CTA routes to the package page.
   async function handleSubscribeFromLock() {
+    if (journey!.isPremium) {
+      hapticMedium();
+      const pkgId = journey!.packageId;
+      router.push(pkgId ? `/packages/browse/${pkgId}` : '/packages');
+      return;
+    }
     setSubscribing(true);
     try {
       await subscribeToJourney(journey!);
       hapticMedium();
-      // After successful enroll, the SWR cache is replaced with the new
-      // enrollment and the path view will render.
     } catch (e) {
       console.error(e);
     } finally {
@@ -124,35 +131,57 @@ function DetailsContent({ params }: PageProps) {
         journeyId={id}
       />
 
-      {/* Unenrolled users browse the full journey structure but see a
-          persistent Subscribe CTA. Day 1 is tappable on every journey
-          (free attempt) via the path view's preview-bypass for day 1. */}
+      {/* Unenrolled users browse the full journey structure in preview mode.
+          Premium → golden "Subscribe to Premium" CTA routes to the package
+          browse flow (no task is attemptable). Free → primary CTA enrolls. */}
       {!isSubscribed && (
         <div className="fixed bottom-20 left-4 right-4 z-30 sm:left-auto sm:right-6 sm:max-w-sm">
-          <div className="relative overflow-hidden rounded-2xl border border-primary/30 bg-gradient-to-br from-primary to-primary/80 p-3 text-primary-foreground shadow-xl">
-            <div className="flex items-center gap-3">
-              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white/20">
-                <Sparkles className="h-5 w-5" />
+          {journey.isPremium ? (
+            <div className="relative overflow-hidden rounded-2xl border border-amber-300/70 bg-gradient-to-br from-amber-400 via-yellow-500 to-amber-600 p-3 text-white shadow-[0_12px_32px_-10px_rgba(217,119,6,0.65)]">
+              <div className="flex items-center gap-3">
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white/20">
+                  <Crown className="h-5 w-5 drop-shadow-sm" />
+                </div>
+                <div className="min-w-0 flex-1">
+                  <p className="text-sm font-bold leading-tight">Premium journey</p>
+                  <p className="text-[11px] text-white/90 mt-0.5">
+                    Preview only — subscribe to unlock tasks.
+                  </p>
+                </div>
+                <Button
+                  size="sm"
+                  disabled={subscribing}
+                  onClick={handleSubscribeFromLock}
+                  className="shrink-0 bg-white text-amber-700 hover:bg-white/90 font-bold"
+                >
+                  Subscribe
+                </Button>
               </div>
-              <div className="min-w-0 flex-1">
-                <p className="text-sm font-semibold leading-tight">
-                  {journey.isPremium ? 'Day 1 is free — subscribe for full access' : 'Subscribe to track progress'}
-                </p>
-                <p className="text-[11px] text-primary-foreground/85 mt-0.5">
-                  Tap Day 1 to try a task, or subscribe now.
-                </p>
-              </div>
-              <Button
-                size="sm"
-                variant="secondary"
-                disabled={subscribing}
-                onClick={handleSubscribeFromLock}
-                className="shrink-0 bg-white text-primary hover:bg-white/90"
-              >
-                {subscribing ? '…' : 'Subscribe'}
-              </Button>
             </div>
-          </div>
+          ) : (
+            <div className="relative overflow-hidden rounded-2xl border border-primary/30 bg-gradient-to-br from-primary to-primary/80 p-3 text-primary-foreground shadow-xl">
+              <div className="flex items-center gap-3">
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white/20">
+                  <Sparkles className="h-5 w-5" />
+                </div>
+                <div className="min-w-0 flex-1">
+                  <p className="text-sm font-semibold leading-tight">Subscribe to track progress</p>
+                  <p className="text-[11px] text-primary-foreground/85 mt-0.5">
+                    Tap Day 1 to try a task, or subscribe now.
+                  </p>
+                </div>
+                <Button
+                  size="sm"
+                  variant="secondary"
+                  disabled={subscribing}
+                  onClick={handleSubscribeFromLock}
+                  className="shrink-0 bg-white text-primary hover:bg-white/90"
+                >
+                  {subscribing ? '…' : 'Subscribe'}
+                </Button>
+              </div>
+            </div>
+          )}
         </div>
       )}
     </div>

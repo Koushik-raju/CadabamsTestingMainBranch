@@ -11,8 +11,10 @@
  *   3. Shows a skeleton while loading; shows error state if not found.
  *   4. Renders hero image, badge, title, BlocksRenderer description, stats row,
  *      and step highlights.
- *   5. Fixed CTA button: subscribes the user (if not yet subscribed) then
- *      navigates to /journeys/[id]/details.
+ *   5. Fixed CTA row: Preview + Subscribe. For PREMIUM journeys, the
+ *      "Subscribe to Premium" button is golden and routes the user to
+ *      /packages/browse/<packageId> (the package purchase flow). For FREE
+ *      journeys it enrolls directly and navigates to /journeys/[id]/details.
  *
  * KEY VARIABLES / PROPS / EXPORTS:
  *   id              — journey ID from URL params
@@ -27,7 +29,8 @@
  *   subscribeToJourney      — mutation to enroll user
  *   BlocksRenderer          — @strapi/blocks-react-renderer for rich-text
  *
- * LAST UPDATED: 2026-04-16 — add separator before disclaimer, italic disclaimer
+ * LAST UPDATED: 2026-04-22 — premium journeys route Subscribe CTA to package
+ *   page, golden button styling, stronger 2-column layout
  */
 
 "use client";
@@ -46,6 +49,7 @@ import {
   ChevronRight,
   AlertCircle,
   Zap,
+  Crown,
 } from "lucide-react";
 import {
   useJourneyDetail,
@@ -154,15 +158,23 @@ function JourneyLandingContent({ params }: PageProps) {
     )
     .filter(Boolean);
 
+  // Premium journeys: users MUST purchase the linked package before they can
+  // attempt any task (not even Day 1 is free once the journey is gated
+  // behind a package). The Subscribe CTA therefore hands them off to the
+  // package browse flow. Free journeys keep the auto-enroll + redirect path.
   async function handleSubscribe() {
     if (!mobile) {
       router.push("/auth/login");
       return;
     }
+    if (journey!.isPremium) {
+      hapticMedium();
+      const pkgId = journey!.packageId;
+      router.push(pkgId ? `/packages/browse/${pkgId}` : "/packages");
+      return;
+    }
     setSubscribing(true);
     try {
-      // subscribeToJourney internally routes to the correct backend call
-      // (POST /enroll for premium, non-preview GET for free).
       await subscribeToJourney(journey!);
       hapticMedium();
       router.push(`/journeys/${id}/details`);
@@ -179,8 +191,8 @@ function JourneyLandingContent({ params }: PageProps) {
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
-      {/* Header */}
-      <div className="flex items-center px-2 py-2 border-b border-border bg-background">
+      {/* Header — sticky so it stays accessible while scrolling */}
+      <div className="sticky top-0 z-20 flex items-center px-2 py-2 border-b border-border bg-background/90 backdrop-blur-sm">
         <BackButton fallback="/journeys" />
       </div>
 
@@ -273,30 +285,53 @@ function JourneyLandingContent({ params }: PageProps) {
         </div>
       </div>
 
-      {/* CTA — Subscribe + Preview side-by-side for unenrolled users. */}
-      <div className="fixed bottom-0 left-0 right-0 px-5 pb-8 pt-3 bg-background border-t border-border">
+      {/* CTA — Preview + Subscribe side-by-side for unenrolled users.
+          Premium journeys show a golden "Subscribe to Premium" button that
+          routes to the package browse flow — users cannot attempt any task
+          (including Day 1) without purchasing the linked package. */}
+      <div className="fixed bottom-0 left-0 right-0 px-5 pb-8 pt-4 bg-background border-t border-border">
         {journey.isPremium && !isSubscribed && (
-          <p className="text-[11px] text-muted-foreground text-center mb-2">
-            Day 1 is free · Does not include appointments
+          <p className="text-[11px] text-muted-foreground text-center mb-3">
+            Preview the full journey · Subscribe to unlock tasks
           </p>
         )}
-        <div className="flex gap-2">
+        <div className="grid grid-cols-2 gap-3">
           <Button
             variant="outline"
-            className="flex-1 h-14 rounded-2xl font-semibold text-base"
+            className="h-14 rounded-2xl font-semibold text-base border-2"
             disabled={subscribing}
             onClick={handlePreview}
           >
             Preview
           </Button>
-          <Button
-            className="flex-[1.5] bg-primary hover:bg-primary/90 text-primary-foreground font-semibold text-base h-14 rounded-2xl"
-            disabled={subscribing}
-            onClick={handleSubscribe}
-          >
-            {subscribing ? "Please wait..." : "Subscribe"}
-            {!subscribing && <ChevronRight className="w-5 h-5 ml-1" />}
-          </Button>
+          {journey.isPremium ? (
+            <button
+              type="button"
+              disabled={subscribing}
+              onClick={handleSubscribe}
+              className={
+                "relative h-14 rounded-2xl font-bold text-base text-white " +
+                "bg-gradient-to-br from-amber-400 via-yellow-500 to-amber-600 " +
+                "shadow-[0_8px_20px_-6px_rgba(217,119,6,0.55)] " +
+                "ring-1 ring-amber-300/60 " +
+                "hover:brightness-105 active:scale-[0.98] transition " +
+                "flex items-center justify-center gap-2 " +
+                (subscribing ? "opacity-70 cursor-not-allowed" : "")
+              }
+            >
+              <Crown className="w-4 h-4 drop-shadow-sm" />
+              <span className="tracking-tight">Subscribe</span>
+            </button>
+          ) : (
+            <Button
+              className="h-14 rounded-2xl bg-primary hover:bg-primary/90 text-primary-foreground font-bold text-base shadow-md shadow-primary/30"
+              disabled={subscribing}
+              onClick={handleSubscribe}
+            >
+              {subscribing ? "Please wait..." : "Subscribe"}
+              {!subscribing && <ChevronRight className="w-5 h-5 ml-0.5" />}
+            </Button>
+          )}
         </div>
       </div>
     </div>

@@ -54,6 +54,7 @@ export function mapV2Journey(dto: JourneyResponseDto): JourneyItem {
     iconId: dto.iconId,
     grade: dto.grade ?? [],
     isPremium: dto.isPremium ?? false,
+    packageId: dto.packageId ?? null,
     inDraft: dto.inDraft ?? false,
     status: dto.status,
     createdAt: dto.createdAt,

@@ -117,6 +117,7 @@ export interface JourneyItem {
   iconId?: unknown;
   grade?: string[];
   isPremium: boolean;
+  packageId?: number | null;
   inDraft: boolean;
   status: string;
   createdAt: string;
