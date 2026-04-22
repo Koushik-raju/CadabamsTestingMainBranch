@@ -7,23 +7,28 @@
  *
  * LOGIC OVERVIEW:
  *   1. Fetches upcoming appointments via useHomePage().
- *   2. handleAction dispatches router.push based on action type + subtype.
- *   3. Renders HomeHeader (gradient), then main content pulled up over the
+ *   2. Fetches user's enrolled journeys (useEnrolledJourneys) and gamification
+ *      streak (useGamification) to feed real data into JourneySection.
+ *   3. handleAction dispatches router.push based on action type + subtype.
+ *   4. Renders HomeHeader (gradient), then main content pulled up over the
  *      header with a negative top margin and rounded corners.
  *
  * KEY VARIABLES / PROPS / EXPORTS:
- *   appointments — upcoming appointment list from useHomePage
- *   handleAction — central router dispatcher for all home interactions
+ *   appointments        — upcoming appointment list from useHomePage
+ *   homeEnrollments     — enriched enrolled journeys for JourneySection
+ *   handleAction        — central router dispatcher for all home interactions
  *
  * DEPENDENCIES:
- *   useHomePage      — provides upcoming appointments
- *   HomeHeader       — gradient hero header with mood CTA
- *   UpcomingSession  — next appointment card
- *   SupportSection   — talk-to-therapist / match-me CTAs
- *   QuickActions     — 2-column grid of feature shortcuts
- *   JourneySection   — active journey progress
+ *   useHomePage            — provides upcoming appointments
+ *   useEnrolledJourneys    — lists user's active journey enrollments
+ *   useGamification        — provides daily streak count
+ *   HomeHeader             — gradient hero header with mood CTA
+ *   UpcomingSession        — next appointment card
+ *   SupportSection         — talk-to-therapist / match-me CTAs
+ *   QuickActions           — 2-column grid of feature shortcuts
+ *   JourneySection         — active enrolled journey list with progress
  *
- * LAST UPDATED: 2026-04-17 — add appointments + prescriptions quick action routes
+ * LAST UPDATED: 2026-04-22 — pass real enrolled journeys and streak to JourneySection
  */
 
 "use client";
@@ -35,10 +40,26 @@ import { QuickActions } from "@/components/home/quick-actions";
 import { UpcomingSession } from "@/components/home/upcoming-session";
 import { JourneySection } from "@/components/home/journey-section";
 import { useHomePage } from "@/hooks/home/use-home-page";
+import { useEnrolledJourneys, useGamification } from "@/hooks/journeys/use-journey-detail";
+import { useMemo } from "react";
 
 export default function HomePage() {
   const router = useRouter();
   const { upcoming: appointments } = useHomePage();
+  const { enrollments, isLoading: enrollmentsLoading } = useEnrolledJourneys();
+  const { gamification } = useGamification();
+
+  const homeEnrollments = useMemo(
+    () =>
+      enrollments.map((e) => ({
+        enrollmentId: e.id,
+        journeyId: e.journeyId,
+        name: e.name ?? '',
+        currentDay: e.currentDay ?? 1,
+        totalDays: e.totalDays ?? 0,
+      })),
+    [enrollments]
+  );
 
   const handleAction = (type: string, subtype?: string) => {
     switch (type) {
@@ -113,7 +134,11 @@ export default function HomePage() {
           onActionClick={(type) => handleAction("quick_action", type)}
         />
 
-        <JourneySection />
+        <JourneySection
+          enrollments={homeEnrollments}
+          streak={gamification?.streakCount ?? 0}
+          isLoading={enrollmentsLoading}
+        />
       </div>
     </div>
   );
