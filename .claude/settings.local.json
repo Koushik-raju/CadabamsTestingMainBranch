@@ -5,8 +5,8 @@
       "Bash(pnpm add *)",
       "Bash(git add *)",
       "Bash(npm run *)",
-      "Bash(pnpm tsx *)",
-      "Bash(npx tsx *)"
+      "mcp__code-review-graph__semantic_search_nodes_tool",
+      "Bash(grep *)"
     ]
   },
   "enableAllProjectMcpServers": true,
