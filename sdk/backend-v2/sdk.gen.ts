@@ -2169,7 +2169,7 @@ export const journeysControllerGetDaySummary = <ThrowOnError extends boolean = f
 });
 
 /**
- * Get my enrollment for a journey (auto-enrolls for non-premium)
+ * Get my enrollment for a journey. Pass ?preview=true to skip auto-enrollment (returns 404 if not enrolled).
  */
 export const journeysControllerGetByJourneyId = <ThrowOnError extends boolean = false>(options: Options<JourneysControllerGetByJourneyIdData, ThrowOnError>) => (options.client ?? client).get<JourneysControllerGetByJourneyIdResponses, unknown, ThrowOnError>({
     responseType: 'json',

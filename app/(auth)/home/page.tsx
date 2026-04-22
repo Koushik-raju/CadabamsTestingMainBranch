@@ -136,7 +136,7 @@ export default function HomePage() {
 
         <JourneySection
           enrollments={homeEnrollments}
-          streak={gamification?.streakCount ?? 0}
+          streak={gamification?.streak ?? 0}
           isLoading={enrollmentsLoading}
         />
       </div>

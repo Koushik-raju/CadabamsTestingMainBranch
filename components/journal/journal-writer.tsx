@@ -64,6 +64,7 @@ import {
   useJournalingCategories,
   type JournalingPrompt,
 } from '@/hooks/use-journaling';
+import { useJourneyTaskContinuation } from '@/hooks/journeys/use-journey-task-continuation';
 import type { EmojiClickData } from 'emoji-picker-react';
 
 const EmojiPicker = dynamic(() => import('emoji-picker-react'), { ssr: false });
@@ -152,6 +153,7 @@ export function JournalWriter({ slug }: JournalWriterProps) {
   const { user } = useAuth();
   const { entries: recentEntries } = useSelfJournalingEntries(10);
   const { subJournalings, isLoading: subsLoading } = useJournalingCategories();
+  const continuation = useJourneyTaskContinuation('SUB_JOURNAL');
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const recognitionRef = useRef<SpeechRecognitionInstance | null>(null);
 
@@ -255,20 +257,31 @@ export function JournalWriter({ slug }: JournalWriterProps) {
 
     setIsSaving(true);
     try {
-      await createSelfJournalingEntry({
+      const created = await createSelfJournalingEntry({
         crmLeadId: leadId,
         title: sub?.title ?? allPrompts[0]?.heading ?? 'Journal Entry',
         entry: allPrompts.map((p) => `${p.heading}\n${p.text}`).join('\n\n'),
         prompts: allPrompts,
         subJournalingId: sub?.id,
       });
+      // Report back to the journey when this writer was opened as a task.
+      if (continuation.active && created?.id) {
+        try {
+          await continuation.markCompleted(
+            { kind: 'SUB_JOURNAL', selfJournalingId: created.id },
+            { proofPreview: sub?.title ?? 'Journal entry saved' },
+          );
+        } catch (err) {
+          console.error('[JournalWriter] journey completion failed', err);
+        }
+      }
       router.push('/self-journaling');
     } catch (err) {
       console.error('Error saving journal:', err);
     } finally {
       setIsSaving(false);
     }
-  }, [content, currentHeading, savedPrompts, getLeadId, router, sub]);
+  }, [content, currentHeading, savedPrompts, getLeadId, router, sub, continuation]);
 
   const handleGoDeeper = useCallback(async () => {
     const previousContent = content.trim();

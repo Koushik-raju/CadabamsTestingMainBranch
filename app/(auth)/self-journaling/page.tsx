@@ -30,24 +30,27 @@
  * LAST UPDATED: 2026-04-22 — CategoryCard now renders backend icon URL as full
  *   cover image (next/image) instead of emoji span; gradient tile is fallback only.
  */
-'use client';
+"use client";
 
-import { useState, useMemo } from 'react';
-import Image from 'next/image';
-import { useRouter } from 'next/navigation';
-import { BookOpen, ChevronLeft, ChevronRight, Pencil } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Skeleton } from '@/components/ui/skeleton';
-import { Card, CardContent } from '@/components/ui/card';
-import { Separator } from '@/components/ui/separator';
-import { BackButton } from '@/components/shared/navigation/back-button';
+import { useState, useMemo } from "react";
+import Image from "next/image";
+import { useRouter } from "next/navigation";
+import { BookOpen, ChevronLeft, ChevronRight, Pencil } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Card, CardContent } from "@/components/ui/card";
+import { Separator } from "@/components/ui/separator";
+import { BackButton } from "@/components/shared/navigation/back-button";
 import {
   useJournalingCategories,
   useSelfJournalingEntries,
-} from '@/hooks/use-journaling';
-import type { SelfJournalingEntry, JournalingCategory } from '@/hooks/use-journaling';
-import { cn } from '@/lib/utils';
-import { getJournalVisual } from '@/lib/journal-visual';
+} from "@/hooks/use-journaling";
+import type {
+  SelfJournalingEntry,
+  JournalingCategory,
+} from "@/hooks/use-journaling";
+import { cn } from "@/lib/utils";
+import { getJournalVisual } from "@/lib/journal-visual";
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -56,8 +59,8 @@ import { getJournalVisual } from '@/lib/journal-visual';
 /** Timezone-safe local date string: "2026-04-17" */
 function toLocalDateStr(d: Date): string {
   const y = d.getFullYear();
-  const m = String(d.getMonth() + 1).padStart(2, '0');
-  const day = String(d.getDate()).padStart(2, '0');
+  const m = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
   return `${y}-${m}-${day}`;
 }
 
@@ -69,9 +72,9 @@ function buildWeekDays(offsetDays: number) {
     d.setDate(today.getDate() - offsetDays - (6 - i)); // oldest → newest
     return {
       dateStr: toLocalDateStr(d),
-      dayLetter: d.toLocaleDateString('en-US', { weekday: 'narrow' }),
+      dayLetter: d.toLocaleDateString("en-US", { weekday: "narrow" }),
       dayNum: d.getDate(),
-      monthShort: d.toLocaleDateString('en-US', { month: 'short' }),
+      monthShort: d.toLocaleDateString("en-US", { month: "short" }),
     };
   });
 }
@@ -80,7 +83,13 @@ function buildWeekDays(offsetDays: number) {
 // Category Card — horizontal scroll variant (fixed width)
 // ---------------------------------------------------------------------------
 
-function CategoryCard({ category, onClick }: { category: JournalingCategory; onClick: () => void }) {
+function CategoryCard({
+  category,
+  onClick,
+}: {
+  category: JournalingCategory;
+  onClick: () => void;
+}) {
   const { gradient, Icon } = getJournalVisual(category.title);
   const subCount = category.subJournalings?.length ?? 0;
 
@@ -101,10 +110,12 @@ function CategoryCard({ category, onClick }: { category: JournalingCategory; onC
           />
         </div>
       ) : (
-        <div className={cn(
-          'h-20 bg-gradient-to-br flex items-center justify-center relative overflow-hidden',
-          gradient,
-        )}>
+        <div
+          className={cn(
+            "h-20 bg-gradient-to-br flex items-center justify-center relative overflow-hidden",
+            gradient,
+          )}
+        >
           <div className="absolute -top-4 -right-4 w-16 h-16 rounded-full bg-white/10" />
           <div className="absolute -bottom-5 -left-3 w-20 h-20 rounded-full bg-white/5" />
           <Icon className="w-8 h-8 text-white/90 relative z-10" />
@@ -117,7 +128,7 @@ function CategoryCard({ category, onClick }: { category: JournalingCategory; onC
           {category.title}
         </p>
         <p className="text-[10px] text-muted-foreground">
-          {subCount} {subCount === 1 ? 'journal' : 'journals'}
+          {subCount} {subCount === 1 ? "journal" : "journals"}
         </p>
       </div>
     </button>
@@ -129,25 +140,27 @@ function CategoryCard({ category, onClick }: { category: JournalingCategory; onC
 // ---------------------------------------------------------------------------
 
 function EntryRow({ entry }: { entry: SelfJournalingEntry }) {
-  const time = new Date(entry.createdAt).toLocaleTimeString('en-US', {
-    hour: 'numeric',
-    minute: '2-digit',
+  const time = new Date(entry.createdAt).toLocaleTimeString("en-US", {
+    hour: "numeric",
+    minute: "2-digit",
     hour12: true,
   });
 
   const preview =
     entry.prompts && entry.prompts.length > 0
-      ? entry.prompts[0].text ?? entry.prompts[0].heading ?? ''
-      : entry.entry ?? '';
+      ? (entry.prompts[0].text ?? entry.prompts[0].heading ?? "")
+      : (entry.entry ?? "");
 
   const promptCount = entry.prompts?.length ?? 0;
 
   return (
     <div className="py-3 flex items-start gap-3 transition-colors hover:bg-muted/50 active:bg-muted cursor-pointer">
-      <div className={cn(
-        'relative w-11 h-11 rounded-2xl bg-gradient-to-br from-violet-500 to-purple-600',
-        'flex-shrink-0 flex items-center justify-center overflow-hidden shadow-sm',
-      )}>
+      <div
+        className={cn(
+          "relative w-11 h-11 rounded-2xl bg-gradient-to-br from-violet-500 to-purple-600",
+          "flex-shrink-0 flex items-center justify-center overflow-hidden shadow-sm",
+        )}
+      >
         <div className="absolute -top-2 -right-2 w-7 h-7 rounded-full bg-white/10" />
         <BookOpen className="w-5 h-5 text-white" />
       </div>
@@ -181,7 +194,8 @@ function EntryRow({ entry }: { entry: SelfJournalingEntry }) {
 
 export default function JournalHomePage() {
   const router = useRouter();
-  const { categories, isLoading: categoriesLoading } = useJournalingCategories();
+  const { categories, isLoading: categoriesLoading } =
+    useJournalingCategories();
   const { entries, isLoading: entriesLoading } = useSelfJournalingEntries();
 
   const TODAY_STR = toLocalDateStr(new Date());
@@ -191,7 +205,7 @@ export default function JournalHomePage() {
   const weekDays = useMemo(() => buildWeekDays(weekOffset), [weekOffset]);
 
   const publishedCategories = useMemo(
-    () => categories.filter((c) => c.status === 'PUBLISHED'),
+    () => categories.filter((c) => c.status === "PUBLISHED"),
     [categories],
   );
 
@@ -203,34 +217,40 @@ export default function JournalHomePage() {
 
   // Entries for the currently selected date
   const selectedEntries = useMemo(
-    () => entries.filter((e) => toLocalDateStr(new Date(e.createdAt)) === selectedDate),
+    () =>
+      entries.filter(
+        (e) => toLocalDateStr(new Date(e.createdAt)) === selectedDate,
+      ),
     [entries, selectedDate],
   );
 
-  const selectedLabel = selectedDate === TODAY_STR
-    ? 'Today'
-    : new Date(selectedDate + 'T00:00:00').toLocaleDateString('en-US', {
-        weekday: 'long', month: 'long', day: 'numeric',
-      });
+  const selectedLabel =
+    selectedDate === TODAY_STR
+      ? "Today"
+      : new Date(selectedDate + "T00:00:00").toLocaleDateString("en-US", {
+          weekday: "long",
+          month: "long",
+          day: "numeric",
+        });
 
   return (
     <div className="flex flex-col min-h-screen bg-background pb-24">
-
       {/* ── Header ── */}
       <div className="flex items-center gap-2 px-4 pt-5 pb-1">
         <BackButton fallback="/home" />
         <div className="flex-1">
           <h1 className="text-lg font-bold text-foreground">Journal</h1>
-          <p className="text-xs text-muted-foreground">Your safe space for thoughts and feelings.</p>
+          <p className="text-xs text-muted-foreground">
+            Your safe space for thoughts and feelings.
+          </p>
         </div>
       </div>
 
       <div className="flex flex-col gap-6 mt-4">
-
         {/* ── Free Flow hero ── */}
         <div className="px-4">
           <button
-            onClick={() => router.push('/self-journaling/new')}
+            onClick={() => router.push("/self-journaling/new")}
             className="w-full bg-primary text-primary-foreground rounded-2xl overflow-hidden text-left shadow-sm hover:shadow-xl transition-all duration-300 hover:-translate-y-1 active:scale-[0.98]"
           >
             <div className="p-5 flex items-center justify-between min-h-[100px] relative overflow-hidden">
@@ -254,28 +274,26 @@ export default function JournalHomePage() {
         {/* ── Guided Reflection horizontal scroll ── */}
         <section>
           <div className="flex items-center justify-between px-4 mb-3">
-            <h2 className="text-base font-bold text-foreground">Guided Reflection</h2>
-            <Button
-              variant="ghost"
-              size="sm"
-              className="text-primary text-xs gap-1 h-auto py-1"
-              onClick={() => router.push('/self-journaling/history')}
-            >
-              View All
-              <ChevronRight className="w-3.5 h-3.5" />
-            </Button>
+            <h2 className="text-base font-bold text-foreground">
+              Guided Reflection
+            </h2>
           </div>
 
           <div className="flex gap-3 overflow-x-auto -mx-0 px-4 pb-1 scrollbar-none">
             {categoriesLoading
               ? [...Array(3)].map((_, i) => (
-                  <Skeleton key={i} className="flex-shrink-0 w-36 h-36 rounded-2xl" />
+                  <Skeleton
+                    key={i}
+                    className="flex-shrink-0 w-36 h-36 rounded-2xl"
+                  />
                 ))
               : publishedCategories.map((cat) => (
                   <CategoryCard
                     key={cat.id}
                     category={cat}
-                    onClick={() => router.push(`/self-journaling/categories/${cat.id}`)}
+                    onClick={() =>
+                      router.push(`/self-journaling/categories/${cat.id}`)
+                    }
                   />
                 ))}
           </div>
@@ -294,16 +312,18 @@ export default function JournalHomePage() {
             </button>
             <span className="text-xs text-muted-foreground font-medium">
               {weekOffset === 0
-                ? 'This week'
+                ? "This week"
                 : weekOffset === 7
-                ? 'Last week'
-                : `${weekOffset} days ago`}
+                  ? "Last week"
+                  : `${weekOffset} days ago`}
             </span>
             <button
               onClick={() => setWeekOffset((o) => Math.max(0, o - 7))}
               className={cn(
-                'p-1 rounded-lg transition-colors',
-                weekOffset === 0 ? 'opacity-30 pointer-events-none' : 'hover:bg-muted',
+                "p-1 rounded-lg transition-colors",
+                weekOffset === 0
+                  ? "opacity-30 pointer-events-none"
+                  : "hover:bg-muted",
               )}
               aria-label="Next week"
             >
@@ -322,24 +342,30 @@ export default function JournalHomePage() {
                   onClick={() => setSelectedDate(dateStr)}
                   className="flex-1 flex flex-col items-center gap-1 py-1 transition-colors"
                 >
-                  <span className={cn(
-                    'text-[11px] font-medium',
-                    isSelected ? 'text-primary' : 'text-muted-foreground',
-                  )}>
+                  <span
+                    className={cn(
+                      "text-[11px] font-medium",
+                      isSelected ? "text-primary" : "text-muted-foreground",
+                    )}
+                  >
                     {dayLetter}
                   </span>
-                  <span className={cn(
-                    'w-8 h-8 rounded-full flex items-center justify-center text-sm font-semibold transition-colors',
-                    isSelected
-                      ? 'bg-primary text-primary-foreground'
-                      : 'text-foreground hover:bg-muted',
-                  )}>
+                  <span
+                    className={cn(
+                      "w-8 h-8 rounded-full flex items-center justify-center text-sm font-semibold transition-colors",
+                      isSelected
+                        ? "bg-primary text-primary-foreground"
+                        : "text-foreground hover:bg-muted",
+                    )}
+                  >
                     {dayNum}
                   </span>
-                  <span className={cn(
-                    'w-1 h-1 rounded-full transition-opacity',
-                    hasEntries ? 'bg-primary opacity-100' : 'opacity-0',
-                  )} />
+                  <span
+                    className={cn(
+                      "w-1 h-1 rounded-full transition-opacity",
+                      hasEntries ? "bg-primary opacity-100" : "opacity-0",
+                    )}
+                  />
                 </button>
               );
             })}
@@ -347,10 +373,13 @@ export default function JournalHomePage() {
 
           {/* Entries for selected date */}
           <div className="flex items-center justify-between mb-3">
-            <h2 className="text-base font-bold text-foreground">{selectedLabel}</h2>
+            <h2 className="text-base font-bold text-foreground">
+              {selectedLabel}
+            </h2>
             {selectedEntries.length > 0 && (
               <span className="text-xs text-muted-foreground">
-                {selectedEntries.length} {selectedEntries.length === 1 ? 'entry' : 'entries'}
+                {selectedEntries.length}{" "}
+                {selectedEntries.length === 1 ? "entry" : "entries"}
               </span>
             )}
           </div>
@@ -380,18 +409,20 @@ export default function JournalHomePage() {
               </div>
               <div>
                 <p className="text-sm font-semibold text-foreground">
-                  {selectedDate === TODAY_STR ? 'No entry today yet' : 'Nothing written this day'}
+                  {selectedDate === TODAY_STR
+                    ? "No entry today yet"
+                    : "Nothing written this day"}
                 </p>
                 <p className="text-xs text-muted-foreground mt-0.5">
                   {selectedDate === TODAY_STR
-                    ? 'Take a moment to reflect — it only takes a minute.'
-                    : 'No journal entries for this date.'}
+                    ? "Take a moment to reflect — it only takes a minute."
+                    : "No journal entries for this date."}
                 </p>
               </div>
               {selectedDate === TODAY_STR && (
                 <Button
                   className="rounded-xl px-6 gap-2"
-                  onClick={() => router.push('/self-journaling/new')}
+                  onClick={() => router.push("/self-journaling/new")}
                 >
                   <Pencil className="w-3.5 h-3.5" />
                   Start Journaling
@@ -404,7 +435,9 @@ export default function JournalHomePage() {
                 {selectedEntries.map((entry, i) => (
                   <div
                     key={entry.id}
-                    onClick={() => router.push(`/self-journaling/${selectedDate}`)}
+                    onClick={() =>
+                      router.push(`/self-journaling/${selectedDate}`)
+                    }
                   >
                     <EntryRow entry={entry} />
                     {i < selectedEntries.length - 1 && <Separator />}
@@ -414,7 +447,6 @@ export default function JournalHomePage() {
             </Card>
           )}
         </section>
-
       </div>
     </div>
   );

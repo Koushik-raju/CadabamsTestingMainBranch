@@ -11,6 +11,10 @@
  *   3. Filters audios by search query.
  *   4. Tapping a card or "Play all" opens FullscreenAudioPlayer at the selected index.
  *   5. Player auto-advances to the next track on completion.
+ *   6. When opened from a journey task (via destinationPath), reads
+ *      `?audioId=` and auto-opens the player on that track, and reads
+ *      `journeyEnrollmentId` / `journeyTaskId` / `journeyId` so the
+ *      track's completion can be reported back via useJourneyTaskContinuation.
  *
  * KEY VARIABLES / PROPS / EXPORTS:
  *   sortOrder        — 'asc' (oldest first) | 'desc' (newest first)
@@ -28,8 +32,9 @@
 
 'use client';
 
-import { useState, useMemo } from 'react';
-import { useParams } from 'next/navigation';
+import { useState, useMemo, useEffect, useRef } from 'react';
+import { useParams, useSearchParams } from 'next/navigation';
+import { useJourneyTaskContinuation } from '@/hooks/journeys/use-journey-task-continuation';
 import { Play, ChevronDown, ChevronUp } from 'lucide-react';
 import { BackButton } from '@/components/shared/navigation/back-button';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -49,13 +54,21 @@ type SortOrder = 'asc' | 'desc';
 
 export default function MindfulMinuteDetailPage() {
   const params = useParams();
+  const searchParams = useSearchParams();
   const slugOrId = typeof params?.slug === 'string' ? params.slug : '';
   const { mindfulMinute, isLoading, error } = useMindfulMinuteDetail(slugOrId);
+
+  // Journey continuation — active only when the URL carries
+  // journeyEnrollmentId/journeyTaskId AND the context agrees.
+  const continuation = useJourneyTaskContinuation('AUDIO');
+  const deepLinkedAudioId = searchParams?.get('audioId') ?? null;
 
   const [searchQuery, setSearchQuery] = useState('');
   const [sortOrder, setSortOrder] = useState<SortOrder>('asc');
   const [activeIndex, setActiveIndex] = useState<number | null>(null);
   const [playerOpen, setPlayerOpen] = useState(false);
+  const autoOpenedRef = useRef(false);
+  const journeyDoneRef = useRef(false);
 
   const sortedAudios = useMemo((): MindfulMinuteAudio[] => {
     const list = mindfulMinute?.audios ?? [];
@@ -76,6 +89,40 @@ export default function MindfulMinuteDetailPage() {
   const handleAudioTap = (idx: number) => {
     setActiveIndex(idx);
     setPlayerOpen(true);
+  };
+
+  // Auto-open the fullscreen player on the deep-linked audio once the
+  // collection has loaded. Guarded so list re-renders don't re-open after
+  // the user closes the player.
+  useEffect(() => {
+    if (autoOpenedRef.current) return;
+    if (!deepLinkedAudioId) return;
+    if (!filteredAudios.length) return;
+    const idx = filteredAudios.findIndex((a) => a.id === deepLinkedAudioId);
+    if (idx >= 0) {
+      autoOpenedRef.current = true;
+      setActiveIndex(idx);
+      setPlayerOpen(true);
+    }
+  }, [deepLinkedAudioId, filteredAudios]);
+
+  // When the player closes after a journey-driven deep link, report the
+  // track as the completion proof. Guarded so we only fire once per mount.
+  const handlePlayerClose = async () => {
+    setPlayerOpen(false);
+    if (!continuation.active || journeyDoneRef.current) return;
+    const audio = activeIndex != null ? filteredAudios[activeIndex] : null;
+    const audioId = audio?.id ?? deepLinkedAudioId;
+    if (!audioId) return;
+    journeyDoneRef.current = true;
+    try {
+      await continuation.markCompleted(
+        { kind: 'AUDIO', audioId },
+        { proofPreview: audio?.title ?? undefined },
+      );
+    } catch (err) {
+      console.error('[MindfulMinuteDetailPage] journey completion failed', err);
+    }
   };
 
   if (isLoading) {
@@ -126,8 +173,26 @@ export default function MindfulMinuteDetailPage() {
         <FullscreenAudioPlayer
           audios={filteredAudios}
           initialIndex={activeIndex}
-          onClose={() => setPlayerOpen(false)}
+          onClose={handlePlayerClose}
           onTrackChange={(idx) => setActiveIndex(idx)}
+          onTrackCompleted={async (_idx, audio) => {
+            if (!continuation.active || journeyDoneRef.current) return;
+            journeyDoneRef.current = true;
+            // Close the fullscreen player so the user can see the
+            // "Return to journey" banner — otherwise the player's
+            // auto-advance to the next track keeps the overlay visible
+            // and the FAB is stacked behind it.
+            setPlayerOpen(false);
+            try {
+              await continuation.markCompleted(
+                { kind: 'AUDIO', audioId: audio.id },
+                { proofPreview: audio.title },
+              );
+            } catch (err) {
+              journeyDoneRef.current = false;
+              console.error('[MindfulMinuteDetailPage] auto-complete failed', err);
+            }
+          }}
         />
       )}
 
@@ -151,6 +216,44 @@ export default function MindfulMinuteDetailPage() {
           </div>
         </div>
       </div>
+
+      {/* Journey continuation banner — explicit mark-complete for audio task */}
+      {continuation.active && (
+        <div className="mx-4 mt-3 rounded-2xl border border-primary/30 bg-primary/5 p-3 flex items-center gap-3">
+          <div className="flex-1 min-w-0">
+            <p className="text-sm font-semibold text-foreground">Journey task in progress</p>
+            <p className="text-xs text-muted-foreground mt-0.5">
+              Listen to a session, then mark it done to return.
+            </p>
+          </div>
+          <Button
+            size="sm"
+            disabled={journeyDoneRef.current}
+            onClick={async () => {
+              const audio =
+                (activeIndex != null ? filteredAudios[activeIndex] : null) ??
+                (deepLinkedAudioId
+                  ? filteredAudios.find((a) => a.id === deepLinkedAudioId)
+                  : null) ??
+                filteredAudios[0] ??
+                null;
+              if (!audio) return;
+              journeyDoneRef.current = true;
+              try {
+                await continuation.markCompleted(
+                  { kind: 'AUDIO', audioId: audio.id },
+                  { proofPreview: audio.title },
+                );
+              } catch (err) {
+                journeyDoneRef.current = false;
+                console.error('[MindfulMinuteDetailPage] mark-complete failed', err);
+              }
+            }}
+          >
+            Mark done
+          </Button>
+        </div>
+      )}
 
       <main className="flex-1 px-4 py-4 space-y-5 max-w-2xl mx-auto w-full pb-20">
         {/* Sort control + Play all */}

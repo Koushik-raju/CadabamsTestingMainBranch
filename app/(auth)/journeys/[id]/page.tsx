@@ -32,7 +32,7 @@
 
 "use client";
 
-import { use, useState, Suspense } from "react";
+import { use, useState, useEffect, Suspense } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
@@ -80,6 +80,15 @@ function JourneyLandingContent({ params }: PageProps) {
   const { journey, isLoading } = useJourneyDetail(id);
   const { progress, isLoading: progLoad } = useJourneyProgress(id);
   const [subscribing, setSubscribing] = useState(false);
+
+  // Already-enrolled users skip this landing page entirely and go straight
+  // to the interactive details view.
+  const isSubscribedRedirect = !!progress;
+  useEffect(() => {
+    if (!progLoad && isSubscribedRedirect) {
+      router.replace(`/journeys/${id}/details`);
+    }
+  }, [progLoad, isSubscribedRedirect, id, router]);
 
   if (isLoading || progLoad) {
     return (
@@ -145,17 +154,15 @@ function JourneyLandingContent({ params }: PageProps) {
     )
     .filter(Boolean);
 
-  async function handleCTA() {
-    if (isSubscribed) {
-      router.push(`/journeys/${id}/details`);
-      return;
-    }
+  async function handleSubscribe() {
     if (!mobile) {
       router.push("/auth/login");
       return;
     }
     setSubscribing(true);
     try {
+      // subscribeToJourney internally routes to the correct backend call
+      // (POST /enroll for premium, non-preview GET for free).
       await subscribeToJourney(journey!);
       hapticMedium();
       router.push(`/journeys/${id}/details`);
@@ -166,11 +173,9 @@ function JourneyLandingContent({ params }: PageProps) {
     }
   }
 
-  const ctaLabel = isSubscribed
-    ? "Continue Journey"
-    : journey.isPremium
-      ? "Try Day 1 Free"
-      : "Start Journey";
+  function handlePreview() {
+    router.push(`/journeys/${id}/details`);
+  }
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
@@ -268,21 +273,31 @@ function JourneyLandingContent({ params }: PageProps) {
         </div>
       </div>
 
-      {/* CTA */}
+      {/* CTA — Subscribe + Preview side-by-side for unenrolled users. */}
       <div className="fixed bottom-0 left-0 right-0 px-5 pb-8 pt-3 bg-background border-t border-border">
         {journey.isPremium && !isSubscribed && (
           <p className="text-[11px] text-muted-foreground text-center mb-2">
             Day 1 is free · Does not include appointments
           </p>
         )}
-        <Button
-          className="w-full bg-primary hover:bg-primary/90 text-primary-foreground font-semibold text-base h-14 rounded-2xl"
-          disabled={subscribing}
-          onClick={handleCTA}
-        >
-          {subscribing ? "Please wait..." : ctaLabel}
-          {!subscribing && <ChevronRight className="w-5 h-5 ml-1" />}
-        </Button>
+        <div className="flex gap-2">
+          <Button
+            variant="outline"
+            className="flex-1 h-14 rounded-2xl font-semibold text-base"
+            disabled={subscribing}
+            onClick={handlePreview}
+          >
+            Preview
+          </Button>
+          <Button
+            className="flex-[1.5] bg-primary hover:bg-primary/90 text-primary-foreground font-semibold text-base h-14 rounded-2xl"
+            disabled={subscribing}
+            onClick={handleSubscribe}
+          >
+            {subscribing ? "Please wait..." : "Subscribe"}
+            {!subscribing && <ChevronRight className="w-5 h-5 ml-1" />}
+          </Button>
+        </div>
       </div>
     </div>
   );

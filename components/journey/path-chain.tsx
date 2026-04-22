@@ -21,7 +21,7 @@
  * DEPENDENCIES:
  *   PathNode, UnitHeaderBar
  *
- * LAST UPDATED: 2026-04-16 — remove video type and bare-description read fallback; read requires both extraTaskTitle and extraTaskDescription
+ * LAST UPDATED: 2026-04-22 — add data-node-id attribute for auto-scroll targeting
  */
 'use client';
 
@@ -158,6 +158,7 @@ export function PathChain({ items, onNodeTap }: PathChainProps) {
             key={node.nodeId}
             className="relative z-10 flex flex-col items-center"
             style={{ transform: `translateX(${xOffset}px)` }}
+            data-node-id={node.task.id}
           >
             {nodeIdx > 1 && <div className={isActive ? 'h-5' : 'h-4'} />}
             <PathNode

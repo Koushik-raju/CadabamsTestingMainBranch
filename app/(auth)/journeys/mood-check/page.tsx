@@ -28,16 +28,45 @@ import { useRouter } from 'next/navigation';
 import { BackButton } from '@/components/shared/navigation/back-button';
 import { MoodCheckForm } from '@/components/journey/mood-check-form';
 import { Skeleton } from '@/components/ui/skeleton';
+import { useJourneyTaskContinuation } from '@/hooks/journeys/use-journey-task-continuation';
 
 function MoodCheckContent() {
   const router = useRouter();
+  const continuation = useJourneyTaskContinuation('MOOD');
 
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handleSubmit = async (_answers: Record<string, number>) => {
+  // Collapse the multi-question mood form down to the MOOD proof the
+  // backend expects (moodBefore + moodAfter, 1..10). We take q_0 as
+  // "before" and the last answered question as "after"; both fall back
+  // to a neutral 5 when unavailable.
+  function buildMoodProof(answers: Record<string, number>): { moodBefore: number; moodAfter: number } {
+    const keys = Object.keys(answers).sort();
+    const first = keys[0] ? answers[keys[0]] : undefined;
+    const last = keys.length > 1 ? answers[keys[keys.length - 1]] : first;
+    const clamp = (n: number | undefined) => {
+      const v = n ?? 5;
+      return Math.min(10, Math.max(1, Math.round(v)));
+    };
+    return { moodBefore: clamp(first), moodAfter: clamp(last) };
+  }
+
+  const handleSubmit = async (answers: Record<string, number>) => {
     setIsSubmitting(true);
-    router.back();
-    setIsSubmitting(false);
+    try {
+      if (continuation.active) {
+        const { moodBefore, moodAfter } = buildMoodProof(answers);
+        await continuation.markCompleted(
+          { kind: 'MOOD', moodBefore, moodAfter },
+          { proofPreview: `Mood ${moodBefore} → ${moodAfter}` },
+        );
+      }
+    } catch (e) {
+      console.error('[MoodCheckPage] journey completion failed', e);
+    } finally {
+      setIsSubmitting(false);
+      router.back();
+    }
   };
 
   return (

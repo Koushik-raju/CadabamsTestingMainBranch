@@ -27,8 +27,9 @@
  */
 'use client';
 
-import { use } from 'react';
+import { use, useEffect, useRef } from 'react';
 import Link from 'next/link';
+import { useJourneyTaskContinuation } from '@/hooks/journeys/use-journey-task-continuation';
 import { Card, CardContent } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -81,6 +82,28 @@ export default function CompletedAssessmentPage({
   const rows = completion?.userResponse ?? [];
   const config = getSeverityConfig(completion?.severity);
   const pct = completion?.scorePercentage ?? null;
+
+  // When this report was reached via a journey task, mark the task
+  // completed on the backend using this completion as proof, then let
+  // the global FAB surface the "Return to journey" CTA.
+  const continuation = useJourneyTaskContinuation('ASSESSMENT');
+  const reportedRef = useRef(false);
+  useEffect(() => {
+    if (reportedRef.current) return;
+    if (!continuation.active || !completion) return;
+    reportedRef.current = true;
+    const severityLabel = config.label;
+    const pieces = [severityLabel, pct != null ? `${pct}%` : null].filter(Boolean) as string[];
+    continuation
+      .markCompleted(
+        { kind: 'ASSESSMENT', assessmentCompletionId: completion.id },
+        { proofPreview: pieces.join(' · ') || undefined },
+      )
+      .catch((err) => {
+        reportedRef.current = false;
+        console.error('[CompletedAssessmentPage] journey completion failed', err);
+      });
+  }, [continuation, completion, config.label, pct]);
 
   if (isLoading) return <LoadingSkeleton />;
 

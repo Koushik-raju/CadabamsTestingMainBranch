@@ -7,8 +7,9 @@
  *
  * LOGIC OVERVIEW:
  *   Resolves the journey id, fetches CMS detail + enrollment via SWR hooks.
- *   The GET enrollment endpoint auto-enrolls non-premium journeys server-side,
- *   so this page does not need to call subscribeToJourney explicitly.
+ *   useJourneyProgress passes preview=true so GET never auto-enrolls; enrollment
+ *   only happens when the user explicitly taps the subscribe CTA in
+ *   JourneyPathView. Unsubscribed users see the preview/locked UI.
  *
  * KEY VARIABLES / PROPS / EXPORTS:
  *   journey     — CMS JourneyItem
@@ -19,26 +20,39 @@
  *   useJourneyDetail, useJourneyProgress — hooks/journeys/use-journey-detail
  *   JourneyPathView — components/journey/journey-path-view
  *
- * LAST UPDATED: 2026-04-20 — drop client-side auto-subscribe (server auto-enrolls on GET)
+ * LAST UPDATED: 2026-04-22 — use preview=true on GET so unenrolled users don't auto-enroll
  */
 'use client';
 
-import { use } from 'react';
-import { Suspense } from 'react';
-import { MoreVertical } from 'lucide-react';
+import { use, useState, Suspense } from 'react';
+import { useRouter } from 'next/navigation';
+import { Sparkles, MoreVertical } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { BackButton } from '@/components/shared/navigation/back-button';
 import { JourneyPathView } from '@/components/journey/journey-path-view';
-import { useJourneyDetail, useJourneyProgress } from '@/hooks/journeys/use-journey-detail';
+import { useJourneyDetail, useJourneyProgress, subscribeToJourney } from '@/hooks/journeys/use-journey-detail';
 import { extractJourneyName } from '@/types/journey';
+import { hapticMedium } from '@/lib/haptics';
 
 interface PageProps { params: Promise<{ id: string }> }
 
 function DetailsContent({ params }: PageProps) {
   const { id } = use(params);
+  const router = useRouter();
+  const [subscribing, setSubscribing] = useState(false);
 
   const { journey,  isLoading }           = useJourneyDetail(id);
   const { progress, isLoading: progLoad } = useJourneyProgress(id);
+
+  console.log('[DetailsPage] render', {
+    id,
+    journeyLoading: isLoading,
+    progressLoading: progLoad,
+    hasJourney: !!journey,
+    hasProgress: !!progress,
+    progressId: progress?.id,
+  });
 
   if (isLoading || progLoad) {
     return (
@@ -65,6 +79,20 @@ function DetailsContent({ params }: PageProps) {
 
   const name         = extractJourneyName(journey.name);
   const isSubscribed = !!progress;
+
+  async function handleSubscribeFromLock() {
+    setSubscribing(true);
+    try {
+      await subscribeToJourney(journey!);
+      hapticMedium();
+      // After successful enroll, the SWR cache is replaced with the new
+      // enrollment and the path view will render.
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setSubscribing(false);
+    }
+  }
 
   return (
     <div
@@ -95,6 +123,38 @@ function DetailsContent({ params }: PageProps) {
         progress={progress}
         journeyId={id}
       />
+
+      {/* Unenrolled users browse the full journey structure but see a
+          persistent Subscribe CTA. Day 1 is tappable on every journey
+          (free attempt) via the path view's preview-bypass for day 1. */}
+      {!isSubscribed && (
+        <div className="fixed bottom-20 left-4 right-4 z-30 sm:left-auto sm:right-6 sm:max-w-sm">
+          <div className="relative overflow-hidden rounded-2xl border border-primary/30 bg-gradient-to-br from-primary to-primary/80 p-3 text-primary-foreground shadow-xl">
+            <div className="flex items-center gap-3">
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white/20">
+                <Sparkles className="h-5 w-5" />
+              </div>
+              <div className="min-w-0 flex-1">
+                <p className="text-sm font-semibold leading-tight">
+                  {journey.isPremium ? 'Day 1 is free — subscribe for full access' : 'Subscribe to track progress'}
+                </p>
+                <p className="text-[11px] text-primary-foreground/85 mt-0.5">
+                  Tap Day 1 to try a task, or subscribe now.
+                </p>
+              </div>
+              <Button
+                size="sm"
+                variant="secondary"
+                disabled={subscribing}
+                onClick={handleSubscribeFromLock}
+                className="shrink-0 bg-white text-primary hover:bg-white/90"
+              >
+                {subscribing ? '…' : 'Subscribe'}
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

@@ -2802,18 +2802,16 @@ export type EnrollJourneyDto = {
 
 export type JourneyTaskKind = 'AUDIO' | 'ASSESSMENT' | 'WORKSHEET' | 'VIDEO' | 'JOURNAL' | 'SUB_JOURNAL' | 'MOOD' | 'APPOINTMENT' | 'CONSULT_BOOKING' | 'OTHER';
 
+export type DerivedTaskKind = JourneyTaskKind | 'READ';
+
 export type EnrollmentTaskDto = {
-    /**
-     * JourneyTaskCompletion.id — null if not started
-     */
-    id: string | null;
     /**
      * CmsJourneyStepTask.id — plain id, not composite
      */
     taskId: string;
     stepId: string;
     dayNumber: number | null;
-    kind: JourneyTaskKind;
+    kind: DerivedTaskKind;
     title: string | null;
     state: 'locked' | 'available' | 'active' | 'completed';
     /**
@@ -2830,14 +2828,6 @@ export type EnrollmentDayDto = {
     summary: string | null;
     moodBefore: number | null;
     moodAfter: number | null;
-    /**
-     * True when this day has been unlocked for the patient
-     */
-    unlocked: boolean;
-    /**
-     * True when this day is currently accessible
-     */
-    available: boolean;
 };
 
 export type PatientJourneyResponseDto = {
@@ -2884,6 +2874,25 @@ export type CompleteTaskDto = {
      */
     taskId: string;
     dayNumber?: number;
+    /** AssessmentCompletion.id — required when task kind is ASSESSMENT */
+    assessmentCompletionId?: string;
+    /** WorksheetSubmission.id — required when task kind is WORKSHEET */
+    worksheetSubmissionId?: string;
+    /** CmsSelfJournaling.id — required when task kind is SUB_JOURNAL */
+    selfJournalingId?: string;
+    /** JournalEntry.id — required when task kind is JOURNAL (or send selfJournalingId) */
+    journalEntryId?: string;
+    /** CmsAudio.id the patient listened to — required when task kind is AUDIO */
+    audioId?: string;
+    /** CmsVideo.id the patient watched — required when task kind is VIDEO */
+    videoId?: string;
+    /** Required when task kind is MOOD (1..10) */
+    moodBefore?: number;
+    moodAfter?: number;
+    /** CRM appointment id — required when task kind is APPOINTMENT or CONSULT_BOOKING */
+    appointmentId?: string;
+    /** Free-text attestation — required when task kind is READ or OTHER */
+    note?: string;
 };
 
 export type CompleteTaskResponseDto = {
@@ -9961,7 +9970,12 @@ export type JourneysControllerGetByJourneyIdData = {
     path: {
         journeyId: string;
     };
-    query?: never;
+    query?: {
+        /**
+         * When true, skip auto-enrollment and return null for unenrolled users
+         */
+        preview?: boolean;
+    };
     url: '/api/v1/me/journeys/{journeyId}';
 };
 

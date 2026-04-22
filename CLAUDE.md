@@ -42,170 +42,93 @@
 ### Rules for the header
 
 1. **Always at line 1** — before imports, `"use client"`, or anything else.
-2. **Accurate, not aspirational** — describe what the code actually does, not what you wish it did.
-3. **Update on every change** — if you modify logic or variables, update the relevant sections and the `LAST UPDATED` line.
-4. **No placeholders** — never write `<TODO>` or `<describe later>` in a shipped header.
-5. **Applies to all file types** — `.tsx`, `.ts`, `.js`, `.css`, config files. For non-JS files use the appropriate comment syntax (`/* */`, `#`, `<!-- -->`).
+2. **Accurate, not aspirational** — describe what the code actually does.
+3. **Update on every change** — update relevant sections and `LAST UPDATED` on every edit.
+4. **No placeholders** — never `<TODO>` or `<describe later>` in a shipped header.
+5. **Applies to all file types** — `.tsx`, `.ts`, `.js`, `.css`, config. Use the appropriate comment syntax for each.
 
 ### Enforcement
 
-If you open or create a file without a header:
-1. STOP — add the header first.
-2. Read the file to understand its current logic.
-3. Write an accurate header.
-4. Then proceed with your original task.
-
-**Skipping this rule is not allowed under any circumstance.**
+If you open or create a file without a header: STOP — add the header first, read the file, write an accurate header, then proceed.
 
 ---
 
-<!-- code-review-graph MCP tools -->
-## MCP Tools: code-review-graph
+## Plain-Text Explanations for Complicated Logic
 
-**IMPORTANT: This project has a knowledge graph. ALWAYS use the
-code-review-graph MCP tools BEFORE using Grep/Glob/Read to explore
-the codebase.** The graph is faster, cheaper (fewer tokens), and gives
-you structural context (callers, dependents, test coverage) that file
-scanning cannot.
+**Wherever logic is non-trivial, write a plain-text explanation in a comment above it.** This overrides the default "no comments" bias — in this codebase, complicated sections MUST be explained.
 
-### When to use graph tools FIRST
+### When it applies
+- Non-obvious algorithms, state machines, timing/ordering constraints
+- Multi-step data transformations (especially SDK → hook → page shape changes)
+- Conditional branches where the intent is not self-evident from the code
+- Workarounds for SDK gaps, browser/Capacitor quirks, or backend spec limitations
+- Anything that would make a future reader pause and re-read
 
-- **Exploring code**: `semantic_search_nodes` or `query_graph` instead of Grep
-- **Understanding impact**: `get_impact_radius` instead of manually tracing imports
-- **Code review**: `detect_changes` + `get_review_context` instead of reading entire files
-- **Finding relationships**: `query_graph` with callers_of/callees_of/imports_of/tests_for
-- **Architecture questions**: `get_architecture_overview` + `list_communities`
+### How to write it
+- Use plain English — describe what the block does AND why.
+- Place the comment directly above the block it explains.
+- Use `/* */` for multi-line blocks, `//` for one-liners.
+- Do not restate obvious code (no `// increment counter` above `i++`).
 
-Fall back to Grep/Glob/Read **only** when the graph doesn't cover what you need.
+### Keep it updated
+- When editing a block that has an explanation comment, **update the comment in the same edit**. Stale explanations are worse than none.
+- Update the file-header `LOGIC OVERVIEW` section in parallel.
+- If logic changes enough that the explanation no longer makes sense, rewrite it — don't patch it.
 
-### Key Tools
+---
+
+## MCP Tools: code-review-graph (USE FIRST)
+
+This project has a knowledge graph. **Always use the graph MCP tools BEFORE Grep/Glob/Read.** Faster, cheaper, gives structural context (callers, dependents, test coverage) that file scanning cannot.
 
 | Tool | Use when |
-|------|----------|
-| `detect_changes` | Reviewing code changes — gives risk-scored analysis |
-| `get_review_context` | Need source snippets for review — token-efficient |
-| `get_impact_radius` | Understanding blast radius of a change |
-| `get_affected_flows` | Finding which execution paths are impacted |
-| `query_graph` | Tracing callers, callees, imports, tests, dependencies |
+|---|---|
 | `semantic_search_nodes` | Finding functions/classes by name or keyword |
-| `get_architecture_overview` | Understanding high-level codebase structure |
+| `query_graph` | Tracing callers, callees, imports, tests, dependencies |
+| `get_impact_radius` | Understanding blast radius of a change |
+| `detect_changes` | Reviewing code changes — risk-scored analysis |
+| `get_review_context` | Source snippets for review — token-efficient |
+| `get_affected_flows` | Execution paths impacted |
+| `get_architecture_overview` | High-level codebase structure |
 | `refactor_tool` | Planning renames, finding dead code |
 
-### Workflow
+Graph auto-updates on file changes. Fall back to Grep/Glob/Read only when the graph doesn't cover what you need.
 
-1. The graph auto-updates on file changes (via hooks).
-2. Use `detect_changes` for code review.
-3. Use `get_affected_flows` to understand impact.
-4. Use `query_graph` pattern="tests_for" to check coverage.
+---
 
-### Component Co-location Conventions
+## Component & Hook Layout
 
-**Feature-based components**: Components are grouped by feature under `components/<feature>/`. For example:
-- `components/chat/` - chat feature with subdirectories:
-  - `components/chat/history/` - chat history components (thread-card, thread-list, loading-state, empty-state)
-  - `components/chat/chat-header.tsx` - chat page header
-  - `components/chat/message-bubble.tsx` - message bubble component
-  - `components/chat/message-list.tsx` - message list container
-  - `components/chat/chat-input.tsx` - chat input form
-  - `components/chat/history-drawer.tsx` - history drawer sheet
+**Components**: feature-grouped under `components/<feature>/`. Shared components under `components/shared/`. shadcn primitives under `components/ui/`. See `../docs/structure/frontend-tree.md` for the full tree.
 
-**Shared components**: Components shared across multiple features are in `components/shared/`. For example:
-- `components/shared/navigation/back-button.tsx` - shared navigation components
+**Hooks**: feature-grouped under `hooks/<feature>/` (preferred) or top-level `hooks/use-*.ts` (legacy entry points). Full catalog in `../docs/on-demand/frontend-hooks.md` — read that when choosing or adding a hook.
 
-**Custom hooks**: Data fetching and stateful logic hooks go in `hooks/`. For example:
-- `hooks/use-threads.ts` - SWR hook for fetching thread data with cache key `['threads', resourceId]`
+---
 
-### Component Co-location Conventions
+## Data Fetching (SWR)
 
-**Feature-based components**: Components are grouped by feature under `components/<feature>/`. For example:
+- All data fetching goes through SWR hooks in `hooks/`. Pages consume hooks; never call the SDK directly from a page.
+- Cache keys come from `lib/swr-keys.ts` — do not inline.
+- Global SWR config in `app/(auth)/layout.tsx` sets `revalidateOnFocus: false` (Capacitor shell).
+- Hooks return `{ data, isLoading, error }` (or feature-specific aliases). Pages handle all three states: loading skeleton, error + retry, render.
 
-```
-components/
-  find-therapist/
-    context.tsx            # Feature context
-    wizard-view.tsx        # Wizard component
-    list-view.tsx          # List view component
-    doctor-card.tsx        # Doctor card for this feature
-    filter-sheets.tsx      # Filter sheet components
-  booking/
-    date-strip.tsx         # Date strip and tile components
-    slot-section.tsx       # Time slot section component
-    campus-sheet.tsx       # Campus selection sheet
-  checkout/
-    booking-summary-card.tsx    # Booking details card
-    payment-summary-card.tsx     # Payment summary card
-  appointments/
-    appointment-card.tsx   # Appointment card for this feature
-  shared/
-    navigation/
-      back-button.tsx     # Shared back button component
-```
+---
 
-### Data Fetching
+## API & SDK Rules
 
-This project uses **SWR** for data fetching. Follow these conventions:
+0. **⛔ NEVER hand-edit the generated SDK.** Anything under `sdk/backend-v2/` is generator output. After any backend change, the SDK must be **regenerated** — never manually patched. No edits to fix a type, no edits to add a missing field, no casting to work around generator output. If the SDK doesn't match what you need: fix the backend spec, regenerate, and retry. See `../docs/routines/regenerate-sdk.md`.
+1. **Only `crmController...` functions** — only call SDK functions whose names start with `crmController`.
+2. **No hardcoded types** — import types from `@/sdk/backend-v2`, never define custom shapes.
+3. **Pages are independent** — list and detail pages fetch their own data. No shared state between pages.
+4. **No direct API calls** — no `client.*`, `fetch`, or `axios` for backend calls. Missing SDK function → follow `../docs/routines/spec-driven-backend-change.md`.
+5. **No type coercions** — never `as X` or `as unknown[]`. Flag vague SDK types and wait for regeneration.
+6. **No hardcoded UI data** — render only what the API returns. No fallback strings for missing data.
+7. **Hooks wrap SDK; pages use hooks** — `crmController` calls belong in SWR hooks.
+8. **Flag SDK gaps** — missing fields → inform user, wait for spec update + regeneration. No casting.
+9. **Scope fetching to the resource** — never call a list endpoint to get one item. Pass the specific ID.
 
-#### SWR Hooks
-All data fetching hooks are in the `hooks/` directory and wrap SDK calls with SWR:
+---
 
-| Hook | SDK Call | Returns |
-|------|----------|---------|
-| `useDoctor(id)` | `getDoctorsById` | `{ doctor, isLoading, error }` |
-| `useAppointments()` | `getAppointments` + `getAppointmentsPrevious` | `{ upcoming, past, isLoading, error }` |
-| `useSlots(doctorId, consultTypeId)` | `getAppointmentsSlots` | `{ slots, isLoading, error }` |
-| `useSlotPrice(slotId)` | `getAppointmentsSlotsBySlotIdPrice` | `{ price, isLoading, error }` |
-| `useCampuses()` | `getMastersCampuses` | `{ campuses, isLoading, error }` |
-| `useDoctorAvailability(id)` | `getDoctorsByIdAvailability` | `{ availability, isLoading, error }` |
+## Notes
 
-#### SWR Key Factory
-All SWR cache keys are defined in `lib/swr-keys.ts`:
-
-```typescript
-export function doctorKey(id: number | string): string {
-  return `/doctors/${id}`;
-}
-
-export function appointmentsKey(): string {
-  return '/appointments';
-}
-
-export function slotsKey(doctorId: number | string, consultTypeId: number): string {
-  return `/slots/${doctorId}/${consultTypeId}`;
-}
-
-export function slotPriceKey(slotId: number | string): string {
-  return `/slot-price/${slotId}`;
-}
-
-export function campusesKey(): string {
-  return '/campuses';
-}
-
-export function doctorAvailabilityKey(id: number | string): string {
-  return `/doctor-availability/${id}`;
-}
-```
-
-#### SWR Configuration
-Global SWR configuration is set in `app/(auth)/layout.tsx` with `revalidateOnFocus: false` to prevent spurious refetches in the Capacitor shell.
-
-#### Error Handling
-Each hook returns `{ data, isLoading, error }`. Pages should handle all three states:
-- Show loading skeleton while `isLoading` is true
-- Show error message with retry button if `error` exists
-- Render data normally once loaded
-
-# Notes
-use ast-grep for search.
-follow @docs/DESIGN_GUIDELINES.md when creating / editing UI.
-
-# API & SDK Rules
-1. **Use only `crmController...` functions** — only call SDK functions whose names start with `crmController`.
-2. **No hardcoded types** — import all types directly from the SDK (`@/sdk/backend-v2`), never define custom type shapes manually.
-3. **Pages must be independent** — Pages must be independent — list and detail pages fetch their own data separately, no shared state between pages.
-4. **Never call APIs directly** — do not use `client.post/get/...`, raw `fetch`, or `axios` to call backend endpoints. If a required SDK function does not exist, **ask the user** — do not bypass the SDK.
-5. **No type coercions** — never use `as SomeType` or `as unknown[]` casts. If an SDK type is too vague (e.g. `Array<unknown>`), flag it to the user and wait for SDK regeneration.
-6. **No hardcoded UI data** — never render hardcoded strings like `"30 Days"`, `"Available"`, or `"Complete care package"`. Only render what the API actually returns.
-7. **Hooks wrap CRM functions; pages use hooks** — `crmController...` calls belong inside SWR hooks in `hooks/`. Pages import from hooks, not from the SDK directly.
-8. **Flag SDK gaps, don't work around them** — if a required field is missing from an SDK type (e.g. `razorpay_order_id`, `journey_id`), inform the user and wait for them to update the spec and regenerate. Do not cast or fabricate the shape.
-9. **Scope data fetching to the resource** — never call a list endpoint (e.g. `usePackageProductLines()` with no ID) to get data for a specific item. Always pass the specific ID to the correct endpoint.
+- UI work: follow `@docs/DESIGN_GUIDELINES.md`.
+- Routines for common tasks: `../docs/routines/` (frontend-bug-fix, new-sdk-page, regenerate-sdk, spec-driven-backend-change, commit-across-repos).

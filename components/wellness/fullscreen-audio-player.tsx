@@ -51,6 +51,10 @@ interface FullscreenAudioPlayerProps {
   initialIndex: number;
   onClose: () => void;
   onTrackChange?: (index: number) => void;
+  // Fires once per track when playback reaches 95% of the clip, used by
+  // callers (e.g. the journey-driven audio page) to count the track as
+  // "completed" without requiring the user to close the player.
+  onTrackCompleted?: (index: number, audio: MindfulMinuteAudio) => void;
 }
 
 function isVideoUrl(url?: string): boolean {
@@ -71,7 +75,9 @@ export function FullscreenAudioPlayer({
   initialIndex,
   onClose,
   onTrackChange,
+  onTrackCompleted,
 }: FullscreenAudioPlayerProps) {
+  const completedSetRef = useRef<Set<number>>(new Set());
   const [currentIndex, setCurrentIndex] = useState(initialIndex);
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
@@ -105,7 +111,23 @@ export function FullscreenAudioPlayer({
     setDuration(0);
     setIsPlaying(false);
 
-    const onTimeUpdate = () => setCurrentTime(audio.currentTime);
+    const onTimeUpdate = () => {
+      setCurrentTime(audio.currentTime);
+      // Fire "track completed" once the user has listened through 95% of
+      // the clip. Guarded per-index so scrubbing back doesn't re-fire.
+      const dur = audio.duration;
+      if (
+        onTrackCompleted &&
+        isFinite(dur) &&
+        dur > 0 &&
+        audio.currentTime / dur >= 0.95 &&
+        !completedSetRef.current.has(currentIndex)
+      ) {
+        completedSetRef.current.add(currentIndex);
+        const track = audios[currentIndex];
+        if (track) onTrackCompleted(currentIndex, track);
+      }
+    };
     const onLoadedMetadata = () => {
       setDuration(audio.duration);
       setIsLoading(false);

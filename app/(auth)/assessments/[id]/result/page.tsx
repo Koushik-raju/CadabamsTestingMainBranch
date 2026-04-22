@@ -34,8 +34,9 @@
  */
 'use client';
 
-import { use, useEffect } from 'react';
+import { use, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
+import { useJourneyTaskContinuation } from '@/hooks/journeys/use-journey-task-continuation';
 import Link from 'next/link';
 import Markdown from 'react-markdown';
 import { Button } from '@/components/ui/button';
@@ -81,6 +82,33 @@ export default function AssessmentResultPage({
     isLoading,
     error,
   } = useLatestAssessmentResult(assessmentId);
+
+  // Journey continuation — when the user reached this page from a journey
+  // task, mark the task completed using the latest completion as proof.
+  // Fires once per mount as soon as the completion is available so the
+  // global FAB can flip to the "Return to journey" banner.
+  const continuation = useJourneyTaskContinuation('ASSESSMENT');
+  const reportedRef = useRef(false);
+  useEffect(() => {
+    if (reportedRef.current) return;
+    if (!continuation.active || !completion) return;
+    reportedRef.current = true;
+    const severity = completion.severity ?? null;
+    const pct = completion.scorePercentage ?? null;
+    const pieces = [
+      severity ? severity.charAt(0).toUpperCase() + severity.slice(1) : null,
+      pct != null ? `${pct}%` : null,
+    ].filter(Boolean) as string[];
+    continuation
+      .markCompleted(
+        { kind: 'ASSESSMENT', assessmentCompletionId: completion.id },
+        { proofPreview: pieces.join(' · ') || undefined },
+      )
+      .catch((err) => {
+        reportedRef.current = false;
+        console.error('[AssessmentResultPage] journey completion failed', err);
+      });
+  }, [continuation, completion]);
 
   const onRegenerate = async () => {
     try {
