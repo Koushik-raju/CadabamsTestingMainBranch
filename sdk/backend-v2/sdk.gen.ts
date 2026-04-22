@@ -2391,19 +2391,21 @@ export const cmsMindfulMinutesControllerUnpublish = <ThrowOnError extends boolea
 });
 
 /**
- * Get self-journaling entries with pagination and optional leadId filter
+ * Get self-journaling entries (patient: own only; doctor/staff: optional leadId filter)
  */
 export const cmsJournalingControllerGetSelfJournalings = <ThrowOnError extends boolean = false>(options?: Options<CmsJournalingControllerGetSelfJournalingsData, ThrowOnError>) => (options?.client ?? client).get<CmsJournalingControllerGetSelfJournalingsResponses, unknown, ThrowOnError>({
     responseType: 'json',
+    security: [{ scheme: 'bearer', type: 'http' }],
     url: '/api/v1/cms/journaling/self',
     ...options
 });
 
 /**
- * Create a self-journaling entry
+ * Create a self-journaling entry (patient: own record only)
  */
 export const cmsJournalingControllerCreateSelfJournaling = <ThrowOnError extends boolean = false>(options: Options<CmsJournalingControllerCreateSelfJournalingData, ThrowOnError>) => (options.client ?? client).post<CmsJournalingControllerCreateSelfJournalingResponses, unknown, ThrowOnError>({
     responseType: 'json',
+    security: [{ scheme: 'bearer', type: 'http' }],
     url: '/api/v1/cms/journaling/self',
     ...options,
     headers: {
@@ -2413,28 +2415,31 @@ export const cmsJournalingControllerCreateSelfJournaling = <ThrowOnError extends
 });
 
 /**
- * Delete a self-journaling entry
+ * Delete a self-journaling entry (patient: own only)
  */
 export const cmsJournalingControllerDeleteSelfJournaling = <ThrowOnError extends boolean = false>(options: Options<CmsJournalingControllerDeleteSelfJournalingData, ThrowOnError>) => (options.client ?? client).delete<CmsJournalingControllerDeleteSelfJournalingResponses, unknown, ThrowOnError>({
     responseType: 'json',
+    security: [{ scheme: 'bearer', type: 'http' }],
     url: '/api/v1/cms/journaling/self/{id}',
     ...options
 });
 
 /**
- * Get a self-journaling entry by ID
+ * Get a self-journaling entry by ID (patient: own only)
  */
 export const cmsJournalingControllerGetSelfJournalingById = <ThrowOnError extends boolean = false>(options: Options<CmsJournalingControllerGetSelfJournalingByIdData, ThrowOnError>) => (options.client ?? client).get<CmsJournalingControllerGetSelfJournalingByIdResponses, unknown, ThrowOnError>({
     responseType: 'json',
+    security: [{ scheme: 'bearer', type: 'http' }],
     url: '/api/v1/cms/journaling/self/{id}',
     ...options
 });
 
 /**
- * Update a self-journaling entry
+ * Update a self-journaling entry (patient: own only)
  */
 export const cmsJournalingControllerUpdateSelfJournaling = <ThrowOnError extends boolean = false>(options: Options<CmsJournalingControllerUpdateSelfJournalingData, ThrowOnError>) => (options.client ?? client).put<CmsJournalingControllerUpdateSelfJournalingResponses, unknown, ThrowOnError>({
     responseType: 'json',
+    security: [{ scheme: 'bearer', type: 'http' }],
     url: '/api/v1/cms/journaling/self/{id}',
     ...options,
     headers: {
@@ -2448,6 +2453,7 @@ export const cmsJournalingControllerUpdateSelfJournaling = <ThrowOnError extends
  */
 export const cmsJournalingControllerGetSubJournalings = <ThrowOnError extends boolean = false>(options?: Options<CmsJournalingControllerGetSubJournalingsData, ThrowOnError>) => (options?.client ?? client).get<CmsJournalingControllerGetSubJournalingsResponses, unknown, ThrowOnError>({
     responseType: 'json',
+    security: [{ scheme: 'bearer', type: 'http' }],
     url: '/api/v1/cms/journaling/sub',
     ...options
 });
@@ -2457,6 +2463,7 @@ export const cmsJournalingControllerGetSubJournalings = <ThrowOnError extends bo
  */
 export const cmsJournalingControllerCreateSubJournalingDirect = <ThrowOnError extends boolean = false>(options?: Options<CmsJournalingControllerCreateSubJournalingDirectData, ThrowOnError>) => (options?.client ?? client).post<CmsJournalingControllerCreateSubJournalingDirectResponses, unknown, ThrowOnError>({
     responseType: 'json',
+    security: [{ scheme: 'bearer', type: 'http' }],
     url: '/api/v1/cms/journaling/sub',
     ...options
 });
@@ -2466,6 +2473,7 @@ export const cmsJournalingControllerCreateSubJournalingDirect = <ThrowOnError ex
  */
 export const cmsJournalingControllerDeleteSubJournaling = <ThrowOnError extends boolean = false>(options: Options<CmsJournalingControllerDeleteSubJournalingData, ThrowOnError>) => (options.client ?? client).delete<CmsJournalingControllerDeleteSubJournalingResponses, unknown, ThrowOnError>({
     responseType: 'json',
+    security: [{ scheme: 'bearer', type: 'http' }],
     url: '/api/v1/cms/journaling/sub/{id}',
     ...options
 });
@@ -2475,6 +2483,7 @@ export const cmsJournalingControllerDeleteSubJournaling = <ThrowOnError extends 
  */
 export const cmsJournalingControllerGetSubJournalingById = <ThrowOnError extends boolean = false>(options: Options<CmsJournalingControllerGetSubJournalingByIdData, ThrowOnError>) => (options.client ?? client).get<CmsJournalingControllerGetSubJournalingByIdResponses, unknown, ThrowOnError>({
     responseType: 'json',
+    security: [{ scheme: 'bearer', type: 'http' }],
     url: '/api/v1/cms/journaling/sub/{id}',
     ...options
 });
@@ -2484,6 +2493,7 @@ export const cmsJournalingControllerGetSubJournalingById = <ThrowOnError extends
  */
 export const cmsJournalingControllerUpdateSubJournaling = <ThrowOnError extends boolean = false>(options: Options<CmsJournalingControllerUpdateSubJournalingData, ThrowOnError>) => (options.client ?? client).put<CmsJournalingControllerUpdateSubJournalingResponses, unknown, ThrowOnError>({
     responseType: 'json',
+    security: [{ scheme: 'bearer', type: 'http' }],
     url: '/api/v1/cms/journaling/sub/{id}',
     ...options,
     headers: {
@@ -2497,6 +2507,7 @@ export const cmsJournalingControllerUpdateSubJournaling = <ThrowOnError extends 
  */
 export const cmsJournalingControllerUnpublishSubJournaling = <ThrowOnError extends boolean = false>(options: Options<CmsJournalingControllerUnpublishSubJournalingData, ThrowOnError>) => (options.client ?? client).post<CmsJournalingControllerUnpublishSubJournalingResponses, unknown, ThrowOnError>({
     responseType: 'json',
+    security: [{ scheme: 'bearer', type: 'http' }],
     url: '/api/v1/cms/journaling/sub/{id}/unpublish',
     ...options
 });
@@ -2506,6 +2517,7 @@ export const cmsJournalingControllerUnpublishSubJournaling = <ThrowOnError exten
  */
 export const cmsJournalingControllerGetJournalings = <ThrowOnError extends boolean = false>(options?: Options<CmsJournalingControllerGetJournalingsData, ThrowOnError>) => (options?.client ?? client).get<CmsJournalingControllerGetJournalingsResponses, unknown, ThrowOnError>({
     responseType: 'json',
+    security: [{ scheme: 'bearer', type: 'http' }],
     url: '/api/v1/cms/journaling',
     ...options
 });
@@ -2515,6 +2527,7 @@ export const cmsJournalingControllerGetJournalings = <ThrowOnError extends boole
  */
 export const cmsJournalingControllerCreateJournaling = <ThrowOnError extends boolean = false>(options: Options<CmsJournalingControllerCreateJournalingData, ThrowOnError>) => (options.client ?? client).post<CmsJournalingControllerCreateJournalingResponses, unknown, ThrowOnError>({
     responseType: 'json',
+    security: [{ scheme: 'bearer', type: 'http' }],
     url: '/api/v1/cms/journaling',
     ...options,
     headers: {
@@ -2528,6 +2541,7 @@ export const cmsJournalingControllerCreateJournaling = <ThrowOnError extends boo
  */
 export const cmsJournalingControllerUnpublishJournaling = <ThrowOnError extends boolean = false>(options: Options<CmsJournalingControllerUnpublishJournalingData, ThrowOnError>) => (options.client ?? client).post<CmsJournalingControllerUnpublishJournalingResponses, unknown, ThrowOnError>({
     responseType: 'json',
+    security: [{ scheme: 'bearer', type: 'http' }],
     url: '/api/v1/cms/journaling/{id}/unpublish',
     ...options
 });
@@ -2537,6 +2551,7 @@ export const cmsJournalingControllerUnpublishJournaling = <ThrowOnError extends 
  */
 export const cmsJournalingControllerCreateSubJournaling = <ThrowOnError extends boolean = false>(options: Options<CmsJournalingControllerCreateSubJournalingData, ThrowOnError>) => (options.client ?? client).post<CmsJournalingControllerCreateSubJournalingResponses, unknown, ThrowOnError>({
     responseType: 'json',
+    security: [{ scheme: 'bearer', type: 'http' }],
     url: '/api/v1/cms/journaling/{journalingId}/sub',
     ...options,
     headers: {
@@ -2550,6 +2565,7 @@ export const cmsJournalingControllerCreateSubJournaling = <ThrowOnError extends 
  */
 export const cmsJournalingControllerDeleteJournaling = <ThrowOnError extends boolean = false>(options: Options<CmsJournalingControllerDeleteJournalingData, ThrowOnError>) => (options.client ?? client).delete<CmsJournalingControllerDeleteJournalingResponses, unknown, ThrowOnError>({
     responseType: 'json',
+    security: [{ scheme: 'bearer', type: 'http' }],
     url: '/api/v1/cms/journaling/{id}',
     ...options
 });
@@ -2559,6 +2575,7 @@ export const cmsJournalingControllerDeleteJournaling = <ThrowOnError extends boo
  */
 export const cmsJournalingControllerGetJournalingById = <ThrowOnError extends boolean = false>(options: Options<CmsJournalingControllerGetJournalingByIdData, ThrowOnError>) => (options.client ?? client).get<CmsJournalingControllerGetJournalingByIdResponses, unknown, ThrowOnError>({
     responseType: 'json',
+    security: [{ scheme: 'bearer', type: 'http' }],
     url: '/api/v1/cms/journaling/{id}',
     ...options
 });
@@ -2568,6 +2585,7 @@ export const cmsJournalingControllerGetJournalingById = <ThrowOnError extends bo
  */
 export const cmsJournalingControllerUpdateJournaling = <ThrowOnError extends boolean = false>(options: Options<CmsJournalingControllerUpdateJournalingData, ThrowOnError>) => (options.client ?? client).put<CmsJournalingControllerUpdateJournalingResponses, unknown, ThrowOnError>({
     responseType: 'json',
+    security: [{ scheme: 'bearer', type: 'http' }],
     url: '/api/v1/cms/journaling/{id}',
     ...options,
     headers: {

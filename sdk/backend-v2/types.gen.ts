@@ -2758,42 +2758,24 @@ export type SubJournalDetailResponseDto = {
     id: string;
     slug: string;
     title: string;
-    description: {
-        [key: string]: unknown;
-    } | null;
-    icon: {
-        [key: string]: unknown;
-    } | null;
-    aiPrompt: {
-        [key: string]: unknown;
-    } | null;
-    recommendedCadence: {
-        [key: string]: unknown;
-    } | null;
-    estimatedMinutes: {
-        [key: string]: unknown;
-    } | null;
+    description: string | null;
+    icon: string | null;
+    aiPrompt: string | null;
+    recommendedCadence: string | null;
+    estimatedMinutes: number | null;
     tags: Array<string>;
     status: 'DRAFT' | 'PUBLISHED';
 };
 
 export type SubJournalEntryPromptDto = {
-    heading: {
-        [key: string]: unknown;
-    } | null;
-    text: {
-        [key: string]: unknown;
-    } | null;
+    heading: string | null;
+    text: string | null;
 };
 
 export type SubJournalEntryDto = {
     id: string;
-    title: {
-        [key: string]: unknown;
-    } | null;
-    entry: {
-        [key: string]: unknown;
-    } | null;
+    title: string | null;
+    entry: string | null;
     prompts: Array<SubJournalEntryPromptDto> | null;
     createdAt: string;
     updatedAt: string;

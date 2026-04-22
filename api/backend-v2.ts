@@ -25,15 +25,19 @@ import type { CreateClientConfig } from "@/sdk/backend-v2/client.gen";
 import { attachAuthInterceptor, attachRefreshInterceptor } from "@/lib/interceptors";
 import { CONFIG } from "@/config/env";
 
-const instance = axios.create();
+const instance = axios.create({ baseURL: CONFIG.BACKEND_URL });
 
 if (typeof window !== "undefined") {
   attachAuthInterceptor(instance);
   attachRefreshInterceptor(instance);
 }
 
+/** Pre-configured axios instance with auth + refresh interceptors. Use this
+ *  instead of axios.create() in any hook that calls the backend directly. */
+export const apiClient = instance;
+
 export const createClientConfig: CreateClientConfig = (config) => ({
   ...config,
   baseURL: CONFIG.BACKEND_URL,
-  axios: instance,   // key must be `axios`, not `instance`
+  axios: instance,
 });
