@@ -2830,6 +2830,14 @@ export type EnrollmentDayDto = {
     summary: string | null;
     moodBefore: number | null;
     moodAfter: number | null;
+    /**
+     * True when this day has been unlocked for the patient
+     */
+    unlocked: boolean;
+    /**
+     * True when this day is currently accessible
+     */
+    available: boolean;
 };
 
 export type PatientJourneyResponseDto = {
@@ -2898,6 +2906,26 @@ export type CompleteDayDto = {
 
 export type CompleteDayResponseDto = {
     enrollment: PatientJourneyResponseDto;
+};
+
+export type DaySummaryResponseDto = {
+    dayNumber: number;
+    /**
+     * True when this is the enrollment's current active day
+     */
+    isCurrentDay: boolean;
+    completed: boolean;
+    completedAt: string | null;
+    summary: string | null;
+    moodBefore: number | null;
+    moodAfter: number | null;
+    tasks: Array<EnrollmentTaskDto>;
+    completedTaskCount: number;
+    totalTaskCount: number;
+    /**
+     * UTC ISO-8601; only set on the current day when it is fully done
+     */
+    nextDayUnlocksAt: string | null;
 };
 
 export type CreateAssessmentLandingPagePointDto = {
@@ -9907,6 +9935,26 @@ export type JourneysControllerTickResponses = {
 };
 
 export type JourneysControllerTickResponse = JourneysControllerTickResponses[keyof JourneysControllerTickResponses];
+
+export type JourneysControllerGetDaySummaryData = {
+    body?: never;
+    path: {
+        id: string;
+    };
+    query: {
+        /**
+         * Day number (1-indexed)
+         */
+        day: number;
+    };
+    url: '/api/v1/me/journeys/enrollments/{id}/day-summary';
+};
+
+export type JourneysControllerGetDaySummaryResponses = {
+    200: DaySummaryResponseDto;
+};
+
+export type JourneysControllerGetDaySummaryResponse = JourneysControllerGetDaySummaryResponses[keyof JourneysControllerGetDaySummaryResponses];
 
 export type JourneysControllerGetByJourneyIdData = {
     body?: never;
