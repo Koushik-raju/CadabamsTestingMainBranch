@@ -27,12 +27,13 @@
  *   BackButton                 — shared back navigation component
  *   getJournalVisual()         — lib/journal-visual.ts — unique gradient+icon per title
  *
- * LAST UPDATED: 2026-04-17 — Fixed timezone bug (toLocalDateStr), added week
- *   navigation arrows, today selected by default with Start Journaling CTA.
+ * LAST UPDATED: 2026-04-22 — CategoryCard now renders backend icon URL as full
+ *   cover image (next/image) instead of emoji span; gradient tile is fallback only.
  */
 'use client';
 
 import { useState, useMemo } from 'react';
+import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { BookOpen, ChevronLeft, ChevronRight, Pencil } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -88,19 +89,27 @@ function CategoryCard({ category, onClick }: { category: JournalingCategory; onC
       onClick={onClick}
       className="flex-shrink-0 w-36 bg-card border border-border rounded-2xl overflow-hidden text-left shadow-sm hover:shadow-lg transition-all duration-300 hover:-translate-y-1 active:scale-[0.97] group"
     >
-      {/* Gradient image area */}
-      <div className={cn(
-        'h-20 bg-gradient-to-br flex items-center justify-center relative overflow-hidden',
-        gradient,
-      )}>
-        <div className="absolute -top-4 -right-4 w-16 h-16 rounded-full bg-white/10" />
-        <div className="absolute -bottom-5 -left-3 w-20 h-20 rounded-full bg-white/5" />
-        {category.icon ? (
-          <span className="text-3xl relative z-10">{category.icon}</span>
-        ) : (
+      {/* Card image area */}
+      {category.icon ? (
+        <div className="h-20 relative overflow-hidden">
+          <Image
+            src={category.icon}
+            alt={category.title}
+            fill
+            className="object-cover"
+            sizes="144px"
+          />
+        </div>
+      ) : (
+        <div className={cn(
+          'h-20 bg-gradient-to-br flex items-center justify-center relative overflow-hidden',
+          gradient,
+        )}>
+          <div className="absolute -top-4 -right-4 w-16 h-16 rounded-full bg-white/10" />
+          <div className="absolute -bottom-5 -left-3 w-20 h-20 rounded-full bg-white/5" />
           <Icon className="w-8 h-8 text-white/90 relative z-10" />
-        )}
-      </div>
+        </div>
+      )}
 
       {/* Content */}
       <div className="p-3">

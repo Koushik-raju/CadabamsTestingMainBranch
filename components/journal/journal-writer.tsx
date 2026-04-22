@@ -35,8 +35,8 @@
  *   emoji-picker-react          — emoji picker UI
  *   Web Speech API              — browser-native mic transcription
  *
- * LAST UPDATED: 2026-04-21 — identity migration: createSelfJournalingEntry payload leadId → crmLeadId;
- *   removed ... header button; prompt heading reduced to text-xl.
+ * LAST UPDATED: 2026-04-22 — Auto-trigger initial prompt for free-flow mode (no slug);
+ *   "Today's Prompt" label now appears only on the first prompt, not all saved prompts.
  */
 'use client';
 
@@ -217,7 +217,10 @@ export function JournalWriter({ slug }: JournalWriterProps) {
   );
 
   useEffect(() => {
-    if (hasAutoTriggered || !aiPromptTemplate || !user || subsLoading) return;
+    if (hasAutoTriggered || !user) return;
+    // For guided mode wait until the sub's aiPromptTemplate is resolved
+    if (slug && (subsLoading || !aiPromptTemplate)) return;
+
     setHasAutoTriggered(true);
     setIsPrompting(true);
 
@@ -228,7 +231,7 @@ export function JournalWriter({ slug }: JournalWriterProps) {
       }
       setIsPrompting(false);
     });
-  }, [aiPromptTemplate, user, hasAutoTriggered, fetchPromptWithContext, subsLoading]);
+  }, [aiPromptTemplate, user, hasAutoTriggered, fetchPromptWithContext, subsLoading, slug]);
 
   // Clean up speech recognition on unmount
   useEffect(() => {
@@ -462,9 +465,11 @@ export function JournalWriter({ slug }: JournalWriterProps) {
           <>
             {savedPrompts.map((prompt, i) => (
               <div key={i} className="mb-8">
-                <p className="text-[11px] font-bold uppercase tracking-widest text-primary mb-2">
-                  Today&apos;s Prompt
-                </p>
+                {i === 0 && (
+                  <p className="text-[11px] font-bold uppercase tracking-widest text-primary mb-2">
+                    Today&apos;s Prompt
+                  </p>
+                )}
                 <h2 className="text-xl font-bold text-foreground leading-snug mb-5">
                   {prompt.heading}
                 </h2>
@@ -476,9 +481,11 @@ export function JournalWriter({ slug }: JournalWriterProps) {
 
             {currentHeading && (
               <div className="mb-2 pt-1">
-                <p className="text-[11px] font-bold uppercase tracking-widest text-primary mb-2">
-                  Today&apos;s Prompt
-                </p>
+                {savedPrompts.length === 0 && (
+                  <p className="text-[11px] font-bold uppercase tracking-widest text-primary mb-2">
+                    Today&apos;s Prompt
+                  </p>
+                )}
                 <h2 className="text-xl font-bold text-foreground leading-snug">
                   {currentHeading}
                 </h2>

@@ -27,16 +27,14 @@
  *   deleteSelfJournalingEntry  — async; void
  *
  * DEPENDENCIES:
- *   axios (cmsApi)     — direct HTTP to CMS endpoints (not SDK)
- *   swr                — caching + revalidation
- *   useAuth            — provides user.lead_id for crmLeadId
+ *   apiClient (api/backend-v2) — shared axios instance with auth + refresh interceptors
+ *   swr                        — caching + revalidation
+ *   useAuth                    — provides user.lead_id for crmLeadId
  *
- * LAST UPDATED: 2026-04-21 — identity migration: GET query param leadId →
- *   crmLeadId; CreateSelfJournalingPayload.leadId → crmLeadId
+ * LAST UPDATED: 2026-04-22 — use shared apiClient (auth interceptor) instead of bare axios.create()
  */
 import useSWR, { mutate as globalMutate } from 'swr';
-import axios from 'axios';
-import { CONFIG } from '@/config/env';
+import { apiClient } from '@/api/backend-v2';
 import { swrConfig } from '@/lib/swr-config';
 import {
   journalingCategoriesKey,
@@ -45,7 +43,7 @@ import {
 } from '@/lib/swr-keys';
 import { useAuth } from '@/hooks/use-auth';
 
-const cmsApi = axios.create({ baseURL: CONFIG.BACKEND_URL });
+const cmsApi = apiClient;
 
 // ---------------------------------------------------------------------------
 // Types

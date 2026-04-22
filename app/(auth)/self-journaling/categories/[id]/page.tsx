@@ -34,11 +34,12 @@
  *   Tabs, TabsList, TabsTrigger, TabsContent — shadcn/ui tabs
  *   getJournalVisual()         — lib/journal-visual.ts — unique gradient+icon per title
  *
- * LAST UPDATED: 2026-04-17 — Added handleStartWriting to fix missing function used by Write Again button.
+ * LAST UPDATED: 2026-04-22 — Sub-journaling grid cards now render backend icon URL as full cover image; gradient tile is fallback only.
  */
 'use client';
 
 import { useMemo } from 'react';
+import Image from 'next/image';
 import { useRouter, useParams } from 'next/navigation';
 import { Pencil, BookOpen, RotateCcw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -214,19 +215,27 @@ export default function CategoryDetailPage() {
                       onClick={() => router.push(`/self-journaling/journal/${encodeURIComponent(sub.slug)}`)}
                       className="bg-card border border-border rounded-2xl overflow-hidden text-left shadow-sm hover:shadow-xl transition-all duration-300 hover:-translate-y-1 active:scale-[0.97] group"
                     >
-                      {/* Gradient image area */}
-                      <div className={cn(
-                        'aspect-[16/10] bg-gradient-to-br flex items-center justify-center relative overflow-hidden',
-                        gradient,
-                      )}>
-                        <div className="absolute -top-4 -right-4 w-20 h-20 rounded-full bg-white/10" />
-                        <div className="absolute -bottom-6 -left-3 w-24 h-24 rounded-full bg-white/5" />
-                        {sub.icon ? (
-                          <span className="text-3xl relative z-10">{sub.icon}</span>
-                        ) : (
+                      {/* Card image area */}
+                      {sub.icon ? (
+                        <div className="aspect-[16/10] relative overflow-hidden">
+                          <Image
+                            src={sub.icon}
+                            alt={sub.title}
+                            fill
+                            className="object-cover"
+                            sizes="(max-width: 768px) 50vw, 200px"
+                          />
+                        </div>
+                      ) : (
+                        <div className={cn(
+                          'aspect-[16/10] bg-gradient-to-br flex items-center justify-center relative overflow-hidden',
+                          gradient,
+                        )}>
+                          <div className="absolute -top-4 -right-4 w-20 h-20 rounded-full bg-white/10" />
+                          <div className="absolute -bottom-6 -left-3 w-24 h-24 rounded-full bg-white/5" />
                           <SubIcon className="w-8 h-8 text-white/90 relative z-10" />
-                        )}
-                      </div>
+                        </div>
+                      )}
 
                       {/* Content */}
                       <div className="p-3">

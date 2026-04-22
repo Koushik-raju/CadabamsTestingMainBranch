@@ -35,11 +35,13 @@
  *   getJournalVisual()            — lib/journal-visual.ts
  *   BackButton                    — components/shared/navigation/back-button.tsx
  *
- * LAST UPDATED: 2026-04-17 — Guard cadence/estimatedMinutes with typeof check (SDK types them as object, not string/number).
+ * LAST UPDATED: 2026-04-22 — SDK types fixed; removed typeof guards; hero tile now
+ *   renders sub.icon as cover image (next/image) with gradient fallback.
  */
 'use client';
 
 import { useState, use } from 'react';
+import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import {
   BookOpen,
@@ -103,17 +105,9 @@ function formatEntryDate(iso: string): string {
 // ---------------------------------------------------------------------------
 
 function EntryRow({ entry }: { entry: SubJournalEntryDto }) {
-  const firstPrompt = Array.isArray(entry.prompts) ? entry.prompts[0] : null;
-  const preview =
-    firstPrompt?.text
-      ? typeof firstPrompt.text === 'string'
-        ? firstPrompt.text
-        : null
-      : typeof entry.entry === 'string'
-        ? entry.entry
-        : null;
-
-  const title = typeof entry.title === 'string' ? entry.title : null;
+  const firstPrompt = entry.prompts?.[0] ?? null;
+  const preview = firstPrompt?.text ?? entry.entry ?? null;
+  const title = entry.title ?? null;
 
   return (
     <div className="py-3 flex items-start gap-3">
@@ -243,7 +237,7 @@ export default function JournalDetailPage({
     );
   }
 
-  const descriptionText = typeof sub.description === 'string' ? sub.description : null;
+  const descriptionText = sub.description;
 
   // ---------------------------------------------------------------------------
   // Subscribed view
@@ -269,27 +263,33 @@ export default function JournalDetailPage({
 
         <div className="flex flex-col gap-5 px-4 mt-2">
 
-          {/* Hero gradient tile */}
-          <div className={cn(
-            'relative w-full h-36 rounded-2xl bg-gradient-to-br overflow-hidden shadow-sm',
-            gradient,
-          )}>
-            <div className="absolute -top-8 -right-8 w-40 h-40 rounded-full bg-white/10" />
-            <div className="absolute -bottom-12 -left-6 w-52 h-52 rounded-full bg-white/5" />
-            <div className="absolute inset-0 flex items-center justify-center">
-              <Icon className="w-12 h-12 text-white/80" />
+          {/* Hero image */}
+          {sub.icon ? (
+            <div className="relative w-full h-36 rounded-2xl overflow-hidden shadow-sm">
+              <Image src={sub.icon} alt={sub.title} fill className="object-cover" sizes="100vw" />
             </div>
-          </div>
+          ) : (
+            <div className={cn(
+              'relative w-full h-36 rounded-2xl bg-gradient-to-br overflow-hidden shadow-sm',
+              gradient,
+            )}>
+              <div className="absolute -top-8 -right-8 w-40 h-40 rounded-full bg-white/10" />
+              <div className="absolute -bottom-12 -left-6 w-52 h-52 rounded-full bg-white/5" />
+              <div className="absolute inset-0 flex items-center justify-center">
+                <Icon className="w-12 h-12 text-white/80" />
+              </div>
+            </div>
+          )}
 
           {/* Cadence + tags */}
           <div className="flex flex-wrap gap-2">
-            {typeof sub.recommendedCadence === 'string' && sub.recommendedCadence && (
+            {sub.recommendedCadence && (
               <div className="flex items-center gap-1.5 bg-primary/10 text-primary rounded-full px-3 py-1">
                 <CalendarDays className="w-3.5 h-3.5" />
                 <span className="text-xs font-medium">{sub.recommendedCadence}</span>
               </div>
             )}
-            {typeof sub.estimatedMinutes === 'number' && sub.estimatedMinutes > 0 && (
+            {sub.estimatedMinutes != null && sub.estimatedMinutes > 0 && (
               <div className="flex items-center gap-1.5 bg-muted text-muted-foreground rounded-full px-3 py-1">
                 <Clock className="w-3.5 h-3.5" />
                 <span className="text-xs font-medium">~{sub.estimatedMinutes} min</span>
@@ -431,27 +431,33 @@ export default function JournalDetailPage({
 
       <div className="flex flex-col gap-5 px-4 mt-2">
 
-        {/* Hero gradient tile */}
-        <div className={cn(
-          'relative w-full h-48 rounded-2xl bg-gradient-to-br overflow-hidden shadow-sm',
-          gradient,
-        )}>
-          <div className="absolute -top-8 -right-8 w-40 h-40 rounded-full bg-white/10" />
-          <div className="absolute -bottom-12 -left-6 w-52 h-52 rounded-full bg-white/5" />
-          <div className="absolute inset-0 flex items-center justify-center">
-            <Icon className="w-16 h-16 text-white/80" />
+        {/* Hero image */}
+        {sub.icon ? (
+          <div className="relative w-full h-48 rounded-2xl overflow-hidden shadow-sm">
+            <Image src={sub.icon} alt={sub.title} fill className="object-cover" sizes="100vw" />
           </div>
-        </div>
+        ) : (
+          <div className={cn(
+            'relative w-full h-48 rounded-2xl bg-gradient-to-br overflow-hidden shadow-sm',
+            gradient,
+          )}>
+            <div className="absolute -top-8 -right-8 w-40 h-40 rounded-full bg-white/10" />
+            <div className="absolute -bottom-12 -left-6 w-52 h-52 rounded-full bg-white/5" />
+            <div className="absolute inset-0 flex items-center justify-center">
+              <Icon className="w-16 h-16 text-white/80" />
+            </div>
+          </div>
+        )}
 
         {/* Cadence + time badges */}
         <div className="flex flex-wrap gap-2">
-          {typeof sub.recommendedCadence === 'string' && sub.recommendedCadence && (
+          {sub.recommendedCadence && (
             <div className="flex items-center gap-1.5 bg-primary/10 text-primary rounded-full px-3 py-1">
               <CalendarDays className="w-3.5 h-3.5" />
               <span className="text-xs font-medium">{sub.recommendedCadence}</span>
             </div>
           )}
-          {typeof sub.estimatedMinutes === 'number' && sub.estimatedMinutes > 0 && (
+          {sub.estimatedMinutes != null && sub.estimatedMinutes > 0 && (
             <div className="flex items-center gap-1.5 bg-muted text-muted-foreground rounded-full px-3 py-1">
               <Clock className="w-3.5 h-3.5" />
               <span className="text-xs font-medium">~{sub.estimatedMinutes} min</span>
