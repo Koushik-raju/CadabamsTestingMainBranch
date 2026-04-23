@@ -20,21 +20,20 @@
  *
  * DEPENDENCIES:
  *   useSelfJournalingEntries() — SWR hook (hooks/use-journaling.ts)
- *   BackButton                 — shared back navigation component
+ *   PageHeader                 — shared navigation header component
  *
- * LAST UPDATED: 2026-04-17 — Design compliance: BackButton, grouped Card+Separator
- *   layout, pt-5 header, pb-24 root, empty state with icon.
+ * LAST UPDATED: 2026-04-23 — Replaced custom header div with shared PageHeader.
  */
 'use client';
 
 import { useMemo } from 'react';
 import { useRouter, useParams } from 'next/navigation';
-import { Calendar, BookOpen } from 'lucide-react';
+import { BookOpen } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Card, CardContent } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
-import { BackButton } from '@/components/shared/navigation/back-button';
+import { PageHeader } from '@/components/shared/navigation/page-header';
 import { useSelfJournalingEntries } from '@/hooks/use-journaling';
 
 export default function JournalDatePage() {
@@ -67,16 +66,7 @@ export default function JournalDatePage() {
 
   return (
     <div className="flex flex-col min-h-screen bg-background pb-24">
-      {/* Header */}
-      <div className="flex items-center gap-2 px-4 pt-5 pb-3 border-b border-border">
-        <BackButton fallback="/self-journaling" />
-        <div className="flex-1 flex items-center gap-1.5">
-          <Calendar className="w-4 h-4 text-muted-foreground flex-shrink-0" />
-          <h1 className="text-lg font-bold text-foreground">
-            {formattedDate}
-          </h1>
-        </div>
-      </div>
+      <PageHeader title={formattedDate} fallback="/self-journaling" />
 
       <div className="flex-1 px-4 pt-4 flex flex-col gap-4">
         {isLoading ? (

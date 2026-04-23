@@ -1,6 +1,7 @@
 import type { AxiosInstance } from 'axios';
 import { getAccessToken } from '@/lib/cookies';
-import { refreshPatientToken } from './auth';
+/* refreshPatientToken is imported lazily inside the 401 handler to break the
+   circular dep: api/backend-v2 → interceptors → auth → sdk → api/backend-v2 */
 
 /** Attaches the access token as a Bearer header on every outgoing request. */
 export function attachAuthInterceptor(axiosInstance: AxiosInstance) {
@@ -25,6 +26,7 @@ export function attachRefreshInterceptor(axiosInstance: AxiosInstance) {
         original._retry = true;
 
         try {
+          const { refreshPatientToken } = await import('./auth');
           const tokenData = await refreshPatientToken();
           original.headers = {
             ...original.headers,

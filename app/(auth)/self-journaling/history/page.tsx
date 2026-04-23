@@ -21,26 +21,25 @@
  *
  * DEPENDENCIES:
  *   useSelfJournalingEntries() — SWR hook (hooks/use-journaling.ts)
- *   BackButton                 — shared back navigation component
+ *   PageHeader                 — shared navigation header component
  *   Input                      — shadcn/ui text input
  *
- * LAST UPDATED: 2026-04-17 — Design compliance: BackButton, grouped Card+Separator
- *   rows, shadcn Input, gradient icon tiles, pt-5 header, pb-24 root, empty state icon.
+ * LAST UPDATED: 2026-04-23 — Replaced custom header div with shared PageHeader; entry count passed via right slot.
  */
-'use client';
+"use client";
 
-import { useState, useMemo, Suspense } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
-import { Search, X, BookOpen } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Skeleton } from '@/components/ui/skeleton';
-import { Card, CardContent } from '@/components/ui/card';
-import { Separator } from '@/components/ui/separator';
-import { Input } from '@/components/ui/input';
-import { BackButton } from '@/components/shared/navigation/back-button';
-import { useSelfJournalingEntries } from '@/hooks/use-journaling';
-import type { SelfJournalingEntry } from '@/hooks/use-journaling';
-import { cn } from '@/lib/utils';
+import { useState, useMemo, Suspense } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { Search, X, BookOpen } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Card, CardContent } from "@/components/ui/card";
+import { Separator } from "@/components/ui/separator";
+import { Input } from "@/components/ui/input";
+import { PageHeader } from "@/components/shared/navigation/page-header";
+import { useSelfJournalingEntries } from "@/hooks/use-journaling";
+import type { SelfJournalingEntry } from "@/hooks/use-journaling";
+import { cn } from "@/lib/utils";
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -55,16 +54,16 @@ interface GroupedEntries {
 function groupByDate(entries: SelfJournalingEntry[]): GroupedEntries[] {
   const today = new Date();
   today.setHours(0, 0, 0, 0);
-  const todayStr = today.toISOString().split('T')[0];
+  const todayStr = today.toISOString().split("T")[0];
   const yesterday = new Date(today);
   yesterday.setDate(yesterday.getDate() - 1);
-  const yesterdayStr = yesterday.toISOString().split('T')[0];
+  const yesterdayStr = yesterday.toISOString().split("T")[0];
 
   const map = new Map<string, SelfJournalingEntry[]>();
   for (const entry of entries) {
     const d = new Date(entry.createdAt);
     if (isNaN(d.getTime())) continue;
-    const dateStr = d.toISOString().split('T')[0];
+    const dateStr = d.toISOString().split("T")[0];
     const arr = map.get(dateStr) ?? [];
     arr.push(entry);
     map.set(dateStr, arr);
@@ -74,11 +73,15 @@ function groupByDate(entries: SelfJournalingEntry[]): GroupedEntries[] {
     .sort(([a], [b]) => (a > b ? -1 : 1))
     .map(([dateStr, items]) => {
       let label: string;
-      if (dateStr === todayStr) label = 'Today';
-      else if (dateStr === yesterdayStr) label = 'Yesterday';
-      else label = new Date(dateStr + 'T00:00:00').toLocaleDateString('en-US', {
-        weekday: 'short', month: 'long', day: 'numeric', year: 'numeric',
-      });
+      if (dateStr === todayStr) label = "Today";
+      else if (dateStr === yesterdayStr) label = "Yesterday";
+      else
+        label = new Date(dateStr + "T00:00:00").toLocaleDateString("en-US", {
+          weekday: "short",
+          month: "long",
+          day: "numeric",
+          year: "numeric",
+        });
       return { label, dateStr, entries: items };
     });
 }
@@ -87,7 +90,14 @@ function matchesSearch(entry: SelfJournalingEntry, query: string): boolean {
   const q = query.toLowerCase();
   if (entry.title?.toLowerCase().includes(q)) return true;
   if (entry.entry?.toLowerCase().includes(q)) return true;
-  if (entry.prompts?.some((p) => p.heading?.toLowerCase().includes(q) || p.text?.toLowerCase().includes(q))) return true;
+  if (
+    entry.prompts?.some(
+      (p) =>
+        p.heading?.toLowerCase().includes(q) ||
+        p.text?.toLowerCase().includes(q),
+    )
+  )
+    return true;
   return false;
 }
 
@@ -103,7 +113,10 @@ function EntryDetailModal({
   onClose: () => void;
 }) {
   return (
-    <div className="fixed inset-0 z-50 bg-foreground/50 flex items-end justify-center" onClick={onClose}>
+    <div
+      className="fixed inset-0 z-50 bg-foreground/50 flex items-end justify-center"
+      onClick={onClose}
+    >
       <div
         className="bg-background w-full max-w-lg rounded-t-3xl max-h-[90vh] overflow-y-auto animate-in slide-in-from-bottom duration-300"
         onClick={(e) => e.stopPropagation()}
@@ -113,24 +126,29 @@ function EntryDetailModal({
           <div className="flex items-start justify-between">
             <div>
               <h2 className="text-lg font-bold text-foreground">
-                {entry.title ?? 'Journal Entry'}
+                {entry.title ?? "Journal Entry"}
               </h2>
               <p className="text-xs text-muted-foreground mt-0.5">
-                {new Date(entry.createdAt).toLocaleDateString('en-US', {
-                  weekday: 'long',
-                  month: 'long',
-                  day: 'numeric',
-                  year: 'numeric',
-                })}{' '}
-                at{' '}
-                {new Date(entry.createdAt).toLocaleTimeString('en-US', {
-                  hour: 'numeric',
-                  minute: '2-digit',
+                {new Date(entry.createdAt).toLocaleDateString("en-US", {
+                  weekday: "long",
+                  month: "long",
+                  day: "numeric",
+                  year: "numeric",
+                })}{" "}
+                at{" "}
+                {new Date(entry.createdAt).toLocaleTimeString("en-US", {
+                  hour: "numeric",
+                  minute: "2-digit",
                   hour12: true,
                 })}
               </p>
             </div>
-            <Button variant="ghost" size="icon" className="rounded-full" onClick={onClose}>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="rounded-full"
+              onClick={onClose}
+            >
               <X className="w-5 h-5" />
             </Button>
           </div>
@@ -140,11 +158,16 @@ function EntryDetailModal({
         <div className="px-5 py-5 flex flex-col gap-5">
           {entry.prompts && entry.prompts.length > 0 ? (
             entry.prompts.map((prompt, idx) => (
-              <div key={idx} className="bg-card border border-border rounded-xl p-4">
+              <div
+                key={idx}
+                className="bg-card border border-border rounded-xl p-4"
+              >
                 {prompt.heading && (
                   <div className="flex items-start gap-2 mb-2">
                     <div className="w-[3px] h-6 bg-primary rounded-full flex-shrink-0 mt-0.5" />
-                    <p className="text-sm font-bold text-primary">{prompt.heading}</p>
+                    <p className="text-sm font-bold text-primary">
+                      {prompt.heading}
+                    </p>
                   </div>
                 )}
                 {prompt.text && (
@@ -163,10 +186,14 @@ function EntryDetailModal({
           {(entry.emotion || entry.stressLevel) && (
             <div className="flex gap-3 pt-2 border-t border-border">
               {entry.emotion && (
-                <span className="text-xs text-muted-foreground">Mood: {entry.emotion}/5</span>
+                <span className="text-xs text-muted-foreground">
+                  Mood: {entry.emotion}/5
+                </span>
               )}
               {entry.stressLevel && (
-                <span className="text-xs text-muted-foreground">Stress: {entry.stressLevel}/5</span>
+                <span className="text-xs text-muted-foreground">
+                  Stress: {entry.stressLevel}/5
+                </span>
               )}
             </div>
           )}
@@ -174,7 +201,11 @@ function EntryDetailModal({
 
         {/* Footer */}
         <div className="px-5 pb-8">
-          <Button variant="outline" className="w-full rounded-full" onClick={onClose}>
+          <Button
+            variant="outline"
+            className="w-full rounded-full"
+            onClick={onClose}
+          >
             Close Entry
           </Button>
         </div>
@@ -190,11 +221,12 @@ function EntryDetailModal({
 function HistoryContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const subJournalId = searchParams.get('subJournalId');
+  const subJournalId = searchParams.get("subJournalId");
 
   const { entries: allEntries, isLoading } = useSelfJournalingEntries(300);
-  const [search, setSearch] = useState('');
-  const [selectedEntry, setSelectedEntry] = useState<SelfJournalingEntry | null>(null);
+  const [search, setSearch] = useState("");
+  const [selectedEntry, setSelectedEntry] =
+    useState<SelfJournalingEntry | null>(null);
 
   const filteredEntries = useMemo(() => {
     let filtered = allEntries;
@@ -207,20 +239,24 @@ function HistoryContent() {
     return filtered;
   }, [allEntries, subJournalId, search]);
 
-  const grouped = useMemo(() => groupByDate(filteredEntries), [filteredEntries]);
+  const grouped = useMemo(
+    () => groupByDate(filteredEntries),
+    [filteredEntries],
+  );
 
   return (
     <div className="flex flex-col min-h-screen bg-background pb-24">
-      {/* Header */}
-      <div className="flex items-center gap-2 px-4 pt-5 pb-3 border-b border-border">
-        <BackButton fallback="/self-journaling" />
-        <div className="flex-1">
-          <h1 className="text-lg font-bold text-foreground">Journal History</h1>
-        </div>
-        <span className="text-xs text-muted-foreground">
-          {filteredEntries.length} {filteredEntries.length === 1 ? 'entry' : 'entries'}
-        </span>
-      </div>
+      <PageHeader
+        title="Journal History"
+        fallback="/self-journaling"
+        hardBack="/self-journaling"
+        right={
+          <span className="text-xs text-muted-foreground">
+            {filteredEntries.length}{" "}
+            {filteredEntries.length === 1 ? "entry" : "entries"}
+          </span>
+        }
+      />
 
       {/* Search bar */}
       <div className="px-4 py-3">
@@ -235,7 +271,7 @@ function HistoryContent() {
           />
           {search && (
             <button
-              onClick={() => setSearch('')}
+              onClick={() => setSearch("")}
               className="absolute right-3 top-1/2 -translate-y-1/2"
             >
               <X className="w-4 h-4 text-muted-foreground" />
@@ -271,19 +307,19 @@ function HistoryContent() {
             </div>
             <div>
               <p className="font-semibold text-foreground">
-                {search ? 'No matching entries' : 'No journal entries yet'}
+                {search ? "No matching entries" : "No journal entries yet"}
               </p>
               <p className="text-sm text-muted-foreground mt-1 max-w-xs">
                 {search
-                  ? 'Try a different search term.'
-                  : 'Start writing to build your reflection history.'}
+                  ? "Try a different search term."
+                  : "Start writing to build your reflection history."}
               </p>
             </div>
             {!search && (
               <Button
                 variant="outline"
                 className="rounded-xl"
-                onClick={() => router.push('/self-journaling/new')}
+                onClick={() => router.push("/self-journaling/new")}
               >
                 Write now
               </Button>
@@ -298,15 +334,20 @@ function HistoryContent() {
               <Card className="p-0">
                 <CardContent className="py-0 px-3">
                   {group.entries.map((entry, i) => {
-                    const time = new Date(entry.createdAt).toLocaleTimeString('en-US', {
-                      hour: 'numeric',
-                      minute: '2-digit',
-                      hour12: true,
-                    });
+                    const time = new Date(entry.createdAt).toLocaleTimeString(
+                      "en-US",
+                      {
+                        hour: "numeric",
+                        minute: "2-digit",
+                        hour12: true,
+                      },
+                    );
                     const preview =
                       entry.prompts && entry.prompts.length > 0
-                        ? entry.prompts[0].text ?? entry.prompts[0].heading ?? ''
-                        : entry.entry ?? '';
+                        ? (entry.prompts[0].text ??
+                          entry.prompts[0].heading ??
+                          "")
+                        : (entry.entry ?? "");
                     const promptCount = entry.prompts?.length ?? 0;
 
                     return (
@@ -316,10 +357,12 @@ function HistoryContent() {
                           className="py-3 flex items-start gap-3 w-full text-left transition-colors hover:bg-muted/50 active:bg-muted"
                         >
                           {/* Gradient icon tile */}
-                          <div className={cn(
-                            'relative w-11 h-11 rounded-2xl bg-gradient-to-br from-violet-500 to-purple-600',
-                            'flex-shrink-0 flex items-center justify-center overflow-hidden shadow-sm',
-                          )}>
+                          <div
+                            className={cn(
+                              "relative w-11 h-11 rounded-2xl bg-gradient-to-br from-violet-500 to-purple-600",
+                              "flex-shrink-0 flex items-center justify-center overflow-hidden shadow-sm",
+                            )}
+                          >
                             <div className="absolute -top-2 -right-2 w-7 h-7 rounded-full bg-white/10" />
                             <BookOpen className="w-5 h-5 text-white" />
                           </div>
@@ -336,7 +379,9 @@ function HistoryContent() {
                           </div>
 
                           <div className="flex-shrink-0 flex flex-col items-end gap-1">
-                            <span className="text-xs text-muted-foreground">{time}</span>
+                            <span className="text-xs text-muted-foreground">
+                              {time}
+                            </span>
                             {promptCount > 0 && (
                               <span className="bg-primary/10 text-primary text-[10px] font-bold px-2 py-0.5 rounded-full">
                                 {promptCount}p

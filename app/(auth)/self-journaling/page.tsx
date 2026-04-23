@@ -328,7 +328,7 @@ export default function JournalHomePage() {
       <PageHeader
         title="Journal"
         subtitle="Your safe space for thoughts and feelings."
-        fallback="/home"
+        hardBack="/home"
       />
 
       <div className="flex flex-col gap-6 mt-4">

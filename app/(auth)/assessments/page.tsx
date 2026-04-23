@@ -47,7 +47,7 @@
  *   useFilteredAssessments()    — SWR hook for server-side search + category filtering
  *   getDynamicCategories()      — derives category list from loaded assessments
  *   useAuth()                   — provides authenticated user (lead_id)
- *   BackButton                  — shared navigation back button
+ *   PageHeader                  — shared navigation header component
  *   AssessmentGridCard / RecommendedAssessmentCard — CMS assessment card components
  *   AssignmentsList             — renders list of completed assessments
  *   BrowseSkeleton / AssignmentsSkeleton — loading skeletons
@@ -88,7 +88,7 @@ import {
 import { AssessmentEmptyState } from '@/components/assessment/assessment-empty-state';
 import { AssignmentsList } from '@/components/assessment/assignments-list';
 import { categoryMap } from '@/components/assessment/assessment-category';
-import { BackButton } from '@/components/shared/navigation/back-button';
+import { PageHeader } from '@/components/shared/navigation/page-header';
 
 type SortBy = 'default' | 'alpha' | 'quick';
 type Duration = 'all' | 'short' | 'medium' | 'long';
@@ -266,10 +266,7 @@ export default function AssessmentsPage() {
       >
         {/* Header */}
         <header>
-          <div className="flex items-center gap-2 px-4 pt-5 pb-3">
-            <BackButton fallback="/home" />
-            <h1 className="flex-1 text-lg font-bold text-foreground">Assessments</h1>
-          </div>
+          <PageHeader title="Assessments" hardBack="/home" />
           <div className="px-4 pb-3">
             <TabsList className="grid w-full grid-cols-2">
               <TabsTrigger value="browse">Explore</TabsTrigger>

@@ -30,11 +30,11 @@
  * DEPENDENCIES:
  *   useJournalingCategories()  — SWR hook (hooks/use-journaling.ts)
  *   useSelfJournalingEntries() — SWR hook (hooks/use-journaling.ts)
- *   BackButton                 — shared back navigation component
+ *   PageHeader                 — shared navigation header component
  *   Tabs, TabsList, TabsTrigger, TabsContent — shadcn/ui tabs
  *   getJournalVisual()         — lib/journal-visual.ts — unique gradient+icon per title
  *
- * LAST UPDATED: 2026-04-22 — Sub-journaling grid cards now render backend icon URL as full cover image; gradient tile is fallback only.
+ * LAST UPDATED: 2026-04-23 — Replaced custom header divs with shared PageHeader.
  */
 'use client';
 
@@ -47,7 +47,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Card, CardContent } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { BackButton } from '@/components/shared/navigation/back-button';
+import { PageHeader } from '@/components/shared/navigation/page-header';
 import { useJournalingCategories, useSelfJournalingEntries } from '@/hooks/use-journaling';
 import type { SelfJournalingEntry } from '@/hooks/use-journaling';
 import { cn } from '@/lib/utils';
@@ -133,10 +133,7 @@ export default function CategoryDetailPage() {
   if (catLoading) {
     return (
       <div className="flex flex-col min-h-screen bg-background pb-24">
-        <div className="flex items-center gap-2 px-4 pt-5 pb-3">
-          <BackButton fallback="/self-journaling" />
-          <Skeleton className="h-6 w-40" />
-        </div>
+        <PageHeader title="" hardBack="/self-journaling" />
         <div className="px-4 mt-2">
           <Skeleton className="h-10 w-full rounded-full mb-4" />
           <div className="grid grid-cols-2 gap-3">
@@ -166,18 +163,11 @@ export default function CategoryDetailPage() {
 
   return (
     <div className="flex flex-col min-h-screen bg-background pb-24">
-      {/* Header */}
-      <div className="flex items-center gap-2 px-4 pt-5 pb-3">
-        <BackButton fallback="/self-journaling" />
-        <div className="flex-1">
-          <h1 className="text-lg font-bold text-foreground">{category.title}</h1>
-          {category.description && (
-            <p className="text-xs text-muted-foreground line-clamp-1">
-              {category.description}
-            </p>
-          )}
-        </div>
-      </div>
+      <PageHeader
+        title={category.title}
+        subtitle={category.description ?? undefined}
+        hardBack="/self-journaling"
+      />
 
       {/* Tabs */}
       <div className="px-4 pb-4">

@@ -30,12 +30,12 @@
  * DEPENDENCIES:
  *   useAssessmentById  — SWR hook wrapping the assessment detail SDK call
  *   next/navigation    — `useRouter` for programmatic navigation
- *   BackButton         — shared navigation component
+ *   PageHeader         — shared navigation header component
  *   shadcn/ui          — Button, Skeleton
  *   lucide-react       — Clock, ListChecks, ChevronRight, CheckCircle2,
  *                        ShieldCheck, AlertCircle
  *
- * LAST UPDATED: 2026-04-21 — add file header
+ * LAST UPDATED: 2026-04-23 — Replaced BackButton header with PageHeader; hardBack="/assessments"
  */
 'use client';
 
@@ -43,7 +43,7 @@ import { use, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
-import { BackButton } from '@/components/shared/navigation/back-button';
+import { PageHeader } from '@/components/shared/navigation/page-header';
 import {
   Clock,
   ListChecks,
@@ -83,9 +83,7 @@ export default function AssessmentDetailsPage({
   if (isLoading) {
     return (
       <div className="min-h-screen bg-background flex flex-col">
-        <div className="flex items-center gap-2 px-4 py-3 border-b border-border">
-          <Skeleton className="h-9 w-9 rounded-full" />
-        </div>
+        <PageHeader title="" hardBack="/assessments" />
         <div className="flex-1 overflow-y-auto">
           <Skeleton className="h-56 w-full" />
           <div className="p-5 space-y-4">
@@ -119,10 +117,7 @@ export default function AssessmentDetailsPage({
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
-      {/* Header */}
-      <div className="flex items-center px-2 py-2 border-b border-border bg-background">
-        <BackButton fallback="/assessments" />
-      </div>
+      <PageHeader title="" hardBack="/assessments" />
 
       {/* Scrollable content */}
       <div className="flex-1 overflow-y-auto pb-32">
