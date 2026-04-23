@@ -29,8 +29,7 @@
  *   subscribeToJourney      — mutation to enroll user
  *   BlocksRenderer          — @strapi/blocks-react-renderer for rich-text
  *
- * LAST UPDATED: 2026-04-22 — premium journeys route Subscribe CTA to package
- *   page, golden button styling, stronger 2-column layout
+ * LAST UPDATED: 2026-04-23 — migrated sticky header to PageHeader
  */
 
 "use client";
@@ -40,7 +39,7 @@ import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
-import { BackButton } from "@/components/shared/navigation/back-button";
+import { PageHeader } from "@/components/shared/navigation/page-header";
 import {
   CheckCircle2,
   Clock,
@@ -191,10 +190,11 @@ function JourneyLandingContent({ params }: PageProps) {
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
-      {/* Header — sticky so it stays accessible while scrolling */}
-      <div className="sticky top-0 z-20 flex items-center px-2 py-2 border-b border-border bg-background/90 backdrop-blur-sm">
-        <BackButton fallback="/journeys" />
-      </div>
+      <PageHeader
+        title=""
+        fallback="/journeys"
+        className="sticky top-0 z-20 border-b border-border bg-background/90 backdrop-blur-sm px-4 py-2"
+      />
 
       {/* Scrollable content */}
       <div className="flex-1 overflow-y-auto pb-32">

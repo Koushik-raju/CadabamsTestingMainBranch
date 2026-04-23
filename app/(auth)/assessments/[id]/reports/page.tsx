@@ -21,10 +21,10 @@
  *
  * DEPENDENCIES:
  *   useAssessmentReports   — wraps patientAssessmentsAnalysisControllerList + list-mine
- *   BackButton             — standard navigation affordance
+ *   PageHeader             — shared navigation header
  *   react-markdown         — renders analysis.result markdown
  *
- * LAST UPDATED: 2026-04-21 — use scorePercentage from DTO; narrow severity to enum
+ * LAST UPDATED: 2026-04-23 — migrated custom header div to PageHeader
  */
 'use client';
 
@@ -34,7 +34,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
-import { BackButton } from '@/components/shared/navigation/back-button';
+import { PageHeader } from '@/components/shared/navigation/page-header';
 import { useAssessmentReports, type AssessmentReport } from '@/hooks/assessments/use-assessment-reports';
 import { AlertCircle, ChevronDown, ChevronUp, FileText, Sparkles } from 'lucide-react';
 
@@ -68,10 +68,7 @@ export default function AssessmentReportsPage({
 
   return (
     <div className="min-h-screen bg-background pb-24">
-      <div className="flex items-center gap-2 px-4 pt-5 pb-3">
-        <BackButton fallback={`/assessments/${assessmentId}/details`} />
-        <h1 className="flex-1 text-lg font-bold text-foreground">Previous Reports</h1>
-      </div>
+      <PageHeader title="Previous Reports" fallback={`/assessments/${assessmentId}/details`} />
 
       <div className="px-4">
         {isLoading && <ReportsSkeleton />}

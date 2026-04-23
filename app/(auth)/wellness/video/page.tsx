@@ -1,10 +1,34 @@
+/**
+ * FILE: app/(auth)/wellness/video/page.tsx
+ *
+ * PURPOSE:
+ *   Browse page for wellness videos. Shows a featured video hero card and a
+ *   filtered grid of all available videos with category chip filter and search.
+ *
+ * LOGIC OVERVIEW:
+ *   1. Fetches videos via useVideos() (SWR-backed Strapi CMS).
+ *   2. Client-side filters by selectedCategory and searchQuery.
+ *   3. First filtered result becomes the featured hero card; the rest go in a grid.
+ *   4. Tapping a video navigates to /wellness/video/[slug].
+ *
+ * KEY VARIABLES / PROPS / EXPORTS:
+ *   filteredVideos   — videos after category + search filter
+ *   selectedCategory — active category chip
+ *   searchQuery      — text search input
+ *
+ * DEPENDENCIES:
+ *   useVideos — SWR hook backed by Strapi /api/videos
+ *   PageHeader — shared navigation header
+ *
+ * LAST UPDATED: 2026-04-23 — migrated sticky header to PageHeader; added file header
+ */
 'use client';
 
 import { useState, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import { Search, Play, RefreshCw } from 'lucide-react';
-import { BackButton } from '@/components/shared/navigation/back-button';
+import { PageHeader } from '@/components/shared/navigation/page-header';
 import { CategoryFilter } from '@/components/wellness/category-filter';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
@@ -167,22 +191,12 @@ export default function VideoPage() {
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
-      {/* Sticky header */}
-      <div className="sticky top-0 z-10 bg-background border-b border-border px-4 py-3">
-        <div className="flex items-center gap-3">
-          <BackButton fallback="/home" />
-          <div className="flex-1 min-w-0">
-            <h1 className="font-bold text-foreground text-base">
-              {selectedCategory !== 'All' ? selectedCategory : 'Videos'}
-            </h1>
-            <p className="text-muted-foreground text-xs">
-              {isLoading
-                ? 'Loading…'
-                : isFiltered
-                ? `${filteredVideos.length} videos`
-                : `${videos.length} videos available`}
-            </p>
-          </div>
+      <PageHeader
+        title={selectedCategory !== 'All' ? selectedCategory : 'Videos'}
+        subtitle={isLoading ? 'Loading…' : isFiltered ? `${filteredVideos.length} videos` : `${videos.length} videos available`}
+        fallback="/home"
+        className="sticky top-0 z-10 bg-background border-b border-border px-4 py-3"
+        right={
           <div className="relative">
             <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
             <Input
@@ -193,8 +207,8 @@ export default function VideoPage() {
               aria-label="Search videos"
             />
           </div>
-        </div>
-      </div>
+        }
+      />
 
       {/* Banner */}
       {!isFiltered && !isLoading && (

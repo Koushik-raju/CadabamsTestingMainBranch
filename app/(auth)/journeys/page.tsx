@@ -31,7 +31,7 @@
  *   JourneyDiscoveryCard    — components/journey/journey-discovery-card.tsx
  *   CategoryChips           — components/journey/category-chips.tsx
  *
- * LAST UPDATED: 2026-04-20 — removed Tabs layout; single-view page
+ * LAST UPDATED: 2026-04-23 — migrated custom header div to PageHeader
  */
 'use client';
 
@@ -52,7 +52,7 @@ import { useEnrolledJourneys } from '@/hooks/journeys/use-journey-detail';
 import { useAuth } from '@/hooks/shared/auth/use-auth';
 import { extractJourneyName, extractJourneyDescription } from '@/types/journey';
 import { fixImageUrl } from '@/lib/utils';
-import { BackButton } from '@/components/shared/navigation/back-button';
+import { PageHeader } from '@/components/shared/navigation/page-header';
 
 // Firebase-based assessment category lookup removed — now always returns null
 // until a backend-v2 equivalent is implemented
@@ -177,12 +177,7 @@ function JourneysInner() {
 
   return (
     <div className="flex flex-col min-h-screen bg-background">
-      <header>
-        <div className="flex items-center gap-2 px-4 pt-5 pb-3">
-          <BackButton fallback="/" />
-          <h1 className="flex-1 text-lg font-bold text-foreground">Journeys</h1>
-        </div>
-      </header>
+      <PageHeader title="Journeys" fallback="/" />
 
       <main className="flex-1 pb-24">
         <div className="px-4 mb-4">

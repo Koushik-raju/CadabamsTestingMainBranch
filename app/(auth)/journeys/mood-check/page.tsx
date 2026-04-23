@@ -8,7 +8,7 @@
  *
  * LOGIC OVERVIEW:
  *   - Wraps content in a Suspense boundary with a shaped skeleton fallback.
- *   - Header uses the shared BackButton + flat title (no gradient banner).
+ *   - Header uses the shared PageHeader component.
  *   - On form submit, flips isSubmitting, routes back, then resets.
  *
  * KEY VARIABLES / PROPS / EXPORTS:
@@ -17,15 +17,15 @@
  *   MoodCheckPage    — default export, the page component
  *
  * DEPENDENCIES:
- *   next/navigation (useRouter), BackButton, MoodCheckForm, Skeleton
+ *   next/navigation (useRouter), PageHeader, MoodCheckForm, Skeleton
  *
- * LAST UPDATED: 2026-04-20 — align layout with DESIGN_GUIDELINES (flat header, pb-24, section spacing).
+ * LAST UPDATED: 2026-04-23 — migrated custom header div to PageHeader
  */
 'use client';
 
 import { Suspense, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { BackButton } from '@/components/shared/navigation/back-button';
+import { PageHeader } from '@/components/shared/navigation/page-header';
 import { MoodCheckForm } from '@/components/journey/mood-check-form';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useJourneyTaskContinuation } from '@/hooks/journeys/use-journey-task-continuation';
@@ -71,10 +71,7 @@ function MoodCheckContent() {
 
   return (
     <div className="min-h-screen bg-background pb-24">
-      <div className="flex items-center gap-2 px-4 pt-5 pb-3">
-        <BackButton fallback="/journeys" />
-        <h1 className="flex-1 text-lg font-bold text-foreground">Mood Check-In</h1>
-      </div>
+      <PageHeader title="Mood Check-In" fallback="/journeys" />
 
       <div className="px-4">
         <MoodCheckForm

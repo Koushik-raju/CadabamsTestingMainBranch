@@ -1,9 +1,32 @@
+/**
+ * FILE: app/(auth)/packages/book-package/page.tsx
+ *
+ * PURPOSE:
+ *   Browse available packages list page, reached from /packages.
+ *   Shows all purchasable packages with pricing; tapping one saves it to
+ *   sessionStorage and navigates to the browse detail page.
+ *
+ * LOGIC OVERVIEW:
+ *   1. Fetches available packages via useAvailablePackages().
+ *   2. Renders loading skeletons, error/empty states, or a card list.
+ *   3. handlePackageClick saves the selected package to sessionStorage then navigates.
+ *
+ * KEY VARIABLES / PROPS / EXPORTS:
+ *   packages — PackageResponseDto[] from useAvailablePackages
+ *   isLoading — fetch-in-progress flag
+ *
+ * DEPENDENCIES:
+ *   useAvailablePackages — SWR hook for available package list
+ *   PageHeader           — shared navigation header
+ *
+ * LAST UPDATED: 2026-04-23 — migrated custom header div to PageHeader; added file header
+ */
 'use client';
 
 import { Suspense } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
-import { BackButton } from '@/components/shared/navigation/back-button';
+import { PageHeader } from '@/components/shared/navigation/page-header';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Card, CardContent } from '@/components/ui/card';
@@ -46,22 +69,15 @@ function BookPackageContent() {
 
   return (
     <div className="min-h-screen bg-background pb-28">
-      <div className="bg-card border-b border-border px-4 pt-6 pb-4">
-        <div className="flex items-center gap-3">
-          <BackButton fallback="/packages" />
-          <div className="flex-1">
-            <h1 className="text-lg font-bold text-foreground tracking-tight">Browse Packages</h1>
-            <p className="text-xs text-muted-foreground mt-0.5">
-              Comprehensive care plans tailored for you
-            </p>
-          </div>
-          {!isLoading && (
-            <Badge variant="secondary" className="text-xs">
-              {packages.length} plans
-            </Badge>
-          )}
-        </div>
-      </div>
+      <PageHeader
+        title="Browse Packages"
+        subtitle="Comprehensive care plans tailored for you"
+        fallback="/packages"
+        className="bg-card border-b border-border px-4 py-4"
+        right={!isLoading ? (
+          <Badge variant="secondary" className="text-xs">{packages.length} plans</Badge>
+        ) : undefined}
+      />
 
       <div className="px-4 pt-4 space-y-3">
         {isLoading && [0, 1, 2, 3].map((i) => <PackageCardSkeleton key={i} />)}

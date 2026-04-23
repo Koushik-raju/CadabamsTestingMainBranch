@@ -20,8 +20,9 @@
  * DEPENDENCIES:
  *   patientAssessmentsAnalysisControllerAnalyze — SDK analyze (upsert) endpoint
  *   assessmentReportsKey + useSWRConfig.mutate  — revalidate result cache
+ *   PageHeader — shared navigation header
  *
- * LAST UPDATED: 2026-04-20 — simplified layout to a single centered CTA.
+ * LAST UPDATED: 2026-04-23 — migrated custom header div to PageHeader
  */
 'use client';
 
@@ -29,7 +30,7 @@ import { use, useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useSWRConfig } from 'swr';
 import { Button } from '@/components/ui/button';
-import { BackButton } from '@/components/shared/navigation/back-button';
+import { PageHeader } from '@/components/shared/navigation/page-header';
 import { patientAssessmentsAnalysisControllerAnalyze } from '@/sdk/backend-v2';
 import { assessmentReportsKey } from '@/lib/swr-keys';
 import { Loader2, Sparkles } from 'lucide-react';
@@ -73,9 +74,7 @@ export default function AssessmentGeneratePage({
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
-      <div className="flex items-center px-2 py-2">
-        <BackButton fallback="/assessments" />
-      </div>
+      <PageHeader title="" fallback="/assessments" />
 
       <div className="flex-1 flex flex-col items-center justify-center px-6 text-center">
         <div className="w-16 h-16 rounded-2xl bg-primary/10 flex items-center justify-center mb-5">

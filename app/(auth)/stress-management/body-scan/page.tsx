@@ -76,8 +76,8 @@ export default function BodyScanPage() {
           <ChevronLeft className="w-5 h-5" />
         </Button>
         <div>
-          <h1 className="text-xl font-bold text-foreground">Body Scan Meditation</h1>
-          <p className="text-sm text-muted-foreground">Progressive relaxation</p>
+          <h1 className="text-lg font-bold text-foreground">Body Scan Meditation</h1>
+          <p className="text-xs text-muted-foreground">Progressive relaxation</p>
         </div>
       </div>
 

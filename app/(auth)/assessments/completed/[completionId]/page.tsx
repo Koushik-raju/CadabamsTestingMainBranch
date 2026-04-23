@@ -20,10 +20,9 @@
  *
  * DEPENDENCIES:
  *   useCompletionById — hooks/assessments/use-assessment-detail
- *   BackButton        — shared navigation
+ *   PageHeader        — shared navigation header
  *
- * LAST UPDATED: 2026-04-21 — rewrite to use userResponse (single API call);
- *   removed CMS assessment fetch, questionMap, and order-merge logic
+ * LAST UPDATED: 2026-04-23 — migrated custom header div to PageHeader
  */
 'use client';
 
@@ -34,7 +33,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
-import { BackButton } from '@/components/shared/navigation/back-button';
+import { PageHeader } from '@/components/shared/navigation/page-header';
 import type { CompletionResponseDto } from '@/sdk/backend-v2';
 import { useCompletionById } from '@/hooks/assessments/use-assessment-detail';
 import { AlertCircle, ClipboardList, FileText, Sparkles } from 'lucide-react';
@@ -128,14 +127,11 @@ export default function CompletedAssessmentPage({
 
   return (
     <div className="min-h-screen bg-background pb-24">
-      {/* Header */}
-      <div className="flex items-center gap-2 px-4 pt-5 pb-3">
-        <BackButton fallback="/assessments" />
-        <div className="flex-1 min-w-0">
-          <h1 className="text-lg font-bold text-foreground leading-tight truncate">{title}</h1>
-          <p className="text-xs text-muted-foreground mt-0.5">{formatDate(completion.completedAt)}</p>
-        </div>
-      </div>
+      <PageHeader
+        title={title}
+        subtitle={formatDate(completion.completedAt)}
+        fallback="/assessments"
+      />
 
       <div className="px-4 space-y-4">
         {/* Summary card */}

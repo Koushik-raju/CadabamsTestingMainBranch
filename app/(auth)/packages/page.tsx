@@ -24,7 +24,7 @@
  *   FeaturedPackageCard, PackageDiscoveryCard — from @/components/package/
  *   odooTuple                                 — from @/lib/odoo (safe many2one tuple access)
  *
- * LAST UPDATED: 2026-04-17 — added odooTuple guard for package_id many2one field
+ * LAST UPDATED: 2026-04-23 — migrated custom header div to PageHeader
  */
 'use client';
 
@@ -44,7 +44,7 @@ import { Input } from '@/components/ui/input';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
-import { BackButton } from '@/components/shared/navigation/back-button';
+import { PageHeader } from '@/components/shared/navigation/page-header';
 import { FeaturedPackageCard } from '@/components/package/featured-package-card';
 import { PackageDiscoveryCard } from '@/components/package/package-discovery-card';
 import { useAvailablePackages, useManagedPackages } from '@/hooks/use-packages';
@@ -173,11 +173,7 @@ function PackagesInner() {
 
   return (
     <div className="min-h-screen bg-background pb-24">
-      {/* Header */}
-      <div className="flex items-center gap-2 px-4 pt-5 pb-3">
-        <BackButton fallback="/" />
-        <h1 className="flex-1 text-lg font-bold text-foreground">Explore Packages</h1>
-      </div>
+      <PageHeader title="Explore Packages" fallback="/" />
 
       {/* Search */}
       <div className="px-4 mb-5">

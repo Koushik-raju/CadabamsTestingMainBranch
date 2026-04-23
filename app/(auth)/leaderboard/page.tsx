@@ -79,7 +79,7 @@ export default function LeaderboardPage() {
             className="text-white hover:bg-white/20"
           />
           <div>
-            <h1 className="text-white text-xl font-bold">Leaderboard</h1>
+            <h1 className="text-white text-lg font-bold">Leaderboard</h1>
             <p className="text-white/70 text-xs">See how you rank</p>
           </div>
         </div>

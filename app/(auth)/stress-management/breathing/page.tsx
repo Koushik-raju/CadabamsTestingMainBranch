@@ -20,8 +20,8 @@ export default function BreathingPage() {
           <ChevronLeft className="w-5 h-5" />
         </Button>
         <div>
-          <h1 className="text-xl font-bold text-foreground">Breathing Exercises</h1>
-          <p className="text-sm text-muted-foreground">Calm your nervous system</p>
+          <h1 className="text-lg font-bold text-foreground">Breathing Exercises</h1>
+          <p className="text-xs text-muted-foreground">Calm your nervous system</p>
         </div>
       </div>
 

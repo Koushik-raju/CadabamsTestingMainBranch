@@ -57,7 +57,7 @@ export default function StressManagementPage() {
           >
             <ChevronLeft className="w-5 h-5" />
           </Button>
-          <h1 className="text-xl font-bold">Stress Management</h1>
+          <h1 className="text-lg font-bold">Stress Management</h1>
         </div>
 
         {/* Current level */}

@@ -69,7 +69,7 @@ export default function VideoDetailPage() {
           className="text-white/80 hover:text-white"
         />
         <div className="flex-1 min-w-0">
-          <h1 className="font-bold text-white text-sm truncate">{video.title}</h1>
+          <h1 className="font-bold text-white text-lg truncate">{video.title}</h1>
           {video.category && video.category.length > 0 && (
             <p className="text-white/50 text-xs mt-0.5">{video.category.join(' · ')}</p>
           )}

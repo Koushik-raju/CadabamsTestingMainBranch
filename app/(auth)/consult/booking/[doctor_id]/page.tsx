@@ -1,3 +1,32 @@
+/**
+ * FILE: app/(auth)/consult/booking/[doctor_id]/page.tsx
+ *
+ * PURPOSE:
+ *   Slot selection page for booking or rescheduling an appointment with a doctor.
+ *   Shows a date strip, slot grid by time of day, and campus selection sheet.
+ *
+ * LOGIC OVERVIEW:
+ *   1. Reads doctorId from URL params; fetches doctor details, available slots,
+ *      slot price, and campuses in parallel.
+ *   2. Date strip lets the user pick a date; slots are filtered by that date.
+ *   3. CampusSheet opens when user taps a slot and chooses in-person.
+ *   4. On slot + campus confirm: saves to BookingContext and navigates to checkout.
+ *   5. isReschedule mode reads appointmentId from search params and calls
+ *      crmControllerRescheduleAppointment instead of navigating to checkout.
+ *
+ * KEY VARIABLES / PROPS / EXPORTS:
+ *   doctorId     — URL param
+ *   isReschedule — derived from searchParams.has('reschedule')
+ *   selectedDate — date key (YYYY-MM-DD) controlling slot filtering
+ *
+ * DEPENDENCIES:
+ *   crmControllerGetDoctorById, crmControllerGetSlots, crmControllerGetSlotPrice,
+ *   crmControllerGetCampuses, crmControllerRescheduleAppointment — SDK calls
+ *   useBooking — BookingContext for saving selection before checkout
+ *   PageHeader — shared navigation header
+ *
+ * LAST UPDATED: 2026-04-23 — migrated custom header div to PageHeader; added file header
+ */
 "use client";
 
 import { Suspense, useState, useEffect, useCallback, useMemo } from "react";
@@ -6,7 +35,7 @@ import { Video, Building2, Loader2, AlertCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
-import { BackButton } from "@/components/shared/navigation/back-button";
+import { PageHeader } from "@/components/shared/navigation/page-header";
 import { SlotSection } from "@/components/booking/slot-section";
 import { DateStrip, toDateKey } from "@/components/booking/date-strip";
 import { CampusSheet } from "@/components/booking/campus-sheet";
@@ -356,13 +385,10 @@ function BookingContent() {
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
-      {/* Header */}
-      <div className="flex items-center gap-3 px-4 pt-6 pb-4">
-        <BackButton fallback="/consult/find-therapist" />
-        <h1 className="text-base font-semibold">
-          {isReschedule ? "Reschedule appointment" : "Select a slot"}
-        </h1>
-      </div>
+      <PageHeader
+        title={isReschedule ? "Reschedule appointment" : "Select a slot"}
+        fallback="/consult/find-therapist"
+      />
 
       <div className="flex-1 px-4 pb-36 space-y-5 max-w-xl mx-auto w-full">
         {/* ── Doctor card ── */}

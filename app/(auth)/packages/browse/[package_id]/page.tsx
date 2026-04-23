@@ -26,7 +26,7 @@
  *   odooTuple                                       — from @/lib/odoo (safe many2one tuple access)
  *   PackageResponseDto                              — from @/sdk/backend-v2
  *
- * LAST UPDATED: 2026-04-17 — added odooTuple guard for product_id many2one field
+ * LAST UPDATED: 2026-04-23 — migrated custom header divs to PageHeader
  */
 'use client';
 
@@ -35,7 +35,7 @@ import { useRouter, useParams } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
-import { BackButton } from '@/components/shared/navigation/back-button';
+import { PageHeader } from '@/components/shared/navigation/page-header';
 import {
   CheckCircle2,
   Layers,
@@ -91,9 +91,7 @@ function PackageDetailContent({ packageId }: { packageId: string }) {
   if (!pkg) {
     return (
       <div className="min-h-screen bg-background flex flex-col">
-        <div className="flex items-center px-2 py-2 border-b border-border bg-background">
-          <BackButton fallback="/packages" />
-        </div>
+        <PageHeader title="" fallback="/packages" />
         <div className="flex-1 flex flex-col items-center justify-center gap-4 px-6 text-center">
           <AlertCircle className="w-12 h-12 text-destructive" />
           <p className="text-destructive font-medium">Package not found.</p>
@@ -112,9 +110,7 @@ function PackageDetailContent({ packageId }: { packageId: string }) {
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
-      <div className="flex items-center px-2 py-2 border-b border-border bg-background">
-        <BackButton fallback="/packages" />
-      </div>
+      <PageHeader title="" fallback="/packages" />
 
       <div className="flex-1 overflow-y-auto pb-32">
         {/* Hero banner */}

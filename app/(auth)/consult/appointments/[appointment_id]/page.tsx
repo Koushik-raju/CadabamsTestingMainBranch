@@ -1,3 +1,27 @@
+/**
+ * FILE: app/(auth)/consult/appointments/[appointment_id]/page.tsx
+ *
+ * PURPOSE:
+ *   Detail page for a single appointment. Shows doctor info, time, type,
+ *   preparation items, and cancel/reschedule actions.
+ *
+ * LOGIC OVERVIEW:
+ *   1. Reads appointment_id from route params; fetches via useAppointmentById.
+ *   2. Renders loading spinner, not-found error, or full detail view.
+ *   3. Cancel opens an AlertDialog that requires a reason; calls cancelAppointment.
+ *   4. Reschedule navigates to /consult/booking/:doctorId?reschedule=:aptId.
+ *
+ * KEY VARIABLES / PROPS / EXPORTS:
+ *   apt         — SlotDetailDto from useAppointmentById
+ *   isCancelled / isCompleted / isPast — derived status flags
+ *   cancelling  — in-progress flag for cancel action
+ *
+ * DEPENDENCIES:
+ *   useAppointmentById, cancelAppointment — from use-appointments-page hook
+ *   PageHeader — shared navigation header
+ *
+ * LAST UPDATED: 2026-04-23 — migrated custom header div to PageHeader; added file header
+ */
 'use client';
 
 import { Suspense, useState } from 'react';
@@ -19,7 +43,7 @@ import {
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
-import { BackButton } from '@/components/shared/navigation/back-button';
+import { PageHeader } from '@/components/shared/navigation/page-header';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -139,16 +163,18 @@ function DetailContent() {
 
   return (
     <div className="min-h-screen bg-white flex flex-col">
-      <div className="flex items-center justify-between px-4 pt-6 pb-2">
-        <BackButton fallback="/consult/appointments" />
-        <h1 className="text-[17px] font-bold">Session Details</h1>
-        <button
-          type="button"
-          className="h-9 w-9 flex items-center justify-center rounded-full hover:bg-muted transition-colors"
-        >
-          <MoreHorizontal className="h-6 w-6" />
-        </button>
-      </div>
+      <PageHeader
+        title="Session Details"
+        fallback="/consult/appointments"
+        right={
+          <button
+            type="button"
+            className="h-9 w-9 flex items-center justify-center rounded-full hover:bg-muted transition-colors"
+          >
+            <MoreHorizontal className="h-6 w-6" />
+          </button>
+        }
+      />
 
       <div className="flex-1 px-5 pb-28 space-y-6 overflow-y-auto">
         <div className="flex flex-col items-center pt-4 pb-2 gap-3">

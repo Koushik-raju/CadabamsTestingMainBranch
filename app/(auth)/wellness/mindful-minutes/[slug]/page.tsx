@@ -26,8 +26,7 @@
  *   useMindfulMinuteDetail(slug) — SWR hook for single collection
  *   FullscreenAudioPlayer        — fullscreen player overlay component
  *
- * LAST UPDATED: 2026-04-16 — fixed sort (now uses createdAt, was broken duration),
- *               added Play all button, replaced broken duration/category badges with track numbers
+ * LAST UPDATED: 2026-04-23 — migrated sticky header to PageHeader
  */
 
 'use client';
@@ -36,7 +35,7 @@ import { useState, useMemo, useEffect, useRef } from 'react';
 import { useParams, useSearchParams } from 'next/navigation';
 import { useJourneyTaskContinuation } from '@/hooks/journeys/use-journey-task-continuation';
 import { Play, ChevronDown, ChevronUp } from 'lucide-react';
-import { BackButton } from '@/components/shared/navigation/back-button';
+import { PageHeader } from '@/components/shared/navigation/page-header';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -196,14 +195,12 @@ export default function MindfulMinuteDetailPage() {
         />
       )}
 
-      {/* Header */}
-      <div className="sticky top-0 z-10 bg-background border-b border-border px-4 py-3">
-        <div className="flex items-center gap-3">
-          <BackButton fallback="/wellness/mindful-minutes" />
-          <div className="flex-1 min-w-0">
-            <h1 className="font-bold text-foreground text-base truncate">{mindfulMinute.title}</h1>
-            <p className="text-muted-foreground text-xs">{filteredAudios.length} sessions available</p>
-          </div>
+      <PageHeader
+        title={mindfulMinute.title}
+        subtitle={`${filteredAudios.length} sessions available`}
+        fallback="/wellness/mindful-minutes"
+        className="sticky top-0 z-10 bg-background border-b border-border px-4 py-3"
+        right={
           <div className="relative">
             <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
             <Input
@@ -214,8 +211,8 @@ export default function MindfulMinuteDetailPage() {
               aria-label="Search audio"
             />
           </div>
-        </div>
-      </div>
+        }
+      />
 
       {/* Journey continuation banner — explicit mark-complete for audio task */}
       {continuation.active && (

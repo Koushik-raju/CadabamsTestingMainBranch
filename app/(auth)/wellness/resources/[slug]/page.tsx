@@ -1,3 +1,29 @@
+/**
+ * FILE: app/(auth)/wellness/resources/[slug]/page.tsx
+ *
+ * PURPOSE:
+ *   Detail page for a single wellness resource (article/blog). Renders the
+ *   cover image, categories, title, author, rich text blocks, audio/video
+ *   embeds, and similar articles at the bottom.
+ *
+ * LOGIC OVERVIEW:
+ *   1. Reads slug from URL params and fetches the full resource via useWellnessResourceDetail.
+ *   2. Renders Strapi rich-text block nodes via StrapiRichText.
+ *   3. Audio and video blocks render inline players.
+ *   4. Similar blogs appear in a horizontal scroll strip at the bottom.
+ *
+ * KEY VARIABLES / PROPS / EXPORTS:
+ *   resource    — WellnessResource from useWellnessResourceDetail
+ *   categories  — string[] from resource.category
+ *   similarBlogs — WellnessResource[] for the "More like this" strip
+ *
+ * DEPENDENCIES:
+ *   useWellnessResourceDetail — SWR hook for single resource
+ *   AudioPlayer, VideoPlayer  — inline media player components
+ *   PageHeader — shared navigation header
+ *
+ * LAST UPDATED: 2026-04-23 — migrated sticky header to PageHeader; added file header
+ */
 'use client';
 
 import { useParams } from 'next/navigation';
@@ -17,7 +43,7 @@ import {
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
-import { BackButton } from '@/components/shared/navigation/back-button';
+import { PageHeader } from '@/components/shared/navigation/page-header';
 import { AudioPlayer } from '@/components/wellness/audio-player';
 import { VideoPlayer } from '@/components/wellness/video-player';
 import { useWellnessResourceDetail } from '@/hooks/wellness/use-wellness-resource-detail';
@@ -270,10 +296,11 @@ export default function ResourceDetailPage() {
   if (isLoading) {
     return (
       <div className="min-h-screen bg-background">
-        <div className="sticky top-0 z-10 bg-background/95 backdrop-blur border-b border-border px-4 py-3 flex items-center gap-3">
-          <BackButton fallback="/wellness/resources" />
-          <Skeleton className="h-5 w-40" />
-        </div>
+        <PageHeader
+          title=""
+          fallback="/wellness/resources"
+          className="sticky top-0 z-10 bg-background/95 backdrop-blur border-b border-border px-4 py-3"
+        />
         <div className="max-w-3xl mx-auto px-4 py-6 space-y-5">
           <Skeleton className="h-5 w-24 rounded-full" />
           <Skeleton className="h-8 w-3/4" />
@@ -320,11 +347,11 @@ export default function ResourceDetailPage() {
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
-      {/* Sticky header */}
-      <div className="sticky top-0 z-10 bg-background/95 backdrop-blur border-b border-border px-4 py-3 flex items-center gap-3">
-        <BackButton fallback="/wellness/resources" />
-        <h1 className="text-primary font-bold text-base truncate flex-1">Resources</h1>
-      </div>
+      <PageHeader
+        title="Resources"
+        fallback="/wellness/resources"
+        className="sticky top-0 z-10 bg-background/95 backdrop-blur border-b border-border px-4 py-3"
+      />
 
       <article className="flex-1 max-w-3xl mx-auto w-full px-4 py-6 pb-20 space-y-6">
         {/* Categories */}

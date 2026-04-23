@@ -1,10 +1,36 @@
+/**
+ * FILE: app/(auth)/wellness/resources/page.tsx
+ *
+ * PURPOSE:
+ *   Browse page for wellness resources/articles with category filter, search,
+ *   and infinite scroll pagination.
+ *
+ * LOGIC OVERVIEW:
+ *   1. Fetches resources via useWellnessResources (search + category params).
+ *   2. Debounces search input by 450ms to limit API calls.
+ *   3. IntersectionObserver on a sentinel div triggers loadMore for infinite scroll.
+ *   4. First result (when not filtered) becomes a featured article; the rest go in a grid.
+ *   5. Category chips reset search on select.
+ *
+ * KEY VARIABLES / PROPS / EXPORTS:
+ *   resources        — WellnessResource[] from useWellnessResources
+ *   selectedCategory — active category filter
+ *   debouncedSearch  — debounced version of searchQuery
+ *   hasMore          — true when more pages exist for infinite scroll
+ *
+ * DEPENDENCIES:
+ *   useWellnessResources — SWR hook backed by Strapi /api/wellness-resources
+ *   PageHeader           — shared navigation header
+ *
+ * LAST UPDATED: 2026-04-23 — migrated sticky header to PageHeader; added file header
+ */
 'use client';
 
 import { useState, useCallback, useRef, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import { Search, RefreshCw, Clock, ChevronRight } from 'lucide-react';
-import { BackButton } from '@/components/shared/navigation/back-button';
+import { PageHeader } from '@/components/shared/navigation/page-header';
 import { CategoryFilter } from '@/components/wellness/category-filter';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
@@ -164,22 +190,12 @@ export default function ResourcesPage() {
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
-      {/* Sticky header */}
-      <div className="sticky top-0 z-10 bg-background border-b border-border px-4 py-3">
-        <div className="flex items-center gap-3">
-          <BackButton fallback="/home" />
-          <div className="flex-1 min-w-0">
-            <h1 className="font-bold text-foreground text-base">
-              {selectedCategory !== 'All' ? formatCategory(selectedCategory) : 'Resources'}
-            </h1>
-            <p className="text-muted-foreground text-xs">
-              {isLoading
-                ? 'Loading…'
-                : isFiltered
-                ? `${resources.length}${hasMore ? '+' : ''} of ${totalCount} articles`
-                : `${totalCount} articles`}
-            </p>
-          </div>
+      <PageHeader
+        title={selectedCategory !== 'All' ? formatCategory(selectedCategory) : 'Resources'}
+        subtitle={isLoading ? 'Loading…' : isFiltered ? `${resources.length}${hasMore ? '+' : ''} of ${totalCount} articles` : `${totalCount} articles`}
+        fallback="/home"
+        className="sticky top-0 z-10 bg-background border-b border-border px-4 py-3"
+        right={
           <div className="relative">
             <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
             <Input
@@ -190,8 +206,8 @@ export default function ResourcesPage() {
               aria-label="Search resources"
             />
           </div>
-        </div>
-      </div>
+        }
+      />
 
       {/* Banner */}
       {!isFiltered && !isLoading && (

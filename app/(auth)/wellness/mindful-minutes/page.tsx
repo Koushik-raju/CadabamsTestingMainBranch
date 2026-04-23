@@ -22,8 +22,7 @@
  *   useMindfulMinutes() — SWR hook for all collections
  *   getStrapiImageUrl   — resolves Strapi image paths
  *
- * LAST UPDATED: 2026-04-16 — replaced misleading Play CTAs with Browse sessions navigation,
- *               added session count badge on list cards
+ * LAST UPDATED: 2026-04-23 — migrated sticky header to PageHeader
  */
 
 'use client';
@@ -32,7 +31,7 @@ import { useState, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import { ChevronRight, RefreshCw, Search } from 'lucide-react';
-import { BackButton } from '@/components/shared/navigation/back-button';
+import { PageHeader } from '@/components/shared/navigation/page-header';
 import { CategoryFilter } from '@/components/wellness/category-filter';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
@@ -73,22 +72,12 @@ export default function MindfulMinutesPage() {
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
-      {/* Header */}
-      <div className="sticky top-0 z-10 bg-background border-b border-border px-4 py-3">
-        <div className="flex items-center gap-3">
-          <BackButton fallback="/home" />
-          <div className="flex-1 min-w-0">
-            <h1 className="font-bold text-foreground text-base">
-              {isListView ? 'Audio resets' : 'Quick relief'}
-            </h1>
-            <p className="text-muted-foreground text-xs">
-              {isLoading
-                ? 'Loading…'
-                : isListView
-                ? `${filteredItems.length} sessions available`
-                : 'Breath, audio & visual resets · Under 5 min'}
-            </p>
-          </div>
+      <PageHeader
+        title={isListView ? 'Audio resets' : 'Quick relief'}
+        subtitle={isLoading ? 'Loading…' : isListView ? `${filteredItems.length} sessions available` : 'Breath, audio & visual resets · Under 5 min'}
+        fallback="/home"
+        className="sticky top-0 z-10 bg-background border-b border-border px-4 py-3"
+        right={
           <div className="relative">
             <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
             <Input
@@ -99,8 +88,8 @@ export default function MindfulMinutesPage() {
               aria-label="Search mindful minutes"
             />
           </div>
-        </div>
-      </div>
+        }
+      />
 
       <main className="flex-1 px-4 py-4 space-y-6 max-w-2xl mx-auto w-full pb-20">
         {/* Banner */}

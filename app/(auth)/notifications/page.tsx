@@ -1,3 +1,26 @@
+/**
+ * FILE: app/(auth)/notifications/page.tsx
+ *
+ * PURPOSE:
+ *   Lists local push notifications stored on device, split into unread and read
+ *   sections. Provides a "Clear all" action to wipe the notification store.
+ *
+ * LOGIC OVERVIEW:
+ *   1. Reads notifications from getStoredNotifications() on mount.
+ *   2. Clicking a notification marks it as read and navigates to its action URL.
+ *   3. "Clear all" triggers an AlertDialog then clears the store.
+ *
+ * KEY VARIABLES / PROPS / EXPORTS:
+ *   notifications — LocalNotification[] from local storage
+ *   unread / read — filtered slices of notifications list
+ *
+ * DEPENDENCIES:
+ *   getStoredNotifications, markNotificationAsRead, clearAllNotifications
+ *     — from use-notifications
+ *   PageHeader — shared navigation header
+ *
+ * LAST UPDATED: 2026-04-23 — migrated custom header div to PageHeader; added file header
+ */
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
@@ -18,7 +41,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
-import { BackButton } from '@/components/shared/navigation/back-button';
+import { PageHeader } from '@/components/shared/navigation/page-header';
 import { cn } from '@/lib/utils';
 import {
   getStoredNotifications,
@@ -147,16 +170,11 @@ export default function NotificationsPage() {
 
   return (
     <main className="min-h-screen bg-background pb-24">
-      {/* Header */}
-      <div className="flex items-center gap-2 px-4 pt-5 pb-3">
-        <BackButton fallback="/home" />
-        <div className="flex-1">
-          <h1 className="text-lg font-bold text-foreground leading-tight">Notifications</h1>
-          {unread.length > 0 && (
-            <p className="text-xs text-muted-foreground">{unread.length} unread</p>
-          )}
-        </div>
-        {notifications.length > 0 && (
+      <PageHeader
+        title="Notifications"
+        subtitle={unread.length > 0 ? `${unread.length} unread` : undefined}
+        fallback="/home"
+        right={notifications.length > 0 ? (
           <AlertDialog>
             <AlertDialogTrigger asChild>
               <Button
@@ -182,8 +200,8 @@ export default function NotificationsPage() {
               </AlertDialogFooter>
             </AlertDialogContent>
           </AlertDialog>
-        )}
-      </div>
+        ) : undefined}
+      />
 
       <div className="px-4 space-y-5">
         {loading ? (

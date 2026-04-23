@@ -1,3 +1,32 @@
+/**
+ * FILE: app/(auth)/consult/checkout/page.tsx
+ *
+ * PURPOSE:
+ *   Checkout page for booking a consultation slot. Shows booking summary,
+ *   payment amount, and processes payment via Razorpay.
+ *
+ * LOGIC OVERVIEW:
+ *   1. Reads slotId, doctorId, and booking params from BookingContext.
+ *   2. Fetches doctor details and slot price in parallel on mount.
+ *   3. Opens a bottom sheet to select who the appointment is for (self or a relation).
+ *   4. On confirm, calls crmControllerBookAppointment then crmControllerRazorpayPayment.
+ *   5. Redirects to Razorpay short_url on success.
+ *
+ * KEY VARIABLES / PROPS / EXPORTS:
+ *   doctor           — fetched CrmControllerGetDoctorByIdResponse
+ *   price            — slot price in INR
+ *   selectedRelation — chosen RelationshipResponseDto from the sheet
+ *   CheckoutContent  — inner component wrapped in Suspense
+ *
+ * DEPENDENCIES:
+ *   crmControllerGetDoctorById, crmControllerGetSlotPrice,
+ *   crmControllerBookAppointment, crmControllerRazorpayPayment,
+ *   crmControllerGetRelationships — SDK calls
+ *   useBooking — BookingContext hook for slot/doctor/campus IDs
+ *   PageHeader — shared navigation header
+ *
+ * LAST UPDATED: 2026-04-23 — migrated custom header div to PageHeader; added file header
+ */
 "use client";
 
 import { Suspense, useState, useEffect } from "react";
@@ -22,7 +51,7 @@ import {
   SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet";
-import { BackButton } from "@/components/shared/navigation/back-button";
+import { PageHeader } from "@/components/shared/navigation/page-header";
 import { BookingSummaryCard } from "@/components/checkout/booking-summary-card";
 import { PaymentSummaryCard } from "@/components/checkout/payment-summary-card";
 import { useAuth } from "@/hooks/shared/auth/use-auth";
@@ -194,12 +223,7 @@ function CheckoutContent() {
 
   return (
     <div className="min-h-screen bg-background">
-      <div className="flex items-center gap-3 px-4 pt-6 pb-4 border-b border-border">
-        <BackButton fallback="/consult/find-therapist" />
-        <h1 className="text-base font-semibold text-foreground">
-          Confirm &amp; Pay
-        </h1>
-      </div>
+      <PageHeader title="Confirm & Pay" fallback="/consult/find-therapist" />
 
       <div className="px-4 py-5 pb-32 max-w-2xl mx-auto space-y-4">
         <BookingSummaryCard

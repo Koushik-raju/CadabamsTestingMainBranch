@@ -1,10 +1,36 @@
+/**
+ * FILE: app/(auth)/documents/page.tsx
+ *
+ * PURPOSE:
+ *   Displays the user's uploaded documents with download and delete actions,
+ *   and provides an upload button to add new files.
+ *
+ * LOGIC OVERVIEW:
+ *   1. Fetches documents via useDocuments() (leadId-scoped SWR).
+ *   2. Renders loading skeletons, error banner, empty state, or grouped list card.
+ *   3. Upload button triggers hidden <input type="file"> via a ref.
+ *   4. Download opens the file URL via Capacitor Browser on native, window.open on web.
+ *   5. Delete shows a native confirm dialog before calling deleteDocument.
+ *
+ * KEY VARIABLES / PROPS / EXPORTS:
+ *   documents    — DocumentData[] from useDocuments
+ *   uploading    — local upload-in-progress flag
+ *   leadId       — required for upload API; disables button if absent
+ *
+ * DEPENDENCIES:
+ *   useDocuments — SWR hook for document list, upload, and delete
+ *   DocumentCard — shared document row component
+ *   PageHeader   — shared navigation header
+ *
+ * LAST UPDATED: 2026-04-23 — migrated custom header div to PageHeader; added file header
+ */
 'use client';
 
 import { useRef, useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { Upload, AlertCircle, FolderOpen } from 'lucide-react';
 import { Capacitor } from '@capacitor/core';
-import { BackButton } from '@/components/shared/navigation/back-button';
+import { PageHeader } from '@/components/shared/navigation/page-header';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -79,22 +105,23 @@ export default function DocumentsPage() {
 
   return (
     <main className="min-h-screen bg-background pb-24" role="main" aria-label="My documents">
-      {/* Header */}
-      <div className="flex items-center gap-2 px-4 pt-5 pb-3">
-        <BackButton fallback="/" />
-        <h1 className="flex-1 text-lg font-bold text-foreground">My Documents</h1>
-        <Button
-          size="sm"
-          variant="outline"
-          className="rounded-xl gap-1.5"
-          onClick={handleUploadClick}
-          disabled={uploading || !leadId}
-          aria-label="Upload a document"
-        >
-          <Upload className="w-3.5 h-3.5" />
-          {uploading ? 'Uploading…' : 'Upload'}
-        </Button>
-      </div>
+      <PageHeader
+        title="My Documents"
+        fallback="/"
+        right={
+          <Button
+            size="sm"
+            variant="outline"
+            className="rounded-xl gap-1.5"
+            onClick={handleUploadClick}
+            disabled={uploading || !leadId}
+            aria-label="Upload a document"
+          >
+            <Upload className="w-3.5 h-3.5" />
+            {uploading ? 'Uploading…' : 'Upload'}
+          </Button>
+        }
+      />
 
       <input
         ref={fileInputRef}

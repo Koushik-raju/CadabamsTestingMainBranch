@@ -1,3 +1,26 @@
+/**
+ * FILE: app/(auth)/consult/appointments/page.tsx
+ *
+ * PURPOSE:
+ *   Lists the user's upcoming and past appointments in a tabbed view.
+ *
+ * LOGIC OVERVIEW:
+ *   1. Fetches appointments via useAppointments().
+ *   2. Splits into upcoming (future) and past (completed/cancelled) lists.
+ *   3. Shows loading skeletons, error state, empty state, or tabbed list.
+ *   4. FAB in bottom-right navigates to /consult/find-therapist for new bookings.
+ *
+ * KEY VARIABLES / PROPS / EXPORTS:
+ *   upcoming — future appointments from useAppointments
+ *   past     — past/completed appointments from useAppointments
+ *
+ * DEPENDENCIES:
+ *   useAppointments — SWR hook for appointment list
+ *   AppointmentCard — shared appointment card component
+ *   PageHeader      — shared navigation header
+ *
+ * LAST UPDATED: 2026-04-23 — migrated custom header div to PageHeader; added file header
+ */
 'use client';
 
 import Link from 'next/link';
@@ -5,7 +28,7 @@ import { Plus, CalendarX, AlertCircle } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
-import { BackButton } from '@/components/shared/navigation/back-button';
+import { PageHeader } from '@/components/shared/navigation/page-header';
 import { AppointmentCard } from '@/components/appointments/appointment-card';
 import { useAppointments } from '@/hooks/appointments/use-appointments-page';
 
@@ -16,10 +39,7 @@ export default function AppointmentsPage() {
 
   return (
     <div className="min-h-screen bg-background">
-      <div className="flex items-center gap-3 px-4 pt-6 pb-4">
-        <BackButton fallback="/home" />
-        <h1 className="text-xl font-bold text-foreground">My Appointments</h1>
-      </div>
+      <PageHeader title="My Appointments" fallback="/home" />
 
       {isLoading && (
         <div className="px-4 space-y-3">

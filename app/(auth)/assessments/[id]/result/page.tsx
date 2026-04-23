@@ -26,11 +26,10 @@
  *
  * DEPENDENCIES:
  *   useLatestAssessmentResult — hooks/assessments/use-assessment-reports
- *   BackButton                — shared navigation
+ *   PageHeader                — shared navigation header
  *   react-markdown            — renders report.result
  *
- * LAST UPDATED: 2026-04-21 — narrow severity to 4-value enum; use scorePercentage
- *   from DTO instead of client-side Math.round(totalScore/maxScore*100)
+ * LAST UPDATED: 2026-04-23 — migrated custom header div to PageHeader
  */
 'use client';
 
@@ -42,7 +41,7 @@ import Markdown from 'react-markdown';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
-import { BackButton } from '@/components/shared/navigation/back-button';
+import { PageHeader } from '@/components/shared/navigation/page-header';
 import { useLatestAssessmentResult } from '@/hooks/assessments/use-assessment-reports';
 import {
   AlertCircle,
@@ -128,10 +127,10 @@ export default function AssessmentResultPage({
 
   return (
     <div className="min-h-screen bg-background pb-24">
-      <div className="flex items-center gap-2 px-4 pt-5 pb-3">
-        <BackButton fallback="/assessments" />
-        <h1 className="flex-1 text-lg font-bold text-foreground">Your Report</h1>
-        {report && (
+      <PageHeader
+        title="Your Report"
+        fallback="/assessments"
+        right={report ? (
           <button
             type="button"
             onClick={onRegenerate}
@@ -146,8 +145,8 @@ export default function AssessmentResultPage({
             )}
             {isRegenerating ? 'Regenerating' : 'Regenerate'}
           </button>
-        )}
-      </div>
+        ) : undefined}
+      />
 
       <div className="px-4">
         {isLoading && <ResultSkeleton />}

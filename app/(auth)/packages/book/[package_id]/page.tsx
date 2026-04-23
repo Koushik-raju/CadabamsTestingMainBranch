@@ -1,3 +1,28 @@
+/**
+ * FILE: app/(auth)/packages/book/[package_id]/page.tsx
+ *
+ * PURPOSE:
+ *   Package booking confirmation page reached from /packages/browse/:id.
+ *   Reads the selected package from sessionStorage and processes payment.
+ *
+ * LOGIC OVERVIEW:
+ *   1. Reads packageId from URL param and validates against sessionStorage package.
+ *   2. If mismatch, redirects to /packages/book-package.
+ *   3. Optionally fetches journey description.
+ *   4. On confirm: calls bookPackage then initiatePackagePayment, then redirects to short_url.
+ *
+ * KEY VARIABLES / PROPS / EXPORTS:
+ *   pkg          — PackageResponseDto from sessionStorage
+ *   packageId    — URL param, used to validate stored package
+ *   isLoading    — payment processing state
+ *
+ * DEPENDENCIES:
+ *   bookPackage, initiatePackagePayment — from @/hooks/use-packages
+ *   useAuth — user identity
+ *   PageHeader — shared navigation header
+ *
+ * LAST UPDATED: 2026-04-23 — migrated custom header div to PageHeader; added file header
+ */
 'use client';
 
 import { useState, useEffect, useMemo, Suspense } from 'react';
@@ -5,7 +30,7 @@ import { useRouter, useParams } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
-import { BackButton } from '@/components/shared/navigation/back-button';
+import { PageHeader } from '@/components/shared/navigation/page-header';
 import {
   Package,
   IndianRupee,
@@ -144,15 +169,11 @@ function BookPackageContent({ packageId }: { packageId: string }) {
 
   return (
     <div className="min-h-screen bg-background pb-24">
-      <div className="px-4 pt-4 mb-6">
-        <div className="flex items-center gap-3">
-          <BackButton fallback={`/packages/browse/${packageId}`} />
-          <div>
-            <h1 className="text-xl font-bold text-foreground">Book Package</h1>
-            <p className="text-sm text-muted-foreground">Review and confirm your selection</p>
-          </div>
-        </div>
-      </div>
+      <PageHeader
+        title="Book Package"
+        subtitle="Review and confirm your selection"
+        fallback={`/packages/browse/${packageId}`}
+      />
 
       <div className="px-4 space-y-4">
         <Card className="border-border">

@@ -16,14 +16,14 @@
  * DEPENDENCIES:
  *   usePrescriptions — SWR hook backed by crmControllerGetPrescriptions
  *   PrescriptionCard — renders a single prescription row
- *   BackButton       — shared back navigation component
+ *   PageHeader       — shared navigation header
  *
- * LAST UPDATED: 2026-04-17 — grouped list card layout; skeleton loading; Download PDF CTA
+ * LAST UPDATED: 2026-04-23 — migrated custom header div to PageHeader
  */
 
 'use client';
 
-import { BackButton } from '@/components/shared/navigation/back-button';
+import { PageHeader } from '@/components/shared/navigation/page-header';
 import { PrescriptionCard } from '@/components/prescription/prescription-card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
@@ -48,14 +48,11 @@ export default function PrescriptionsPage() {
 
   return (
     <div className="min-h-screen bg-background pb-24">
-      {/* Header */}
-      <div className="flex items-center gap-2 px-4 pt-5 pb-3">
-        <BackButton fallback="/home" />
-        <div className="flex-1">
-          <h1 className="text-lg font-bold text-foreground">My Prescriptions</h1>
-          <p className="text-xs text-muted-foreground">{dayjs().format('ddd, DD MMM YYYY')}</p>
-        </div>
-      </div>
+      <PageHeader
+        title="My Prescriptions"
+        subtitle={dayjs().format('ddd, DD MMM YYYY')}
+        fallback="/home"
+      />
 
       <div className="px-4">
         {/* Loading skeletons */}

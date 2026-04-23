@@ -1,3 +1,28 @@
+/**
+ * FILE: app/(auth)/packages/selected-package/page.tsx
+ *
+ * PURPOSE:
+ *   Package checkout confirmation page. Reads the selected package from
+ *   sessionStorage, optionally fetches a journey description, and processes
+ *   payment via Razorpay.
+ *
+ * LOGIC OVERVIEW:
+ *   1. Reads package from sessionStorage on mount; redirects to /packages/book-package if absent.
+ *   2. Optionally fetches a journey description from the JOURNEY_BASE_URL if journeyId is set.
+ *   3. On confirm: calls bookPackage then initiatePackagePayment, then redirects to short_url.
+ *
+ * KEY VARIABLES / PROPS / EXPORTS:
+ *   pkg          — PackageResponseDto from sessionStorage
+ *   journeyData  — optional journey description fetched from CMS
+ *   isLoading    — payment processing state
+ *
+ * DEPENDENCIES:
+ *   bookPackage, initiatePackagePayment — from @/hooks/packages/use-packages
+ *   useAuth — user identity for lead_id and caller_name
+ *   PageHeader — shared navigation header
+ *
+ * LAST UPDATED: 2026-04-23 — migrated custom header div to PageHeader; added file header
+ */
 'use client';
 
 import { useState, useEffect, useMemo, Suspense } from 'react';
@@ -5,7 +30,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
-import { BackButton } from '@/components/shared/navigation/back-button';
+import { PageHeader } from '@/components/shared/navigation/page-header';
 import {
   Package,
   IndianRupee,
@@ -146,15 +171,11 @@ function SelectedPackageContent() {
 
   return (
     <div className="min-h-screen bg-background pb-24">
-      <div className="px-4 pt-4 mb-6">
-        <div className="flex items-center gap-3">
-          <BackButton fallback="/packages/book-package" />
-          <div>
-            <h1 className="text-xl font-bold text-foreground">Package Details</h1>
-            <p className="text-sm text-muted-foreground">Review and confirm your selection</p>
-          </div>
-        </div>
-      </div>
+      <PageHeader
+        title="Package Details"
+        subtitle="Review and confirm your selection"
+        fallback="/packages/book-package"
+      />
 
       <div className="px-4 space-y-4">
         <Card className="border-border">

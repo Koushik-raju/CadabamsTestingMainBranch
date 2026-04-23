@@ -21,15 +21,15 @@
  *
  * DEPENDENCIES:
  *   useThreads, mastraDataContext, ThreadList, LoadingState, EmptyState,
- *   BackButton
+ *   PageHeader
  *
- * LAST UPDATED: 2026-04-16 — added file header
+ * LAST UPDATED: 2026-04-23 — migrated custom header div to PageHeader
  */
 "use client";
 
 import { useRouter } from "next/navigation";
 import { useContext } from "react";
-import { BackButton } from "@/components/shared/navigation/back-button";
+import { PageHeader } from "@/components/shared/navigation/page-header";
 import { mastraDataContext } from "@/contexts/mastra-data-context";
 import { useThreads } from "@/hooks/use-threads";
 import { ThreadList } from "@/components/chat/history/thread-list";
@@ -54,11 +54,7 @@ export default function ChatHistoryPage() {
       {/* Safe-area top */}
       <div className="pt-[max(env(safe-area-inset-top,0px),1rem)]" />
 
-      {/* Header */}
-      <header className="flex items-center gap-3 px-4 pb-4">
-        <BackButton fallback="/ai-therapy" />
-        <h1 className="text-xl font-extrabold text-foreground">My AI Chats</h1>
-      </header>
+      <PageHeader title="My AI Chats" fallback="/ai-therapy" />
 
       {/* Content */}
       {isLoading ? (

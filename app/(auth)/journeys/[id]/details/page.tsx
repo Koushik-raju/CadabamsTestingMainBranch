@@ -19,8 +19,9 @@
  * DEPENDENCIES:
  *   useJourneyDetail, useJourneyProgress — hooks/journeys/use-journey-detail
  *   JourneyPathView — components/journey/journey-path-view
+ *   PageHeader — shared navigation header
  *
- * LAST UPDATED: 2026-04-22 — use preview=true on GET so unenrolled users don't auto-enroll
+ * LAST UPDATED: 2026-04-23 — migrated sticky app bar to PageHeader
  */
 'use client';
 
@@ -29,7 +30,7 @@ import { useRouter } from 'next/navigation';
 import { Sparkles, MoreVertical, Crown } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
-import { BackButton } from '@/components/shared/navigation/back-button';
+import { PageHeader } from '@/components/shared/navigation/page-header';
 import { JourneyPathView } from '@/components/journey/journey-path-view';
 import { useJourneyDetail, useJourneyProgress, subscribeToJourney } from '@/hooks/journeys/use-journey-detail';
 import { extractJourneyName } from '@/types/journey';
@@ -72,7 +73,7 @@ function DetailsContent({ params }: PageProps) {
     return (
       <div className="min-h-screen bg-background flex flex-col items-center justify-center gap-4 px-4">
         <p className="text-muted-foreground">Journey not found.</p>
-        <BackButton fallback="/journeys" />
+        <Button variant="outline" onClick={() => router.replace('/journeys')}>Go Back</Button>
       </div>
     );
   }
@@ -109,21 +110,17 @@ function DetailsContent({ params }: PageProps) {
           'linear-gradient(180deg, hsl(var(--primary) / 0.14) 0%, hsl(var(--primary) / 0.04) 22%, hsl(var(--background)) 45%, hsl(var(--background)) 82%, hsl(var(--primary) / 0.05) 100%)',
       }}
     >
-      {/* App bar */}
-      <div className="flex items-center gap-2 px-4 py-3 bg-card/70 backdrop-blur-sm border-b border-border sticky top-0 z-20">
-        <BackButton fallback="/journeys" />
-        <div className="flex-1 min-w-0">
-          <p className="text-sm font-bold text-foreground truncate">{name}</p>
-          {journey.isPremium && (
-            <p className="text-[10px] text-primary font-semibold">Premium Journey</p>
-          )}
-        </div>
-        {isSubscribed && (
+      <PageHeader
+        title={name}
+        subtitle={journey.isPremium ? 'Premium Journey' : undefined}
+        fallback="/journeys"
+        className="sticky top-0 z-20 bg-card/70 backdrop-blur-sm border-b border-border px-4 py-3"
+        right={isSubscribed ? (
           <button className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-muted transition-colors">
             <MoreVertical className="w-4 h-4 text-muted-foreground" />
           </button>
-        )}
-      </div>
+        ) : undefined}
+      />
 
       <JourneyPathView
         journey={journey}

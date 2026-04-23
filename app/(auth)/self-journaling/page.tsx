@@ -29,8 +29,7 @@
  *   useJournalingCategories()       — SWR hook (hooks/use-journaling.ts)
  *   useSelfJournalingEntries()      — SWR hook (hooks/use-journaling.ts)
  *   useJournalingSubscriptions()    — SWR hook (hooks/use-journaling-subscriptions.ts)
- *   PageHeader                      — shared header component
- *   BackButton                      — shared back navigation component
+ *   PageHeader                      — shared navigation header
  *   getJournalVisual()              — lib/journal-visual.ts
  *
  * LAST UPDATED: 2026-04-23 — JourneyCard now fetches sub-journal detail to show
