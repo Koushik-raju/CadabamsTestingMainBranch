@@ -682,14 +682,23 @@ export function JourneyPathView({ journey, progress, journeyId }: JourneyPathVie
       });
 
       // Append a synthetic "Summary" node as the final item of every day.
-      // - locked while any sibling task is not yet completed (greyed out)
-      // - completed once all siblings are completed (stays re-openable)
-      // The task payload is a minimal stub because PathChainNode requires one;
-      // handleNodeTap branches on taskType === 'summary' before dereferencing.
-      const allCompleted =
+      // Variants:
+      //   locked    — the day's tasks aren't all completed yet (greyed + lock)
+      //   default   — tasks done, no AI summary yet (tappable → Generate flow)
+      //   completed — AI summary already persisted (tappable → View flow)
+      // handleNodeTap branches on taskType === 'summary' before dereferencing
+      // the (stubbed) task payload, so the minimal stub is safe.
+      const dayProgress = progress?.days?.find((d) => d.dayNumber === stepIdx + 1);
+      const allTasksCompleted =
         taskVariants.length > 0 &&
         taskVariants.every((v) => v === 'completed');
-      const summaryVariant: NodeVariant = allCompleted ? 'completed' : 'locked';
+      const dayDone = allTasksCompleted || dayProgress?.completed === true;
+      const summaryGenerated = !!dayProgress?.summary;
+      const summaryVariant: NodeVariant = !dayDone
+        ? 'locked'
+        : summaryGenerated
+          ? 'completed'
+          : 'default';
       items.push({
         kind: 'node',
         node: {
@@ -702,7 +711,7 @@ export function JourneyPathView({ journey, progress, journeyId }: JourneyPathVie
           variant: summaryVariant,
           taskType: 'summary',
           nodeId: `${step.id}-summary`,
-          taskTitle: 'Summary',
+          taskTitle: summaryGenerated ? 'View Summary' : 'Summary',
           isMandatory: false,
           stepIdx,
           isPremiumStep: isPremium,
@@ -711,7 +720,7 @@ export function JourneyPathView({ journey, progress, journeyId }: JourneyPathVie
     });
     return items;
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [steps, journey.isPremium, taskStateById, isSubscribed]);
+  }, [steps, journey.isPremium, taskStateById, isSubscribed, progress?.days]);
 
   const imageUrl = fixImageUrl(journey.icon);
   const name     = extractJourneyName(journey.name);
@@ -888,6 +897,11 @@ export function JourneyPathView({ journey, progress, journeyId }: JourneyPathVie
           enrollmentId={enrollmentId}
           dayNumber={summaryModalDay}
           totalDays={steps.length}
+          onSummaryGenerated={() => {
+            // Refresh enrollment so progress.days[].summary updates and the
+            // summary node flips from 'default' (Generate) to 'completed' (View).
+            void globalMutate(journeyEnrollmentKey(journeyId));
+          }}
         />
       )}
 

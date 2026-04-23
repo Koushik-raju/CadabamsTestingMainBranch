@@ -26,10 +26,10 @@
  */
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
-import { Sparkles } from 'lucide-react';
+import { Sparkles, Loader2 } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
@@ -48,6 +48,7 @@ interface JourneyDaySummaryModalProps {
   enrollmentId: string;
   dayNumber: number;
   totalDays: number;
+  onSummaryGenerated?: () => void;
 }
 
 export function JourneyDaySummaryModal({
@@ -56,41 +57,52 @@ export function JourneyDaySummaryModal({
   enrollmentId,
   dayNumber,
   totalDays,
+  onSummaryGenerated,
 }: JourneyDaySummaryModalProps) {
   const [isLoading, setIsLoading] = useState(false);
   const [data, setData] = useState<DaySummaryResponseDto | null>(null);
   const [hasError, setHasError] = useState(false);
 
+  const fetchSummary = useCallback(
+    async (signal?: { cancelled: boolean }) => {
+      setIsLoading(true);
+      setHasError(false);
+      try {
+        const res = await journeysControllerGetDaySummary({
+          path: { id: enrollmentId },
+          query: { day: dayNumber },
+        });
+        if (signal?.cancelled) return;
+        if (res.error) setHasError(true);
+        else {
+          setData(res.data ?? null);
+          if (res.data?.summary) onSummaryGenerated?.();
+        }
+      } catch {
+        if (!signal?.cancelled) setHasError(true);
+      } finally {
+        if (!signal?.cancelled) setIsLoading(false);
+      }
+    },
+    [enrollmentId, dayNumber, onSummaryGenerated],
+  );
+
   useEffect(() => {
     if (!open) return;
-
-    let cancelled = false;
-    setIsLoading(true);
-    setHasError(false);
+    const signal = { cancelled: false };
     setData(null);
-
-    journeysControllerGetDaySummary({
-      path: { id: enrollmentId },
-      query: { day: dayNumber },
-    })
-      .then((res) => {
-        if (cancelled) return;
-        if (res.error) setHasError(true);
-        else setData(res.data ?? null);
-      })
-      .catch(() => {
-        if (!cancelled) setHasError(true);
-      })
-      .finally(() => {
-        if (!cancelled) setIsLoading(false);
-      });
-
+    void fetchSummary(signal);
     return () => {
-      cancelled = true;
+      signal.cancelled = true;
     };
-  }, [open, enrollmentId, dayNumber]);
+  }, [open, fetchSummary]);
 
   const summaryText = data?.summary ?? null;
+  const allTasksDone =
+    !!data &&
+    data.totalTaskCount > 0 &&
+    data.completedTaskCount >= data.totalTaskCount;
+  const canForceGenerate = allTasksDone && !summaryText && !isLoading;
 
   return (
     <Dialog open={open} onOpenChange={(v) => { if (!v) onClose(); }}>
@@ -123,9 +135,31 @@ export function JourneyDaySummaryModal({
               <Skeleton className="h-4 w-4/5 rounded" />
             </div>
           ) : hasError || !summaryText ? (
-            <p className="text-sm text-muted-foreground text-center py-4">
-              Summary will be available once you finish all tasks for Day {dayNumber}.
-            </p>
+            <div className="flex flex-col items-center gap-3 py-4">
+              <p className="text-sm text-muted-foreground text-center">
+                {canForceGenerate
+                  ? `Your Day ${dayNumber} summary hasn't been generated yet.`
+                  : `Summary will be available once you finish all tasks for Day ${dayNumber}.`}
+              </p>
+              {canForceGenerate && (
+                <button
+                  onClick={() => void fetchSummary()}
+                  className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-violet-600 text-white text-sm font-semibold active:scale-[0.97] transition-transform"
+                >
+                  <Sparkles className="w-4 h-4" />
+                  Generate summary
+                </button>
+              )}
+              {hasError && (
+                <button
+                  onClick={() => void fetchSummary()}
+                  className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-muted text-xs font-medium"
+                >
+                  <Loader2 className="w-3.5 h-3.5" />
+                  Retry
+                </button>
+              )}
+            </div>
           ) : (
             <div className="prose prose-sm max-w-none text-foreground [&_p]:leading-relaxed [&_ul]:list-disc [&_ul]:pl-5 [&_ol]:list-decimal [&_ol]:pl-5 [&_strong]:text-foreground">
               <ReactMarkdown remarkPlugins={[remarkGfm]}>
