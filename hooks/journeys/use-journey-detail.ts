@@ -13,7 +13,7 @@
  *                              passes preview=true so GET never auto-enrolls
  *   useEnrolledJourneys()    — lists all PatientJourneyResponseDto for the user
  *   useGamification()        — fetches GamificationDto (streak, xp, …)
- *   subscribeToJourney()     — POST enroll (only needed for premium journeys)
+ *   subscribeToJourney()     — auto-enroll free journeys via GET; throws for premium (purchase package instead)
  *   tickJourney()            — POST tick; server idempotently advances the day
  *   updateNodeProgress()     — POST complete-task; server returns the full
  *                              enrollment which replaces the SWR cache 1:1
@@ -31,7 +31,7 @@
  *   journeysControllerGetDaySummary
  *   SWR (useSWR, globalMutate)
  *
- * LAST UPDATED: 2026-04-22 — updateNodeProgress now accepts a TaskProof
+ * LAST UPDATED: 2026-04-23 — subscribeToJourney now throws for premium journeys (backend returns 402); removed dead enrollAPI branch
  *   discriminated union and forwards the proof id to the backend. The server
  *   rejects completion when the proof is missing, belongs to another patient,
  *   or does not match the content linked to the task. Added completeJourneyDay
@@ -40,7 +40,6 @@
 import useSWR, { mutate as globalMutate } from 'swr';
 import {
   cmsJourneysControllerGetById,
-  journeysControllerEnroll,
   journeysControllerGetByJourneyId,
   journeysControllerCompleteTask,
   journeysControllerCompleteDay,
@@ -166,22 +165,20 @@ async function replaceCache(journeyId: string, enrollment: PatientJourneyRespons
   globalMutate(gamificationKey());
 }
 
-/** Enroll in a premium/paid journey. Free journeys auto-enroll via GET. */
+/**
+ * Auto-enroll in a free journey via a non-preview GET. Premium journeys are
+ * purchased through the package flow — calling this for a premium journey is
+ * a programming error; the backend returns 402.
+ */
 export async function subscribeToJourney(journey: JourneyItem): Promise<void> {
-  if (!journey.isPremium) {
-    // Backend rejects the enroll POST for free journeys — instead, a
-    // non-preview GET triggers auto-enrollment server-side.
-    const res = await journeysControllerGetByJourneyId({
-      path: { journeyId: journey.id },
-      query: { preview: false },
-    });
-    if (res.error) throw new Error(JSON.stringify(res.error));
-    if (res.data) await replaceCache(journey.id, res.data);
-    else await globalMutate(journeyEnrollmentKey(journey.id));
-    return;
+  if (journey.isPremium) {
+    throw new Error('Purchase the package to get access — you will be auto-subscribed.');
   }
-  const res = await journeysControllerEnroll({
-    body: { journeyId: journey.id },
+  // Backend rejects the enroll POST for free journeys — a non-preview GET
+  // triggers auto-enrollment server-side.
+  const res = await journeysControllerGetByJourneyId({
+    path: { journeyId: journey.id },
+    query: { preview: false },
   });
   if (res.error) throw new Error(JSON.stringify(res.error));
   if (res.data) await replaceCache(journey.id, res.data);
