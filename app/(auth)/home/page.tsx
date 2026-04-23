@@ -33,9 +33,9 @@
 
 "use client";
 
+import { GrowthWidget } from "@/components/home/growth-widget";
 import { HomeHeader } from "@/components/home/home-header";
 import { JourneySection } from "@/components/home/journey-section";
-import { GrowthWidget } from "@/components/home/growth-widget";
 import { QuickActions } from "@/components/home/quick-actions";
 import { SupportSection } from "@/components/home/support-section";
 import { UpcomingSession } from "@/components/home/upcoming-session";

@@ -204,10 +204,10 @@ export function journalSubEntriesKey(slug: string): string {
   return `/journaling/sub-journalings/${slug}/entries`;
 }
 
-export function growthWeekKey(date: string): readonly ['growth-week', string] {
-  return ['growth-week', date] as const;
+export function growthWeekKey(date: string): readonly ["growth-week", string] {
+  return ["growth-week", date] as const;
 }
 
-export function growthDayKey(date: string): readonly ['growth-day', string] {
-  return ['growth-day', date] as const;
+export function growthDayKey(date: string): readonly ["growth-day", string] {
+  return ["growth-day", date] as const;
 }

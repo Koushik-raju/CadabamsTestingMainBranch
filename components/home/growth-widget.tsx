@@ -28,10 +28,19 @@
  *
  * LAST UPDATED: 2026-04-23 — redesigned: personal, richer preview, 7-day strip
  */
-'use client';
+"use client";
 
-import Link from 'next/link';
-import ReactMarkdown, { type Components } from 'react-markdown';
+import { Card, CardContent } from "@/components/ui/card";
+import { Skeleton } from "@/components/ui/skeleton";
+import {
+  type GrowthDay,
+  todayIso,
+  useGrowthDay,
+  useGrowthLatestActiveDate,
+  useGrowthWeek,
+} from "@/hooks/growth/use-growth";
+import { useAuth } from "@/hooks/use-auth";
+import { cn } from "@/lib/utils";
 import {
   ArrowUpRight,
   BookOpen,
@@ -39,20 +48,11 @@ import {
   MessageSquareText,
   Route,
   Sparkles,
-} from 'lucide-react';
-import { Card, CardContent } from '@/components/ui/card';
-import { Skeleton } from '@/components/ui/skeleton';
-import { cn } from '@/lib/utils';
-import { useAuth } from '@/hooks/use-auth';
-import {
-  todayIso,
-  useGrowthDay,
-  useGrowthLatestActiveDate,
-  useGrowthWeek,
-  type GrowthDay,
-} from '@/hooks/growth/use-growth';
+} from "lucide-react";
+import Link from "next/link";
+import ReactMarkdown, { type Components } from "react-markdown";
 
-const DOW_LABELS = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
+const DOW_LABELS = ["M", "T", "W", "T", "F", "S", "S"];
 
 /** Collapse markdown blocks to inline so a 2-line clamp never mid-breaks a
  *  heading or list. Inline formatting (bold/italic) still renders. */
@@ -78,9 +78,9 @@ function formatFriendlyDate(iso: string): string {
   const d = new Date(`${iso}T00:00:00.000Z`);
   if (Number.isNaN(d.getTime())) return iso;
   return d.toLocaleDateString(undefined, {
-    month: 'short',
-    day: 'numeric',
-    timeZone: 'UTC',
+    month: "short",
+    day: "numeric",
+    timeZone: "UTC",
   });
 }
 
@@ -89,18 +89,18 @@ function formatFriendlyDate(iso: string): string {
 function derivePreview(day: GrowthDay | undefined): { label: string; text: string } | null {
   if (!day) return null;
   if (day.chatSummaries[0]?.text) {
-    return { label: 'Chat reflection', text: day.chatSummaries[0].text };
+    return { label: "Chat reflection", text: day.chatSummaries[0].text };
   }
   const journey = day.journeys.find((j) => j.summaryText?.trim());
   if (journey && journey.summaryText) {
     return {
-      label: `${journey.journeyTitle ?? 'Journey'} · Day ${journey.dayNumber}`,
+      label: `${journey.journeyTitle ?? "Journey"} · Day ${journey.dayNumber}`,
       text: journey.summaryText,
     };
   }
   if (day.journals[0]?.entryText) {
     return {
-      label: day.journals[0].title?.trim() || 'Journal entry',
+      label: day.journals[0].title?.trim() || "Journal entry",
       text: day.journals[0].entryText,
     };
   }
@@ -116,7 +116,7 @@ function derivePreview(day: GrowthDay | undefined): { label: string; text: strin
 export function GrowthWidget() {
   const today = todayIso();
   const { user } = useAuth();
-  const firstName = ((user?.name as string | undefined) ?? '').split(' ')[0] || 'there';
+  const firstName = ((user?.name as string | undefined) ?? "").split(" ")[0] || "there";
 
   const { week, isLoading: weekLoading } = useGrowthWeek(today);
   const { latest, isLoading: latestLoading } = useGrowthLatestActiveDate();
@@ -136,11 +136,10 @@ export function GrowthWidget() {
     assessment: day?.assessments.length ?? 0,
     chat: day?.chatSummaries.length ?? 0,
   };
-  const totalCount =
-    totals.journey + totals.journal + totals.assessment + totals.chat;
-  const weekActive = week?.days.filter(
-    (d) => d.hasJourney || d.hasJournal || d.hasAssessment || d.hasChatSummary,
-  ).length ?? 0;
+  const totalCount = totals.journey + totals.journal + totals.assessment + totals.chat;
+  const weekActive =
+    week?.days.filter((d) => d.hasJourney || d.hasJournal || d.hasAssessment || d.hasChatSummary)
+      .length ?? 0;
 
   const preview = derivePreview(day);
   const isBestToday = bestDate === today;
@@ -171,7 +170,7 @@ export function GrowthWidget() {
             {/* Soft gradient top */}
             <div className="bg-gradient-to-br from-primary/5 via-transparent to-amber-500/5 px-4 pt-4 pb-3">
               <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-foreground mb-1">
-                {isBestToday ? "Today's reflection" : 'Most recent reflection'}
+                {isBestToday ? "Today's reflection" : "Most recent reflection"}
               </p>
 
               {/* Hero line: big count + framing sentence */}
@@ -184,15 +183,14 @@ export function GrowthWidget() {
               ) : (
                 <p className="text-base font-bold text-foreground leading-tight">
                   <span className="text-primary">
-                    {totalCount} {totalCount === 1 ? 'moment' : 'moments'}
-                  </span>{' '}
+                    {totalCount} {totalCount === 1 ? "moment" : "moments"}
+                  </span>{" "}
                   on {formatFriendlyDate(bestDate)}
                   {weekActive > 0 && (
                     <>
-                      {' '}
+                      {" "}
                       <span className="text-muted-foreground font-medium">
-                        · {weekActive} {weekActive === 1 ? 'day' : 'days'} active this
-                        week
+                        · {weekActive} {weekActive === 1 ? "day" : "days"} active this week
                       </span>
                     </>
                   )}
@@ -212,34 +210,31 @@ export function GrowthWidget() {
                   const active =
                     d && (d.hasJourney || d.hasJournal || d.hasAssessment || d.hasChatSummary);
                   return (
-                    <div
-                      key={iso ?? i}
-                      className="flex flex-col items-center gap-1"
-                    >
+                    <div key={iso ?? i} className="flex flex-col items-center gap-1">
                       <span
                         className={cn(
-                          'text-[9px] font-bold uppercase tracking-wider',
-                          isToday ? 'text-primary' : 'text-muted-foreground',
+                          "text-[9px] font-bold uppercase tracking-wider",
+                          isToday ? "text-primary" : "text-muted-foreground",
                         )}
                       >
                         {DOW_LABELS[i]}
                       </span>
                       <div
                         className={cn(
-                          'w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold transition-colors',
+                          "w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold transition-colors",
                           isToday
-                            ? 'bg-primary text-primary-foreground'
+                            ? "bg-primary text-primary-foreground"
                             : active
-                            ? 'bg-primary/10 text-primary'
-                            : 'bg-muted text-muted-foreground',
+                              ? "bg-primary/10 text-primary"
+                              : "bg-muted text-muted-foreground",
                         )}
                       >
-                        {iso ? Number(iso.slice(8, 10)) : ''}
+                        {iso ? Number(iso.slice(8, 10)) : ""}
                       </div>
                       <span
                         className={cn(
-                          'w-1 h-1 rounded-full',
-                          active && !isToday ? 'bg-primary' : 'bg-transparent',
+                          "w-1 h-1 rounded-full",
+                          active && !isToday ? "bg-primary" : "bg-transparent",
                         )}
                       />
                     </div>
@@ -255,20 +250,10 @@ export function GrowthWidget() {
                   <Chip icon={Route} label="Journey" count={totals.journey} tint="violet" />
                 )}
                 {totals.chat > 0 && (
-                  <Chip
-                    icon={MessageSquareText}
-                    label="Chat"
-                    count={totals.chat}
-                    tint="sky"
-                  />
+                  <Chip icon={MessageSquareText} label="Chat" count={totals.chat} tint="sky" />
                 )}
                 {totals.journal > 0 && (
-                  <Chip
-                    icon={BookOpen}
-                    label="Journal"
-                    count={totals.journal}
-                    tint="emerald"
-                  />
+                  <Chip icon={BookOpen} label="Journal" count={totals.journal} tint="emerald" />
                 )}
                 {totals.assessment > 0 && (
                   <Chip
@@ -288,9 +273,7 @@ export function GrowthWidget() {
                   {preview.label}
                 </p>
                 <div className="text-xs text-foreground/80 leading-relaxed line-clamp-2 [&_strong]:font-semibold [&_em]:italic">
-                  <ReactMarkdown components={PREVIEW_COMPONENTS}>
-                    {preview.text}
-                  </ReactMarkdown>
+                  <ReactMarkdown components={PREVIEW_COMPONENTS}>{preview.text}</ReactMarkdown>
                 </div>
               </div>
             )}
@@ -299,8 +282,8 @@ export function GrowthWidget() {
             {!isLoading && !hasAnyData && (
               <div className="mx-4 mb-4 bg-muted/40 rounded-xl px-3 py-3 border border-border/50 text-center">
                 <p className="text-xs text-muted-foreground leading-relaxed">
-                  Journal an entry, complete a journey day, or chat with Dr. Riya —
-                  every moment lands here.
+                  Journal an entry, complete a journey day, or chat with Dr. Riya — every moment
+                  lands here.
                 </p>
               </div>
             )}
@@ -333,18 +316,18 @@ function Chip({
   icon: React.ComponentType<{ className?: string }>;
   label: string;
   count: number;
-  tint: 'violet' | 'sky' | 'emerald' | 'amber';
+  tint: "violet" | "sky" | "emerald" | "amber";
 }) {
   const tintClass = {
-    violet: 'bg-violet-500/10 text-violet-700 dark:text-violet-300',
-    sky: 'bg-sky-500/10 text-sky-700 dark:text-sky-300',
-    emerald: 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-300',
-    amber: 'bg-amber-500/10 text-amber-700 dark:text-amber-300',
+    violet: "bg-violet-500/10 text-violet-700 dark:text-violet-300",
+    sky: "bg-sky-500/10 text-sky-700 dark:text-sky-300",
+    emerald: "bg-emerald-500/10 text-emerald-700 dark:text-emerald-300",
+    amber: "bg-amber-500/10 text-amber-700 dark:text-amber-300",
   }[tint];
   return (
     <span
       className={cn(
-        'inline-flex items-center gap-1 px-2 py-1 rounded-full text-[11px] font-semibold',
+        "inline-flex items-center gap-1 px-2 py-1 rounded-full text-[11px] font-semibold",
         tintClass,
       )}
     >

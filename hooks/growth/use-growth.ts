@@ -1,3 +1,5 @@
+import { apiClient } from "@/api/backend-v2";
+import { growthDayKey, growthWeekKey } from "@/lib/swr-keys";
 /**
  * FILE: hooks/growth/use-growth.ts
  *
@@ -22,9 +24,7 @@
  *
  * LAST UPDATED: 2026-04-23 — initial scaffold
  */
-import useSWR from 'swr';
-import { apiClient } from '@/api/backend-v2';
-import { growthDayKey, growthWeekKey } from '@/lib/swr-keys';
+import useSWR from "swr";
 
 export interface GrowthWeekDay {
   date: string;
@@ -90,7 +90,7 @@ export function todayIso(): string {
 
 async function fetchLatestActiveDate(): Promise<GrowthLatestActiveDate> {
   const { data } = await apiClient.get<GrowthLatestActiveDate>(
-    '/api/v1/me/growth/latest-active-date',
+    "/api/v1/me/growth/latest-active-date",
   );
   return data;
 }
@@ -103,7 +103,7 @@ async function fetchLatestActiveDate(): Promise<GrowthLatestActiveDate> {
  */
 export function useGrowthLatestActiveDate() {
   const { data, error, isLoading } = useSWR<GrowthLatestActiveDate>(
-    'growth-latest-active-date',
+    "growth-latest-active-date",
     fetchLatestActiveDate,
     { revalidateOnFocus: false },
   );
@@ -111,14 +111,14 @@ export function useGrowthLatestActiveDate() {
 }
 
 async function fetchWeek(date: string): Promise<GrowthWeek> {
-  const { data } = await apiClient.get<GrowthWeek>('/api/v1/me/growth/week', {
+  const { data } = await apiClient.get<GrowthWeek>("/api/v1/me/growth/week", {
     params: { date },
   });
   return data;
 }
 
 async function fetchDay(date: string): Promise<GrowthDay> {
-  const { data } = await apiClient.get<GrowthDay>('/api/v1/me/growth/day', {
+  const { data } = await apiClient.get<GrowthDay>("/api/v1/me/growth/day", {
     params: { date },
   });
   return data;

@@ -22,15 +22,15 @@
  *
  * LAST UPDATED: 2026-04-23 — initial scaffold
  */
-'use client';
+"use client";
 
-import ReactMarkdown, { type Components } from 'react-markdown';
-import { BookOpen, ClipboardCheck, MessageSquareText, Route } from 'lucide-react';
-import { Card, CardContent } from '@/components/ui/card';
-import { Separator } from '@/components/ui/separator';
-import { Skeleton } from '@/components/ui/skeleton';
-import { cn } from '@/lib/utils';
-import type { GrowthDay } from '@/hooks/growth/use-growth';
+import { Card, CardContent } from "@/components/ui/card";
+import { Separator } from "@/components/ui/separator";
+import { Skeleton } from "@/components/ui/skeleton";
+import type { GrowthDay } from "@/hooks/growth/use-growth";
+import { cn } from "@/lib/utils";
+import { BookOpen, ClipboardCheck, MessageSquareText, Route } from "lucide-react";
+import ReactMarkdown, { type Components } from "react-markdown";
 
 /**
  * Preview markdown components — collapse every block-level element (paragraph,
@@ -72,8 +72,8 @@ interface Props {
 
 function formatTime(iso: string): string {
   const d = new Date(iso);
-  if (Number.isNaN(d.getTime())) return '';
-  return d.toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' });
+  if (Number.isNaN(d.getTime())) return "";
+  return d.toLocaleTimeString(undefined, { hour: "numeric", minute: "2-digit" });
 }
 
 function Section({
@@ -90,7 +90,7 @@ function Section({
   return (
     <div className="px-4 mb-6">
       <div className="flex items-center gap-2 mb-3">
-        <div className={cn('w-6 h-6 rounded-lg flex items-center justify-center', accent)}>
+        <div className={cn("w-6 h-6 rounded-lg flex items-center justify-center", accent)}>
           <Icon className="w-3.5 h-3.5 text-white" />
         </div>
         <h3 className="text-sm font-bold text-foreground">{title}</h3>
@@ -149,17 +149,12 @@ export function DayFeed({ day, isLoading, onOpenItem }: Props) {
   }
 
   const totalItems =
-    day.journeys.length +
-    day.journals.length +
-    day.assessments.length +
-    day.chatSummaries.length;
+    day.journeys.length + day.journals.length + day.assessments.length + day.chatSummaries.length;
 
   if (totalItems === 0) {
     return (
       <div className="px-4 py-10 text-center">
-        <p className="text-sm text-muted-foreground">
-          Nothing recorded for this day yet.
-        </p>
+        <p className="text-sm text-muted-foreground">Nothing recorded for this day yet.</p>
       </div>
     );
   }
@@ -173,12 +168,12 @@ export function DayFeed({ day, isLoading, onOpenItem }: Props) {
               key={`${item.enrollmentId}-${item.dayNumber}`}
               onClick={() =>
                 onOpenItem({
-                  title: item.journeyTitle ?? 'Journey',
+                  title: item.journeyTitle ?? "Journey",
                   subtitle: `Day ${item.dayNumber} · ${formatTime(item.completedAt)}`,
                   body: item.summaryText,
                 })
               }
-              title={`Day ${item.dayNumber} · ${item.journeyTitle ?? 'Journey'}`}
+              title={`Day ${item.dayNumber} · ${item.journeyTitle ?? "Journey"}`}
               meta={formatTime(item.completedAt)}
               preview={item.summaryText}
               isLast={i === day.journeys.length - 1}
@@ -194,12 +189,12 @@ export function DayFeed({ day, isLoading, onOpenItem }: Props) {
               key={item.id}
               onClick={() =>
                 onOpenItem({
-                  title: item.title?.trim() || 'Journal entry',
+                  title: item.title?.trim() || "Journal entry",
                   subtitle: formatTime(item.journaledAt),
                   body: item.entryText,
                 })
               }
-              title={item.title?.trim() || 'Journal entry'}
+              title={item.title?.trim() || "Journal entry"}
               meta={formatTime(item.journaledAt)}
               preview={item.entryText}
               isLast={i === day.journals.length - 1}
@@ -221,7 +216,7 @@ export function DayFeed({ day, isLoading, onOpenItem }: Props) {
                     formatTime(item.completedAt),
                   ]
                     .filter(Boolean)
-                    .join(' · '),
+                    .join(" · "),
                   body: item.analysisMarkdown,
                 })
               }
@@ -241,7 +236,7 @@ export function DayFeed({ day, isLoading, onOpenItem }: Props) {
               key={item.id}
               onClick={() =>
                 onOpenItem({
-                  title: 'Chat summary',
+                  title: "Chat summary",
                   subtitle: formatTime(item.createdAt),
                   body: item.text,
                 })
