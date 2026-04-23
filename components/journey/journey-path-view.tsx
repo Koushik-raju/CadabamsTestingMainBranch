@@ -58,7 +58,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { mutate as globalMutate } from 'swr';
 import { toast } from 'react-toastify';
 import {
-  Flame, Zap, Lock, Clock, BarChart2, Timer, Sparkles,
+  Flame, Zap, Lock, Clock, BarChart2, Timer, Sparkles, Crown,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { PathChain, getTaskType, type PathChainNode, type ChainItem } from './path-chain';
@@ -551,12 +551,14 @@ export function JourneyPathView({ journey, progress, journeyId }: JourneyPathVie
       return;
     }
 
-    // Unsubscribed: Day 1 nodes are tappable as a free try-out for every
-    // journey (including premium). Later days still show the preview
-    // sheet so the user understands they need to subscribe.
+    // Unsubscribed behaviour:
+    // - FREE journeys: Day 1 is tappable as a free try-out; later days
+    //   route to the preview sheet so the user sees the subscribe CTA.
+    // - PREMIUM journeys: NO day is attemptable. Every tap routes to the
+    //   preview sheet — the user must purchase the linked package first.
     if (!isSubscribed) {
       const isDayOne = (node.stepIdx ?? 0) === 0;
-      if (isDayOne) {
+      if (!journey.isPremium && isDayOne) {
         hapticLight();
         setActionSheetData({ node, isActive: true });
         setActionSheetOpen(true);
@@ -571,7 +573,7 @@ export function JourneyPathView({ journey, progress, journeyId }: JourneyPathVie
     // Session gate: free-preview users tapping book tasks → go to packages
     if (isPaidFreePreview && node.taskType === 'book') {
       hapticWarning();
-      router.push('/packages');
+      router.push(packagePath);
       return;
     }
 
@@ -588,7 +590,21 @@ export function JourneyPathView({ journey, progress, journeyId }: JourneyPathVie
     setActionSheetOpen(true);
   }
 
+  // Resolves the correct destination for any "subscribe to plan" CTA on
+  // this journey. If the journey has a linked packageId, route to the
+  // specific package browse page; otherwise fall back to the generic list.
+  const packagePath = journey.packageId ? `/packages/browse/${journey.packageId}` : '/packages';
+
+  // Premium journeys: enrollment is handled automatically on the backend
+  // once the user purchases the linked package. The frontend MUST NOT call
+  // subscribeToJourney for premium journeys — it routes to the package
+  // browse flow instead. Free journeys keep the direct-enroll path.
   async function handleSubscribe() {
+    if (journey.isPremium) {
+      hapticMedium();
+      router.push(packagePath);
+      return;
+    }
     setSubscribing(true);
     try {
       await subscribeToJourney(journey);
@@ -726,7 +742,7 @@ export function JourneyPathView({ journey, progress, journeyId }: JourneyPathVie
           <div className="bg-card px-4 py-2.5 flex items-center justify-between">
             <p className="text-xs text-muted-foreground">Unlock all days &amp; appointments</p>
             <button
-              onClick={() => router.push('/packages')}
+              onClick={() => router.push(packagePath)}
               className="text-xs font-bold text-primary"
             >
               View Plans →
@@ -821,32 +837,15 @@ export function JourneyPathView({ journey, progress, journeyId }: JourneyPathVie
               <Lock className="w-5 h-5 text-muted-foreground/50" />
             </div>
             <p className="text-sm font-semibold text-muted-foreground">Unlock more units</p>
-            <button onClick={() => router.push('/packages')} className="text-xs font-bold text-primary underline underline-offset-2">
+            <button onClick={() => router.push(packagePath)} className="text-xs font-bold text-primary underline underline-offset-2">
               View Plans →
             </button>
           </div>
         )}
       </div>
 
-      {/* Footer — only shown when NOT subscribed */}
-      {!isSubscribed && (
-        <div className="fixed bottom-0 left-0 right-0 bg-card/80 backdrop-blur-sm border-t border-border px-4 pt-3 pb-6 z-20">
-          <p className="text-xs text-muted-foreground mb-3 text-center">
-            {months} {months === 1 ? 'Month' : 'Months'} · {steps.length} Days · {dayCount} Tasks
-          </p>
-          <button
-            onClick={journey.isPremium ? () => setPremiumSheetOpen(true) : handleSubscribe}
-            disabled={subscribing}
-            className={cn(
-              'w-full h-14 rounded-2xl font-bold text-base active:scale-[0.98] transition-transform',
-              subscribing && 'opacity-60 cursor-not-allowed',
-              journey.isPremium ? 'bg-foreground text-background' : 'bg-primary text-primary-foreground shadow-md shadow-primary/30',
-            )}
-          >
-            {ctaLabel}
-          </button>
-        </div>
-      )}
+      {/* Unenrolled users see the sticky Subscribe banner rendered by the
+          details page — no footer CTA here to avoid stacking two CTAs. */}
 
       {/* Task action sheet */}
       <JourneyTaskActionSheet
@@ -874,7 +873,7 @@ export function JourneyPathView({ journey, progress, journeyId }: JourneyPathVie
         onTaskTap={(item) => {
           setUnitTasksOpen(false);
           if (isPaidFreePreview && item.type === 'book') {
-            router.push('/packages');
+            router.push(packagePath);
             return;
           }
           navigateToTask(item.task, item.task.id);
@@ -920,7 +919,7 @@ export function JourneyPathView({ journey, progress, journeyId }: JourneyPathVie
                 ))}
               </div>
               <button
-                onClick={() => { setPremiumSheetOpen(false); router.push('/packages'); }}
+                onClick={() => { setPremiumSheetOpen(false); router.push(packagePath); }}
                 className="w-full h-14 rounded-2xl bg-foreground text-background font-bold text-base"
               >
                 View Plans →
@@ -956,7 +955,7 @@ export function JourneyPathView({ journey, progress, journeyId }: JourneyPathVie
                 ))}
               </div>
               <button
-                onClick={() => { setPremiumSheetOpen(false); router.push('/packages'); }}
+                onClick={() => { setPremiumSheetOpen(false); router.push(packagePath); }}
                 className="w-full h-14 rounded-2xl bg-gradient-to-r from-violet-500 to-purple-600 text-white font-bold text-base"
               >
                 Get Full Access →
@@ -967,7 +966,7 @@ export function JourneyPathView({ journey, progress, journeyId }: JourneyPathVie
               <p className="text-lg font-bold text-foreground mb-2">Unlock with a plan</p>
               <p className="text-sm text-muted-foreground mb-6">Upgrade to unlock all units and track your progress.</p>
               <button
-                onClick={() => { setPremiumSheetOpen(false); router.push('/packages'); }}
+                onClick={() => { setPremiumSheetOpen(false); router.push(packagePath); }}
                 className="w-full h-14 rounded-2xl bg-primary text-primary-foreground font-bold text-base"
               >
                 View Plans →
@@ -986,7 +985,7 @@ export function JourneyPathView({ journey, progress, journeyId }: JourneyPathVie
         isPremium={journey.isPremium ?? false}
         isSubscribing={subscribing}
         onSubscribe={() => { setPreviewSheetOpen(false); handleSubscribe(); }}
-        onViewPlans={() => { setPreviewSheetOpen(false); router.push('/packages'); }}
+        onViewPlans={() => { setPreviewSheetOpen(false); router.push(packagePath); }}
       />
 
       {/* Day summary sheet */}

@@ -1,0 +1,10 @@
+echo "▶ Generating doctors list..."
+pnpm run generate:doctors-list
+
+echo "▶ Type checking..."
+pnpm run typecheck
+
+echo "▶ Building..."
+pnpm run build
+
+echo "✓ All checks passed."
