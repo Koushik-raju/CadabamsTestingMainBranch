@@ -25,7 +25,7 @@
  *   useBooking — BookingContext for saving selection before checkout
  *   PageHeader — shared navigation header
  *
- * LAST UPDATED: 2026-04-23 — migrated custom header div to PageHeader; added file header
+ * LAST UPDATED: 2026-04-23 — filter campuses by doctor.campus_ids so only the doctor's campuses show in the sheet
  */
 "use client";
 
@@ -54,6 +54,7 @@ import { useAuth } from "@/hooks/shared/auth/use-auth";
 type DoctorResponseDto = DoctorBasicResponseDto & {
   doctor_type?: string;
   profile_image?: string;
+  campus_ids?: number[];
 };
 
 type CampusItem = {
@@ -237,6 +238,15 @@ function BookingContent() {
     [campuses],
   );
 
+  // ── filter campuses to only those where the doctor is available ──────────────
+  // doctor.campus_ids is an array of campus IDs (e.g. [4]) returned by the API.
+  // We filter the master campus list so only the doctor's campuses appear in the sheet.
+  const availableCampuses = useMemo(() => {
+    if (!doctor?.campus_ids?.length) return campuses;
+    const allowed = new Set(doctor.campus_ids);
+    return campuses.filter((c) => allowed.has(c.id));
+  }, [campuses, doctor]);
+
   // ── derived display values ───────────────────────────────────────────────────
   const slotsByDate = useMemo(() => {
     const map: Record<string, SlotResponseDto[]> = {};
@@ -279,8 +289,8 @@ function BookingContent() {
 
   const confirmedCampusName =
     confirmedCampusId !== null
-      ? campuses.find((c) => c.id === confirmedCampusId)?.display_name ||
-        campuses.find((c) => c.id === confirmedCampusId)?.name ||
+      ? availableCampuses.find((c) => c.id === confirmedCampusId)?.display_name ||
+        availableCampuses.find((c) => c.id === confirmedCampusId)?.name ||
         null
       : null;
 
@@ -599,7 +609,7 @@ function BookingContent() {
         onConfirmedCampusChange={setConfirmedCampusId}
         confirmedSubId={confirmedSubId}
         onConfirmedSubChange={setConfirmedSubId}
-        campuses={campuses}
+        campuses={availableCampuses}
         isOnline={isOnline}
         loading={loadingMeta}
       />
