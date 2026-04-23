@@ -39,6 +39,7 @@ import { SupportSection } from "@/components/home/support-section";
 import { QuickActions } from "@/components/home/quick-actions";
 import { UpcomingSession } from "@/components/home/upcoming-session";
 import { JourneySection } from "@/components/home/journey-section";
+import { GrowthWidget } from "@/components/home/growth-widget";
 import { useHomePage } from "@/hooks/home/use-home-page";
 import { useEnrolledJourneys, useGamification } from "@/hooks/journeys/use-journey-detail";
 import { useMemo } from "react";
@@ -139,6 +140,8 @@ export default function HomePage() {
           streak={gamification?.streak ?? 0}
           isLoading={enrollmentsLoading}
         />
+
+        <GrowthWidget />
       </div>
     </div>
   );
