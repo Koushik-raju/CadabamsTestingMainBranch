@@ -1,6 +1,8 @@
 import type { CapacitorConfig } from '@capacitor/cli';
 import { KeyboardResize } from '@capacitor/keyboard';
 
+const isDev = process.env.NODE_ENV !== 'production';
+
 const config: CapacitorConfig = {
   appId: 'com.mindtalk.com',
   appName: 'MindTalk',
@@ -8,12 +10,13 @@ const config: CapacitorConfig = {
   ios: {
     preferredContentMode: 'mobile',
     limitsNavigationsToAppBoundDomains: false,
-    webContentsDebuggingEnabled: true,
+    // Only enable WebView debugging in dev — exposes the app to Chrome DevTools in prod otherwise
+    webContentsDebuggingEnabled: isDev,
     scrollEnabled: true,
     allowsLinkPreview: false,
   },
   android: {
-    webContentsDebuggingEnabled: true,
+    webContentsDebuggingEnabled: isDev,
     allowMixedContent: true,
     captureInput: true,
   },
@@ -42,7 +45,7 @@ const config: CapacitorConfig = {
     url: 'https://consult.cadabams.com/',
     cleartext: false,
   },
-  loggingBehavior: 'debug',
+  loggingBehavior: isDev ? 'debug' : 'none',
 };
 
 export default config;
