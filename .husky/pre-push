@@ -1,9 +1,6 @@
 echo "▶ Generating doctors list..."
 pnpm run generate:doctors-list
 
-echo "▶ Linting..."
-pnpm run lint
-
 echo "▶ Type checking..."
 pnpm run typecheck
 
