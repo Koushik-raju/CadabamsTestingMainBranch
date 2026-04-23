@@ -2,33 +2,39 @@
  * FILE: app/(auth)/self-journaling/page.tsx
  *
  * PURPOSE:
- *   Home page for the Self Journaling feature. Arranged as:
- *   header → Free Flow hero → Guided Reflection horizontal scroll →
- *   date-strip picker → entries for the selected date.
+ *   Home page for the Self Journaling feature. Sections:
+ *   header → Free Flow hero → Continue Journey (subscribed journals) →
+ *   Guided Reflection horizontal scroll → date-strip picker → entries.
  *
  * LOGIC OVERVIEW:
  *   1. Fetches published journaling categories via useJournalingCategories().
- *   2. Fetches the user's entries via useSelfJournalingEntries().
- *   3. Builds a 7-day date strip (today and the 6 prior days).
- *   4. selectedDate state drives which day's entries are shown below the strip.
- *   5. A dot appears on strip days that have at least one entry.
- *   6. Category cards render in a horizontal scroll row (w-36 fixed-width).
- *   7. Tapping an entry row navigates to /self-journaling/[date].
+ *   2. Fetches the user's journal entries via useSelfJournalingEntries().
+ *   3. Fetches the user's subscribed journals via useJournalingSubscriptions().
+ *   4. Builds a 7-day date strip (today + 6 prior days) with week-offset navigation.
+ *   5. selectedDate state drives which day's entries are shown below the strip.
+ *   6. A dot appears on strip days that have at least one entry.
+ *   7. "Continue Journey" section shows subscribed journals in a horizontal scroll;
+ *      "View all" navigates to /self-journaling/subscriptions.
+ *   8. "Guided Reflection" shows published categories in a horizontal scroll;
+ *      "View all" navigates to /self-journaling/categories.
  *
  * KEY VARIABLES / PROPS / EXPORTS:
- *   selectedDate        — ISO date string for the currently active date strip day
+ *   selectedDate        — ISO date string for the active date strip day
  *   selectedEntries     — entries filtered to selectedDate
- *   entryDateSet        — Set of ISO date strings that have at least one entry (for dots)
+ *   entryDateSet        — Set of ISO date strings that have at least one entry
  *   publishedCategories — PUBLISHED JournalingCategory[]
+ *   subscriptions       — SubscriptionWithTitleResponseDto[] (user's subscribed journals)
  *
  * DEPENDENCIES:
- *   useJournalingCategories()  — SWR hook (hooks/use-journaling.ts)
- *   useSelfJournalingEntries() — SWR hook (hooks/use-journaling.ts)
- *   BackButton                 — shared back navigation component
- *   getJournalVisual()         — lib/journal-visual.ts — unique gradient+icon per title
+ *   useJournalingCategories()       — SWR hook (hooks/use-journaling.ts)
+ *   useSelfJournalingEntries()      — SWR hook (hooks/use-journaling.ts)
+ *   useJournalingSubscriptions()    — SWR hook (hooks/use-journaling-subscriptions.ts)
+ *   PageHeader                      — shared header component
+ *   BackButton                      — shared back navigation component
+ *   getJournalVisual()              — lib/journal-visual.ts
  *
- * LAST UPDATED: 2026-04-22 — CategoryCard now renders backend icon URL as full
- *   cover image (next/image) instead of emoji span; gradient tile is fallback only.
+ * LAST UPDATED: 2026-04-23 — JourneyCard now fetches sub-journal detail to show
+ *   cover image; gradient tile is fallback only (same pattern as subscriptions page).
  */
 "use client";
 
@@ -40,7 +46,7 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Card, CardContent } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
-import { BackButton } from "@/components/shared/navigation/back-button";
+import { PageHeader } from "@/components/shared/navigation/page-header";
 import {
   useJournalingCategories,
   useSelfJournalingEntries,
@@ -49,6 +55,11 @@ import type {
   SelfJournalingEntry,
   JournalingCategory,
 } from "@/hooks/use-journaling";
+import {
+  useJournalingSubscriptions,
+  useSubJournalDetail,
+  type SubscriptionWithTitleResponseDto,
+} from "@/hooks/use-journaling-subscriptions";
 import { cn } from "@/lib/utils";
 import { getJournalVisual } from "@/lib/journal-visual";
 
@@ -69,7 +80,7 @@ function buildWeekDays(offsetDays: number) {
   today.setHours(0, 0, 0, 0);
   return Array.from({ length: 7 }, (_, i) => {
     const d = new Date(today);
-    d.setDate(today.getDate() - offsetDays - (6 - i)); // oldest → newest
+    d.setDate(today.getDate() - offsetDays - (6 - i));
     return {
       dateStr: toLocalDateStr(d),
       dayLetter: d.toLocaleDateString("en-US", { weekday: "narrow" }),
@@ -77,6 +88,60 @@ function buildWeekDays(offsetDays: number) {
       monthShort: d.toLocaleDateString("en-US", { month: "short" }),
     };
   });
+}
+
+// ---------------------------------------------------------------------------
+// Subscribed Journey Card — horizontal scroll variant
+// ---------------------------------------------------------------------------
+
+function JourneyCard({
+  subscription,
+  onClick,
+}: {
+  subscription: SubscriptionWithTitleResponseDto;
+  onClick: () => void;
+}) {
+  const { gradient, Icon } = getJournalVisual(subscription.title);
+  const { sub, isLoading: detailLoading } = useSubJournalDetail(subscription.slug);
+
+  return (
+    <button
+      onClick={onClick}
+      className="flex-shrink-0 w-36 bg-card border border-border rounded-2xl overflow-hidden text-left shadow-sm hover:shadow-lg transition-all duration-300 hover:-translate-y-1 active:scale-[0.97]"
+    >
+      {sub?.icon ? (
+        <div className="h-20 relative overflow-hidden">
+          <Image
+            src={sub.icon}
+            alt={subscription.title}
+            fill
+            className="object-cover"
+            sizes="144px"
+          />
+        </div>
+      ) : detailLoading ? (
+        <Skeleton className="h-20 w-full rounded-none" />
+      ) : (
+        <div
+          className={cn(
+            "h-20 bg-gradient-to-br flex items-center justify-center relative overflow-hidden",
+            gradient,
+          )}
+        >
+          <div className="absolute -top-4 -right-4 w-16 h-16 rounded-full bg-white/10" />
+          <div className="absolute -bottom-5 -left-3 w-20 h-20 rounded-full bg-white/5" />
+          <Icon className="w-8 h-8 text-white/90 relative z-10" />
+        </div>
+      )}
+
+      <div className="p-3">
+        <p className="text-sm font-medium text-foreground line-clamp-2 leading-snug mb-1">
+          {subscription.title}
+        </p>
+        <p className="text-[10px] text-muted-foreground">Continue →</p>
+      </div>
+    </button>
+  );
 }
 
 // ---------------------------------------------------------------------------
@@ -96,9 +161,8 @@ function CategoryCard({
   return (
     <button
       onClick={onClick}
-      className="flex-shrink-0 w-36 bg-card border border-border rounded-2xl overflow-hidden text-left shadow-sm hover:shadow-lg transition-all duration-300 hover:-translate-y-1 active:scale-[0.97] group"
+      className="flex-shrink-0 w-36 bg-card border border-border rounded-2xl overflow-hidden text-left shadow-sm hover:shadow-lg transition-all duration-300 hover:-translate-y-1 active:scale-[0.97] active:scale-[0.97] group"
     >
-      {/* Card image area */}
       {category.icon ? (
         <div className="h-20 relative overflow-hidden">
           <Image
@@ -122,7 +186,6 @@ function CategoryCard({
         </div>
       )}
 
-      {/* Content */}
       <div className="p-3">
         <p className="text-sm font-medium text-foreground line-clamp-2 leading-snug mb-1">
           {category.title}
@@ -189,6 +252,32 @@ function EntryRow({ entry }: { entry: SelfJournalingEntry }) {
 }
 
 // ---------------------------------------------------------------------------
+// Section header with optional "View all" link
+// ---------------------------------------------------------------------------
+
+function SectionHeader({
+  title,
+  onViewAll,
+}: {
+  title: string;
+  onViewAll?: () => void;
+}) {
+  return (
+    <div className="flex items-center justify-between px-4 mb-3">
+      <h2 className="text-base font-bold text-foreground">{title}</h2>
+      {onViewAll && (
+        <button
+          onClick={onViewAll}
+          className="text-xs text-primary font-medium hover:underline"
+        >
+          View all
+        </button>
+      )}
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
 // Page
 // ---------------------------------------------------------------------------
 
@@ -197,10 +286,12 @@ export default function JournalHomePage() {
   const { categories, isLoading: categoriesLoading } =
     useJournalingCategories();
   const { entries, isLoading: entriesLoading } = useSelfJournalingEntries();
+  const { subscriptions, isLoading: subscriptionsLoading } =
+    useJournalingSubscriptions();
 
   const TODAY_STR = toLocalDateStr(new Date());
   const [selectedDate, setSelectedDate] = useState(TODAY_STR);
-  const [weekOffset, setWeekOffset] = useState(0); // 0 = this week, 7 = prev week, …
+  const [weekOffset, setWeekOffset] = useState(0);
 
   const weekDays = useMemo(() => buildWeekDays(weekOffset), [weekOffset]);
 
@@ -209,13 +300,11 @@ export default function JournalHomePage() {
     [categories],
   );
 
-  // Set of local date strings that have entries — drives the dot indicators
   const entryDateSet = useMemo(
     () => new Set(entries.map((e) => toLocalDateStr(new Date(e.createdAt)))),
     [entries],
   );
 
-  // Entries for the currently selected date
   const selectedEntries = useMemo(
     () =>
       entries.filter(
@@ -236,15 +325,11 @@ export default function JournalHomePage() {
   return (
     <div className="flex flex-col min-h-screen bg-background pb-24">
       {/* ── Header ── */}
-      <div className="flex items-center gap-2 px-4 pt-5 pb-1">
-        <BackButton fallback="/home" />
-        <div className="flex-1">
-          <h1 className="text-lg font-bold text-foreground">Journal</h1>
-          <p className="text-xs text-muted-foreground">
-            Your safe space for thoughts and feelings.
-          </p>
-        </div>
-      </div>
+      <PageHeader
+        title="Journal"
+        subtitle="Your safe space for thoughts and feelings."
+        fallback="/home"
+      />
 
       <div className="flex flex-col gap-6 mt-4">
         {/* ── Free Flow hero ── */}
@@ -271,15 +356,47 @@ export default function JournalHomePage() {
           </button>
         </div>
 
+        {/* ── Continue Journey (subscribed journals) ── */}
+        {(subscriptionsLoading || subscriptions.length > 0) && (
+          <section>
+            <SectionHeader
+              title="Continue Journey"
+              onViewAll={
+                subscriptions.length > 0
+                  ? () => router.push("/self-journaling/subscriptions")
+                  : undefined
+              }
+            />
+
+            <div className="flex gap-3 overflow-x-auto px-4 pb-1 scrollbar-none">
+              {subscriptionsLoading
+                ? [...Array(3)].map((_, i) => (
+                    <Skeleton
+                      key={i}
+                      className="flex-shrink-0 w-36 h-36 rounded-2xl"
+                    />
+                  ))
+                : subscriptions.map((sub) => (
+                    <JourneyCard
+                      key={sub.id}
+                      subscription={sub}
+                      onClick={() =>
+                        router.push(`/self-journaling/journal/${sub.slug}`)
+                      }
+                    />
+                  ))}
+            </div>
+          </section>
+        )}
+
         {/* ── Guided Reflection horizontal scroll ── */}
         <section>
-          <div className="flex items-center justify-between px-4 mb-3">
-            <h2 className="text-base font-bold text-foreground">
-              Guided Reflection
-            </h2>
-          </div>
+          <SectionHeader
+            title="Guided Reflection"
+            onViewAll={() => router.push("/self-journaling/categories")}
+          />
 
-          <div className="flex gap-3 overflow-x-auto -mx-0 px-4 pb-1 scrollbar-none">
+          <div className="flex gap-3 overflow-x-auto px-4 pb-1 scrollbar-none">
             {categoriesLoading
               ? [...Array(3)].map((_, i) => (
                   <Skeleton
