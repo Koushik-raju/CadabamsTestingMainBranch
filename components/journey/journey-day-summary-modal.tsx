@@ -22,11 +22,13 @@
  *   Dialog, DialogContent, DialogTitle — @/components/ui/dialog
  *   ReactMarkdown, remarkGfm
  *
- * LAST UPDATED: 2026-04-22 — initial implementation.
+ * LAST UPDATED: 2026-04-23 — use a ref for onSummaryGenerated to prevent
+ *   fetchSummary from recreating on every parent render (was causing request spam);
+ *   added mx-4 + w-[calc(100%-2rem)] so the modal has side margins on mobile.
  */
 'use client';
 
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { Sparkles, Loader2 } from 'lucide-react';
@@ -63,6 +65,13 @@ export function JourneyDaySummaryModal({
   const [data, setData] = useState<DaySummaryResponseDto | null>(null);
   const [hasError, setHasError] = useState(false);
 
+  // Keep a stable ref so fetchSummary's useCallback doesn't need to list
+  // onSummaryGenerated as a dependency. Without this, any parent re-render
+  // that passes a new inline function would recreate fetchSummary, causing
+  // the useEffect to re-fire and spam the API.
+  const onSummaryGeneratedRef = useRef(onSummaryGenerated);
+  useEffect(() => { onSummaryGeneratedRef.current = onSummaryGenerated; });
+
   const fetchSummary = useCallback(
     async (signal?: { cancelled: boolean }) => {
       setIsLoading(true);
@@ -76,7 +85,7 @@ export function JourneyDaySummaryModal({
         if (res.error) setHasError(true);
         else {
           setData(res.data ?? null);
-          if (res.data?.summary) onSummaryGenerated?.();
+          if (res.data?.summary) onSummaryGeneratedRef.current?.();
         }
       } catch {
         if (!signal?.cancelled) setHasError(true);
@@ -84,7 +93,7 @@ export function JourneyDaySummaryModal({
         if (!signal?.cancelled) setIsLoading(false);
       }
     },
-    [enrollmentId, dayNumber, onSummaryGenerated],
+    [enrollmentId, dayNumber],
   );
 
   useEffect(() => {
@@ -106,7 +115,7 @@ export function JourneyDaySummaryModal({
 
   return (
     <Dialog open={open} onOpenChange={(v) => { if (!v) onClose(); }}>
-      <DialogContent className="max-w-md p-0 overflow-hidden">
+      <DialogContent className="w-[calc(100vw-2rem)] max-w-md p-0 overflow-hidden rounded-2xl">
         {/* Gradient header */}
         <div className="relative bg-gradient-to-br from-violet-500 to-purple-600 px-5 pt-6 pb-5">
           <div className="absolute -top-6 -right-6 w-24 h-24 rounded-full bg-white/10" />
@@ -126,7 +135,7 @@ export function JourneyDaySummaryModal({
         </div>
 
         {/* Body */}
-        <div className="px-5 py-5 max-h-[60vh] overflow-y-auto">
+        <div className="px-5 pt-0 pb-5 max-h-[60vh] overflow-y-auto">
           {isLoading ? (
             <div className="flex flex-col gap-3">
               <Skeleton className="h-4 w-3/4 rounded" />

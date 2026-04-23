@@ -19,14 +19,14 @@
  *   Sheet, SheetContent, SheetTitle — @/components/ui/sheet
  *   Skeleton — @/components/ui/skeleton
  *
- * LAST UPDATED: 2026-04-22 — On Continue, POST complete-day so the server
- *   persists a JourneyDayProgress row (required for the contiguous-day lock
- *   check in composeEnrollmentDto) and refreshes nextDayUnlocksAt cooldown.
- *   Added journeyId prop so the shared enrollment SWR cache is updated.
+ * LAST UPDATED: 2026-04-23 — Render summary through ReactMarkdown so bold
+ *   labels and bullet lists from AI-generated markdown display correctly.
  */
 'use client';
 
 import { useState, useEffect } from 'react';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 import { Sheet, SheetContent, SheetTitle } from '@/components/ui/sheet';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Trophy, Flame, CheckCircle2 } from 'lucide-react';
@@ -160,10 +160,14 @@ export function JourneyDaySummarySheet({
               </div>
 
               {/* Summary text */}
-              <div className="px-4 py-3 rounded-xl border bg-card">
-                <p className="text-sm text-muted-foreground leading-relaxed">
-                  {summary.summary ?? 'Great work — keep your streak going!'}
-                </p>
+              <div className="px-4 py-3 rounded-xl border bg-card prose prose-sm max-w-none text-muted-foreground [&_p]:leading-relaxed [&_ul]:list-disc [&_ul]:pl-5 [&_strong]:text-foreground [&_strong]:font-semibold">
+                {summary.summary ? (
+                  <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                    {summary.summary}
+                  </ReactMarkdown>
+                ) : (
+                  <p>Great work — keep your streak going!</p>
+                )}
               </div>
 
               {/* Progress line */}

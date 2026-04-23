@@ -35,8 +35,9 @@
  *   emoji-picker-react          — emoji picker UI
  *   Web Speech API              — browser-native mic transcription
  *
- * LAST UPDATED: 2026-04-22 — Auto-trigger initial prompt for free-flow mode (no slug);
- *   "Today's Prompt" label now appears only on the first prompt, not all saved prompts.
+ * LAST UPDATED: 2026-04-23 — Handle both SUB_JOURNAL and JOURNAL journey task kinds;
+ *   after journey task completion, navigate to journey details via returnToJourney()
+ *   instead of always redirecting to /self-journaling.
  */
 'use client';
 
@@ -153,7 +154,13 @@ export function JournalWriter({ slug }: JournalWriterProps) {
   const { user } = useAuth();
   const { entries: recentEntries } = useSelfJournalingEntries(10);
   const { subJournalings, isLoading: subsLoading } = useJournalingCategories();
-  const continuation = useJourneyTaskContinuation('SUB_JOURNAL');
+  // Journey tasks can be typed as either SUB_JOURNAL (sub-journal linked via
+  // subJournalingIds) or JOURNAL (free-flow entry). Call both hooks and use
+  // whichever one has an active slot — only one can be active at a time.
+  const continuationSubJournal = useJourneyTaskContinuation('SUB_JOURNAL');
+  const continuationJournal = useJourneyTaskContinuation('JOURNAL');
+  const continuation = continuationSubJournal.active ? continuationSubJournal : continuationJournal;
+  const journeyProofKind = continuationSubJournal.active ? 'SUB_JOURNAL' : 'JOURNAL';
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const recognitionRef = useRef<SpeechRecognitionInstance | null>(null);
 
@@ -265,12 +272,16 @@ export function JournalWriter({ slug }: JournalWriterProps) {
         subJournalingId: sub?.id,
       });
       // Report back to the journey when this writer was opened as a task.
+      // On success, navigate directly to journey details instead of the
+      // listing page — the user came from a journey and expects to return there.
       if (continuation.active && created?.id) {
         try {
           await continuation.markCompleted(
-            { kind: 'SUB_JOURNAL', selfJournalingId: created.id },
+            { kind: journeyProofKind, selfJournalingId: created.id },
             { proofPreview: sub?.title ?? 'Journal entry saved' },
           );
+          continuation.returnToJourney();
+          return;
         } catch (err) {
           console.error('[JournalWriter] journey completion failed', err);
         }
