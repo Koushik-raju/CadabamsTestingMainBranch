@@ -1,6 +1,3 @@
-echo "▶ Formatting & linting..."
-pnpm run format
-
 echo "▶ Generating doctors list..."
 pnpm run generate:doctors-list
 
