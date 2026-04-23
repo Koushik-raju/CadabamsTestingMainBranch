@@ -40,9 +40,8 @@ const baseConfig = {
     "https://next-video-call-demo-six.vercel.app",
   MASTRA_BACKEND_URL:
     process.env.NEXT_PUBLIC_MASTRA_BACKEND_URL ??
-    "http://localhost:4111/super-chat",
-  MASTRA_AGENT_ID:
-    process.env.NEXT_PUBLIC_MASTRA_AGENT_ID ?? "super-chat",
+    "http://localhost:4111/super-agent",
+  MASTRA_AGENT_ID: process.env.NEXT_PUBLIC_MASTRA_AGENT_ID ?? "super-agent",
   IS_PRODUCTION: process.env.NODE_ENV === "production",
 };
 
