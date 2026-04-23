@@ -12,6 +12,9 @@
  *   3. Renders ChatHeader (with history drawer toggle), MessageList (merged
  *      messages + pagination), and ChatInput (send form).
  *   4. HistoryDrawer slides in from the right for navigating past threads.
+ *   5. If the URL contains a ?q= param (set by the home header "Ask Dr. Riya"
+ *      input), auto-sends that text once as soon as initial loading finishes.
+ *      A ref guards against double-sending on re-renders.
  *
  * KEY VARIABLES / PROPS / EXPORTS:
  *   threadId        — UUID from URL, scopes the chat session
@@ -19,17 +22,18 @@
  *   allMessages     — merged historical + live messages from useChatSession
  *   isStreaming     — true while assistant is generating; disables send button
  *   handleSubmit    — form submit handler; calls useChatSession.sendMessage
+ *   initialQ        — decoded ?q= value; auto-sent once on first load
  *
  * DEPENDENCIES:
  *   useChatSession, mastraDataContext, ChatHeader, MessageList, ChatInput,
  *   HistoryDrawer
  *
- * LAST UPDATED: 2026-04-16 — consolidated useThreadMessages + useChat into useChatSession
+ * LAST UPDATED: 2026-04-23 — auto-send ?q= param from home Dr. Riya input
  */
 "use client";
 
-import { useCallback, useContext, useState } from "react";
-import { useParams } from "next/navigation";
+import { useCallback, useContext, useEffect, useRef, useState } from "react";
+import { useParams, useSearchParams } from "next/navigation";
 import { mastraDataContext } from "@/contexts/mastra-data-context";
 import { ChatHeader } from "@/components/chat/chat-header";
 import { MessageList } from "@/components/chat/message-list";
@@ -39,7 +43,11 @@ import { useChatSession } from "@/hooks/use-chat-session";
 
 export default function ChatPage() {
   const params = useParams();
+  const searchParams = useSearchParams();
   const threadId = params.thread_id as string;
+
+  /* ?q= is set by the home header "Ask Dr. Riya" input. Decode once. */
+  const initialQ = searchParams.get('q') ?? '';
 
   const [historyOpen, setHistoryOpen] = useState(false);
   const { resource_id } = useContext(mastraDataContext);
@@ -51,9 +59,19 @@ export default function ChatPage() {
     loadMore,
     hasMore,
     isLoadingMore,
+    isInitialLoading,
     text,
     setText,
   } = useChatSession({ threadId, resourceId: resource_id });
+
+  /* Auto-send the initial question from the home input once loading is done.
+   * The ref prevents double-firing on StrictMode double-renders. */
+  const sentRef = useRef(false);
+  useEffect(() => {
+    if (!initialQ || isInitialLoading || sentRef.current) return;
+    sentRef.current = true;
+    sendMessage(initialQ);
+  }, [initialQ, isInitialLoading, sendMessage]);
 
   const handleSubmit = useCallback(
     (e: React.FormEvent) => {

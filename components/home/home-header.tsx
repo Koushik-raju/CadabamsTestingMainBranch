@@ -1,8 +1,40 @@
+/**
+ * FILE: components/home/home-header.tsx
+ *
+ * PURPOSE:
+ *   Gradient hero header shown only on the home screen. Contains the greeting,
+ *   mood selector, and a functional "Ask Dr. Riya" input bar.
+ *
+ * LOGIC OVERVIEW:
+ *   1. Derives firstName and profileImage from the auth session.
+ *   2. Renders a gradient banner with greeting text and mood selector row.
+ *   3. The AI input bar is a real controlled <input>. While empty it shows a
+ *      Mic icon; once the user types, the Mic swaps for a SendHorizonal icon.
+ *   4. On submit (Enter or tap send icon), a new UUID thread is generated and
+ *      the router navigates to /chat/thread/<uuid>?q=<encoded message>.
+ *      The chat thread page reads the ?q param and auto-sends it as the first
+ *      message, so the new chat opens with the user's question in-flight.
+ *
+ * KEY VARIABLES / PROPS / EXPORTS:
+ *   firstName        — first word of user.name, or "There" as fallback
+ *   profileImage     — user profile image URL (may be absent)
+ *   inputText        — controlled state for the Dr. Riya input
+ *   handleSend       — creates a new thread UUID and pushes to it with ?q=
+ *
+ * DEPENDENCIES:
+ *   useAuth() — provides user name and profile image
+ *   useRouter() — for navigation on send
+ *
+ * LAST UPDATED: 2026-04-23 — converted Ask Dr. Riya from button to real input with send
+ */
+
 'use client';
 
 import Image from 'next/image';
+import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Sparkles, Mic, Bell } from 'lucide-react';
+import { Sparkles, Mic, SendHorizonal, Bell } from 'lucide-react';
+import { Input } from '@/components/ui/input';
 import { useAuth } from '@/hooks/use-auth';
 
 interface Props {
@@ -15,11 +47,25 @@ const MOODS = ['😟', '😐', '😊', '😄', '🤩'];
 export function HomeHeader({ moodTracker, onMoodClick }: Props) {
   const router = useRouter();
   const { user } = useAuth();
+  const [inputText, setInputText] = useState('');
 
   const name = (user?.name as string | undefined) ?? 'There';
   const firstName = name.split(' ')[0];
   const profileImage = user?.profile_image as string | undefined;
   const currentMoodId = moodTracker?.[0]?.simily?.id;
+
+  /* Navigate to a fresh thread and pass the typed question as ?q= so the
+   * thread page can auto-send it as the first message. */
+  const handleSend = () => {
+    const trimmed = inputText.trim();
+    if (!trimmed) {
+      router.push('/chat/new');
+      return;
+    }
+    const threadId = crypto.randomUUID();
+    router.push(`/chat/thread/${threadId}?q=${encodeURIComponent(trimmed)}`);
+    setInputText('');
+  };
 
   return (
     <div className="home-header-gradient relative w-full rounded-b-2xl px-4 pt-5 pb-8 text-white z-[16]">
@@ -110,21 +156,39 @@ export function HomeHeader({ moodTracker, onMoodClick }: Props) {
           </button>
         </div>
 
-        {/* AI search bar — overlaps the card section below */}
+        {/* AI input bar — overlaps the card section below */}
         <div className="mt-1 mb-[-24px] z-50">
-          <button
-            onClick={() => router.push('/chat/new')}
-            className="w-full bg-card rounded-xl shadow-lg px-4 py-2 flex items-center gap-4 border border-border hover:bg-muted/30 transition-all active:scale-[0.98]"
-            aria-label="Chat with Dr. Riya"
-          >
+          <div className="w-full bg-card rounded-[28px] shadow-lg px-4 py-2 flex items-center gap-3 border border-border">
             <Sparkles className="w-5 h-5 text-primary flex-shrink-0" />
-            <span className="text-[14px] flex-grow font-semibold text-muted-foreground tracking-tight text-left">
-              Ask Dr. Riya anything...
-            </span>
-            <div className="w-9 h-9 rounded-full bg-muted flex items-center justify-center flex-shrink-0">
-              <Mic className="w-4 h-4 text-muted-foreground" />
-            </div>
-          </button>
+            <Input
+              className="flex-1 border-0 bg-transparent shadow-none focus-visible:ring-0 text-[14px] font-medium text-foreground placeholder:text-muted-foreground px-0 py-1 h-auto"
+              placeholder="Ask Dr. Riya anything..."
+              value={inputText}
+              onChange={(e) => setInputText(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') {
+                  e.preventDefault();
+                  handleSend();
+                }
+              }}
+              aria-label="Ask Dr. Riya"
+            />
+            <button
+              onClick={handleSend}
+              className="w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0 transition-all active:scale-95"
+              aria-label={inputText.trim() ? 'Send message' : 'Open chat'}
+            >
+              {inputText.trim() ? (
+                <div className="w-9 h-9 rounded-full bg-primary flex items-center justify-center">
+                  <SendHorizonal className="w-4 h-4 text-primary-foreground" />
+                </div>
+              ) : (
+                <div className="w-9 h-9 rounded-full bg-muted flex items-center justify-center">
+                  <Mic className="w-4 h-4 text-muted-foreground" />
+                </div>
+              )}
+            </button>
+          </div>
         </div>
       </div>
     </div>
