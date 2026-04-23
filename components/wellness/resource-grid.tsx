@@ -1,5 +1,5 @@
-import type { WellnessResource } from '@/hooks/wellness/use-wellness-resources';
-import { ResourceCard } from './resource-card';
+import type { WellnessResource } from "@/hooks/wellness/use-wellness-resources";
+import { ResourceCard } from "./resource-card";
 
 interface ResourceGridProps {
   resources: WellnessResource[];

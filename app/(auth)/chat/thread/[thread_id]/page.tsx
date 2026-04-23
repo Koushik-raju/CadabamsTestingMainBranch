@@ -32,14 +32,14 @@
  */
 "use client";
 
-import { useCallback, useContext, useEffect, useRef, useState } from "react";
-import { useParams, useSearchParams } from "next/navigation";
-import { mastraDataContext } from "@/contexts/mastra-data-context";
 import { ChatHeader } from "@/components/chat/chat-header";
-import { MessageList } from "@/components/chat/message-list";
 import { ChatInput } from "@/components/chat/chat-input";
 import { HistoryDrawer } from "@/components/chat/history-drawer";
+import { MessageList } from "@/components/chat/message-list";
+import { mastraDataContext } from "@/contexts/mastra-data-context";
 import { useChatSession } from "@/hooks/use-chat-session";
+import { useParams, useSearchParams } from "next/navigation";
+import { useCallback, useContext, useEffect, useRef, useState } from "react";
 
 export default function ChatPage() {
   const params = useParams();
@@ -47,7 +47,7 @@ export default function ChatPage() {
   const threadId = params.thread_id as string;
 
   /* ?q= is set by the home header "Ask Dr. Riya" input. Decode once. */
-  const initialQ = searchParams.get('q') ?? '';
+  const initialQ = searchParams.get("q") ?? "";
 
   const [historyOpen, setHistoryOpen] = useState(false);
   const { resource_id } = useContext(mastraDataContext);

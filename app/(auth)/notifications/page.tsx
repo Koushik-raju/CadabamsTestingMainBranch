@@ -21,15 +21,9 @@
  *
  * LAST UPDATED: 2026-04-23 — migrated custom header div to PageHeader; added file header
  */
-'use client';
+"use client";
 
-import { useState, useEffect, useCallback } from 'react';
-import { useRouter } from 'next/navigation';
-import { Bell, Trash2, ChevronRight, CalendarCheck, Route, Megaphone, Stethoscope } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
-import { Skeleton } from '@/components/ui/skeleton';
-import { Separator } from '@/components/ui/separator';
+import { PageHeader } from "@/components/shared/navigation/page-header";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -40,15 +34,29 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
   AlertDialogTrigger,
-} from '@/components/ui/alert-dialog';
-import { PageHeader } from '@/components/shared/navigation/page-header';
-import { cn } from '@/lib/utils';
+} from "@/components/ui/alert-dialog";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { Separator } from "@/components/ui/separator";
+import { Skeleton } from "@/components/ui/skeleton";
 import {
+  type LocalNotification,
+  clearAllNotifications,
   getStoredNotifications,
   markNotificationAsRead,
-  clearAllNotifications,
-  type LocalNotification,
-} from '@/hooks/notifications/use-notifications';
+} from "@/hooks/notifications/use-notifications";
+import { cn } from "@/lib/utils";
+import {
+  Bell,
+  CalendarCheck,
+  ChevronRight,
+  Megaphone,
+  Route,
+  Stethoscope,
+  Trash2,
+} from "lucide-react";
+import { useRouter } from "next/navigation";
+import { useCallback, useEffect, useState } from "react";
 
 function formatTime(iso: string) {
   const date = new Date(iso);
@@ -58,25 +66,25 @@ function formatTime(iso: string) {
   const diffHours = Math.floor(diffMs / 3600000);
   const diffDays = Math.floor(diffMs / 86400000);
 
-  if (diffMins < 60) return diffMins <= 1 ? 'Just now' : `${diffMins}m ago`;
+  if (diffMins < 60) return diffMins <= 1 ? "Just now" : `${diffMins}m ago`;
   if (diffHours < 24) return `${diffHours}h ago`;
-  if (diffDays === 1) return 'Yesterday';
-  return date.toLocaleDateString('en-IN', { day: '2-digit', month: 'short' });
+  if (diffDays === 1) return "Yesterday";
+  return date.toLocaleDateString("en-IN", { day: "2-digit", month: "short" });
 }
 
 function getNotifConfig(n: LocalNotification): {
   gradient: string;
   Icon: React.ElementType;
 } {
-  const text = `${n.title ?? ''} ${n.body ?? ''} ${n.action ?? ''}`.toLowerCase();
+  const text = `${n.title ?? ""} ${n.body ?? ""} ${n.action ?? ""}`.toLowerCase();
 
-  if (n.journeyName || text.includes('journey'))
-    return { gradient: 'from-violet-500 to-purple-600', Icon: Route };
-  if (text.includes('appointment') || text.includes('session') || text.includes('book'))
-    return { gradient: 'from-emerald-500 to-teal-600', Icon: CalendarCheck };
-  if (text.includes('doctor') || text.includes('consult') || text.includes('prescription'))
-    return { gradient: 'from-sky-500 to-blue-600', Icon: Stethoscope };
-  return { gradient: 'from-orange-400 to-amber-500', Icon: Megaphone };
+  if (n.journeyName || text.includes("journey"))
+    return { gradient: "from-violet-500 to-purple-600", Icon: Route };
+  if (text.includes("appointment") || text.includes("session") || text.includes("book"))
+    return { gradient: "from-emerald-500 to-teal-600", Icon: CalendarCheck };
+  if (text.includes("doctor") || text.includes("consult") || text.includes("prescription"))
+    return { gradient: "from-sky-500 to-blue-600", Icon: Stethoscope };
+  return { gradient: "from-orange-400 to-amber-500", Icon: Megaphone };
 }
 
 function NotificationRow({
@@ -94,17 +102,22 @@ function NotificationRow({
     <div>
       <div
         className={cn(
-          'flex items-start gap-3 py-3 px-1 cursor-pointer transition-colors rounded-lg',
-          !n.read && 'bg-primary/5',
+          "flex items-start gap-3 py-3 px-1 cursor-pointer transition-colors rounded-lg",
+          !n.read && "bg-primary/5",
         )}
         onClick={onClick}
         role="button"
         tabIndex={0}
-        aria-label={n.title ?? 'Notification'}
-        onKeyDown={(e) => e.key === 'Enter' && onClick()}
+        aria-label={n.title ?? "Notification"}
+        onKeyDown={(e) => e.key === "Enter" && onClick()}
       >
         {/* Colored icon avatar */}
-        <div className={cn('relative w-11 h-11 rounded-2xl bg-gradient-to-br flex-shrink-0 flex items-center justify-center overflow-hidden shadow-sm', gradient)}>
+        <div
+          className={cn(
+            "relative w-11 h-11 rounded-2xl bg-gradient-to-br flex-shrink-0 flex items-center justify-center overflow-hidden shadow-sm",
+            gradient,
+          )}
+        >
           <div className="absolute -top-2 -right-2 w-7 h-7 rounded-full bg-white/10" />
           <Icon className="w-5 h-5 text-white" aria-hidden="true" />
         </div>
@@ -112,16 +125,19 @@ function NotificationRow({
         {/* Content */}
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-1.5">
-            <p className={cn('text-sm leading-snug truncate', n.read ? 'text-muted-foreground font-normal' : 'text-foreground font-medium')}>
-              {n.title ?? 'Notification'}
+            <p
+              className={cn(
+                "text-sm leading-snug truncate",
+                n.read ? "text-muted-foreground font-normal" : "text-foreground font-medium",
+              )}
+            >
+              {n.title ?? "Notification"}
             </p>
             {!n.read && (
               <span className="w-1.5 h-1.5 rounded-full bg-primary shrink-0" aria-label="Unread" />
             )}
           </div>
-          {n.body && (
-            <p className="text-xs text-muted-foreground mt-0.5 line-clamp-2">{n.body}</p>
-          )}
+          {n.body && <p className="text-xs text-muted-foreground mt-0.5 line-clamp-2">{n.body}</p>}
           {n.journeyName && (
             <p className="text-[10px] text-violet-600 font-medium mt-0.5">{n.journeyName}</p>
           )}
@@ -174,33 +190,35 @@ export default function NotificationsPage() {
         title="Notifications"
         subtitle={unread.length > 0 ? `${unread.length} unread` : undefined}
         fallback="/home"
-        right={notifications.length > 0 ? (
-          <AlertDialog>
-            <AlertDialogTrigger asChild>
-              <Button
-                size="sm"
-                variant="ghost"
-                className="text-destructive hover:text-destructive hover:bg-destructive/10 gap-1.5 rounded-xl"
-                aria-label="Clear all notifications"
-              >
-                <Trash2 className="w-3.5 h-3.5" />
-                Clear all
-              </Button>
-            </AlertDialogTrigger>
-            <AlertDialogContent>
-              <AlertDialogHeader>
-                <AlertDialogTitle>Clear all notifications?</AlertDialogTitle>
-                <AlertDialogDescription>
-                  This will remove all notifications from this device.
-                </AlertDialogDescription>
-              </AlertDialogHeader>
-              <AlertDialogFooter>
-                <AlertDialogCancel>Cancel</AlertDialogCancel>
-                <AlertDialogAction onClick={handleClearAll}>Clear all</AlertDialogAction>
-              </AlertDialogFooter>
-            </AlertDialogContent>
-          </AlertDialog>
-        ) : undefined}
+        right={
+          notifications.length > 0 ? (
+            <AlertDialog>
+              <AlertDialogTrigger asChild>
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  className="text-destructive hover:text-destructive hover:bg-destructive/10 gap-1.5 rounded-xl"
+                  aria-label="Clear all notifications"
+                >
+                  <Trash2 className="w-3.5 h-3.5" />
+                  Clear all
+                </Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Clear all notifications?</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    This will remove all notifications from this device.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                  <AlertDialogAction onClick={handleClearAll}>Clear all</AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
+          ) : undefined
+        }
       />
 
       <div className="px-4 space-y-5">

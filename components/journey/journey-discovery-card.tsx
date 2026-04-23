@@ -1,14 +1,14 @@
-'use client';
+"use client";
 
-import { useRouter } from 'next/navigation';
-import { Clock } from 'lucide-react';
-import { Card, CardContent, CardHeader } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { PremiumBadge } from './premium-badge';
-import { cn } from '@/lib/utils';
-import { fixImageUrl } from '@/lib/utils';
-import type { JourneyRichText } from '@/types/journey';
-import type { JourneyItem } from '@/types/journey';
+import { Badge } from "@/components/ui/badge";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import { cn } from "@/lib/utils";
+import { fixImageUrl } from "@/lib/utils";
+import type { JourneyRichText } from "@/types/journey";
+import type { JourneyItem } from "@/types/journey";
+import { Clock } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { PremiumBadge } from "./premium-badge";
 
 export type DiscoveryJourney = JourneyItem & {
   category?: string;
@@ -22,8 +22,8 @@ interface JourneyDiscoveryCardProps {
 }
 
 function getSafeString(val: unknown): string {
-  if (typeof val === 'string') return val;
-  if (!val) return '';
+  if (typeof val === "string") return val;
+  if (!val) return "";
   if (Array.isArray(val)) {
     for (const block of val as JourneyRichText[]) {
       if (block.children) {
@@ -38,31 +38,27 @@ function getSafeString(val: unknown): string {
       }
     }
   }
-  if (typeof val === 'object') {
+  if (typeof val === "object") {
     const o = val as Record<string, unknown>;
-    return String(o.name ?? o.title ?? o.text ?? '');
+    return String(o.name ?? o.title ?? o.text ?? "");
   }
   return String(val);
 }
 
 function getMediaType(journey: DiscoveryJourney): string {
   const tasks = journey.steps?.flatMap((s) => s.tasks ?? []) ?? [];
-  if (tasks.some((t) => t.audios && t.audios.length > 0)) return 'Audio';
-  if (tasks.some((t) => t.worksheets && (t.worksheets as unknown[]).length > 0))
-    return 'Journal';
-  return 'Interactive';
+  if (tasks.some((t) => t.audios && t.audios.length > 0)) return "Audio";
+  if (tasks.some((t) => t.worksheets && (t.worksheets as unknown[]).length > 0)) return "Journal";
+  return "Interactive";
 }
 
-export function JourneyDiscoveryCard({
-  journey,
-  className,
-}: JourneyDiscoveryCardProps) {
+export function JourneyDiscoveryCard({ journey, className }: JourneyDiscoveryCardProps) {
   const router = useRouter();
   const journeyId = journey.id;
   const name = getSafeString(journey.name);
   const dayCount = journey.steps?.length ?? 30;
   const imageUrl = fixImageUrl(
-    journey.icon ?? (journey as { banner?: { url?: string } }).banner?.url
+    journey.icon ?? (journey as { banner?: { url?: string } }).banner?.url,
   );
   const isPremium = journey.isPremium ?? false;
   const mediaType = getMediaType(journey);
@@ -74,18 +70,14 @@ export function JourneyDiscoveryCard({
   return (
     <Card
       className={cn(
-        'cursor-pointer hover:shadow-md transition-shadow border border-border overflow-hidden pt-0',
-        className
+        "cursor-pointer hover:shadow-md transition-shadow border border-border overflow-hidden pt-0",
+        className,
       )}
       onClick={handleClick}
     >
       <CardHeader className="relative h-24 m-0 p-0 w-full bg-muted overflow-hidden">
         {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img
-          src={imageUrl}
-          alt={name}
-          className="absolute inset-0 w-full h-full object-cover"
-        />
+        <img src={imageUrl} alt={name} className="absolute inset-0 w-full h-full object-cover" />
         {isPremium && (
           <div className="absolute top-2 left-2">
             <PremiumBadge size="sm" />
@@ -93,9 +85,7 @@ export function JourneyDiscoveryCard({
         )}
       </CardHeader>
       <CardContent className="p-2 pt-0 mt-0">
-        <h4 className="font-bold text-xs text-foreground leading-snug truncate">
-          {name}
-        </h4>
+        <h4 className="font-bold text-xs text-foreground leading-snug truncate">{name}</h4>
         <div className="flex items-center gap-1 mt-1 text-[10px] text-muted-foreground">
           <Clock className="w-3 h-3" />
           <span>{dayCount} Days</span>

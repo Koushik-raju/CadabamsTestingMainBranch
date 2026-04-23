@@ -22,28 +22,9 @@
  *
  * LAST UPDATED: 2026-04-23 — migrated custom header div to PageHeader; added file header
  */
-'use client';
+"use client";
 
-import { Suspense, useState } from 'react';
-import { useRouter, useParams } from 'next/navigation';
-import {
-  ChevronRight,
-  MoreHorizontal,
-  Calendar,
-  Video,
-  Building2,
-  Loader2,
-  AlertCircle,
-  ClipboardList,
-  BookOpen,
-  FileText,
-  RefreshCw,
-  XCircle,
-  Info,
-} from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Avatar, AvatarFallback } from '@/components/ui/avatar';
-import { PageHeader } from '@/components/shared/navigation/page-header';
+import { PageHeader } from "@/components/shared/navigation/page-header";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -54,44 +35,81 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
   AlertDialogTrigger,
-} from '@/components/ui/alert-dialog';
-import { useAppointmentById, cancelAppointment } from '@/hooks/appointments/use-appointments-page';
-import type { SlotDetailDto } from '@/hooks/appointments/use-appointments-page';
+} from "@/components/ui/alert-dialog";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Button } from "@/components/ui/button";
+import { cancelAppointment, useAppointmentById } from "@/hooks/appointments/use-appointments-page";
+import type { SlotDetailDto } from "@/hooks/appointments/use-appointments-page";
+import {
+  AlertCircle,
+  BookOpen,
+  Building2,
+  Calendar,
+  ChevronRight,
+  ClipboardList,
+  FileText,
+  Info,
+  Loader2,
+  MoreHorizontal,
+  RefreshCw,
+  Video,
+  XCircle,
+} from "lucide-react";
+import { useParams, useRouter } from "next/navigation";
+import { Suspense, useState } from "react";
 
-function getDoctorName(doctor: SlotDetailDto['doctor']): string {
-  if (Array.isArray(doctor) && doctor.length >= 2 && typeof doctor[1] === 'string') {
+function getDoctorName(doctor: SlotDetailDto["doctor"]): string {
+  if (Array.isArray(doctor) && doctor.length >= 2 && typeof doctor[1] === "string") {
     const raw = doctor[1];
-    const name = raw.includes(',') ? raw.split(',').pop()!.trim() : raw.trim();
+    const name = raw.includes(",") ? raw.split(",").pop()!.trim() : raw.trim();
     return /^Dr\.?\s/i.test(name) ? name : `Dr. ${name}`;
   }
-  return 'Doctor';
+  return "Doctor";
 }
 
-function getSpeciality(specialityId: SlotDetailDto['speciality_id']): string {
-  if (Array.isArray(specialityId) && specialityId.length >= 2 && typeof specialityId[1] === 'string') {
+function getSpeciality(specialityId: SlotDetailDto["speciality_id"]): string {
+  if (
+    Array.isArray(specialityId) &&
+    specialityId.length >= 2 &&
+    typeof specialityId[1] === "string"
+  ) {
     return specialityId[1];
   }
-  return '';
+  return "";
 }
 
 function formatDate(iso: string): string {
   try {
     const d = new Date(iso);
-    if (new Date().toDateString() === d.toDateString()) return 'Today';
-    return d.toLocaleDateString('en-US', { weekday: 'short', day: 'numeric', month: 'short' });
-  } catch { return ''; }
+    if (new Date().toDateString() === d.toDateString()) return "Today";
+    return d.toLocaleDateString("en-US", { weekday: "short", day: "numeric", month: "short" });
+  } catch {
+    return "";
+  }
 }
 
 function formatTime(iso: string): string {
   try {
-    return new Date(iso).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
-  } catch { return ''; }
+    return new Date(iso).toLocaleTimeString("en-US", {
+      hour: "numeric",
+      minute: "2-digit",
+      hour12: true,
+    });
+  } catch {
+    return "";
+  }
 }
 
 function PrepareItem({
-  icon, title, subtitle, onClick,
+  icon,
+  title,
+  subtitle,
+  onClick,
 }: {
-  icon: React.ReactNode; title: string; subtitle: string; onClick?: () => void;
+  icon: React.ReactNode;
+  title: string;
+  subtitle: string;
+  onClick?: () => void;
 }) {
   return (
     <button
@@ -119,7 +137,7 @@ function DetailContent() {
   const { appointment: apt, isLoading, refetch } = useAppointmentById(isNaN(id) ? null : id);
 
   const [cancelling, setCancelling] = useState(false);
-  const [cancelReason, setCancelReason] = useState('');
+  const [cancelReason, setCancelReason] = useState("");
 
   const handleCancel = async () => {
     if (!apt || !cancelReason.trim()) return;
@@ -127,7 +145,7 @@ function DetailContent() {
     try {
       await cancelAppointment(apt.id, cancelReason.trim());
       await refetch();
-      router.push('/consult/appointments');
+      router.push("/consult/appointments");
     } catch (err) {
       console.error(err);
     } finally {
@@ -148,7 +166,9 @@ function DetailContent() {
       <div className="min-h-screen flex flex-col items-center justify-center gap-3 px-6 text-center">
         <AlertCircle className="h-8 w-8 text-destructive" />
         <p className="text-sm text-destructive">Appointment not found.</p>
-        <Button variant="outline" onClick={() => router.back()}>Go back</Button>
+        <Button variant="outline" onClick={() => router.back()}>
+          Go back
+        </Button>
       </div>
     );
   }
@@ -156,10 +176,16 @@ function DetailContent() {
   const doctorName = getDoctorName(apt.doctor);
   const speciality = getSpeciality(apt.speciality_id);
   const isVirtual = !!apt.virtual_consultation_url;
-  const isCancelled = apt.availability?.toLowerCase() === 'cancelled';
-  const isCompleted = apt.availability?.toLowerCase() === 'completed';
+  const isCancelled = apt.availability?.toLowerCase() === "cancelled";
+  const isCompleted = apt.availability?.toLowerCase() === "completed";
   const isPast = isCancelled || isCompleted;
-  const initials = doctorName.replace(/^Dr\.?\s*/i, '').split(' ').map((w) => w[0]).slice(0, 2).join('').toUpperCase();
+  const initials = doctorName
+    .replace(/^Dr\.?\s*/i, "")
+    .split(" ")
+    .map((w) => w[0])
+    .slice(0, 2)
+    .join("")
+    .toUpperCase();
 
   return (
     <div className="min-h-screen bg-white flex flex-col">
@@ -212,11 +238,13 @@ function DetailContent() {
               Type
             </p>
             <div className="flex items-center gap-2">
-              {isVirtual
-                ? <Video className="h-5 w-5 text-primary shrink-0" />
-                : <Building2 className="h-5 w-5 text-primary shrink-0" />}
+              {isVirtual ? (
+                <Video className="h-5 w-5 text-primary shrink-0" />
+              ) : (
+                <Building2 className="h-5 w-5 text-primary shrink-0" />
+              )}
               <p className="text-[15px] font-bold text-foreground">
-                {isVirtual ? 'Video Call' : 'In-person'}
+                {isVirtual ? "Video Call" : "In-person"}
               </p>
             </div>
           </div>
@@ -229,7 +257,7 @@ function DetailContent() {
               className="w-full h-14 rounded-full bg-primary text-white text-[17px] font-bold flex items-center justify-center gap-2.5 active:opacity-90 transition-opacity"
               onClick={() => {
                 if (apt.virtual_consultation_url) {
-                  window.open(apt.virtual_consultation_url, '_blank');
+                  window.open(apt.virtual_consultation_url, "_blank");
                 }
               }}
             >
@@ -251,19 +279,19 @@ function DetailContent() {
                 icon={<ClipboardList className="h-5 w-5" />}
                 title="Pre-session Check-in"
                 subtitle="Complete a quick check-in before your session"
-                onClick={() => router.push('/assessment')}
+                onClick={() => router.push("/assessment")}
               />
               <PrepareItem
                 icon={<BookOpen className="h-5 w-5" />}
                 title="Share Journal"
                 subtitle={`Select entries to share with ${doctorName}`}
-                onClick={() => router.push('/self-journaling')}
+                onClick={() => router.push("/self-journaling")}
               />
               <PrepareItem
                 icon={<FileText className="h-5 w-5" />}
                 title="Previous Notes"
                 subtitle="Review notes from last session"
-                onClick={() => router.push('/consult/appointments')}
+                onClick={() => router.push("/consult/appointments")}
               />
             </div>
           </div>
@@ -276,15 +304,17 @@ function DetailContent() {
             type="button"
             className="flex-1 h-12 flex items-center justify-center gap-2 text-[15px] font-semibold text-foreground hover:bg-muted rounded-full transition-colors"
             onClick={() => {
-              const doctorId = Array.isArray(apt.doctor) && apt.doctor.length > 0 ? apt.doctor[0] : null;
+              const doctorId =
+                Array.isArray(apt.doctor) && apt.doctor.length > 0 ? apt.doctor[0] : null;
               const params = new URLSearchParams({
-                reschedule: 'true',
+                reschedule: "true",
                 appointment_id: String(apt.id),
-                appointment_type: apt.appointment_type ?? '',
+                appointment_type: apt.appointment_type ?? "",
               });
-              router.push(doctorId
-                ? `/consult/booking/${doctorId}?${params.toString()}`
-                : '/consult/find-therapist'
+              router.push(
+                doctorId
+                  ? `/consult/booking/${doctorId}?${params.toString()}`
+                  : "/consult/find-therapist",
               );
             }}
           >
@@ -299,7 +329,11 @@ function DetailContent() {
                 disabled={cancelling}
                 className="flex-1 h-12 flex items-center justify-center gap-2 text-[15px] font-semibold text-destructive border border-destructive/40 rounded-full hover:bg-destructive/5 transition-colors disabled:opacity-60"
               >
-                {cancelling ? <Loader2 className="h-4 w-4 animate-spin" /> : <XCircle className="h-4 w-4" />}
+                {cancelling ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <XCircle className="h-4 w-4" />
+                )}
                 Cancel
               </button>
             </AlertDialogTrigger>
@@ -325,7 +359,7 @@ function DetailContent() {
                 </div>
               </div>
               <AlertDialogFooter>
-                <AlertDialogCancel onClick={() => setCancelReason('')}>Keep it</AlertDialogCancel>
+                <AlertDialogCancel onClick={() => setCancelReason("")}>Keep it</AlertDialogCancel>
                 <AlertDialogAction
                   onClick={handleCancel}
                   disabled={!cancelReason.trim()}

@@ -26,78 +26,82 @@
  *
  * LAST UPDATED: 2026-04-23 — migrated custom header div to PageHeader
  */
-'use client';
+"use client";
 
-import { useState, useMemo, Suspense } from 'react';
-import { useRouter } from 'next/navigation';
+import { FeaturedPackageCard } from "@/components/package/featured-package-card";
+import { PackageDiscoveryCard } from "@/components/package/package-discovery-card";
+import { PageHeader } from "@/components/shared/navigation/page-header";
+import { Badge } from "@/components/ui/badge";
+import { Card, CardContent } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Skeleton } from "@/components/ui/skeleton";
+import { useAvailablePackages, useManagedPackages } from "@/hooks/use-packages";
+import { odooTuple } from "@/lib/odoo";
+import { cn } from "@/lib/utils";
+import type { BookedPackageDto } from "@/sdk/backend-v2";
 import {
-  Search,
-  Package,
-  IndianRupee,
   ArrowRight,
-  PlayCircle,
   CheckCircle,
-  Clock,
   CheckCircle2,
-} from 'lucide-react';
-import { Input } from '@/components/ui/input';
-import { Skeleton } from '@/components/ui/skeleton';
-import { Badge } from '@/components/ui/badge';
-import { Card, CardContent } from '@/components/ui/card';
-import { PageHeader } from '@/components/shared/navigation/page-header';
-import { FeaturedPackageCard } from '@/components/package/featured-package-card';
-import { PackageDiscoveryCard } from '@/components/package/package-discovery-card';
-import { useAvailablePackages, useManagedPackages } from '@/hooks/use-packages';
-import { getPackagePalette } from '@/lib/package-colors';
-import { cn } from '@/lib/utils';
-import type { BookedPackageDto } from '@/sdk/backend-v2';
-import { odooTuple } from '@/lib/odoo';
+  Clock,
+  IndianRupee,
+  Package,
+  PlayCircle,
+  Search,
+} from "lucide-react";
+import { useRouter } from "next/navigation";
+import { Suspense, useMemo, useState } from "react";
 
 // Per-stage visual config
-const STAGE_CONFIG: Record<string, { label: string; Icon: React.ElementType; cardGradient: string; badgeCn: string }> = {
+const STAGE_CONFIG: Record<
+  string,
+  { label: string; Icon: React.ElementType; cardGradient: string; badgeCn: string }
+> = {
   in_progress: {
-    label: 'Active',
+    label: "Active",
     Icon: PlayCircle,
-    cardGradient: 'from-emerald-500 to-teal-600',
-    badgeCn: 'bg-white/20 text-white border-0',
+    cardGradient: "from-emerald-500 to-teal-600",
+    badgeCn: "bg-white/20 text-white border-0",
   },
   confirm: {
-    label: 'Confirmed',
+    label: "Confirmed",
     Icon: CheckCircle,
-    cardGradient: 'from-violet-600 to-indigo-700',
-    badgeCn: 'bg-white/20 text-white border-0',
+    cardGradient: "from-violet-600 to-indigo-700",
+    badgeCn: "bg-white/20 text-white border-0",
   },
   booked: {
-    label: 'Pay Now',
+    label: "Pay Now",
     Icon: Clock,
-    cardGradient: 'from-orange-500 to-amber-500',
-    badgeCn: 'bg-white text-orange-600 border-0 font-bold',
+    cardGradient: "from-orange-500 to-amber-500",
+    badgeCn: "bg-white text-orange-600 border-0 font-bold",
   },
   done: {
-    label: 'Completed',
+    label: "Completed",
     Icon: CheckCircle2,
-    cardGradient: 'from-slate-400 to-slate-500',
-    badgeCn: 'bg-white/20 text-white border-0',
+    cardGradient: "from-slate-400 to-slate-500",
+    badgeCn: "bg-white/20 text-white border-0",
   },
 };
 
 function fallbackConfig(stage: string) {
-  return STAGE_CONFIG[stage] ?? {
-    label: stage,
-    Icon: Package,
-    cardGradient: 'from-sky-500 to-blue-600',
-    badgeCn: 'bg-white/20 text-white border-0',
-  };
+  return (
+    STAGE_CONFIG[stage] ?? {
+      label: stage,
+      Icon: Package,
+      cardGradient: "from-sky-500 to-blue-600",
+      badgeCn: "bg-white/20 text-white border-0",
+    }
+  );
 }
 
 function PurchasedPackageCard({ pkg }: { pkg: BookedPackageDto }) {
   const router = useRouter();
-  const packageName = String(odooTuple(pkg.package_id, 1) ?? 'Package');
+  const packageName = String(odooTuple(pkg.package_id, 1) ?? "Package");
   const initials = packageName
-    .split(' ')
+    .split(" ")
     .slice(0, 2)
-    .map((w) => w[0] ?? '')
-    .join('')
+    .map((w) => w[0] ?? "")
+    .join("")
     .toUpperCase();
 
   const { label, Icon, cardGradient, badgeCn } = fallbackConfig(pkg.package_stage);
@@ -108,14 +112,14 @@ function PurchasedPackageCard({ pkg }: { pkg: BookedPackageDto }) {
       onClick={() => router.push(`/packages/${pkg.booked_package_id}`)}
     >
       <CardContent className="p-0">
-        <div className={cn('bg-gradient-to-br p-4 relative overflow-hidden', cardGradient)}>
+        <div className={cn("bg-gradient-to-br p-4 relative overflow-hidden", cardGradient)}>
           <div className="absolute -top-4 -right-4 w-20 h-20 rounded-full bg-white/10" />
           {/* Top row: initials + stage badge */}
           <div className="flex items-start justify-between gap-2">
             <div className="w-8 h-8 rounded-xl bg-white/20 flex items-center justify-center font-bold text-xs text-white shrink-0">
               {initials}
             </div>
-            <Badge className={cn('text-[10px] gap-1 shrink-0', badgeCn)}>
+            <Badge className={cn("text-[10px] gap-1 shrink-0", badgeCn)}>
               <Icon className="w-3 h-3" />
               {label}
             </Badge>
@@ -129,10 +133,10 @@ function PurchasedPackageCard({ pkg }: { pkg: BookedPackageDto }) {
         <div className="px-3 py-2.5 flex items-center justify-between">
           <div className="flex items-center gap-0.5 text-sm font-bold text-foreground">
             <IndianRupee className="w-3.5 h-3.5" />
-            {pkg.package_cost.toLocaleString('en-IN')}
+            {pkg.package_cost.toLocaleString("en-IN")}
           </div>
           <div className="flex items-center gap-1 text-xs text-muted-foreground">
-            <span>{pkg.package_stage === 'booked' ? 'Pay now' : 'Details'}</span>
+            <span>{pkg.package_stage === "booked" ? "Pay now" : "Details"}</span>
             <ArrowRight className="w-3 h-3" />
           </div>
         </div>
@@ -145,7 +149,7 @@ function PurchasedPackageCard({ pkg }: { pkg: BookedPackageDto }) {
 const STAGE_ORDER: Record<string, number> = { booked: 0, in_progress: 1, confirm: 2, done: 3 };
 
 function PackagesInner() {
-  const [search, setSearch] = useState('');
+  const [search, setSearch] = useState("");
   const { packages: available, isLoading: loadingAvailable } = useAvailablePackages();
   const { packages: managed, isLoading: loadingManaged } = useManagedPackages();
 
@@ -154,18 +158,17 @@ function PackagesInner() {
   const sortedManaged = useMemo(
     () =>
       [...managed].sort(
-        (a, b) =>
-          (STAGE_ORDER[a.package_stage] ?? 99) - (STAGE_ORDER[b.package_stage] ?? 99)
+        (a, b) => (STAGE_ORDER[a.package_stage] ?? 99) - (STAGE_ORDER[b.package_stage] ?? 99),
       ),
-    [managed]
+    [managed],
   );
 
   const filtered = useMemo(
     () =>
       available.filter(
-        (p) => !search || p.package_name.toLowerCase().includes(search.toLowerCase())
+        (p) => !search || p.package_name.toLowerCase().includes(search.toLowerCase()),
       ),
-    [available, search]
+    [available, search],
   );
 
   const featuredPackage = filtered[0] ?? null;
@@ -195,7 +198,9 @@ function PackagesInner() {
             <div className="flex items-center justify-between mb-3">
               <h2 className="text-base font-bold text-foreground">My Packages</h2>
               {!isLoading && sortedManaged.length > 0 && (
-                <span className="text-xs text-muted-foreground">{sortedManaged.length} purchased</span>
+                <span className="text-xs text-muted-foreground">
+                  {sortedManaged.length} purchased
+                </span>
               )}
             </div>
             {isLoading ? (
@@ -233,7 +238,7 @@ function PackagesInner() {
         {(isLoading || quickPicks.length > 0) && (
           <section>
             <h2 className="text-base font-bold text-foreground mb-3">
-              {search ? 'Results' : 'Quick Picks'}
+              {search ? "Results" : "Quick Picks"}
             </h2>
             {isLoading ? (
               <div className="grid grid-cols-2 gap-3">

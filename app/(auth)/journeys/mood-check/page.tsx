@@ -21,18 +21,18 @@
  *
  * LAST UPDATED: 2026-04-23 — migrated custom header div to PageHeader
  */
-'use client';
+"use client";
 
-import { Suspense, useState } from 'react';
-import { useRouter } from 'next/navigation';
-import { PageHeader } from '@/components/shared/navigation/page-header';
-import { MoodCheckForm } from '@/components/journey/mood-check-form';
-import { Skeleton } from '@/components/ui/skeleton';
-import { useJourneyTaskContinuation } from '@/hooks/journeys/use-journey-task-continuation';
+import { MoodCheckForm } from "@/components/journey/mood-check-form";
+import { PageHeader } from "@/components/shared/navigation/page-header";
+import { Skeleton } from "@/components/ui/skeleton";
+import { useJourneyTaskContinuation } from "@/hooks/journeys/use-journey-task-continuation";
+import { useRouter } from "next/navigation";
+import { Suspense, useState } from "react";
 
 function MoodCheckContent() {
   const router = useRouter();
-  const continuation = useJourneyTaskContinuation('MOOD');
+  const continuation = useJourneyTaskContinuation("MOOD");
 
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -40,7 +40,10 @@ function MoodCheckContent() {
   // backend expects (moodBefore + moodAfter, 1..10). We take q_0 as
   // "before" and the last answered question as "after"; both fall back
   // to a neutral 5 when unavailable.
-  function buildMoodProof(answers: Record<string, number>): { moodBefore: number; moodAfter: number } {
+  function buildMoodProof(answers: Record<string, number>): {
+    moodBefore: number;
+    moodAfter: number;
+  } {
     const keys = Object.keys(answers).sort();
     const first = keys[0] ? answers[keys[0]] : undefined;
     const last = keys.length > 1 ? answers[keys[keys.length - 1]] : first;
@@ -57,12 +60,12 @@ function MoodCheckContent() {
       if (continuation.active) {
         const { moodBefore, moodAfter } = buildMoodProof(answers);
         await continuation.markCompleted(
-          { kind: 'MOOD', moodBefore, moodAfter },
+          { kind: "MOOD", moodBefore, moodAfter },
           { proofPreview: `Mood ${moodBefore} → ${moodAfter}` },
         );
       }
     } catch (e) {
-      console.error('[MoodCheckPage] journey completion failed', e);
+      console.error("[MoodCheckPage] journey completion failed", e);
     } finally {
       setIsSubmitting(false);
       router.back();

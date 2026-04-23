@@ -1,15 +1,14 @@
-import Image from 'next/image';
-import { ChevronRight, Play } from 'lucide-react';
-import { Badge } from '@/components/ui/badge';
-import { Card } from '@/components/ui/card';
-import type { WellnessResource } from '@/hooks/wellness/use-wellness-resources';
-import { cn } from '@/lib/utils';
+import { Badge } from "@/components/ui/badge";
+import { Card } from "@/components/ui/card";
+import type { WellnessResource } from "@/hooks/wellness/use-wellness-resources";
+import { ChevronRight, Play } from "lucide-react";
+import Image from "next/image";
 
-function getStrapiImageUrl(coverImage?: WellnessResource['coverImage']): string | null {
+function getStrapiImageUrl(coverImage?: WellnessResource["coverImage"]): string | null {
   const url = coverImage?.webImage?.url || coverImage?.mobileImage?.url;
   if (!url) return null;
-  if (url.startsWith('http')) return url.split('?')[0];
-  return `https://admin.mindtalkbuddy.com${url}`.split('?')[0];
+  if (url.startsWith("http")) return url.split("?")[0];
+  return `https://admin.mindtalkbuddy.com${url}`.split("?")[0];
 }
 
 interface ResourceCardProps {
@@ -23,15 +22,17 @@ export function ResourceCard({ resource, index = 0, onClick }: ResourceCardProps
   const categories = Array.isArray(resource.category)
     ? resource.category
     : resource.category
-    ? [resource.category]
-    : [];
+      ? [resource.category]
+      : [];
 
   return (
     <Card
       role="button"
       tabIndex={0}
       onClick={onClick}
-      onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') onClick?.(); }}
+      onKeyDown={(e) => {
+        if (e.key === "Enter" || e.key === " ") onClick?.();
+      }}
       className="group overflow-hidden cursor-pointer border-border bg-card shadow-sm hover:-translate-y-1 transition-transform duration-300 rounded-2xl"
     >
       {/* Thumbnail */}
@@ -39,7 +40,7 @@ export function ResourceCard({ resource, index = 0, onClick }: ResourceCardProps
         {imageUrl ? (
           <Image
             src={imageUrl}
-            alt={resource.title ?? 'Wellness resource'}
+            alt={resource.title ?? "Wellness resource"}
             fill
             priority={index < 4}
             sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 33vw"

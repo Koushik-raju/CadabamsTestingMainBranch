@@ -37,30 +37,24 @@
  */
 "use client";
 
-import { useState, useMemo } from "react";
-import Image from "next/image";
-import { useRouter } from "next/navigation";
-import { BookOpen, ChevronLeft, ChevronRight, Pencil } from "lucide-react";
+import { PageHeader } from "@/components/shared/navigation/page-header";
 import { Button } from "@/components/ui/button";
-import { Skeleton } from "@/components/ui/skeleton";
 import { Card, CardContent } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
-import { PageHeader } from "@/components/shared/navigation/page-header";
+import { Skeleton } from "@/components/ui/skeleton";
+import { useJournalingCategories, useSelfJournalingEntries } from "@/hooks/use-journaling";
+import type { JournalingCategory, SelfJournalingEntry } from "@/hooks/use-journaling";
 import {
-  useJournalingCategories,
-  useSelfJournalingEntries,
-} from "@/hooks/use-journaling";
-import type {
-  SelfJournalingEntry,
-  JournalingCategory,
-} from "@/hooks/use-journaling";
-import {
+  type SubscriptionWithTitleResponseDto,
   useJournalingSubscriptions,
   useSubJournalDetail,
-  type SubscriptionWithTitleResponseDto,
 } from "@/hooks/use-journaling-subscriptions";
-import { cn } from "@/lib/utils";
 import { getJournalVisual } from "@/lib/journal-visual";
+import { cn } from "@/lib/utils";
+import { BookOpen, ChevronLeft, ChevronRight, Pencil } from "lucide-react";
+import Image from "next/image";
+import { useRouter } from "next/navigation";
+import { useMemo, useState } from "react";
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -229,13 +223,9 @@ function EntryRow({ entry }: { entry: SelfJournalingEntry }) {
 
       <div className="flex-1 min-w-0">
         {entry.title && (
-          <p className="text-sm font-medium text-foreground line-clamp-1 mb-0.5">
-            {entry.title}
-          </p>
+          <p className="text-sm font-medium text-foreground line-clamp-1 mb-0.5">{entry.title}</p>
         )}
-        <p className="text-xs text-muted-foreground line-clamp-2 leading-relaxed">
-          {preview}
-        </p>
+        <p className="text-xs text-muted-foreground line-clamp-2 leading-relaxed">{preview}</p>
       </div>
 
       <div className="flex-shrink-0 flex flex-col items-end gap-1">
@@ -265,10 +255,7 @@ function SectionHeader({
     <div className="flex items-center justify-between px-4 mb-3">
       <h2 className="text-base font-bold text-foreground">{title}</h2>
       {onViewAll && (
-        <button
-          onClick={onViewAll}
-          className="text-xs text-primary font-medium hover:underline"
-        >
+        <button onClick={onViewAll} className="text-xs text-primary font-medium hover:underline">
           View all
         </button>
       )}
@@ -282,11 +269,9 @@ function SectionHeader({
 
 export default function JournalHomePage() {
   const router = useRouter();
-  const { categories, isLoading: categoriesLoading } =
-    useJournalingCategories();
+  const { categories, isLoading: categoriesLoading } = useJournalingCategories();
   const { entries, isLoading: entriesLoading } = useSelfJournalingEntries();
-  const { subscriptions, isLoading: subscriptionsLoading } =
-    useJournalingSubscriptions();
+  const { subscriptions, isLoading: subscriptionsLoading } = useJournalingSubscriptions();
 
   const TODAY_STR = toLocalDateStr(new Date());
   const [selectedDate, setSelectedDate] = useState(TODAY_STR);
@@ -305,10 +290,7 @@ export default function JournalHomePage() {
   );
 
   const selectedEntries = useMemo(
-    () =>
-      entries.filter(
-        (e) => toLocalDateStr(new Date(e.createdAt)) === selectedDate,
-      ),
+    () => entries.filter((e) => toLocalDateStr(new Date(e.createdAt)) === selectedDate),
     [entries, selectedDate],
   );
 
@@ -370,18 +352,13 @@ export default function JournalHomePage() {
             <div className="flex gap-3 overflow-x-auto px-4 pb-1 scrollbar-none">
               {subscriptionsLoading
                 ? [...Array(3)].map((_, i) => (
-                    <Skeleton
-                      key={i}
-                      className="flex-shrink-0 w-36 h-36 rounded-2xl"
-                    />
+                    <Skeleton key={i} className="flex-shrink-0 w-36 h-36 rounded-2xl" />
                   ))
                 : subscriptions.map((sub) => (
                     <JourneyCard
                       key={sub.id}
                       subscription={sub}
-                      onClick={() =>
-                        router.push(`/self-journaling/journal/${sub.slug}`)
-                      }
+                      onClick={() => router.push(`/self-journaling/journal/${sub.slug}`)}
                     />
                   ))}
             </div>
@@ -398,18 +375,13 @@ export default function JournalHomePage() {
           <div className="flex gap-3 overflow-x-auto px-4 pb-1 scrollbar-none">
             {categoriesLoading
               ? [...Array(3)].map((_, i) => (
-                  <Skeleton
-                    key={i}
-                    className="flex-shrink-0 w-36 h-36 rounded-2xl"
-                  />
+                  <Skeleton key={i} className="flex-shrink-0 w-36 h-36 rounded-2xl" />
                 ))
               : publishedCategories.map((cat) => (
                   <CategoryCard
                     key={cat.id}
                     category={cat}
-                    onClick={() =>
-                      router.push(`/self-journaling/categories/${cat.id}`)
-                    }
+                    onClick={() => router.push(`/self-journaling/categories/${cat.id}`)}
                   />
                 ))}
           </div>
@@ -437,9 +409,7 @@ export default function JournalHomePage() {
               onClick={() => setWeekOffset((o) => Math.max(0, o - 7))}
               className={cn(
                 "p-1 rounded-lg transition-colors",
-                weekOffset === 0
-                  ? "opacity-30 pointer-events-none"
-                  : "hover:bg-muted",
+                weekOffset === 0 ? "opacity-30 pointer-events-none" : "hover:bg-muted",
               )}
               aria-label="Next week"
             >
@@ -489,13 +459,10 @@ export default function JournalHomePage() {
 
           {/* Entries for selected date */}
           <div className="flex items-center justify-between mb-3">
-            <h2 className="text-base font-bold text-foreground">
-              {selectedLabel}
-            </h2>
+            <h2 className="text-base font-bold text-foreground">{selectedLabel}</h2>
             {selectedEntries.length > 0 && (
               <span className="text-xs text-muted-foreground">
-                {selectedEntries.length}{" "}
-                {selectedEntries.length === 1 ? "entry" : "entries"}
+                {selectedEntries.length} {selectedEntries.length === 1 ? "entry" : "entries"}
               </span>
             )}
           </div>
@@ -525,9 +492,7 @@ export default function JournalHomePage() {
               </div>
               <div>
                 <p className="text-sm font-semibold text-foreground">
-                  {selectedDate === TODAY_STR
-                    ? "No entry today yet"
-                    : "Nothing written this day"}
+                  {selectedDate === TODAY_STR ? "No entry today yet" : "Nothing written this day"}
                 </p>
                 <p className="text-xs text-muted-foreground mt-0.5">
                   {selectedDate === TODAY_STR
@@ -551,9 +516,7 @@ export default function JournalHomePage() {
                 {selectedEntries.map((entry, i) => (
                   <div
                     key={entry.id}
-                    onClick={() =>
-                      router.push(`/self-journaling/${selectedDate}`)
-                    }
+                    onClick={() => router.push(`/self-journaling/${selectedDate}`)}
                   >
                     <EntryRow entry={entry} />
                     {i < selectedEntries.length - 1 && <Separator />}

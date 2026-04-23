@@ -22,7 +22,7 @@
  *
  * LAST UPDATED: 2026-04-17 — removed Firebase RTDB token saving (Firebase removed)
  */
-import { isNative } from './platform';
+import { isNative } from "./platform";
 
 /**
  * Full push notification initialisation:
@@ -35,12 +35,12 @@ export async function initPushNotifications(): Promise<void> {
   if (!(await isNative())) return;
 
   try {
-    const { PushNotifications } = await import('@capacitor/push-notifications');
+    const { PushNotifications } = await import("@capacitor/push-notifications");
 
     // 1. Request permission
     const permResult = await PushNotifications.requestPermissions();
-    if (permResult.receive !== 'granted') {
-      console.warn('[PushNotifications] Permission not granted:', permResult.receive);
+    if (permResult.receive !== "granted") {
+      console.warn("[PushNotifications] Permission not granted:", permResult.receive);
       return;
     }
 
@@ -48,51 +48,51 @@ export async function initPushNotifications(): Promise<void> {
     await PushNotifications.register();
 
     // Handle registration errors
-    await PushNotifications.addListener('registrationError', (error) => {
-      console.error('[PushNotifications] Registration error:', error);
+    await PushNotifications.addListener("registrationError", (error) => {
+      console.error("[PushNotifications] Registration error:", error);
     });
 
     // 3. Handle foreground notifications
-    await PushNotifications.addListener('pushNotificationReceived', (notification) => {
-      console.log('[PushNotifications] Foreground notification received:', notification.title);
+    await PushNotifications.addListener("pushNotificationReceived", (notification) => {
+      console.log("[PushNotifications] Foreground notification received:", notification.title);
     });
 
     // 4. Handle notification taps — navigate to the appropriate page
-    await PushNotifications.addListener('pushNotificationActionPerformed', (action) => {
+    await PushNotifications.addListener("pushNotificationActionPerformed", (action) => {
       const data = action.notification.data as Record<string, unknown> | undefined;
       if (!data) return;
 
       const route = resolveNotificationRoute(data);
-      if (route && typeof window !== 'undefined') {
+      if (route && typeof window !== "undefined") {
         window.location.href = route;
       }
     });
   } catch (e) {
-    console.warn('[PushNotifications] initPushNotifications failed:', e);
+    console.warn("[PushNotifications] initPushNotifications failed:", e);
   }
 }
 
 function resolveNotificationRoute(data: Record<string, unknown>): string | null {
-  const type = data['type'] as string | undefined;
-  const id = data['id'] as string | undefined;
+  const type = data["type"] as string | undefined;
+  const id = data["id"] as string | undefined;
 
   switch (type) {
-    case 'appointment':
-      return id ? `/appointments/${id}` : '/appointments';
-    case 'chat':
-      return id ? `/chat/${id}` : '/chat';
-    case 'payment_success':
-      return '/booking/success';
-    case 'payment_failed':
-      return '/booking/failed';
-    case 'session':
-      return '/sessions';
+    case "appointment":
+      return id ? `/appointments/${id}` : "/appointments";
+    case "chat":
+      return id ? `/chat/${id}` : "/chat";
+    case "payment_success":
+      return "/booking/success";
+    case "payment_failed":
+      return "/booking/failed";
+    case "session":
+      return "/sessions";
     default:
-      if (data['url'] && typeof data['url'] === 'string') {
+      if (data["url"] && typeof data["url"] === "string") {
         try {
-          const u = new URL(data['url']);
-          if (u.host === 'consult.cadabams.com') {
-            return u.pathname + (u.search ?? '');
+          const u = new URL(data["url"]);
+          if (u.host === "consult.cadabams.com") {
+            return u.pathname + (u.search ?? "");
           }
         } catch {
           // ignore malformed URL

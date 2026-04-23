@@ -24,17 +24,17 @@
  *
  * LAST UPDATED: 2026-04-23 — Replaced custom header div with shared PageHeader.
  */
-'use client';
+"use client";
 
-import { useMemo } from 'react';
-import { useRouter, useParams } from 'next/navigation';
-import { BookOpen } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Skeleton } from '@/components/ui/skeleton';
-import { Card, CardContent } from '@/components/ui/card';
-import { Separator } from '@/components/ui/separator';
-import { PageHeader } from '@/components/shared/navigation/page-header';
-import { useSelfJournalingEntries } from '@/hooks/use-journaling';
+import { PageHeader } from "@/components/shared/navigation/page-header";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { Separator } from "@/components/ui/separator";
+import { Skeleton } from "@/components/ui/skeleton";
+import { useSelfJournalingEntries } from "@/hooks/use-journaling";
+import { BookOpen } from "lucide-react";
+import { useParams, useRouter } from "next/navigation";
+import { useMemo } from "react";
 
 export default function JournalDatePage() {
   const router = useRouter();
@@ -46,18 +46,18 @@ export default function JournalDatePage() {
     () =>
       allEntries.filter((e) => {
         const d = new Date(e.createdAt);
-        return !isNaN(d.getTime()) && d.toISOString().split('T')[0] === date;
+        return !isNaN(d.getTime()) && d.toISOString().split("T")[0] === date;
       }),
     [allEntries, date],
   );
 
   const formattedDate = (() => {
     try {
-      return new Date(date + 'T00:00:00').toLocaleDateString('en-US', {
-        weekday: 'long',
-        month: 'long',
-        day: 'numeric',
-        year: 'numeric',
+      return new Date(date + "T00:00:00").toLocaleDateString("en-US", {
+        weekday: "long",
+        month: "long",
+        day: "numeric",
+        year: "numeric",
       });
     } catch {
       return date;
@@ -100,7 +100,7 @@ export default function JournalDatePage() {
             <Button
               variant="outline"
               className="rounded-xl"
-              onClick={() => router.push('/self-journaling/new')}
+              onClick={() => router.push("/self-journaling/new")}
             >
               Write now
             </Button>
@@ -117,9 +117,9 @@ export default function JournalDatePage() {
                         Entry {i + 1}
                       </span>
                       <span className="text-xs text-muted-foreground">
-                        {new Date(entry.createdAt).toLocaleTimeString('en-US', {
-                          hour: '2-digit',
-                          minute: '2-digit',
+                        {new Date(entry.createdAt).toLocaleTimeString("en-US", {
+                          hour: "2-digit",
+                          minute: "2-digit",
                         })}
                       </span>
                     </div>

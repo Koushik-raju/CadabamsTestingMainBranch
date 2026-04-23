@@ -1,16 +1,14 @@
-import { clientCookies } from './client-cookies';
-import { serverCookies } from './server-cookies';
-import type { CookieEntry, CookieOptions, GetCookieOptions, SetCookieOptions } from './types';
+import { clientCookies } from "./client-cookies";
+import { serverCookies } from "./server-cookies";
+import type { CookieEntry, CookieOptions, GetCookieOptions, SetCookieOptions } from "./types";
 
 function isServer(): boolean {
-  return typeof window === 'undefined';
+  return typeof window === "undefined";
 }
 
 export async function getCookie(name: string, options?: GetCookieOptions): Promise<string | null> {
   try {
-    return isServer()
-      ? await serverCookies.get(name, options)
-      : clientCookies.get(name, options);
+    return isServer() ? await serverCookies.get(name, options) : clientCookies.get(name, options);
   } catch {
     return null;
   }
@@ -45,9 +43,7 @@ export async function removeCookie(name: string, options?: CookieOptions): Promi
 
 export async function cookieExists(name: string): Promise<boolean> {
   try {
-    return isServer()
-      ? await serverCookies.exists(name)
-      : clientCookies.exists(name);
+    return isServer() ? await serverCookies.exists(name) : clientCookies.exists(name);
   } catch {
     return false;
   }

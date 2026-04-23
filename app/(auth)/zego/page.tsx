@@ -1,5 +1,5 @@
-import { Suspense } from 'react';
-import { ZegoClient } from './zego-client';
+import { Suspense } from "react";
+import { ZegoClient } from "./zego-client";
 
 interface ZegoPageProps {
   searchParams: Promise<{ roomID?: string }>;
@@ -7,7 +7,7 @@ interface ZegoPageProps {
 
 export default async function ZegoPage({ searchParams }: ZegoPageProps) {
   const params = await searchParams;
-  const roomId = params.roomID ?? '';
+  const roomId = params.roomID ?? "";
 
   return (
     <Suspense
@@ -17,9 +17,7 @@ export default async function ZegoPage({ searchParams }: ZegoPageProps) {
           role="status"
           aria-label="Loading video call"
         >
-          <p className="text-white text-lg font-semibold animate-pulse">
-            Connecting to call…
-          </p>
+          <p className="text-white text-lg font-semibold animate-pulse">Connecting to call…</p>
         </div>
       }
     >

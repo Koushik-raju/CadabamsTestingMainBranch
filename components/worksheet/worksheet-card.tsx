@@ -1,9 +1,9 @@
-'use client';
+"use client";
 
-import { Card, CardContent } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { BookOpen, ChevronRight, CheckCircle2 } from 'lucide-react';
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { BookOpen, CheckCircle2, ChevronRight } from "lucide-react";
 
 export interface AssignedWorksheetItem {
   documentId: string;
@@ -25,7 +25,11 @@ interface WorksheetCardProps {
 
 export function WorksheetCard({ item, onOpen }: WorksheetCardProps) {
   const assignedDate = item.assignedAt
-    ? new Date(item.assignedAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })
+    ? new Date(item.assignedAt).toLocaleDateString("en-IN", {
+        day: "numeric",
+        month: "short",
+        year: "numeric",
+      })
     : null;
 
   return (
@@ -52,15 +56,13 @@ export function WorksheetCard({ item, onOpen }: WorksheetCardProps) {
               )}
               <div className="flex flex-wrap items-center gap-2 mt-1.5">
                 <Badge
-                  variant={item.isCompleted ? 'default' : 'secondary'}
+                  variant={item.isCompleted ? "default" : "secondary"}
                   className="text-[10px] px-1.5 py-0"
                 >
-                  {item.isCompleted ? 'Completed' : 'Pending'}
+                  {item.isCompleted ? "Completed" : "Pending"}
                 </Badge>
                 {assignedDate && (
-                  <span className="text-xs text-muted-foreground">
-                    Assigned: {assignedDate}
-                  </span>
+                  <span className="text-xs text-muted-foreground">Assigned: {assignedDate}</span>
                 )}
               </div>
             </div>

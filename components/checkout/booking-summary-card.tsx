@@ -1,14 +1,12 @@
 "use client";
 
-import { User as UserIcon, Video, Building2 } from "lucide-react";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import type { CrmControllerGetDoctorByIdResponse } from "@/sdk/backend-v2";
+import { Building2, User as UserIcon, Video } from "lucide-react";
 
-function displayName(
-  doctor: CrmControllerGetDoctorByIdResponse | null,
-): string {
+function displayName(doctor: CrmControllerGetDoctorByIdResponse | null): string {
   if (!doctor) return "Doctor";
   const raw = (doctor.name || "").trim();
   const name = raw.includes(",") ? raw.split(",").pop()!.trim() : raw;
@@ -42,11 +40,7 @@ export interface BookingSummaryCardProps {
   isOnline: boolean;
 }
 
-export function BookingSummaryCard({
-  doctor,
-  startDatetime,
-  isOnline,
-}: BookingSummaryCardProps) {
+export function BookingSummaryCard({ doctor, startDatetime, isOnline }: BookingSummaryCardProps) {
   const initials = (doctor?.name || "")
     .replace(/^Dr\.?\s*/i, "")
     .split(" ")
@@ -65,22 +59,16 @@ export function BookingSummaryCard({
       <CardContent className="space-y-4">
         <div className="flex items-center gap-4">
           <Avatar className="h-14 w-14">
-            {doctor?.image && (
-              <AvatarImage src={doctor.image} alt={displayName(doctor)} />
-            )}
+            {doctor?.image && <AvatarImage src={doctor.image} alt={displayName(doctor)} />}
             <AvatarFallback className="bg-primary/10 text-primary font-semibold">
               {initials || <UserIcon className="h-6 w-6" />}
             </AvatarFallback>
           </Avatar>
           <div>
-            <p className="font-semibold text-foreground">
-              {displayName(doctor)}
-            </p>
+            <p className="font-semibold text-foreground">{displayName(doctor)}</p>
             <>
               {doctor?.speciality_id?.[1] && (
-                <p className="text-sm text-muted-foreground">
-                  {String(doctor.speciality_id[1])}
-                </p>
+                <p className="text-sm text-muted-foreground">{String(doctor.speciality_id[1])}</p>
               )}
             </>
           </div>
@@ -92,9 +80,7 @@ export function BookingSummaryCard({
           {startDatetime && (
             <div className="flex justify-between">
               <span className="text-muted-foreground">Date &amp; Time</span>
-              <span className="font-medium text-foreground">
-                {formatDatetime(startDatetime)}
-              </span>
+              <span className="font-medium text-foreground">{formatDatetime(startDatetime)}</span>
             </div>
           )}
           <div className="flex justify-between">

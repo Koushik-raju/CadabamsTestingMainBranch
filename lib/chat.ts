@@ -16,7 +16,7 @@ export function normalizeThread(thread: MastraThread): MastraThread {
 
 export function formatDate(date?: Date | string): string {
   if (!date) return "Unknown date";
-  
+
   try {
     const dateObj = date instanceof Date ? date : new Date(date);
     return dateObj.toLocaleString("en-IN", {

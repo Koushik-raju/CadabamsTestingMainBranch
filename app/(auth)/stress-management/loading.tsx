@@ -1,4 +1,4 @@
-import { Skeleton } from '@/components/ui/skeleton';
+import { Skeleton } from "@/components/ui/skeleton";
 
 export default function StressManagementLoading() {
   return (
@@ -12,7 +12,9 @@ export default function StressManagementLoading() {
       </div>
       <div className="px-4 pt-6 flex flex-col gap-6">
         <div className="grid grid-cols-3 gap-3">
-          {[...Array(3)].map((_, i) => <Skeleton key={i} className="h-28 rounded-xl" />)}
+          {[...Array(3)].map((_, i) => (
+            <Skeleton key={i} className="h-28 rounded-xl" />
+          ))}
         </div>
         <Skeleton className="h-40 rounded-xl" />
       </div>

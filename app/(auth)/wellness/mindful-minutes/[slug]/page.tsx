@@ -29,41 +29,40 @@
  * LAST UPDATED: 2026-04-23 — migrated sticky header to PageHeader
  */
 
-'use client';
+"use client";
 
-import { useState, useMemo, useEffect, useRef } from 'react';
-import { useParams, useSearchParams } from 'next/navigation';
-import { useJourneyTaskContinuation } from '@/hooks/journeys/use-journey-task-continuation';
-import { Play, ChevronDown, ChevronUp } from 'lucide-react';
-import { PageHeader } from '@/components/shared/navigation/page-header';
-import { Skeleton } from '@/components/ui/skeleton';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Search } from 'lucide-react';
-import { useMindfulMinuteDetail } from '@/hooks/wellness/use-mindful-minute-detail';
+import { PageHeader } from "@/components/shared/navigation/page-header";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Skeleton } from "@/components/ui/skeleton";
 import {
-  FullscreenAudioPlayer,
   EqualizerBars,
-} from '@/components/wellness/fullscreen-audio-player';
-import Link from 'next/link';
-import type { MindfulMinuteAudio } from '@/hooks/wellness/use-mindful-minutes';
+  FullscreenAudioPlayer,
+} from "@/components/wellness/fullscreen-audio-player";
+import { useJourneyTaskContinuation } from "@/hooks/journeys/use-journey-task-continuation";
+import { useMindfulMinuteDetail } from "@/hooks/wellness/use-mindful-minute-detail";
+import type { MindfulMinuteAudio } from "@/hooks/wellness/use-mindful-minutes";
+import { ChevronDown, ChevronUp, Play } from "lucide-react";
+import { Search } from "lucide-react";
+import Link from "next/link";
+import { useParams, useSearchParams } from "next/navigation";
+import { useEffect, useMemo, useRef, useState } from "react";
 
-type SortOrder = 'asc' | 'desc';
-
+type SortOrder = "asc" | "desc";
 
 export default function MindfulMinuteDetailPage() {
   const params = useParams();
   const searchParams = useSearchParams();
-  const slugOrId = typeof params?.slug === 'string' ? params.slug : '';
+  const slugOrId = typeof params?.slug === "string" ? params.slug : "";
   const { mindfulMinute, isLoading, error } = useMindfulMinuteDetail(slugOrId);
 
   // Journey continuation — active only when the URL carries
   // journeyEnrollmentId/journeyTaskId AND the context agrees.
-  const continuation = useJourneyTaskContinuation('AUDIO');
-  const deepLinkedAudioId = searchParams?.get('audioId') ?? null;
+  const continuation = useJourneyTaskContinuation("AUDIO");
+  const deepLinkedAudioId = searchParams?.get("audioId") ?? null;
 
-  const [searchQuery, setSearchQuery] = useState('');
-  const [sortOrder, setSortOrder] = useState<SortOrder>('asc');
+  const [searchQuery, setSearchQuery] = useState("");
+  const [sortOrder, setSortOrder] = useState<SortOrder>("asc");
   const [activeIndex, setActiveIndex] = useState<number | null>(null);
   const [playerOpen, setPlayerOpen] = useState(false);
   const autoOpenedRef = useRef(false);
@@ -74,15 +73,13 @@ export default function MindfulMinuteDetailPage() {
     return [...list].sort((a, b) => {
       const da = Date.parse(a.createdAt);
       const db = Date.parse(b.createdAt);
-      return sortOrder === 'asc' ? da - db : db - da;
+      return sortOrder === "asc" ? da - db : db - da;
     });
   }, [mindfulMinute, sortOrder]);
 
   const filteredAudios = useMemo(() => {
     if (!searchQuery) return sortedAudios;
-    return sortedAudios.filter((a) =>
-      a.title.toLowerCase().includes(searchQuery.toLowerCase())
-    );
+    return sortedAudios.filter((a) => a.title.toLowerCase().includes(searchQuery.toLowerCase()));
   }, [sortedAudios, searchQuery]);
 
   const handleAudioTap = (idx: number) => {
@@ -116,11 +113,11 @@ export default function MindfulMinuteDetailPage() {
     journeyDoneRef.current = true;
     try {
       await continuation.markCompleted(
-        { kind: 'AUDIO', audioId },
+        { kind: "AUDIO", audioId },
         { proofPreview: audio?.title ?? undefined },
       );
     } catch (err) {
-      console.error('[MindfulMinuteDetailPage] journey completion failed', err);
+      console.error("[MindfulMinuteDetailPage] journey completion failed", err);
     }
   };
 
@@ -147,16 +144,14 @@ export default function MindfulMinuteDetailPage() {
   }
 
   if (error || !mindfulMinute) {
-    const isNotFound = !mindfulMinute || error?.message === 'not_found';
+    const isNotFound = !mindfulMinute || error?.message === "not_found";
     return (
       <div className="min-h-screen bg-background flex flex-col items-center justify-center p-6 gap-4 text-center">
         <p className="font-bold text-foreground text-lg">
-          {isNotFound ? '404' : 'Something went wrong'}
+          {isNotFound ? "404" : "Something went wrong"}
         </p>
         <p className="text-muted-foreground">
-          {isNotFound
-            ? 'This mindful minute could not be found.'
-            : error?.message}
+          {isNotFound ? "This mindful minute could not be found." : error?.message}
         </p>
         <Button asChild variant="outline">
           <Link href="/wellness/mindful-minutes">Back to Mindful Minutes</Link>
@@ -184,12 +179,12 @@ export default function MindfulMinuteDetailPage() {
             setPlayerOpen(false);
             try {
               await continuation.markCompleted(
-                { kind: 'AUDIO', audioId: audio.id },
+                { kind: "AUDIO", audioId: audio.id },
                 { proofPreview: audio.title },
               );
             } catch (err) {
               journeyDoneRef.current = false;
-              console.error('[MindfulMinuteDetailPage] auto-complete failed', err);
+              console.error("[MindfulMinuteDetailPage] auto-complete failed", err);
             }
           }}
         />
@@ -238,12 +233,12 @@ export default function MindfulMinuteDetailPage() {
               journeyDoneRef.current = true;
               try {
                 await continuation.markCompleted(
-                  { kind: 'AUDIO', audioId: audio.id },
+                  { kind: "AUDIO", audioId: audio.id },
                   { proofPreview: audio.title },
                 );
               } catch (err) {
                 journeyDoneRef.current = false;
-                console.error('[MindfulMinuteDetailPage] mark-complete failed', err);
+                console.error("[MindfulMinuteDetailPage] mark-complete failed", err);
               }
             }}
           >
@@ -256,11 +251,11 @@ export default function MindfulMinuteDetailPage() {
         {/* Sort control + Play all */}
         <div className="flex justify-between items-center">
           <button
-            onClick={() => setSortOrder((o) => (o === 'asc' ? 'desc' : 'asc'))}
+            onClick={() => setSortOrder((o) => (o === "asc" ? "desc" : "asc"))}
             className="text-sm font-bold text-muted-foreground flex items-center gap-1 active:opacity-70"
           >
-            {sortOrder === 'asc' ? 'Oldest first' : 'Newest first'}
-            {sortOrder === 'asc' ? (
+            {sortOrder === "asc" ? "Oldest first" : "Newest first"}
+            {sortOrder === "asc" ? (
               <ChevronDown className="w-4 h-4" />
             ) : (
               <ChevronUp className="w-4 h-4" />
@@ -271,7 +266,10 @@ export default function MindfulMinuteDetailPage() {
               size="sm"
               variant="outline"
               className="rounded-xl gap-1.5 h-8 text-xs font-bold"
-              onClick={() => { setActiveIndex(0); setPlayerOpen(true); }}
+              onClick={() => {
+                setActiveIndex(0);
+                setPlayerOpen(true);
+              }}
             >
               <Play className="w-3 h-3 fill-current" />
               Play all
@@ -292,11 +290,7 @@ export default function MindfulMinuteDetailPage() {
                 <div className="p-3.5 flex items-center gap-4">
                   {/* Icon / equalizer */}
                   <div className="relative w-14 h-14 rounded-full overflow-hidden flex-shrink-0 bg-gradient-to-br from-primary/20 to-primary/40 flex items-center justify-center">
-                    {isActive ? (
-                      <EqualizerBars />
-                    ) : (
-                      <span className="text-xl">🎵</span>
-                    )}
+                    {isActive ? <EqualizerBars /> : <span className="text-xl">🎵</span>}
                   </div>
 
                   <div className="flex-1 min-w-0">
@@ -310,7 +304,7 @@ export default function MindfulMinuteDetailPage() {
                     </div>
                     <div className="flex items-center gap-1.5 text-primary font-bold text-[13px] mt-2">
                       <Play className="w-3.5 h-3.5 fill-current" />
-                      {isActive ? 'Now playing' : 'Play'}
+                      {isActive ? "Now playing" : "Play"}
                     </div>
                   </div>
                 </div>

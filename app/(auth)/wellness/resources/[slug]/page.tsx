@@ -24,36 +24,39 @@
  *
  * LAST UPDATED: 2026-04-23 — migrated sticky header to PageHeader; added file header
  */
-'use client';
+"use client";
 
-import { useParams } from 'next/navigation';
-import Image from 'next/image';
-import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { PageHeader } from "@/components/shared/navigation/page-header";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
+import { AudioPlayer } from "@/components/wellness/audio-player";
+import { VideoPlayer } from "@/components/wellness/video-player";
+import { useWellnessResourceDetail } from "@/hooks/wellness/use-wellness-resource-detail";
+import type {
+  ResourceBlock,
+  WellnessResource,
+} from "@/hooks/wellness/use-wellness-resource-detail";
+import { getStrapiImageUrl } from "@/lib/strapi-fetcher";
 import {
-  Clock,
-  User,
-  MapPin,
   Briefcase,
   ChevronRight,
-  RefreshCw,
+  Clock,
   Headphones,
+  MapPin,
   Play,
-} from 'lucide-react';
-import { Badge } from '@/components/ui/badge';
-import { Skeleton } from '@/components/ui/skeleton';
-import { Button } from '@/components/ui/button';
-import { PageHeader } from '@/components/shared/navigation/page-header';
-import { AudioPlayer } from '@/components/wellness/audio-player';
-import { VideoPlayer } from '@/components/wellness/video-player';
-import { useWellnessResourceDetail } from '@/hooks/wellness/use-wellness-resource-detail';
-import { getStrapiImageUrl } from '@/lib/strapi-fetcher';
-import type { WellnessResource, ResourceBlock } from '@/hooks/wellness/use-wellness-resource-detail';
+  RefreshCw,
+  User,
+} from "lucide-react";
+import Image from "next/image";
+import Link from "next/link";
+import { useParams } from "next/navigation";
+import { useRouter } from "next/navigation";
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
 function formatCategory(cat: string): string {
-  return cat.replace(/-/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
+  return cat.replace(/-/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
 }
 
 // ─── Rich text renderer ───────────────────────────────────────────────────────
@@ -64,17 +67,17 @@ function StrapiRichText({ nodes }: { nodes: unknown[] }) {
     <>
       {nodes.map((node: unknown, i) => {
         const n = node as Record<string, unknown>;
-        if (n.type === 'paragraph') {
+        if (n.type === "paragraph") {
           const children = (n.children as unknown[]) ?? [];
           const text = children
             .map((c) => {
               const ch = c as Record<string, unknown>;
-              let t = String(ch.text ?? '');
+              let t = String(ch.text ?? "");
               if (ch.bold) t = `<strong>${t}</strong>`;
               if (ch.italic) t = `<em>${t}</em>`;
               return t;
             })
-            .join('');
+            .join("");
           if (!text.trim()) return <br key={i} />;
           return (
             <p
@@ -84,33 +87,49 @@ function StrapiRichText({ nodes }: { nodes: unknown[] }) {
             />
           );
         }
-        if (n.type === 'heading') {
+        if (n.type === "heading") {
           const children = (n.children as unknown[]) ?? [];
-          const text = children.map((c) => String((c as Record<string, unknown>).text ?? '')).join('');
+          const text = children
+            .map((c) => String((c as Record<string, unknown>).text ?? ""))
+            .join("");
           const level = Number(n.level ?? 2);
           const cls =
             level <= 2
-              ? 'text-xl font-bold text-foreground mt-6 mb-2'
-              : 'text-lg font-semibold text-foreground mt-4 mb-2';
-          if (level <= 2) return <h2 key={i} className={cls}>{text}</h2>;
-          if (level === 3) return <h3 key={i} className={cls}>{text}</h3>;
-          return <h4 key={i} className={cls}>{text}</h4>;
+              ? "text-xl font-bold text-foreground mt-6 mb-2"
+              : "text-lg font-semibold text-foreground mt-4 mb-2";
+          if (level <= 2)
+            return (
+              <h2 key={i} className={cls}>
+                {text}
+              </h2>
+            );
+          if (level === 3)
+            return (
+              <h3 key={i} className={cls}>
+                {text}
+              </h3>
+            );
+          return (
+            <h4 key={i} className={cls}>
+              {text}
+            </h4>
+          );
         }
-        if (n.type === 'list') {
+        if (n.type === "list") {
           const items = (n.children as unknown[]) ?? [];
-          const isOrdered = n.format === 'ordered';
-          const Tag = isOrdered ? 'ol' : 'ul';
+          const isOrdered = n.format === "ordered";
+          const Tag = isOrdered ? "ol" : "ul";
           return (
             <Tag
               key={i}
-              className={`mb-3 pl-5 ${isOrdered ? 'list-decimal' : 'list-disc'} space-y-1`}
+              className={`mb-3 pl-5 ${isOrdered ? "list-decimal" : "list-disc"} space-y-1`}
             >
               {items.map((item, j) => {
                 const it = item as Record<string, unknown>;
                 const itemChildren = (it.children as unknown[]) ?? [];
                 const text = itemChildren
-                  .map((c) => String((c as Record<string, unknown>).text ?? ''))
-                  .join('');
+                  .map((c) => String((c as Record<string, unknown>).text ?? ""))
+                  .join("");
                 return (
                   <li key={j} className="text-foreground leading-relaxed">
                     {text}
@@ -120,15 +139,15 @@ function StrapiRichText({ nodes }: { nodes: unknown[] }) {
             </Tag>
           );
         }
-        if (n.type === 'image') {
+        if (n.type === "image") {
           const img = n.image as Record<string, unknown> | undefined;
-          const url = getStrapiImageUrl(String(img?.url ?? ''));
+          const url = getStrapiImageUrl(String(img?.url ?? ""));
           if (!url) return null;
           return (
             <div key={i} className="rounded-2xl overflow-hidden my-4">
               <Image
                 src={url}
-                alt={String(img?.alternativeText ?? '')}
+                alt={String(img?.alternativeText ?? "")}
                 width={800}
                 height={450}
                 className="w-full object-cover"
@@ -143,7 +162,7 @@ function StrapiRichText({ nodes }: { nodes: unknown[] }) {
 }
 
 function RichTextBlock({ block }: { block: ResourceBlock }) {
-  if (block.__component === 'blocks.richtext') {
+  if (block.__component === "blocks.richtext") {
     const body = block.body ?? block.content ?? block.text;
     if (Array.isArray(body)) {
       return (
@@ -152,7 +171,7 @@ function RichTextBlock({ block }: { block: ResourceBlock }) {
         </div>
       );
     }
-    if (typeof body === 'string' && body.trim()) {
+    if (typeof body === "string" && body.trim()) {
       return (
         <div
           className="prose prose-sm max-w-none text-foreground"
@@ -162,7 +181,7 @@ function RichTextBlock({ block }: { block: ResourceBlock }) {
     }
     return null;
   }
-  if (block.__component === 'blocks.image') {
+  if (block.__component === "blocks.image") {
     const img = block.image as { url?: string; alternativeText?: string } | undefined;
     const url = getStrapiImageUrl(img?.url);
     if (!url) return null;
@@ -170,7 +189,7 @@ function RichTextBlock({ block }: { block: ResourceBlock }) {
       <div className="rounded-2xl overflow-hidden">
         <Image
           src={url}
-          alt={img?.alternativeText ?? (block.caption as string) ?? ''}
+          alt={img?.alternativeText ?? (block.caption as string) ?? ""}
           width={800}
           height={450}
           className="w-full object-cover"
@@ -196,7 +215,7 @@ function extractDoctorId(linkForAppointment?: string): string | null {
   if (!linkForAppointment) return null;
   try {
     const url = new URL(linkForAppointment);
-    return url.searchParams.get('id');
+    return url.searchParams.get("id");
   } catch {
     return null;
   }
@@ -211,10 +230,10 @@ function AuthorCard({ author }: { author: AuthorData }) {
         <User className="h-6 w-6 text-primary" />
       </div>
       <div className="flex-1 min-w-0">
-        <p className="font-bold text-foreground text-sm">{author.name ?? 'Expert'}</p>
+        <p className="font-bold text-foreground text-sm">{author.name ?? "Expert"}</p>
         {author.department && author.department.length > 0 && (
           <p className="text-muted-foreground text-xs mt-0.5">
-            {author.department.map((d) => d.replace(/-/g, ' ')).join(' · ')}
+            {author.department.map((d) => d.replace(/-/g, " ")).join(" · ")}
           </p>
         )}
         <div className="flex flex-wrap gap-3 mt-2">
@@ -227,7 +246,7 @@ function AuthorCard({ author }: { author: AuthorData }) {
           {author.location && author.location.length > 0 && (
             <div className="flex items-center gap-1 text-muted-foreground text-xs">
               <MapPin className="h-3 w-3" />
-              <span>{author.location.join(', ')}</span>
+              <span>{author.location.join(", ")}</span>
             </div>
           )}
         </div>
@@ -252,20 +271,20 @@ function SimilarCard({ blog, onClick }: { blog: WellnessResource; onClick: () =>
   const cats = Array.isArray(blog.category)
     ? (blog.category as string[])
     : blog.category
-    ? [blog.category as string]
-    : [];
+      ? [blog.category as string]
+      : [];
 
   return (
     <div
       role="button"
       tabIndex={0}
       onClick={onClick}
-      onKeyDown={(e) => (e.key === 'Enter' || e.key === ' ') && onClick()}
+      onKeyDown={(e) => (e.key === "Enter" || e.key === " ") && onClick()}
       className="group bg-card border border-border rounded-xl overflow-hidden cursor-pointer hover:border-primary/40 hover:shadow-sm transition-all duration-200 flex gap-3"
     >
       {imgUrl && (
         <div className="relative w-20 h-20 flex-shrink-0 overflow-hidden bg-muted">
-          <Image src={imgUrl} alt={blog.title ?? ''} fill className="object-cover" />
+          <Image src={imgUrl} alt={blog.title ?? ""} fill className="object-cover" />
         </div>
       )}
       <div className="flex-1 min-w-0 p-3 flex flex-col justify-center gap-1">
@@ -290,7 +309,7 @@ function SimilarCard({ blog, onClick }: { blog: WellnessResource; onClick: () =>
 export default function ResourceDetailPage() {
   const params = useParams();
   const router = useRouter();
-  const slug = typeof params?.slug === 'string' ? params.slug : '';
+  const slug = typeof params?.slug === "string" ? params.slug : "";
   const { resource, isLoading, error } = useWellnessResourceDetail(slug);
 
   if (isLoading) {
@@ -305,10 +324,10 @@ export default function ResourceDetailPage() {
           <Skeleton className="h-5 w-24 rounded-full" />
           <Skeleton className="h-8 w-3/4" />
           <Skeleton className="h-4 w-1/3" />
-          <Skeleton className="w-full rounded-2xl" style={{ aspectRatio: '16/9' }} />
+          <Skeleton className="w-full rounded-2xl" style={{ aspectRatio: "16/9" }} />
           <div className="space-y-3">
             {Array.from({ length: 8 }).map((_, i) => (
-              <Skeleton key={i} className={`h-4 ${i % 3 === 2 ? 'w-3/4' : 'w-full'}`} />
+              <Skeleton key={i} className={`h-4 ${i % 3 === 2 ? "w-3/4" : "w-full"}`} />
             ))}
           </div>
         </div>
@@ -320,7 +339,7 @@ export default function ResourceDetailPage() {
     return (
       <div className="min-h-screen bg-background flex flex-col items-center justify-center p-6 text-center gap-4">
         <RefreshCw className="h-8 w-8 text-muted-foreground" />
-        <p className="text-muted-foreground">{error?.message ?? 'Article not found'}</p>
+        <p className="text-muted-foreground">{error?.message ?? "Article not found"}</p>
         <Button asChild variant="outline">
           <Link href="/wellness/resources">Back to Resources</Link>
         </Button>
@@ -331,8 +350,8 @@ export default function ResourceDetailPage() {
   const categories = Array.isArray(resource.category)
     ? (resource.category as string[])
     : resource.category
-    ? [resource.category as string]
-    : [];
+      ? [resource.category as string]
+      : [];
 
   const coverWebUrl = getStrapiImageUrl(resource.coverImage?.webImage?.url);
   const coverMobileUrl = getStrapiImageUrl(resource.coverImage?.mobileImage?.url);
@@ -381,10 +400,10 @@ export default function ResourceDetailPage() {
             )}
             {publishedOn && (
               <span>
-                {new Date(publishedOn).toLocaleDateString('en-IN', {
-                  year: 'numeric',
-                  month: 'long',
-                  day: 'numeric',
+                {new Date(publishedOn).toLocaleDateString("en-IN", {
+                  year: "numeric",
+                  month: "long",
+                  day: "numeric",
                 })}
               </span>
             )}
@@ -405,7 +424,7 @@ export default function ResourceDetailPage() {
               <div className="relative w-full aspect-video md:hidden">
                 <Image
                   src={coverMobileUrl}
-                  alt={resource.coverImage?.mobileImage?.alternativeText ?? resource.title ?? ''}
+                  alt={resource.coverImage?.mobileImage?.alternativeText ?? resource.title ?? ""}
                   fill
                   className="object-cover"
                   priority
@@ -413,12 +432,12 @@ export default function ResourceDetailPage() {
               </div>
             )}
             <div
-              className={`relative w-full aspect-video ${coverMobileUrl ? 'hidden md:block' : 'block'}`}
+              className={`relative w-full aspect-video ${coverMobileUrl ? "hidden md:block" : "block"}`}
             >
               {coverWebUrl && (
                 <Image
                   src={coverWebUrl}
-                  alt={resource.coverImage?.webImage?.alternativeText ?? resource.title ?? ''}
+                  alt={resource.coverImage?.webImage?.alternativeText ?? resource.title ?? ""}
                   fill
                   className="object-cover"
                   priority
@@ -435,7 +454,7 @@ export default function ResourceDetailPage() {
               <Headphones className="h-4 w-4 text-primary" />
               <span className="font-semibold text-sm text-foreground">Listen to Article</span>
             </div>
-            <AudioPlayer src={resource.audioUrl} title={resource.title ?? 'Audio'} />
+            <AudioPlayer src={resource.audioUrl} title={resource.title ?? "Audio"} />
           </div>
         )}
 
@@ -446,7 +465,7 @@ export default function ResourceDetailPage() {
               <Play className="h-4 w-4 text-white/70" />
               <span className="font-semibold text-sm text-white/70">Watch Video</span>
             </div>
-            <VideoPlayer src={resource.videoUrl} title={resource.title ?? 'Video'} />
+            <VideoPlayer src={resource.videoUrl} title={resource.title ?? "Video"} />
           </div>
         )}
 

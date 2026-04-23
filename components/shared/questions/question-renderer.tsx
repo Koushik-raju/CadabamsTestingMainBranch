@@ -1,24 +1,35 @@
-'use client';
+"use client";
 
-import { Textarea } from '@/components/ui/textarea';
-import { Label } from '@/components/ui/label';
-import { McqSelector, type McqOption } from './answer-selectors/mcq';
-import { SmileySelector } from './answer-selectors/smiley';
-import { YesNoSelector } from './answer-selectors/yes-no';
-import { MultiDropdownSelector, type SubQuestion } from './answer-selectors/multi-dropdown';
-import { LevelSelector } from './answer-selectors/level-selector';
-import { BubbleSelector, type BubbleOption } from './answer-selectors/bubble-selector';
-import { IndicatorSelector } from './answer-selectors/indicator';
-import { ViewText } from './answer-selectors/view-text';
-import { Agreement } from './answer-selectors/agreement';
-import { MoodSelector } from './answer-selectors/mood-selector';
-import { DotChooser, type DotOption } from './answer-selectors/dot-chooser';
-import { Generate } from './answer-selectors/generate';
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Agreement } from "./answer-selectors/agreement";
+import { type BubbleOption, BubbleSelector } from "./answer-selectors/bubble-selector";
+import { DotChooser, type DotOption } from "./answer-selectors/dot-chooser";
+import { Generate } from "./answer-selectors/generate";
+import { IndicatorSelector } from "./answer-selectors/indicator";
+import { LevelSelector } from "./answer-selectors/level-selector";
+import { type McqOption, McqSelector } from "./answer-selectors/mcq";
+import { MoodSelector } from "./answer-selectors/mood-selector";
+import { MultiDropdownSelector, type SubQuestion } from "./answer-selectors/multi-dropdown";
+import { SmileySelector } from "./answer-selectors/smiley";
+import { ViewText } from "./answer-selectors/view-text";
+import { YesNoSelector } from "./answer-selectors/yes-no";
 
 export type QuestionType =
-  | 'mcq' | 'yes_no' | 'smiley' | 'rating' | 'text' | 'multi_dropdown'
-  | 'level_selector' | 'bubble_selector' | 'indicator' | 'view_text'
-  | 'agreement' | 'mood_selector' | 'dot_chooser' | 'generate'
+  | "mcq"
+  | "yes_no"
+  | "smiley"
+  | "rating"
+  | "text"
+  | "multi_dropdown"
+  | "level_selector"
+  | "bubble_selector"
+  | "indicator"
+  | "view_text"
+  | "agreement"
+  | "mood_selector"
+  | "dot_chooser"
+  | "generate"
   | string;
 
 export interface QuestionOption {
@@ -80,69 +91,95 @@ interface QuestionRendererProps {
 }
 
 const LIKERT_OPTIONS = [
-  { id: 'sd', label: 'Strongly Disagree', value: 'strongly_disagree' },
-  { id: 'd', label: 'Disagree', value: 'disagree' },
-  { id: 'n', label: 'Neutral', value: 'neutral' },
-  { id: 'a', label: 'Agree', value: 'agree' },
-  { id: 'sa', label: 'Strongly Agree', value: 'strongly_agree' },
+  { id: "sd", label: "Strongly Disagree", value: "strongly_disagree" },
+  { id: "d", label: "Disagree", value: "disagree" },
+  { id: "n", label: "Neutral", value: "neutral" },
+  { id: "a", label: "Agree", value: "agree" },
+  { id: "sa", label: "Strongly Agree", value: "strongly_agree" },
 ];
 
 function getQuestionType(q: Question): QuestionType {
   // Normalize both q.type and q.__component — the backend stores raw Strapi
   // __component strings (e.g. "assessment.level-selector") as `type`.
-  const raw = q.type || q.__component || '';
+  const raw = q.type || q.__component || "";
 
-  if (raw === 'mcq' || raw === 'yes_no' || raw === 'smiley' || raw === 'rating'
-    || raw === 'text' || raw === 'multi_dropdown' || raw === 'level_selector'
-    || raw === 'bubble_selector' || raw === 'indicator' || raw === 'view_text'
-    || raw === 'agreement' || raw === 'mood_selector' || raw === 'dot_chooser'
-    || raw === 'generate' || raw === 'qa') {
+  if (
+    raw === "mcq" ||
+    raw === "yes_no" ||
+    raw === "smiley" ||
+    raw === "rating" ||
+    raw === "text" ||
+    raw === "multi_dropdown" ||
+    raw === "level_selector" ||
+    raw === "bubble_selector" ||
+    raw === "indicator" ||
+    raw === "view_text" ||
+    raw === "agreement" ||
+    raw === "mood_selector" ||
+    raw === "dot_chooser" ||
+    raw === "generate" ||
+    raw === "qa"
+  ) {
     return raw;
   }
 
   // Fallback: match by substring for Strapi __component strings
-  if (raw.includes('level-selector') || raw.includes('level_selector')) return 'level_selector';
-  if (raw.includes('bubble-selector') || raw.includes('bubble_selector')) return 'bubble_selector';
-  if (raw.includes('mood-selector') || raw.includes('mood_selector')) return 'mood_selector';
-  if (raw.includes('dot-chooser') || raw.includes('dot_chooser')) return 'dot_chooser';
-  if (raw.includes('indicator')) return 'indicator';
-  if (raw.includes('smiley')) return 'smiley';
-  if (raw.includes('yes') || raw.includes('no')) return 'yes_no';
-  if (raw.includes('multiple-choice') || raw.includes('mcq-multiple') || raw.includes('mcq')) return 'mcq';
-  if (raw.includes('multi') || raw.includes('dropdown')) return 'multi_dropdown';
-  if (raw.includes('view-text') || raw.includes('view_text')) return 'view_text';
-  if (raw.includes('agreement')) return 'agreement';
-  if (raw.includes('generate')) return 'generate';
+  if (raw.includes("level-selector") || raw.includes("level_selector")) return "level_selector";
+  if (raw.includes("bubble-selector") || raw.includes("bubble_selector")) return "bubble_selector";
+  if (raw.includes("mood-selector") || raw.includes("mood_selector")) return "mood_selector";
+  if (raw.includes("dot-chooser") || raw.includes("dot_chooser")) return "dot_chooser";
+  if (raw.includes("indicator")) return "indicator";
+  if (raw.includes("smiley")) return "smiley";
+  if (raw.includes("yes") || raw.includes("no")) return "yes_no";
+  if (raw.includes("multiple-choice") || raw.includes("mcq-multiple") || raw.includes("mcq"))
+    return "mcq";
+  if (raw.includes("multi") || raw.includes("dropdown")) return "multi_dropdown";
+  if (raw.includes("view-text") || raw.includes("view_text")) return "view_text";
+  if (raw.includes("agreement")) return "agreement";
+  if (raw.includes("generate")) return "generate";
   // assessment.qa with sub-questions + answers = multi_dropdown (Likert grid)
   // assessment.qa without those fields = text input
-  if (raw.includes('qa')) return 'qa';
-  if (raw.includes('text') || raw.includes('speech')) return 'text';
-  return 'mcq';
+  if (raw.includes("qa")) return "qa";
+  if (raw.includes("text") || raw.includes("speech")) return "text";
+  return "mcq";
 }
 
 function getQuestionLabel(q: Question): string {
-  return q.question || q.title || q.label || q.description || '';
+  return q.question || q.title || q.label || q.description || "";
 }
 
 function parseKeyValue(kv?: string | Record<string, string>): Record<string, string> | undefined {
   if (!kv) return undefined;
-  if (typeof kv === 'object') return kv;
-  try { return JSON.parse(kv); } catch { return undefined; }
+  if (typeof kv === "object") return kv;
+  try {
+    return JSON.parse(kv);
+  } catch {
+    return undefined;
+  }
 }
 
-export function QuestionRenderer({ question, answer, onChange, onComplete, onFinish }: QuestionRendererProps) {
+export function QuestionRenderer({
+  question,
+  answer,
+  onChange,
+  onComplete,
+  onFinish,
+}: QuestionRendererProps) {
   const qType = getQuestionType(question);
   const qLabel = getQuestionLabel(question);
-  const options: McqOption[] = question.Questions || question.options?.map(o => ({ option: o.option || o.label || o.value, id: o.id })) || [];
+  const options: McqOption[] =
+    question.Questions ||
+    question.options?.map((o) => ({ option: o.option || o.label || o.value, id: o.id })) ||
+    [];
 
   switch (qType) {
-    case 'mcq':
+    case "mcq":
       return (
         <McqSelector
           title={qLabel}
           subTitle={question.subTitle || question.description}
           questions={options}
-          selected={(answer as { selected: string })?.selected || ''}
+          selected={(answer as { selected: string })?.selected || ""}
           onSelect={(value) => {
             onChange({ selected: value });
             onComplete(true);
@@ -150,14 +187,14 @@ export function QuestionRenderer({ question, answer, onChange, onComplete, onFin
         />
       );
 
-    case 'yes_no':
+    case "yes_no":
       return (
         <YesNoSelector
           title={qLabel}
           subTitle={question.subTitle || question.description}
-          yesLabel={question.yesLabel || 'Yes'}
-          noLabel={question.noLabel || 'No'}
-          selected={(answer as { selected: string })?.selected || ''}
+          yesLabel={question.yesLabel || "Yes"}
+          noLabel={question.noLabel || "No"}
+          selected={(answer as { selected: string })?.selected || ""}
           onSelect={(value) => {
             onChange({ selected: value });
             onComplete(true);
@@ -165,7 +202,7 @@ export function QuestionRenderer({ question, answer, onChange, onComplete, onFin
         />
       );
 
-    case 'smiley': {
+    case "smiley": {
       const smileyAnswer = answer as { selected: number };
       return (
         <SmileySelector
@@ -176,12 +213,18 @@ export function QuestionRenderer({ question, answer, onChange, onComplete, onFin
             onChange({ selected: value });
             onComplete(true);
           }}
-          labels={[question.title1, question.title2, question.title3, question.title4, question.title5]}
+          labels={[
+            question.title1,
+            question.title2,
+            question.title3,
+            question.title4,
+            question.title5,
+          ]}
         />
       );
     }
 
-    case 'mood_selector': {
+    case "mood_selector": {
       const moodAnswer = answer as { selected: number };
       return (
         <MoodSelector
@@ -196,7 +239,7 @@ export function QuestionRenderer({ question, answer, onChange, onComplete, onFin
       );
     }
 
-    case 'level_selector': {
+    case "level_selector": {
       const levelAnswer = answer as { level: number };
       return (
         <LevelSelector
@@ -211,11 +254,11 @@ export function QuestionRenderer({ question, answer, onChange, onComplete, onFin
       );
     }
 
-    case 'bubble_selector': {
+    case "bubble_selector": {
       const bubbleAnswer = answer as { selected: string[] };
       const bubbleOptions: BubbleOption[] = (question.options || []).map((o) => ({
         id: o.id,
-        label: o.option || o.label || o.value || '',
+        label: o.option || o.label || o.value || "",
         value: o.value,
       }));
       const selectedBubbles = bubbleAnswer?.selected || [];
@@ -237,11 +280,11 @@ export function QuestionRenderer({ question, answer, onChange, onComplete, onFin
       );
     }
 
-    case 'dot_chooser': {
+    case "dot_chooser": {
       const dotAnswer = answer as { selected: string[] };
       const dotOptions: DotOption[] = (question.options || []).map((o) => ({
         id: o.id,
-        label: o.option || o.label || o.value || '',
+        label: o.option || o.label || o.value || "",
         value: o.value,
       }));
       const selectedDots = dotAnswer?.selected || [];
@@ -264,7 +307,7 @@ export function QuestionRenderer({ question, answer, onChange, onComplete, onFin
       );
     }
 
-    case 'indicator': {
+    case "indicator": {
       const indicatorAnswer = answer as { value: number };
       return (
         <IndicatorSelector
@@ -280,7 +323,7 @@ export function QuestionRenderer({ question, answer, onChange, onComplete, onFin
       );
     }
 
-    case 'view_text':
+    case "view_text":
       return (
         <ViewText
           title={qLabel}
@@ -290,7 +333,7 @@ export function QuestionRenderer({ question, answer, onChange, onComplete, onFin
         />
       );
 
-    case 'agreement':
+    case "agreement":
       return (
         <Agreement
           title={qLabel}
@@ -300,7 +343,7 @@ export function QuestionRenderer({ question, answer, onChange, onComplete, onFin
         />
       );
 
-    case 'generate':
+    case "generate":
       return (
         <Generate
           title={qLabel}
@@ -309,7 +352,7 @@ export function QuestionRenderer({ question, answer, onChange, onComplete, onFin
         />
       );
 
-    case 'qa': {
+    case "qa": {
       // assessment.qa: has `questions[]` (sub-items) + `answers[]` (shared options)
       // Renders as a Likert-style grid via MultiDropdownSelector
       const qaQuestions = question.questions || [];
@@ -349,14 +392,12 @@ export function QuestionRenderer({ question, answer, onChange, onComplete, onFin
       return (
         <div className="flex flex-col px-5 pt-6 pb-4 w-full max-w-lg mx-auto">
           {qLabel && (
-            <Label className="text-lg font-bold text-foreground mb-4 leading-snug">
-              {qLabel}
-            </Label>
+            <Label className="text-lg font-bold text-foreground mb-4 leading-snug">{qLabel}</Label>
           )}
           <Textarea
             className="min-h-[120px] resize-none rounded-2xl"
             placeholder="Type your answer here..."
-            value={qaTextAnswer?.text || ''}
+            value={qaTextAnswer?.text || ""}
             onChange={(e) => {
               onChange({ text: e.target.value });
               onComplete(e.target.value.trim().length > 0);
@@ -366,11 +407,12 @@ export function QuestionRenderer({ question, answer, onChange, onComplete, onFin
       );
     }
 
-    case 'multi_dropdown': {
-      const subQuestions: SubQuestion[] = question.subQuestions ||
+    case "multi_dropdown": {
+      const subQuestions: SubQuestion[] =
+        question.subQuestions ||
         (question.options || []).map((o) => ({
           id: o.id ?? String(Math.random()),
-          label: o.option || o.question || o.value || '',
+          label: o.option || o.question || o.value || "",
           options: LIKERT_OPTIONS,
         }));
 
@@ -392,15 +434,13 @@ export function QuestionRenderer({ question, answer, onChange, onComplete, onFin
       );
     }
 
-    case 'rating': {
+    case "rating": {
       const ratingAnswer = answer as { selected: number };
       const ratingValue = ratingAnswer?.selected ?? 5;
       return (
         <div className="flex flex-col items-center px-5 pt-6 pb-4 w-full">
           {qLabel && (
-            <h2 className="text-xl font-bold text-foreground text-center mb-2">
-              {qLabel}
-            </h2>
+            <h2 className="text-xl font-bold text-foreground text-center mb-2">{qLabel}</h2>
           )}
           <div className="flex gap-2 mt-6 justify-center flex-wrap">
             {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((n) => (
@@ -412,8 +452,8 @@ export function QuestionRenderer({ question, answer, onChange, onComplete, onFin
                 }}
                 className={`w-10 h-10 rounded-full border-2 font-semibold text-sm transition-all duration-200 active:scale-95 ${
                   ratingValue === n
-                    ? 'bg-primary border-primary text-primary-foreground'
-                    : 'bg-card border-border text-foreground hover:border-primary/50'
+                    ? "bg-primary border-primary text-primary-foreground"
+                    : "bg-card border-border text-foreground hover:border-primary/50"
                 }`}
                 aria-label={`Rating ${n}`}
               >
@@ -428,20 +468,18 @@ export function QuestionRenderer({ question, answer, onChange, onComplete, onFin
       );
     }
 
-    case 'text':
+    case "text":
     default: {
       const textAnswer = answer as { text: string };
       return (
         <div className="flex flex-col px-5 pt-6 pb-4 w-full max-w-lg mx-auto">
           {qLabel && (
-            <Label className="text-lg font-bold text-foreground mb-4 leading-snug">
-              {qLabel}
-            </Label>
+            <Label className="text-lg font-bold text-foreground mb-4 leading-snug">{qLabel}</Label>
           )}
           <Textarea
             className="min-h-[120px] resize-none rounded-2xl"
             placeholder="Type your answer here..."
-            value={textAnswer?.text || ''}
+            value={textAnswer?.text || ""}
             onChange={(e) => {
               onChange({ text: e.target.value });
               onComplete(e.target.value.trim().length > 0);

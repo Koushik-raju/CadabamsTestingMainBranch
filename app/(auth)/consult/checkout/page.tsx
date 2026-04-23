@@ -29,44 +29,36 @@
  */
 "use client";
 
-import { Suspense, useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
-import {
-  User as UserIcon,
-  CreditCard,
-  Loader2,
-  AlertCircle,
-  ChevronRight,
-  Check,
-  Users,
-} from "lucide-react";
+import { BookingSummaryCard } from "@/components/checkout/booking-summary-card";
+import { PaymentSummaryCard } from "@/components/checkout/payment-summary-card";
+import { PageHeader } from "@/components/shared/navigation/page-header";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Skeleton } from "@/components/ui/skeleton";
-import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-} from "@/components/ui/sheet";
-import { PageHeader } from "@/components/shared/navigation/page-header";
-import { BookingSummaryCard } from "@/components/checkout/booking-summary-card";
-import { PaymentSummaryCard } from "@/components/checkout/payment-summary-card";
-import { useAuth } from "@/hooks/shared/auth/use-auth";
 import { useBooking } from "@/contexts/booking-context";
+import { useAuth } from "@/hooks/shared/auth/use-auth";
 import {
-  crmControllerGetDoctorById,
-  crmControllerGetSlotPrice,
   crmControllerBookAppointment,
-  crmControllerRazorpayPayment,
+  crmControllerGetDoctorById,
   crmControllerGetRelationships,
+  crmControllerGetSlotPrice,
+  crmControllerRazorpayPayment,
 } from "@/sdk/backend-v2";
-import type {
-  CrmControllerGetDoctorByIdResponse,
-  RelationshipResponseDto,
-} from "@/sdk/backend-v2";
+import type { CrmControllerGetDoctorByIdResponse, RelationshipResponseDto } from "@/sdk/backend-v2";
+import {
+  AlertCircle,
+  Check,
+  ChevronRight,
+  CreditCard,
+  Loader2,
+  User as UserIcon,
+  Users,
+} from "lucide-react";
+import { useRouter } from "next/navigation";
+import { Suspense, useEffect, useState } from "react";
 
 function displayName(doctor: CrmControllerGetDoctorByIdResponse | null): string {
   if (!doctor) return "Doctor";
@@ -82,17 +74,10 @@ function isSelf(relation: RelationshipResponseDto): boolean {
 function CheckoutContent() {
   const router = useRouter();
   const { user } = useAuth();
-  const {
-    slotId,
-    doctorId,
-    campusId,
-    subCampusId,
-    consultationTypeId,
-    startDatetime,
-  } = useBooking();
+  const { slotId, doctorId, campusId, subCampusId, consultationTypeId, startDatetime } =
+    useBooking();
 
-  const [doctor, setDoctor] =
-    useState<CrmControllerGetDoctorByIdResponse | null>(null);
+  const [doctor, setDoctor] = useState<CrmControllerGetDoctorByIdResponse | null>(null);
   const [price, setPrice] = useState<number | null>(null);
   const [loading, setLoading] = useState(true);
   const [processing, setProcessing] = useState(false);
@@ -104,8 +89,7 @@ function CheckoutContent() {
   const [relations, setRelations] = useState<RelationshipResponseDto[]>([]);
   const [relationsLoading, setRelationsLoading] = useState(false);
   const [relationsError, setRelationsError] = useState(false);
-  const [selectedRelation, setSelectedRelation] =
-    useState<RelationshipResponseDto | null>(null);
+  const [selectedRelation, setSelectedRelation] = useState<RelationshipResponseDto | null>(null);
   const [patientNameInput, setPatientNameInput] = useState("");
 
   const isOnline = consultationTypeId === 2;
@@ -158,10 +142,7 @@ function CheckoutContent() {
     proceedWithBooking(patientNameInput.trim(), selectedRelation);
   };
 
-  const proceedWithBooking = async (
-    patientName: string,
-    relation: RelationshipResponseDto,
-  ) => {
+  const proceedWithBooking = async (patientName: string, relation: RelationshipResponseDto) => {
     if (!slotId) return;
     setSheetOpen(false);
     setProcessing(true);
@@ -197,18 +178,12 @@ function CheckoutContent() {
       });
 
       if (!payRes.data?.result.short_url)
-        throw new Error(
-          "Payment initiation failed — no payment link received.",
-        );
+        throw new Error("Payment initiation failed — no payment link received.");
 
       window.location.href = payRes.data?.result.short_url;
     } catch (err) {
       console.error(err);
-      setError(
-        err instanceof Error
-          ? err.message
-          : "Payment initiation failed. Please try again.",
-      );
+      setError(err instanceof Error ? err.message : "Payment initiation failed. Please try again.");
       setProcessing(false);
     }
   };
@@ -226,11 +201,7 @@ function CheckoutContent() {
       <PageHeader title="Confirm & Pay" fallback="/consult/find-therapist" />
 
       <div className="px-4 py-5 pb-32 max-w-2xl mx-auto space-y-4">
-        <BookingSummaryCard
-          doctor={doctor}
-          startDatetime={startDatetime}
-          isOnline={isOnline}
-        />
+        <BookingSummaryCard doctor={doctor} startDatetime={startDatetime} isOnline={isOnline} />
 
         <PaymentSummaryCard price={price} />
 
@@ -269,9 +240,7 @@ function CheckoutContent() {
           ) : (
             <CreditCard className="h-5 w-5" />
           )}
-          {processing
-            ? "Redirecting to Razorpay…"
-            : `Pay ${price !== null ? `₹${price}` : ""}`}
+          {processing ? "Redirecting to Razorpay…" : `Pay ${price !== null ? `₹${price}` : ""}`}
         </Button>
         <p className="text-center text-[11px] text-muted-foreground">
           Secured by Razorpay · 256-bit SSL
@@ -308,9 +277,7 @@ function CheckoutContent() {
               ) : relationsError ? (
                 <div className="px-4 flex flex-col items-center gap-3 py-8 text-center">
                   <AlertCircle className="w-8 h-8 text-destructive" />
-                  <p className="text-sm text-muted-foreground">
-                    Failed to load options.
-                  </p>
+                  <p className="text-sm text-muted-foreground">Failed to load options.</p>
                   <Button
                     size="sm"
                     variant="outline"
@@ -361,8 +328,7 @@ function CheckoutContent() {
                   Patient's name
                 </SheetTitle>
                 <p className="text-sm text-muted-foreground">
-                  Enter the name of the {selectedRelation?.name.toLowerCase()}{" "}
-                  you are booking for.
+                  Enter the name of the {selectedRelation?.name.toLowerCase()} you are booking for.
                 </p>
               </SheetHeader>
 

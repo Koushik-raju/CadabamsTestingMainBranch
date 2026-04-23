@@ -1,7 +1,7 @@
-import { Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { ThreadCard } from "./thread-card";
 import { MastraThread } from "@/lib/chat";
+import { Plus } from "lucide-react";
+import { ThreadCard } from "./thread-card";
 
 interface ThreadListProps {
   threads: MastraThread[];
@@ -17,14 +17,10 @@ export function ThreadList({ threads, onThreadClick, onNewChat }: ThreadListProp
         aria-label="Previous chat sessions"
       >
         {threads.map((thread) => (
-          <ThreadCard
-            key={thread.id}
-            thread={thread}
-            onClick={onThreadClick}
-          />
+          <ThreadCard key={thread.id} thread={thread} onClick={onThreadClick} />
         ))}
       </section>
-      
+
       {onNewChat && threads.length > 0 && (
         <div className="flex justify-center py-4 pb-[max(env(safe-area-inset-bottom,0px),1rem)]">
           <Button

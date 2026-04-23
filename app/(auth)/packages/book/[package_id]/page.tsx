@@ -23,32 +23,25 @@
  *
  * LAST UPDATED: 2026-04-23 — migrated custom header div to PageHeader; added file header
  */
-'use client';
+"use client";
 
-import { useState, useEffect, useMemo, Suspense } from 'react';
-import { useRouter, useParams } from 'next/navigation';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
-import { Separator } from '@/components/ui/separator';
-import { PageHeader } from '@/components/shared/navigation/page-header';
-import {
-  Package,
-  IndianRupee,
-  Shield,
-  CreditCard,
-  Loader2,
-  BookOpen,
-} from 'lucide-react';
-import { bookPackage, initiatePackagePayment } from '@/hooks/use-packages';
-import { useAuth } from '@/hooks/use-auth';
-import type { PackageResponseDto } from '@/sdk/backend-v2';
+import { PageHeader } from "@/components/shared/navigation/page-header";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { Separator } from "@/components/ui/separator";
+import { useAuth } from "@/hooks/use-auth";
+import { bookPackage, initiatePackagePayment } from "@/hooks/use-packages";
+import type { PackageResponseDto } from "@/sdk/backend-v2";
+import { BookOpen, CreditCard, IndianRupee, Loader2, Package, Shield } from "lucide-react";
+import { useParams, useRouter } from "next/navigation";
+import { Suspense, useEffect, useMemo, useState } from "react";
 
-const JOURNEY_BASE_URL = 'https://mindtalkbuddy.com/api/mindful-journeys';
+const JOURNEY_BASE_URL = "https://mindtalkbuddy.com/api/mindful-journeys";
 
 function getPackageFromSession(): PackageResponseDto | null {
-  if (typeof sessionStorage === 'undefined') return null;
+  if (typeof sessionStorage === "undefined") return null;
   try {
-    const raw = sessionStorage.getItem('selected_package');
+    const raw = sessionStorage.getItem("selected_package");
     return raw ? (JSON.parse(raw) as PackageResponseDto) : null;
   } catch {
     return null;
@@ -56,7 +49,12 @@ function getPackageFromSession(): PackageResponseDto | null {
 }
 
 interface JourneyData {
-  attributes?: { description?: unknown; summary?: unknown; shortDescription?: unknown; overview?: unknown };
+  attributes?: {
+    description?: unknown;
+    summary?: unknown;
+    shortDescription?: unknown;
+    overview?: unknown;
+  };
   description?: unknown;
   summary?: unknown;
   shortDescription?: unknown;
@@ -64,27 +62,36 @@ interface JourneyData {
 }
 
 function flattenText(val: unknown, depth = 0): string {
-  if (depth > 5 || !val) return '';
-  if (typeof val === 'string') return val;
-  if (typeof val === 'number') return String(val);
-  if (Array.isArray(val)) return val.map((v) => flattenText(v, depth + 1)).filter(Boolean).join('\n').trim();
-  if (typeof val === 'object') {
+  if (depth > 5 || !val) return "";
+  if (typeof val === "string") return val;
+  if (typeof val === "number") return String(val);
+  if (Array.isArray(val))
+    return val
+      .map((v) => flattenText(v, depth + 1))
+      .filter(Boolean)
+      .join("\n")
+      .trim();
+  if (typeof val === "object") {
     const obj = val as Record<string, unknown>;
-    if (obj.type === 'text' && obj.text) return String(obj.text);
+    if (obj.type === "text" && obj.text) return String(obj.text);
     if (obj.children) return flattenText(obj.children, depth + 1);
-    return Object.values(obj).map((v) => flattenText(v, depth + 1)).filter(Boolean).join('\n').trim();
+    return Object.values(obj)
+      .map((v) => flattenText(v, depth + 1))
+      .filter(Boolean)
+      .join("\n")
+      .trim();
   }
-  return '';
+  return "";
 }
 
 function extractDescription(data: JourneyData | null): string {
-  if (!data) return '';
+  if (!data) return "";
   const src = data.attributes ?? data;
-  for (const key of ['description', 'summary', 'shortDescription', 'overview'] as const) {
+  for (const key of ["description", "summary", "shortDescription", "overview"] as const) {
     const text = flattenText((src as Record<string, unknown>)[key]);
     if (text) return text;
   }
-  return '';
+  return "";
 }
 
 function BookPackageContent({ packageId }: { packageId: string }) {
@@ -102,12 +109,15 @@ function BookPackageContent({ packageId }: { packageId: string }) {
     if (stored && String(stored.id) === packageId) {
       setPkg(stored);
     } else {
-      router.replace('/packages/book-package');
+      router.replace("/packages/book-package");
     }
   }, [packageId, router]);
 
-  const journeyId = (pkg as Record<string, unknown> | null)?.journey_document_id as string | null
-    ?? ((pkg as Record<string, unknown> | null)?.journey_id ? String((pkg as Record<string, unknown>).journey_id) : null);
+  const journeyId =
+    ((pkg as Record<string, unknown> | null)?.journey_document_id as string | null) ??
+    ((pkg as Record<string, unknown> | null)?.journey_id
+      ? String((pkg as Record<string, unknown>).journey_id)
+      : null);
 
   useEffect(() => {
     if (!journeyId) return;
@@ -125,7 +135,9 @@ function BookPackageContent({ packageId }: { packageId: string }) {
         if (!cancelled) setJourneyLoading(false);
       }
     })();
-    return () => { cancelled = true; };
+    return () => {
+      cancelled = true;
+    };
   }, [journeyId]);
 
   const description = useMemo(() => extractDescription(journeyData), [journeyData]);
@@ -135,17 +147,17 @@ function BookPackageContent({ packageId }: { packageId: string }) {
     setIsLoading(true);
     setError(null);
     try {
-      const patientName = String(user.name ?? '');
+      const patientName = String(user.name ?? "");
       const { booking_id } = await bookPackage({
-        package_id:       pkg.id,
-        caller_name:      patientName,
-        patient_name:     patientName,
-        lead_id:          Number(user.lead_id),
-        campus_id:        1,
+        package_id: pkg.id,
+        caller_name: patientName,
+        patient_name: patientName,
+        lead_id: Number(user.lead_id),
+        campus_id: 1,
         sequence_booking: false,
-        package_stage:    'booked',
-        payment_mode:     'online',
-        date:             new Date().toISOString().split('T')[0],
+        package_stage: "booked",
+        payment_mode: "online",
+        date: new Date().toISOString().split("T")[0],
       });
       const payData = await initiatePackagePayment({
         leadBookedPackageId: booking_id,
@@ -153,7 +165,7 @@ function BookPackageContent({ packageId }: { packageId: string }) {
       });
       window.location.href = payData.result.short_url;
     } catch (err: unknown) {
-      setError((err as { message?: string })?.message ?? 'Failed to process payment');
+      setError((err as { message?: string })?.message ?? "Failed to process payment");
     } finally {
       setIsLoading(false);
     }
@@ -201,7 +213,7 @@ function BookPackageContent({ packageId }: { packageId: string }) {
                 </div>
               </div>
               <p className="text-2xl font-bold text-primary">
-                ₹{pkg.amount_total.toLocaleString('en-IN')}
+                ₹{pkg.amount_total.toLocaleString("en-IN")}
               </p>
             </div>
 
@@ -210,7 +222,8 @@ function BookPackageContent({ packageId }: { packageId: string }) {
               <div>
                 <p className="text-sm font-medium text-foreground">Secure Payment</p>
                 <p className="text-xs text-muted-foreground">
-                  Your payment is processed securely through Razorpay. We do not store your card details.
+                  Your payment is processed securely through Razorpay. We do not store your card
+                  details.
                 </p>
               </div>
             </div>
@@ -231,9 +244,13 @@ function BookPackageContent({ packageId }: { packageId: string }) {
                   <div className="h-3 bg-muted rounded animate-pulse w-2/3" />
                 </div>
               ) : description ? (
-                <p className="text-sm text-foreground leading-relaxed whitespace-pre-line">{description}</p>
+                <p className="text-sm text-foreground leading-relaxed whitespace-pre-line">
+                  {description}
+                </p>
               ) : (
-                <p className="text-sm text-muted-foreground">Journey description is unavailable for this package.</p>
+                <p className="text-sm text-muted-foreground">
+                  Journey description is unavailable for this package.
+                </p>
               )}
             </CardContent>
           </Card>
@@ -244,7 +261,7 @@ function BookPackageContent({ packageId }: { packageId: string }) {
             <h3 className="font-semibold text-foreground mb-3">Payment Summary</h3>
             <div className="flex justify-between text-sm">
               <span className="text-muted-foreground">Package Cost</span>
-              <span className="text-foreground">₹{pkg.amount_total.toLocaleString('en-IN')}</span>
+              <span className="text-foreground">₹{pkg.amount_total.toLocaleString("en-IN")}</span>
             </div>
             <div className="flex justify-between text-sm">
               <span className="text-muted-foreground">Taxes &amp; Fees</span>
@@ -253,7 +270,9 @@ function BookPackageContent({ packageId }: { packageId: string }) {
             <Separator />
             <div className="flex justify-between font-semibold">
               <span className="text-foreground">Total Amount</span>
-              <span className="text-primary text-lg">₹{pkg.amount_total.toLocaleString('en-IN')}</span>
+              <span className="text-primary text-lg">
+                ₹{pkg.amount_total.toLocaleString("en-IN")}
+              </span>
             </div>
           </CardContent>
         </Card>
@@ -262,14 +281,21 @@ function BookPackageContent({ packageId }: { packageId: string }) {
 
         <Button size="lg" className="w-full gap-2" onClick={handleCheckout} disabled={isLoading}>
           {isLoading ? (
-            <><Loader2 className="w-5 h-5 animate-spin" />Processing Payment...</>
+            <>
+              <Loader2 className="w-5 h-5 animate-spin" />
+              Processing Payment...
+            </>
           ) : (
-            <><CreditCard className="w-5 h-5" />Pay ₹{pkg.amount_total.toLocaleString('en-IN')}</>
+            <>
+              <CreditCard className="w-5 h-5" />
+              Pay ₹{pkg.amount_total.toLocaleString("en-IN")}
+            </>
           )}
         </Button>
 
         <p className="text-xs text-muted-foreground text-center pb-4">
-          By proceeding, you agree to our terms and conditions.<br />
+          By proceeding, you agree to our terms and conditions.
+          <br />
           Secure payment powered by Razorpay.
         </p>
       </div>
@@ -281,7 +307,13 @@ export default function BookPackagePage() {
   const params = useParams();
   const packageId = params.package_id as string;
   return (
-    <Suspense fallback={<div className="flex items-center justify-center min-h-screen"><Loader2 className="w-8 h-8 animate-spin text-primary" /></div>}>
+    <Suspense
+      fallback={
+        <div className="flex items-center justify-center min-h-screen">
+          <Loader2 className="w-8 h-8 animate-spin text-primary" />
+        </div>
+      }
+    >
       <BookPackageContent packageId={packageId} />
     </Suspense>
   );

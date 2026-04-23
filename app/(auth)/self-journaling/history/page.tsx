@@ -28,18 +28,18 @@
  */
 "use client";
 
-import { useState, useMemo, Suspense } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
-import { Search, X, BookOpen } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Skeleton } from "@/components/ui/skeleton";
-import { Card, CardContent } from "@/components/ui/card";
-import { Separator } from "@/components/ui/separator";
-import { Input } from "@/components/ui/input";
 import { PageHeader } from "@/components/shared/navigation/page-header";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Separator } from "@/components/ui/separator";
+import { Skeleton } from "@/components/ui/skeleton";
 import { useSelfJournalingEntries } from "@/hooks/use-journaling";
 import type { SelfJournalingEntry } from "@/hooks/use-journaling";
 import { cn } from "@/lib/utils";
+import { BookOpen, Search, X } from "lucide-react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { Suspense, useMemo, useState } from "react";
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -92,9 +92,7 @@ function matchesSearch(entry: SelfJournalingEntry, query: string): boolean {
   if (entry.entry?.toLowerCase().includes(q)) return true;
   if (
     entry.prompts?.some(
-      (p) =>
-        p.heading?.toLowerCase().includes(q) ||
-        p.text?.toLowerCase().includes(q),
+      (p) => p.heading?.toLowerCase().includes(q) || p.text?.toLowerCase().includes(q),
     )
   )
     return true;
@@ -143,12 +141,7 @@ function EntryDetailModal({
                 })}
               </p>
             </div>
-            <Button
-              variant="ghost"
-              size="icon"
-              className="rounded-full"
-              onClick={onClose}
-            >
+            <Button variant="ghost" size="icon" className="rounded-full" onClick={onClose}>
               <X className="w-5 h-5" />
             </Button>
           </div>
@@ -158,16 +151,11 @@ function EntryDetailModal({
         <div className="px-5 py-5 flex flex-col gap-5">
           {entry.prompts && entry.prompts.length > 0 ? (
             entry.prompts.map((prompt, idx) => (
-              <div
-                key={idx}
-                className="bg-card border border-border rounded-xl p-4"
-              >
+              <div key={idx} className="bg-card border border-border rounded-xl p-4">
                 {prompt.heading && (
                   <div className="flex items-start gap-2 mb-2">
                     <div className="w-[3px] h-6 bg-primary rounded-full flex-shrink-0 mt-0.5" />
-                    <p className="text-sm font-bold text-primary">
-                      {prompt.heading}
-                    </p>
+                    <p className="text-sm font-bold text-primary">{prompt.heading}</p>
                   </div>
                 )}
                 {prompt.text && (
@@ -186,14 +174,10 @@ function EntryDetailModal({
           {(entry.emotion || entry.stressLevel) && (
             <div className="flex gap-3 pt-2 border-t border-border">
               {entry.emotion && (
-                <span className="text-xs text-muted-foreground">
-                  Mood: {entry.emotion}/5
-                </span>
+                <span className="text-xs text-muted-foreground">Mood: {entry.emotion}/5</span>
               )}
               {entry.stressLevel && (
-                <span className="text-xs text-muted-foreground">
-                  Stress: {entry.stressLevel}/5
-                </span>
+                <span className="text-xs text-muted-foreground">Stress: {entry.stressLevel}/5</span>
               )}
             </div>
           )}
@@ -201,11 +185,7 @@ function EntryDetailModal({
 
         {/* Footer */}
         <div className="px-5 pb-8">
-          <Button
-            variant="outline"
-            className="w-full rounded-full"
-            onClick={onClose}
-          >
+          <Button variant="outline" className="w-full rounded-full" onClick={onClose}>
             Close Entry
           </Button>
         </div>
@@ -225,8 +205,7 @@ function HistoryContent() {
 
   const { entries: allEntries, isLoading } = useSelfJournalingEntries(300);
   const [search, setSearch] = useState("");
-  const [selectedEntry, setSelectedEntry] =
-    useState<SelfJournalingEntry | null>(null);
+  const [selectedEntry, setSelectedEntry] = useState<SelfJournalingEntry | null>(null);
 
   const filteredEntries = useMemo(() => {
     let filtered = allEntries;
@@ -239,10 +218,7 @@ function HistoryContent() {
     return filtered;
   }, [allEntries, subJournalId, search]);
 
-  const grouped = useMemo(
-    () => groupByDate(filteredEntries),
-    [filteredEntries],
-  );
+  const grouped = useMemo(() => groupByDate(filteredEntries), [filteredEntries]);
 
   return (
     <div className="flex flex-col min-h-screen bg-background pb-24">
@@ -252,8 +228,7 @@ function HistoryContent() {
         hardBack="/self-journaling"
         right={
           <span className="text-xs text-muted-foreground">
-            {filteredEntries.length}{" "}
-            {filteredEntries.length === 1 ? "entry" : "entries"}
+            {filteredEntries.length} {filteredEntries.length === 1 ? "entry" : "entries"}
           </span>
         }
       />
@@ -334,19 +309,14 @@ function HistoryContent() {
               <Card className="p-0">
                 <CardContent className="py-0 px-3">
                   {group.entries.map((entry, i) => {
-                    const time = new Date(entry.createdAt).toLocaleTimeString(
-                      "en-US",
-                      {
-                        hour: "numeric",
-                        minute: "2-digit",
-                        hour12: true,
-                      },
-                    );
+                    const time = new Date(entry.createdAt).toLocaleTimeString("en-US", {
+                      hour: "numeric",
+                      minute: "2-digit",
+                      hour12: true,
+                    });
                     const preview =
                       entry.prompts && entry.prompts.length > 0
-                        ? (entry.prompts[0].text ??
-                          entry.prompts[0].heading ??
-                          "")
+                        ? (entry.prompts[0].text ?? entry.prompts[0].heading ?? "")
                         : (entry.entry ?? "");
                     const promptCount = entry.prompts?.length ?? 0;
 
@@ -379,9 +349,7 @@ function HistoryContent() {
                           </div>
 
                           <div className="flex-shrink-0 flex flex-col items-end gap-1">
-                            <span className="text-xs text-muted-foreground">
-                              {time}
-                            </span>
+                            <span className="text-xs text-muted-foreground">{time}</span>
                             {promptCount > 0 && (
                               <span className="bg-primary/10 text-primary text-[10px] font-bold px-2 py-0.5 rounded-full">
                                 {promptCount}p
@@ -402,10 +370,7 @@ function HistoryContent() {
 
       {/* Entry Detail Modal */}
       {selectedEntry && (
-        <EntryDetailModal
-          entry={selectedEntry}
-          onClose={() => setSelectedEntry(null)}
-        />
+        <EntryDetailModal entry={selectedEntry} onClose={() => setSelectedEntry(null)} />
       )}
     </div>
   );

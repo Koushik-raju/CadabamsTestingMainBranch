@@ -1,7 +1,7 @@
-'use client';
+"use client";
 
-import { Flame, Gem } from 'lucide-react';
-import type { JourneyProgress } from '@/hooks/journeys/use-journey-detail';
+import type { JourneyProgress } from "@/hooks/journeys/use-journey-detail";
+import { Flame, Gem } from "lucide-react";
 
 interface PathStatsRowProps {
   progress: JourneyProgress;
@@ -33,14 +33,18 @@ export function PathStatsRow({ progress }: PathStatsRowProps) {
         <div className="relative w-8 h-8">
           <svg className="w-full h-full -rotate-90" viewBox="0 0 32 32">
             <circle
-              cx="16" cy="16" r="13"
+              cx="16"
+              cy="16"
+              r="13"
               fill="none"
               stroke="currentColor"
               strokeWidth="3"
               className="text-muted"
             />
             <circle
-              cx="16" cy="16" r="13"
+              cx="16"
+              cy="16"
+              r="13"
               fill="none"
               stroke="currentColor"
               strokeWidth="3"

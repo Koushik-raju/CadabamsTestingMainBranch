@@ -1,16 +1,16 @@
-'use client';
+"use client";
 
-import useSWR from 'swr';
+import type { DocumentData } from "@/components/documents/document-card";
+import { useAuth } from "@/hooks/shared/auth/use-auth";
 import {
+  userDocumentsControllerDelete,
   userDocumentsControllerList,
   userDocumentsControllerPresignUpload,
   userDocumentsControllerUploadComplete,
-  userDocumentsControllerDelete,
-} from '@/sdk/backend-v2';
-import type { DocumentData } from '@/components/documents/document-card';
-import { useAuth } from '@/hooks/shared/auth/use-auth';
+} from "@/sdk/backend-v2";
+import useSWR from "swr";
 
-const CAMPUS = 'cadabams' as const;
+const CAMPUS = "cadabams" as const;
 
 function documentsKey(crmLeadId: string | null) {
   if (!crmLeadId) return null;
@@ -34,17 +34,17 @@ export function useDocuments() {
           id: d.id,
           name: d.name,
           type: d.type,
-          size: typeof d.size === 'number' ? d.size : undefined,
+          size: typeof d.size === "number" ? d.size : undefined,
           url: d.url,
           createdAt: d.createdAt,
-        })
+        }),
       );
     },
-    { revalidateOnFocus: false }
+    { revalidateOnFocus: false },
   );
 
   async function uploadDocument(file: File): Promise<DocumentData> {
-    if (!leadId) throw new Error('User not authenticated');
+    if (!leadId) throw new Error("User not authenticated");
 
     // 1. Presign upload
     const presignRes = await userDocumentsControllerPresignUpload({
@@ -52,7 +52,14 @@ export function useDocuments() {
       body: {
         crmLeadId: leadId,
         fileName: file.name,
-        contentType: file.type as 'application/pdf' | 'image/jpeg' | 'image/jpg' | 'image/png' | 'application/msword' | 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' | 'text/plain',
+        contentType: file.type as
+          | "application/pdf"
+          | "image/jpeg"
+          | "image/jpg"
+          | "image/png"
+          | "application/msword"
+          | "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+          | "text/plain",
         sizeBytes: file.size,
       },
     });
@@ -60,9 +67,9 @@ export function useDocuments() {
 
     // 2. PUT file directly to S3
     await fetch(uploadUrl, {
-      method: 'PUT',
+      method: "PUT",
       body: file,
-      headers: { 'Content-Type': file.type },
+      headers: { "Content-Type": file.type },
     });
 
     // 3. Mark upload complete
@@ -75,8 +82,8 @@ export function useDocuments() {
       id: dto.id,
       name: dto.name,
       type: dto.mimeType,
-      size: typeof dto.sizeBytes === 'number' ? dto.sizeBytes : undefined,
-      url: '',
+      size: typeof dto.sizeBytes === "number" ? dto.sizeBytes : undefined,
+      url: "",
       createdAt: dto.createdAt,
     };
 

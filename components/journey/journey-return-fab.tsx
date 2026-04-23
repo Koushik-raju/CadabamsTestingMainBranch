@@ -26,12 +26,12 @@
  *
  * LAST UPDATED: 2026-04-22 — initial creation.
  */
-'use client';
+"use client";
 
-import { useRouter, usePathname } from 'next/navigation';
-import { ArrowRight, Sparkles, X } from 'lucide-react';
-import { useJourneyReturn } from '@/contexts/journey-return-context';
-import { Button } from '@/components/ui/button';
+import { Button } from "@/components/ui/button";
+import { useJourneyReturn } from "@/contexts/journey-return-context";
+import { ArrowRight, Sparkles, X } from "lucide-react";
+import { usePathname, useRouter } from "next/navigation";
 
 export function JourneyReturnFab() {
   const { state, hydrated, clear } = useJourneyReturn();
@@ -44,14 +44,14 @@ export function JourneyReturnFab() {
   // on task destinations that happen to live under /journeys/* such as
   // /journeys/mood-check.
   const hideOnJourneyOwnPages =
-    pathname === '/journeys' ||
-    /^\/journeys\/[^/]+$/.test(pathname ?? '') ||
-    /^\/journeys\/[^/]+\/details$/.test(pathname ?? '');
+    pathname === "/journeys" ||
+    /^\/journeys\/[^/]+$/.test(pathname ?? "") ||
+    /^\/journeys\/[^/]+\/details$/.test(pathname ?? "");
   if (hideOnJourneyOwnPages) return null;
   // Only surface the CTA after the task has been marked complete — the
   // in-progress state is tracked so downstream task pages can flip it,
   // but we avoid cluttering unrelated screens with a "return" pill.
-  if (state.status !== 'completed') return null;
+  if (state.status !== "completed") return null;
 
   function goBack() {
     if (!state) return;
@@ -69,9 +69,7 @@ export function JourneyReturnFab() {
             <Sparkles className="h-5 w-5" />
           </div>
           <div className="min-w-0 flex-1">
-            <p className="truncate text-sm font-semibold">
-              {state.taskTitle ?? 'Task complete'}
-            </p>
+            <p className="truncate text-sm font-semibold">{state.taskTitle ?? "Task complete"}</p>
             {state.proofPreview ? (
               <p className="mt-0.5 truncate text-xs text-white/85">{state.proofPreview}</p>
             ) : null}
@@ -87,10 +85,7 @@ export function JourneyReturnFab() {
           </button>
         </div>
         <div className="relative mt-3">
-          <Button
-            onClick={goBack}
-            className="w-full bg-white text-emerald-700 hover:bg-white/90"
-          >
+          <Button onClick={goBack} className="w-full bg-white text-emerald-700 hover:bg-white/90">
             Return to journey
             <ArrowRight className="ml-1 h-4 w-4" />
           </Button>

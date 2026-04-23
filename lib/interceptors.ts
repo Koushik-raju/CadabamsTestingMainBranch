@@ -1,5 +1,5 @@
-import type { AxiosInstance } from 'axios';
-import { getAccessToken } from '@/lib/cookies';
+import { getAccessToken } from "@/lib/cookies";
+import type { AxiosInstance } from "axios";
 /* refreshPatientToken is imported lazily inside the 401 handler to break the
    circular dep: api/backend-v2 → interceptors → auth → sdk → api/backend-v2 */
 
@@ -9,7 +9,7 @@ export function attachAuthInterceptor(axiosInstance: AxiosInstance) {
     const token = await getAccessToken();
     if (token) {
       config.headers = config.headers ?? {};
-      config.headers['Authorization'] = `Bearer ${token}`;
+      config.headers["Authorization"] = `Bearer ${token}`;
     }
     return config;
   });
@@ -26,7 +26,7 @@ export function attachRefreshInterceptor(axiosInstance: AxiosInstance) {
         original._retry = true;
 
         try {
-          const { refreshPatientToken } = await import('./auth');
+          const { refreshPatientToken } = await import("./auth");
           const tokenData = await refreshPatientToken();
           original.headers = {
             ...original.headers,
@@ -39,6 +39,6 @@ export function attachRefreshInterceptor(axiosInstance: AxiosInstance) {
       }
 
       return Promise.reject(error);
-    }
+    },
   );
 }

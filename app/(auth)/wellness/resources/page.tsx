@@ -24,25 +24,25 @@
  *
  * LAST UPDATED: 2026-04-23 — migrated sticky header to PageHeader; added file header
  */
-'use client';
+"use client";
 
-import { useState, useCallback, useRef, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
-import Image from 'next/image';
-import { Search, RefreshCw, Clock, ChevronRight } from 'lucide-react';
-import { PageHeader } from '@/components/shared/navigation/page-header';
-import { CategoryFilter } from '@/components/wellness/category-filter';
-import { Skeleton } from '@/components/ui/skeleton';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { useWellnessResources } from '@/hooks/wellness/use-wellness-resources';
-import { getStrapiImageUrl } from '@/lib/strapi-fetcher';
-import type { WellnessResource } from '@/hooks/wellness/use-wellness-resources';
+import { PageHeader } from "@/components/shared/navigation/page-header";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Skeleton } from "@/components/ui/skeleton";
+import { CategoryFilter } from "@/components/wellness/category-filter";
+import { useWellnessResources } from "@/hooks/wellness/use-wellness-resources";
+import type { WellnessResource } from "@/hooks/wellness/use-wellness-resources";
+import { getStrapiImageUrl } from "@/lib/strapi-fetcher";
+import { ChevronRight, Clock, RefreshCw, Search } from "lucide-react";
+import Image from "next/image";
+import { useRouter } from "next/navigation";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
 function formatCategory(cat: string): string {
-  return cat.replace(/-/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
+  return cat.replace(/-/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
 }
 
 type ResourceWithReadTime = WellnessResource & { averageReadTime?: string };
@@ -60,14 +60,14 @@ function ArticleCard({
 }) {
   const imgUrl =
     getStrapiImageUrl(
-      resource.coverImage?.webImage?.url ?? resource.coverImage?.mobileImage?.url
+      resource.coverImage?.webImage?.url ?? resource.coverImage?.mobileImage?.url,
     ) ?? null;
 
   const categories = Array.isArray(resource.category)
     ? (resource.category as string[])
     : resource.category
-    ? [resource.category as string]
-    : [];
+      ? [resource.category as string]
+      : [];
 
   const readTime = (resource as ResourceWithReadTime).averageReadTime;
 
@@ -76,16 +76,16 @@ function ArticleCard({
       role="button"
       tabIndex={0}
       onClick={onClick}
-      onKeyDown={(e) => (e.key === 'Enter' || e.key === ' ') && onClick()}
+      onKeyDown={(e) => (e.key === "Enter" || e.key === " ") && onClick()}
       className="group bg-card border border-border rounded-2xl overflow-hidden cursor-pointer hover:border-primary/40 hover:shadow-md transition-all duration-200"
       aria-label={`Read: ${resource.title}`}
     >
       {/* Cover image */}
-      <div className="relative overflow-hidden bg-muted" style={{ aspectRatio: '16/9' }}>
+      <div className="relative overflow-hidden bg-muted" style={{ aspectRatio: "16/9" }}>
         {imgUrl ? (
           <Image
             src={imgUrl}
-            alt={resource.title ?? 'Article'}
+            alt={resource.title ?? "Article"}
             fill
             priority={priority}
             sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
@@ -124,7 +124,7 @@ function ArticleCard({
 function ArticleCardSkeleton() {
   return (
     <div className="rounded-2xl overflow-hidden border border-border bg-card">
-      <Skeleton className="w-full" style={{ aspectRatio: '16/9' }} />
+      <Skeleton className="w-full" style={{ aspectRatio: "16/9" }} />
       <div className="p-3 space-y-2">
         <Skeleton className="h-4 w-full" />
         <Skeleton className="h-3 w-1/3" />
@@ -137,9 +137,9 @@ function ArticleCardSkeleton() {
 
 export default function ResourcesPage() {
   const router = useRouter();
-  const [searchQuery, setSearchQuery] = useState('');
-  const [debouncedSearch, setDebouncedSearch] = useState('');
-  const [selectedCategory, setSelectedCategory] = useState('All');
+  const [searchQuery, setSearchQuery] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
+  const [selectedCategory, setSelectedCategory] = useState("All");
 
   // Debounce search by 450ms to limit API calls
   useEffect(() => {
@@ -159,7 +159,7 @@ export default function ResourcesPage() {
       (entries) => {
         if (entries[0].isIntersecting && hasMore && !isLoadingMore) loadMore();
       },
-      { rootMargin: '300px' }
+      { rootMargin: "300px" },
     );
     observer.observe(el);
     return () => observer.disconnect();
@@ -167,11 +167,11 @@ export default function ResourcesPage() {
 
   const handleCategorySelect = useCallback((cat: string) => {
     setSelectedCategory(cat);
-    setSearchQuery('');
-    setDebouncedSearch('');
+    setSearchQuery("");
+    setDebouncedSearch("");
   }, []);
 
-  const isFiltered = selectedCategory !== 'All' || !!debouncedSearch;
+  const isFiltered = selectedCategory !== "All" || !!debouncedSearch;
 
   const featuredResource = !isFiltered ? resources[0] : null;
   const gridResources = !isFiltered ? resources.slice(1) : resources;
@@ -191,8 +191,14 @@ export default function ResourcesPage() {
   return (
     <div className="min-h-screen bg-background flex flex-col">
       <PageHeader
-        title={selectedCategory !== 'All' ? formatCategory(selectedCategory) : 'Resources'}
-        subtitle={isLoading ? 'Loading…' : isFiltered ? `${resources.length}${hasMore ? '+' : ''} of ${totalCount} articles` : `${totalCount} articles`}
+        title={selectedCategory !== "All" ? formatCategory(selectedCategory) : "Resources"}
+        subtitle={
+          isLoading
+            ? "Loading…"
+            : isFiltered
+              ? `${resources.length}${hasMore ? "+" : ""} of ${totalCount} articles`
+              : `${totalCount} articles`
+        }
         fallback="/home"
         className="sticky top-0 z-10 bg-background border-b border-border px-4 py-3"
         right={
@@ -232,7 +238,7 @@ export default function ResourcesPage() {
         {/* Category filter */}
         {!isLoading && categories.length > 0 && (
           <CategoryFilter
-            categories={['All', ...categories]}
+            categories={["All", ...categories]}
             selected={selectedCategory}
             onSelect={handleCategorySelect}
           />
@@ -240,7 +246,7 @@ export default function ResourcesPage() {
 
         {isLoading ? (
           <div className="space-y-5">
-            <Skeleton className="w-full rounded-2xl" style={{ aspectRatio: '16/9' }} />
+            <Skeleton className="w-full rounded-2xl" style={{ aspectRatio: "16/9" }} />
             <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
               {Array.from({ length: 6 }).map((_, i) => (
                 <ArticleCardSkeleton key={i} />
@@ -258,9 +264,9 @@ export default function ResourcesPage() {
             <Button
               variant="ghost"
               onClick={() => {
-                setSearchQuery('');
-                setDebouncedSearch('');
-                setSelectedCategory('All');
+                setSearchQuery("");
+                setDebouncedSearch("");
+                setSelectedCategory("All");
               }}
               className="text-primary"
             >
@@ -281,25 +287,25 @@ export default function ResourcesPage() {
                   tabIndex={0}
                   onClick={() => router.push(`/wellness/resources/${featuredResource.slug}`)}
                   onKeyDown={(e) =>
-                    (e.key === 'Enter' || e.key === ' ') &&
+                    (e.key === "Enter" || e.key === " ") &&
                     router.push(`/wellness/resources/${featuredResource.slug}`)
                   }
                   className="relative w-full rounded-2xl overflow-hidden cursor-pointer group shadow-lg"
-                  style={{ aspectRatio: '16/9' }}
+                  style={{ aspectRatio: "16/9" }}
                   aria-label={`Read: ${featuredResource.title}`}
                 >
                   {getStrapiImageUrl(
                     featuredResource.coverImage?.webImage?.url ??
-                      featuredResource.coverImage?.mobileImage?.url
+                      featuredResource.coverImage?.mobileImage?.url,
                   ) ? (
                     <Image
                       src={
                         getStrapiImageUrl(
                           featuredResource.coverImage?.webImage?.url ??
-                            featuredResource.coverImage?.mobileImage?.url
+                            featuredResource.coverImage?.mobileImage?.url,
                         )!
                       }
-                      alt={featuredResource.title ?? 'Featured article'}
+                      alt={featuredResource.title ?? "Featured article"}
                       fill
                       priority
                       className="object-cover group-hover:scale-105 transition-transform duration-500"
@@ -340,7 +346,7 @@ export default function ResourcesPage() {
             {gridResources.length > 0 && (
               <div className="space-y-3">
                 <h3 className="font-bold text-foreground text-[17px]">
-                  {selectedCategory === 'All' ? 'All Articles' : formatCategory(selectedCategory)}
+                  {selectedCategory === "All" ? "All Articles" : formatCategory(selectedCategory)}
                 </h3>
                 <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
                   {gridResources.map((resource, i) => (

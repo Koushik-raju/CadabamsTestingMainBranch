@@ -33,26 +33,26 @@
  *
  * LAST UPDATED: 2026-04-23 — migrated custom header div to PageHeader
  */
-'use client';
+"use client";
 
-import { useState, Suspense, useMemo } from 'react';
-import { useSearchParams } from 'next/navigation';
-import { Search } from 'lucide-react';
-import { Input } from '@/components/ui/input';
-import { Skeleton } from '@/components/ui/skeleton';
-import { RecommendationBanner } from '@/components/journey/recommendation-banner';
-import { CategoryChips } from '@/components/journey/category-chips';
+import { CategoryChips } from "@/components/journey/category-chips";
 import {
   FeaturedJourneyCarousel,
   type FeaturedSlide,
-} from '@/components/journey/featured-journey-carousel';
-import { JourneyDiscoveryCard } from '@/components/journey/journey-discovery-card';
-import { useJourneys } from '@/hooks/journeys/use-journeys-page';
-import { useEnrolledJourneys } from '@/hooks/journeys/use-journey-detail';
-import { useAuth } from '@/hooks/shared/auth/use-auth';
-import { extractJourneyName, extractJourneyDescription } from '@/types/journey';
-import { fixImageUrl } from '@/lib/utils';
-import { PageHeader } from '@/components/shared/navigation/page-header';
+} from "@/components/journey/featured-journey-carousel";
+import { JourneyDiscoveryCard } from "@/components/journey/journey-discovery-card";
+import { RecommendationBanner } from "@/components/journey/recommendation-banner";
+import { PageHeader } from "@/components/shared/navigation/page-header";
+import { Input } from "@/components/ui/input";
+import { Skeleton } from "@/components/ui/skeleton";
+import { useEnrolledJourneys } from "@/hooks/journeys/use-journey-detail";
+import { useJourneys } from "@/hooks/journeys/use-journeys-page";
+import { useAuth } from "@/hooks/shared/auth/use-auth";
+import { fixImageUrl } from "@/lib/utils";
+import { extractJourneyDescription, extractJourneyName } from "@/types/journey";
+import { Search } from "lucide-react";
+import { useSearchParams } from "next/navigation";
+import { Suspense, useMemo, useState } from "react";
 
 // Firebase-based assessment category lookup removed — now always returns null
 // until a backend-v2 equivalent is implemented
@@ -63,14 +63,10 @@ function useLatestAssessmentCategory(_mobile: string | null): string | null {
 function JourneysInner() {
   const searchParams = useSearchParams();
   const { user } = useAuth();
-  const mobile = (user as Record<string, unknown>)?.caller_mobile as
-    | string
-    | undefined;
+  const mobile = (user as Record<string, unknown>)?.caller_mobile as string | undefined;
 
-  const [search, setSearch] = useState('');
-  const [activeCategory, setActiveCategory] = useState(
-    searchParams?.get('category') ?? 'All'
-  );
+  const [search, setSearch] = useState("");
+  const [activeCategory, setActiveCategory] = useState(searchParams?.get("category") ?? "All");
 
   const { journeys, isLoading: loadingJourneys } = useJourneys();
   const { enrollments, isLoading: loadingEnrolled } = useEnrolledJourneys();
@@ -78,21 +74,15 @@ function JourneysInner() {
 
   const isLoading = loadingJourneys || loadingEnrolled;
 
-  const journeyMap = useMemo(
-    () => new Map(journeys.map((j) => [j.id, j])),
-    [journeys]
-  );
+  const journeyMap = useMemo(() => new Map(journeys.map((j) => [j.id, j])), [journeys]);
 
-  const enrolledIds = useMemo(
-    () => new Set(enrollments.map((e) => e.journeyId)),
-    [enrollments]
-  );
+  const enrolledIds = useMemo(() => new Set(enrollments.map((e) => e.journeyId)), [enrollments]);
 
   const enrichedEnrollments = useMemo(
     () =>
       enrollments.map((e) => {
         const cms = journeyMap.get(e.journeyId);
-        const displayName = e.name || (cms ? extractJourneyName(cms.name) : '');
+        const displayName = e.name || (cms ? extractJourneyName(cms.name) : "");
         return {
           enrollmentId: e.id,
           journeyId: e.journeyId,
@@ -103,13 +93,13 @@ function JourneysInner() {
           totalDays: e.totalDays ?? cms?.steps.length ?? 0,
         };
       }),
-    [enrollments, journeyMap]
+    [enrollments, journeyMap],
   );
 
   const categories = useMemo(() => {
     const gradeSet = new Set<string>();
     journeys.forEach((j) => (j.grade ?? []).forEach((g) => gradeSet.add(g)));
-    return ['All', ...Array.from(gradeSet).sort()];
+    return ["All", ...Array.from(gradeSet).sort()];
   }, [journeys]);
 
   const sortedFiltered = useMemo(() => {
@@ -122,7 +112,7 @@ function JourneysInner() {
 
       const matchSearch = !search || haystack.includes(search.toLowerCase());
       const matchCat =
-        activeCategory === 'All' ||
+        activeCategory === "All" ||
         (j.grade ?? []).includes(activeCategory) ||
         haystack.includes(activeCategory.toLowerCase());
 
@@ -141,11 +131,11 @@ function JourneysInner() {
         key: e.enrollmentId,
         id: e.journeyId,
         name: e.name,
-        description: '',
+        description: "",
         imageUrl: fixImageUrl(e.icon),
         dayCount: e.totalDays,
-        badgeLabel: 'In Progress',
-        ctaLabel: 'Continue →',
+        badgeLabel: "In Progress",
+        ctaLabel: "Continue →",
         progress: { currentDay: e.currentDay, totalDays: e.totalDays },
       }));
     }
@@ -160,18 +150,14 @@ function JourneysInner() {
   }, [enrichedEnrollments, sortedFiltered]);
 
   const hasEnrolled = enrichedEnrollments.length > 0;
-  const quickPicks = hasEnrolled
-    ? sortedFiltered.slice(0, 10)
-    : sortedFiltered.slice(5, 15);
+  const quickPicks = hasEnrolled ? sortedFiltered.slice(0, 10) : sortedFiltered.slice(5, 15);
 
   const recommendedCount = useMemo(() => {
     if (!recommendedCategory) return 0;
     return journeys.filter(
       (j) =>
         (j.grade ?? []).includes(recommendedCategory) ||
-        extractJourneyName(j.name)
-          .toLowerCase()
-          .includes(recommendedCategory.toLowerCase())
+        extractJourneyName(j.name).toLowerCase().includes(recommendedCategory.toLowerCase()),
     ).length;
   }, [journeys, recommendedCategory]);
 
@@ -205,16 +191,14 @@ function JourneysInner() {
         <div className="px-4 mb-5">
           <section className="mb-6">
             <h2 className="text-base font-bold text-foreground mb-3">
-              {hasEnrolled ? 'Your Journeys' : 'Featured Journey'}
+              {hasEnrolled ? "Your Journeys" : "Featured Journey"}
             </h2>
             {isLoading ? (
               <Skeleton className="w-full h-[220px] rounded-2xl" />
             ) : featuredSlides.length > 0 ? (
               <FeaturedJourneyCarousel slides={featuredSlides} />
             ) : (
-              <p className="text-sm text-muted-foreground py-4 text-center">
-                No journeys found.
-              </p>
+              <p className="text-sm text-muted-foreground py-4 text-center">No journeys found.</p>
             )}
           </section>
         </div>
@@ -241,7 +225,7 @@ function JourneysInner() {
           {(isLoading || quickPicks.length > 0) && (
             <section>
               <h2 className="text-base font-bold text-foreground mb-3">
-                {search || activeCategory !== 'All' ? 'Results' : 'Quick Picks'}
+                {search || activeCategory !== "All" ? "Results" : "Quick Picks"}
               </h2>
               {isLoading ? (
                 <div className="grid grid-cols-2 gap-3">

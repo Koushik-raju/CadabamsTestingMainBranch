@@ -24,11 +24,11 @@
  * LAST UPDATED: 2026-04-20 — added assessmentReportsKey for per-assessment analyses list
  */
 export function authMeKey(): string {
-  return '/auth/me';
+  return "/auth/me";
 }
 
 export function assessmentsKey(): string {
-  return '/assessments';
+  return "/assessments";
 }
 
 export function assessmentByIdKey(id: number | string): string {
@@ -39,7 +39,10 @@ export function assignedAssessmentsKey(leadId: number | string): string {
   return `/assigned-assessments/${leadId}`;
 }
 
-export function assessmentSubmissionsKey(leadId: number | string, assessmentId?: number | string): string {
+export function assessmentSubmissionsKey(
+  leadId: number | string,
+  assessmentId?: number | string,
+): string {
   return assessmentId !== undefined
     ? `/assessment-submissions/${leadId}/${assessmentId}`
     : `/assessment-submissions/${leadId}`;
@@ -58,11 +61,11 @@ export function journeyEnrollmentKey(journeyId: number | string): string {
 }
 
 export function gamificationKey(): string {
-  return '/me/gamification';
+  return "/me/gamification";
 }
 
 export function packagesKey(): string {
-  return '/packages';
+  return "/packages";
 }
 
 export function packageByIdKey(id: number | string): string {
@@ -70,28 +73,27 @@ export function packageByIdKey(id: number | string): string {
 }
 
 export function documentsKey(): string {
-  return '/documents';
+  return "/documents";
 }
 
 export function notificationsKey(): string {
-  return '/notifications';
+  return "/notifications";
 }
 
 export function prescriptionsKey(): string {
-  return '/prescriptions';
+  return "/prescriptions";
 }
 
 export function leaderboardKey(): string {
-  return '/leaderboard';
+  return "/leaderboard";
 }
 
 export function selfJournalingKey(): string {
-  return '/self-journaling';
+  return "/self-journaling";
 }
 
-
 export function appointmentsKey(): string {
-  return '/appointments';
+  return "/appointments";
 }
 
 export function slotsKey(doctorId: number | string, consultTypeId: number): string {
@@ -103,14 +105,14 @@ export function slotPriceKey(slotId: number | string): string {
 }
 
 export function campusesKey(): string {
-  return '/campuses';
+  return "/campuses";
 }
 
 export function journeysKey(category?: string, search?: string): string {
-  const parts = ['/journeys'];
+  const parts = ["/journeys"];
   if (category) parts.push(`cat=${category}`);
   if (search) parts.push(`q=${search}`);
-  return parts.join('?');
+  return parts.join("?");
 }
 
 export function journeyDetailKey(id: string): string {
@@ -125,9 +127,9 @@ export function wellnessResourcesKey(
   page: number,
   pageSize: number,
   search: string,
-  category: string
+  category: string,
 ): readonly [string, number, number, string, string] {
-  return ['/wellness-resources', page, pageSize, search, category] as const;
+  return ["/wellness-resources", page, pageSize, search, category] as const;
 }
 
 export function wellnessResourceDetailKey(slug: string): string {
@@ -135,7 +137,7 @@ export function wellnessResourceDetailKey(slug: string): string {
 }
 
 export function mindfulMinutesKey(): string {
-  return '/mindful-minutes';
+  return "/mindful-minutes";
 }
 
 export function mindfulMinuteDetailKey(slugOrId: string): string {
@@ -143,7 +145,7 @@ export function mindfulMinuteDetailKey(slugOrId: string): string {
 }
 
 export function videosKey(): string {
-  return '/videos';
+  return "/videos";
 }
 
 export function videoDetailKey(slug: string): string {
@@ -151,7 +153,7 @@ export function videoDetailKey(slug: string): string {
 }
 
 export function journalingCategoriesKey(): string {
-  return '/journaling/categories';
+  return "/journaling/categories";
 }
 
 export function selfJournalingEntriesKey(leadId: number | string): string {
@@ -163,15 +165,15 @@ export function selfJournalingEntryKey(id: string): string {
 }
 
 export function availablePackagesKey(): string {
-  return '/packages/available';
+  return "/packages/available";
 }
 
 export function managedPackagesKey(): string {
-  return '/packages/managed';
+  return "/packages/managed";
 }
 
 export function packageProductLinesKey(packageId?: number): string {
-  return packageId ? `/packages/product-lines/${packageId}` : '/packages/product-lines';
+  return packageId ? `/packages/product-lines/${packageId}` : "/packages/product-lines";
 }
 
 export function packageProductDetailsKey(packageId: number): string {
@@ -179,15 +181,15 @@ export function packageProductDetailsKey(packageId: number): string {
 }
 
 export function enrolledJourneysKey(): string {
-  return '/journeys/enrolled';
+  return "/journeys/enrolled";
 }
 
-export function threadsKey(resourceId: string): readonly ['threads', string] {
-  return ['threads', resourceId] as const;
+export function threadsKey(resourceId: string): readonly ["threads", string] {
+  return ["threads", resourceId] as const;
 }
 
 export function journalSubscriptionsKey(): string {
-  return '/journaling/subscriptions';
+  return "/journaling/subscriptions";
 }
 
 export function journalSubDetailKey(slug: string): string {

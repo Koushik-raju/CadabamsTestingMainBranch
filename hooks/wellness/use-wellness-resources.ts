@@ -1,8 +1,8 @@
-'use client';
+"use client";
 
-import useSWRInfinite from 'swr/infinite';
-import { fetchWellnessResourcesList } from '@/lib/strapi-fetcher';
-import type { StrapiPagination } from '@/lib/strapi-fetcher';
+import { fetchWellnessResourcesList } from "@/lib/strapi-fetcher";
+import type { StrapiPagination } from "@/lib/strapi-fetcher";
+import useSWRInfinite from "swr/infinite";
 
 export interface CoverImage {
   webImage?: { url?: string; alternativeText?: string };
@@ -44,8 +44,8 @@ type FetchResult = {
 type Key = readonly [string, number, number, string, string];
 
 export function useWellnessResources({
-  search = '',
-  category = 'All',
+  search = "",
+  category = "All",
 }: {
   search?: string;
   category?: string;
@@ -58,15 +58,18 @@ export function useWellnessResources({
       if (!previousPageData.resources.length) return null;
     }
     return [
-      '/wellness-resources',
+      "/wellness-resources",
       pageIndex + 1,
       PAGE_SIZE,
       search.trim(),
-      category === 'All' ? '' : category,
+      category === "All" ? "" : category,
     ] as const;
   };
 
-  const { data, error, isLoading, isValidating, setSize, size } = useSWRInfinite<FetchResult, Error>(
+  const { data, error, isLoading, isValidating, setSize, size } = useSWRInfinite<
+    FetchResult,
+    Error
+  >(
     getKey,
     ([_prefix, page, pageSize, s, cat]: Key) =>
       fetchWellnessResourcesList({ page, pageSize, search: s, category: cat }),
@@ -74,7 +77,7 @@ export function useWellnessResources({
       revalidateOnFocus: false,
       revalidateFirstPage: false,
       parallel: false,
-    }
+    },
   );
 
   const allResources = data?.flatMap((d) => d.resources) ?? [];
@@ -87,7 +90,11 @@ export function useWellnessResources({
   const categories = (() => {
     const set = new Set<string>();
     allResources.forEach((r) => {
-      const cats = Array.isArray(r.category) ? r.category : r.category ? [r.category as string] : [];
+      const cats = Array.isArray(r.category)
+        ? r.category
+        : r.category
+          ? [r.category as string]
+          : [];
       cats.forEach((c) => set.add(c));
     });
     return Array.from(set).sort();

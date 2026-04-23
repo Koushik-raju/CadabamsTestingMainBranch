@@ -21,22 +21,20 @@
  * LAST UPDATED: 2026-04-17 — add Appointments tile before Assessments
  */
 
-import {
-  ClipboardList,
-  Map,
-  BookOpen,
-  Sparkles,
-  Package,
-  Wind,
-  MessageCircle,
-  PlayCircle,
-  FileText,
-  Pill,
-  CalendarCheck,
-  LucideIcon,
-} from "lucide-react";
-import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Card, CardContent } from "@/components/ui/card";
+import {
+  BookOpen,
+  CalendarCheck,
+  ClipboardList,
+  FileText,
+  LucideIcon,
+  Map,
+  MessageCircle,
+  Package,
+  Pill,
+  Wind,
+} from "lucide-react";
 
 interface Action {
   key: string;
@@ -143,42 +141,30 @@ export function QuickActions({ onActionClick }: Props) {
     <div className="px-4 mb-10">
       <h3 className="text-lg font-bold mb-5">Quick Actions</h3>
       <div className="grid grid-cols-2 gap-3">
-        {ACTIONS.map(
-          ({
-            key,
-            title,
-            description,
-            badge,
-            icon: Icon,
-            iconBg,
-            iconColor,
-          }) => (
-            <Card
-              key={key}
-              className="cursor-pointer active:scale-95 transition-all overflow-hidden"
-              onClick={() => onActionClick?.(key)}
-            >
-              <CardContent className="p-4 flex flex-col items-start gap-3">
-                <div
-                  className={`w-10 h-10 rounded-lg flex items-center justify-center ${iconBg} ${iconColor}`}
-                >
-                  <Icon size={20} strokeWidth={2.5} />
-                </div>
-                <div className="flex flex-col gap-1">
-                  <h4 className="text-[15px] font-bold leading-snug">
-                    {title}
-                  </h4>
-                  <p className="text-muted-foreground text-[11px] font-medium leading-tight line-clamp-2">
-                    {description}
-                  </p>
-                </div>
-                <Badge variant="secondary" className="text-[10px] mt-auto">
-                  {badge}
-                </Badge>
-              </CardContent>
-            </Card>
-          ),
-        )}
+        {ACTIONS.map(({ key, title, description, badge, icon: Icon, iconBg, iconColor }) => (
+          <Card
+            key={key}
+            className="cursor-pointer active:scale-95 transition-all overflow-hidden"
+            onClick={() => onActionClick?.(key)}
+          >
+            <CardContent className="p-4 flex flex-col items-start gap-3">
+              <div
+                className={`w-10 h-10 rounded-lg flex items-center justify-center ${iconBg} ${iconColor}`}
+              >
+                <Icon size={20} strokeWidth={2.5} />
+              </div>
+              <div className="flex flex-col gap-1">
+                <h4 className="text-[15px] font-bold leading-snug">{title}</h4>
+                <p className="text-muted-foreground text-[11px] font-medium leading-tight line-clamp-2">
+                  {description}
+                </p>
+              </div>
+              <Badge variant="secondary" className="text-[10px] mt-auto">
+                {badge}
+              </Badge>
+            </CardContent>
+          </Card>
+        ))}
       </div>
     </div>
   );

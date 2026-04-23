@@ -30,10 +30,10 @@
  *
  * LAST UPDATED: 2026-04-20 — refactored to primitive props; added badgeLabel, ctaLabel, progress
  */
-'use client';
+"use client";
 
-import { useRouter } from 'next/navigation';
-import { Clock, BarChart2, TrendingUp } from 'lucide-react';
+import { BarChart2, Clock, TrendingUp } from "lucide-react";
+import { useRouter } from "next/navigation";
 
 interface FeaturedJourneyCardProps {
   id: string;
@@ -52,8 +52,8 @@ export function FeaturedJourneyCard({
   description,
   imageUrl,
   dayCount,
-  badgeLabel = 'Trending',
-  ctaLabel = 'Start Now →',
+  badgeLabel = "Trending",
+  ctaLabel = "Start Now →",
   progress,
 }: FeaturedJourneyCardProps) {
   const router = useRouter();
@@ -67,11 +67,7 @@ export function FeaturedJourneyCard({
     >
       {/* Background image */}
       {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img
-        src={imageUrl}
-        alt={name}
-        className="absolute inset-0 w-full h-full object-cover"
-      />
+      <img src={imageUrl} alt={name} className="absolute inset-0 w-full h-full object-cover" />
       <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent" />
 
       <div className="absolute top-3 left-3 flex items-center gap-1 bg-primary text-primary-foreground text-[10px] font-bold px-2.5 py-1 rounded-full">
@@ -87,17 +83,13 @@ export function FeaturedJourneyCard({
           </span>
           <span className="flex items-center gap-1 bg-white/20 backdrop-blur-sm text-white text-[10px] font-semibold px-2 py-0.5 rounded-full">
             <BarChart2 className="w-3 h-3" />
-            {progress ? `Day ${progress.currentDay}/${progress.totalDays}` : 'Beginner'}
+            {progress ? `Day ${progress.currentDay}/${progress.totalDays}` : "Beginner"}
           </span>
         </div>
 
-        <h2 className="text-white font-bold text-lg leading-tight line-clamp-2 mb-1">
-          {name}
-        </h2>
+        <h2 className="text-white font-bold text-lg leading-tight line-clamp-2 mb-1">{name}</h2>
         {description && (
-          <p className="text-white/70 text-xs leading-snug line-clamp-2 mb-3">
-            {description}
-          </p>
+          <p className="text-white/70 text-xs leading-snug line-clamp-2 mb-3">{description}</p>
         )}
 
         <button

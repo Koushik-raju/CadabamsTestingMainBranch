@@ -36,22 +36,22 @@
  *
  * LAST UPDATED: 2026-04-23 — Replaced custom header divs with shared PageHeader.
  */
-'use client';
+"use client";
 
-import { useMemo } from 'react';
-import Image from 'next/image';
-import { useRouter, useParams } from 'next/navigation';
-import { Pencil, BookOpen, RotateCcw } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Skeleton } from '@/components/ui/skeleton';
-import { Card, CardContent } from '@/components/ui/card';
-import { Separator } from '@/components/ui/separator';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { PageHeader } from '@/components/shared/navigation/page-header';
-import { useJournalingCategories, useSelfJournalingEntries } from '@/hooks/use-journaling';
-import type { SelfJournalingEntry } from '@/hooks/use-journaling';
-import { cn } from '@/lib/utils';
-import { getJournalVisual } from '@/lib/journal-visual';
+import { PageHeader } from "@/components/shared/navigation/page-header";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { Separator } from "@/components/ui/separator";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useJournalingCategories, useSelfJournalingEntries } from "@/hooks/use-journaling";
+import type { SelfJournalingEntry } from "@/hooks/use-journaling";
+import { getJournalVisual } from "@/lib/journal-visual";
+import { cn } from "@/lib/utils";
+import { BookOpen, RotateCcw } from "lucide-react";
+import Image from "next/image";
+import { useParams, useRouter } from "next/navigation";
+import { useMemo } from "react";
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -66,16 +66,16 @@ interface DateGroup {
 function groupByDate(entries: SelfJournalingEntry[]): DateGroup[] {
   const today = new Date();
   today.setHours(0, 0, 0, 0);
-  const todayStr = today.toISOString().split('T')[0];
+  const todayStr = today.toISOString().split("T")[0];
   const yesterday = new Date(today);
   yesterday.setDate(yesterday.getDate() - 1);
-  const yesterdayStr = yesterday.toISOString().split('T')[0];
+  const yesterdayStr = yesterday.toISOString().split("T")[0];
 
   const map = new Map<string, SelfJournalingEntry[]>();
   for (const entry of entries) {
     const d = new Date(entry.createdAt);
     if (isNaN(d.getTime())) continue;
-    const dateStr = d.toISOString().split('T')[0];
+    const dateStr = d.toISOString().split("T")[0];
     const arr = map.get(dateStr) ?? [];
     arr.push(entry);
     map.set(dateStr, arr);
@@ -85,11 +85,15 @@ function groupByDate(entries: SelfJournalingEntry[]): DateGroup[] {
     .sort(([a], [b]) => (a > b ? -1 : 1))
     .map(([dateStr, items]) => {
       let label: string;
-      if (dateStr === todayStr) label = 'Today';
-      else if (dateStr === yesterdayStr) label = 'Yesterday';
-      else label = new Date(dateStr + 'T00:00:00').toLocaleDateString('en-US', {
-        weekday: 'short', month: 'long', day: 'numeric', year: 'numeric',
-      });
+      if (dateStr === todayStr) label = "Today";
+      else if (dateStr === yesterdayStr) label = "Yesterday";
+      else
+        label = new Date(dateStr + "T00:00:00").toLocaleDateString("en-US", {
+          weekday: "short",
+          month: "long",
+          day: "numeric",
+          year: "numeric",
+        });
       return { label, dateStr, entries: items };
     });
 }
@@ -111,7 +115,7 @@ export default function CategoryDetailPage() {
   );
 
   const publishedSubs = useMemo(
-    () => (category?.subJournalings ?? []).filter((s) => s.status === 'PUBLISHED'),
+    () => (category?.subJournalings ?? []).filter((s) => s.status === "PUBLISHED"),
     [category],
   );
 
@@ -177,7 +181,7 @@ export default function CategoryDetailPage() {
               Journals ({publishedSubs.length})
             </TabsTrigger>
             <TabsTrigger value="my-entries" className="flex-1 rounded-full">
-              My Entries {categoryEntries.length > 0 ? `(${categoryEntries.length})` : ''}
+              My Entries {categoryEntries.length > 0 ? `(${categoryEntries.length})` : ""}
             </TabsTrigger>
           </TabsList>
 
@@ -202,7 +206,9 @@ export default function CategoryDetailPage() {
                   return (
                     <button
                       key={sub.id}
-                      onClick={() => router.push(`/self-journaling/journal/${encodeURIComponent(sub.slug)}`)}
+                      onClick={() =>
+                        router.push(`/self-journaling/journal/${encodeURIComponent(sub.slug)}`)
+                      }
                       className="bg-card border border-border rounded-2xl overflow-hidden text-left shadow-sm hover:shadow-xl transition-all duration-300 hover:-translate-y-1 active:scale-[0.97] group"
                     >
                       {/* Card image area */}
@@ -217,10 +223,12 @@ export default function CategoryDetailPage() {
                           />
                         </div>
                       ) : (
-                        <div className={cn(
-                          'aspect-[16/10] bg-gradient-to-br flex items-center justify-center relative overflow-hidden',
-                          gradient,
-                        )}>
+                        <div
+                          className={cn(
+                            "aspect-[16/10] bg-gradient-to-br flex items-center justify-center relative overflow-hidden",
+                            gradient,
+                          )}
+                        >
                           <div className="absolute -top-4 -right-4 w-20 h-20 rounded-full bg-white/10" />
                           <div className="absolute -bottom-6 -left-3 w-24 h-24 rounded-full bg-white/5" />
                           <SubIcon className="w-8 h-8 text-white/90 relative z-10" />
@@ -297,25 +305,29 @@ export default function CategoryDetailPage() {
                     <Card className="p-0">
                       <CardContent className="py-0 px-3">
                         {group.entries.map((entry, i) => {
-                          const matchingSub = publishedSubs.find((s) => s.id === entry.subJournalingId);
-                          const time = new Date(entry.createdAt).toLocaleTimeString('en-US', {
-                            hour: 'numeric',
-                            minute: '2-digit',
+                          const matchingSub = publishedSubs.find(
+                            (s) => s.id === entry.subJournalingId,
+                          );
+                          const time = new Date(entry.createdAt).toLocaleTimeString("en-US", {
+                            hour: "numeric",
+                            minute: "2-digit",
                             hour12: true,
                           });
                           const preview =
                             entry.prompts && entry.prompts.length > 0
-                              ? entry.prompts[0].text ?? entry.prompts[0].heading ?? ''
-                              : entry.entry ?? '';
+                              ? (entry.prompts[0].text ?? entry.prompts[0].heading ?? "")
+                              : (entry.entry ?? "");
 
                           return (
                             <div key={entry.id}>
                               <div className="py-3 flex items-start gap-3">
                                 {/* Gradient icon tile */}
-                                <div className={cn(
-                                  'relative w-11 h-11 rounded-2xl bg-gradient-to-br from-violet-500 to-purple-600',
-                                  'flex-shrink-0 flex items-center justify-center overflow-hidden shadow-sm',
-                                )}>
+                                <div
+                                  className={cn(
+                                    "relative w-11 h-11 rounded-2xl bg-gradient-to-br from-violet-500 to-purple-600",
+                                    "flex-shrink-0 flex items-center justify-center overflow-hidden shadow-sm",
+                                  )}
+                                >
                                   <div className="absolute -top-2 -right-2 w-7 h-7 rounded-full bg-white/10" />
                                   <BookOpen className="w-5 h-5 text-white" />
                                 </div>
@@ -323,7 +335,7 @@ export default function CategoryDetailPage() {
                                 {/* Content */}
                                 <div className="flex-1 min-w-0">
                                   <p className="text-sm font-medium text-foreground line-clamp-1 mb-0.5">
-                                    {entry.title ?? matchingSub?.title ?? 'Journal Entry'}
+                                    {entry.title ?? matchingSub?.title ?? "Journal Entry"}
                                   </p>
                                   <p className="text-xs text-muted-foreground line-clamp-1 leading-relaxed">
                                     {preview}

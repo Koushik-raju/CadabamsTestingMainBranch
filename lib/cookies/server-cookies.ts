@@ -1,13 +1,8 @@
-import type {
-  CookieEntry,
-  CookieOptions,
-  GetCookieOptions,
-  SetCookieOptions,
-} from './types';
+import type { CookieEntry, CookieOptions, GetCookieOptions, SetCookieOptions } from "./types";
 
 async function getNextCookieStore() {
   try {
-    const { cookies } = await import('next/headers');
+    const { cookies } = await import("next/headers");
     return await cookies();
   } catch {
     return null;
@@ -15,7 +10,7 @@ async function getNextCookieStore() {
 }
 
 function isServer(): boolean {
-  return typeof window === 'undefined';
+  return typeof window === "undefined";
 }
 
 async function get(name: string, options?: GetCookieOptions): Promise<string | null> {
@@ -38,7 +33,7 @@ async function set(name: string, value: string, options?: SetCookieOptions): Pro
     store.set({
       name,
       value,
-      path: options?.path ?? '/',
+      path: options?.path ?? "/",
       domain: options?.domain,
       maxAge: options?.maxAge,
       expires: options?.expires,
@@ -60,8 +55,8 @@ async function remove(name: string, options?: CookieOptions): Promise<boolean> {
     if (!store) return false;
     store.set({
       name,
-      value: '',
-      path: options?.path ?? '/',
+      value: "",
+      path: options?.path ?? "/",
       domain: options?.domain,
       maxAge: 0,
       expires: new Date(0),

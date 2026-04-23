@@ -39,38 +39,29 @@
  *   after journey task completion, navigate to journey details via returnToJourney()
  *   instead of always redirecting to /self-journaling.
  */
-'use client';
+"use client";
 
-import { useState, useEffect, useCallback, useRef } from 'react';
-import { useRouter } from 'next/navigation';
-import dynamic from 'next/dynamic';
+import { Button } from "@/components/ui/button";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Textarea } from "@/components/ui/textarea";
+import { useJourneyTaskContinuation } from "@/hooks/journeys/use-journey-task-continuation";
+import { useAuth } from "@/hooks/use-auth";
 import {
-  X,
-  Sparkles,
-  Loader2,
-  ImageIcon,
-  Mic,
-  MicOff,
-  Smile,
-  Hash,
-} from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Skeleton } from '@/components/ui/skeleton';
-import { Textarea } from '@/components/ui/textarea';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { useAuth } from '@/hooks/use-auth';
-import {
-  createSelfJournalingEntry,
-  useSelfJournalingEntries,
-  useJournalingCategories,
   type JournalingPrompt,
-} from '@/hooks/use-journaling';
-import { useJourneyTaskContinuation } from '@/hooks/journeys/use-journey-task-continuation';
-import type { EmojiClickData } from 'emoji-picker-react';
+  createSelfJournalingEntry,
+  useJournalingCategories,
+  useSelfJournalingEntries,
+} from "@/hooks/use-journaling";
+import type { EmojiClickData } from "emoji-picker-react";
+import { Hash, ImageIcon, Loader2, Mic, MicOff, Smile, Sparkles, X } from "lucide-react";
+import dynamic from "next/dynamic";
+import { useRouter } from "next/navigation";
+import { useCallback, useEffect, useRef, useState } from "react";
 
-const EmojiPicker = dynamic(() => import('emoji-picker-react'), { ssr: false });
+const EmojiPicker = dynamic(() => import("emoji-picker-react"), { ssr: false });
 
-const API_BASE = 'https://api-ai-mcp.mindtalkbuddy.com';
+const API_BASE = "https://api-ai-mcp.mindtalkbuddy.com";
 
 // ---------------------------------------------------------------------------
 // Web Speech API type shim (not in default TS lib)
@@ -103,7 +94,7 @@ declare global {
 function formatHeaderDate(): string {
   const now = new Date();
   const day = now.getDate();
-  const month = now.toLocaleDateString('en-US', { month: 'short' });
+  const month = now.toLocaleDateString("en-US", { month: "short" });
   return `Today, ${day} ${month}`;
 }
 
@@ -114,9 +105,9 @@ function fillPromptTemplate(
   entryText: string,
 ): string {
   return template
-    .replace(/\{\{memory_summary\}\}/g, memorySummary || 'No prior summary available.')
-    .replace(/\{\{recent_entries\}\}/g, recentEntries || 'No recent entries.')
-    .replace(/\{\{entry_text\}\}/g, entryText || '');
+    .replace(/\{\{memory_summary\}\}/g, memorySummary || "No prior summary available.")
+    .replace(/\{\{recent_entries\}\}/g, recentEntries || "No recent entries.")
+    .replace(/\{\{entry_text\}\}/g, entryText || "");
 }
 
 function buildContextFromEntries(
@@ -125,18 +116,18 @@ function buildContextFromEntries(
   const recent = entries.slice(0, 5);
   const recentEntriesText = recent
     .map((e) => {
-      const text = e.prompts?.map((p) => `${p.heading}: ${p.text}`).join('\n') ?? e.entry ?? '';
+      const text = e.prompts?.map((p) => `${p.heading}: ${p.text}`).join("\n") ?? e.entry ?? "";
       return text.slice(0, 500);
     })
-    .join('\n---\n');
+    .join("\n---\n");
 
   const memorySummary =
     recent.length > 0
       ? `User has ${entries.length} journal entries. Recent themes: ${recent
-          .map((e) => e.prompts?.[0]?.heading ?? e.entry?.slice(0, 50) ?? '')
+          .map((e) => e.prompts?.[0]?.heading ?? e.entry?.slice(0, 50) ?? "")
           .filter(Boolean)
-          .join(', ')}`
-      : '';
+          .join(", ")}`
+      : "";
 
   return { recentEntriesText, memorySummary };
 }
@@ -157,16 +148,16 @@ export function JournalWriter({ slug }: JournalWriterProps) {
   // Journey tasks can be typed as either SUB_JOURNAL (sub-journal linked via
   // subJournalingIds) or JOURNAL (free-flow entry). Call both hooks and use
   // whichever one has an active slot — only one can be active at a time.
-  const continuationSubJournal = useJourneyTaskContinuation('SUB_JOURNAL');
-  const continuationJournal = useJourneyTaskContinuation('JOURNAL');
+  const continuationSubJournal = useJourneyTaskContinuation("SUB_JOURNAL");
+  const continuationJournal = useJourneyTaskContinuation("JOURNAL");
   const continuation = continuationSubJournal.active ? continuationSubJournal : continuationJournal;
-  const journeyProofKind = continuationSubJournal.active ? 'SUB_JOURNAL' : 'JOURNAL';
+  const journeyProofKind = continuationSubJournal.active ? "SUB_JOURNAL" : "JOURNAL";
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const recognitionRef = useRef<SpeechRecognitionInstance | null>(null);
 
-  const [content, setContent] = useState('');
+  const [content, setContent] = useState("");
   const [savedPrompts, setSavedPrompts] = useState<JournalingPrompt[]>([]);
-  const [currentHeading, setCurrentHeading] = useState('');
+  const [currentHeading, setCurrentHeading] = useState("");
   const [isPromptMode, setIsPromptMode] = useState(false);
   const [isPrompting, setIsPrompting] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
@@ -185,13 +176,12 @@ export function JournalWriter({ slug }: JournalWriterProps) {
   const getMobile = useCallback((): string | null => {
     if (!user) return null;
     const m =
-      (user.caller_mobile as string | undefined) ??
-      (user.phone_number as string | undefined);
-    return m ? m.replace(/\D/g, '') : null;
+      (user.caller_mobile as string | undefined) ?? (user.phone_number as string | undefined);
+    return m ? m.replace(/\D/g, "") : null;
   }, [user]);
 
   const fetchPromptWithContext = useCallback(
-    async (template: string | null, conversationContext = ''): Promise<string | null> => {
+    async (template: string | null, conversationContext = ""): Promise<string | null> => {
       const leadId = getLeadId();
       const mobile = getMobile();
       if (!leadId || !mobile) return null;
@@ -204,8 +194,8 @@ export function JournalWriter({ slug }: JournalWriterProps) {
           : undefined;
 
         const res = await fetch(`${API_BASE}/api/journal/prompt-me`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             userId: leadId,
             mobile: String(mobile),
@@ -266,8 +256,8 @@ export function JournalWriter({ slug }: JournalWriterProps) {
     try {
       const created = await createSelfJournalingEntry({
         crmLeadId: leadId,
-        title: sub?.title ?? allPrompts[0]?.heading ?? 'Journal Entry',
-        entry: allPrompts.map((p) => `${p.heading}\n${p.text}`).join('\n\n'),
+        title: sub?.title ?? allPrompts[0]?.heading ?? "Journal Entry",
+        entry: allPrompts.map((p) => `${p.heading}\n${p.text}`).join("\n\n"),
         prompts: allPrompts,
         subJournalingId: sub?.id,
       });
@@ -278,17 +268,17 @@ export function JournalWriter({ slug }: JournalWriterProps) {
         try {
           await continuation.markCompleted(
             { kind: journeyProofKind, selfJournalingId: created.id },
-            { proofPreview: sub?.title ?? 'Journal entry saved' },
+            { proofPreview: sub?.title ?? "Journal entry saved" },
           );
           continuation.returnToJourney();
           return;
         } catch (err) {
-          console.error('[JournalWriter] journey completion failed', err);
+          console.error("[JournalWriter] journey completion failed", err);
         }
       }
-      router.push('/self-journaling');
+      router.push("/self-journaling");
     } catch (err) {
-      console.error('Error saving journal:', err);
+      console.error("Error saving journal:", err);
     } finally {
       setIsSaving(false);
     }
@@ -301,16 +291,16 @@ export function JournalWriter({ slug }: JournalWriterProps) {
     if (previousContent) {
       setSavedPrompts((prev) => [...prev, { heading: previousHeading, text: previousContent }]);
     }
-    setContent('');
-    setCurrentHeading('');
+    setContent("");
+    setCurrentHeading("");
     setIsPrompting(true);
 
     const conversationCtx = [
       ...savedPrompts.map((p) => `${p.heading}\n${p.text}`),
-      previousContent ? `${previousHeading}\n${previousContent}` : '',
+      previousContent ? `${previousHeading}\n${previousContent}` : "",
     ]
       .filter(Boolean)
-      .join('\n\n');
+      .join("\n\n");
 
     const question = await fetchPromptWithContext(aiPromptTemplate, conversationCtx);
 
@@ -333,12 +323,9 @@ export function JournalWriter({ slug }: JournalWriterProps) {
     setIsPrompting(true);
     const previousHeading = currentHeading || "What's on your mind...";
 
-    const conversationCtx = [
-      ...savedPrompts.map((p) => `${p.heading}\n${p.text}`),
-      content.trim(),
-    ]
+    const conversationCtx = [...savedPrompts.map((p) => `${p.heading}\n${p.text}`), content.trim()]
       .filter(Boolean)
-      .join('\n\n');
+      .join("\n\n");
 
     const question = await fetchPromptWithContext(aiPromptTemplate, conversationCtx);
 
@@ -350,7 +337,7 @@ export function JournalWriter({ slug }: JournalWriterProps) {
     if (content.trim()) {
       setSavedPrompts((prev) => [...prev, { heading: previousHeading, text: content }]);
     }
-    setContent('');
+    setContent("");
     setCurrentHeading(question);
     setIsPromptMode(true);
     setIsPrompting(false);
@@ -360,15 +347,15 @@ export function JournalWriter({ slug }: JournalWriterProps) {
     if (content.trim() || savedPrompts.length > 0) {
       handleSave();
     } else {
-      router.push('/self-journaling');
+      router.push("/self-journaling");
     }
   };
 
   const handleContentChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     setContent(e.target.value);
     if (textareaRef.current) {
-      textareaRef.current.style.height = 'auto';
-      textareaRef.current.style.height = textareaRef.current.scrollHeight + 'px';
+      textareaRef.current.style.height = "auto";
+      textareaRef.current.style.height = textareaRef.current.scrollHeight + "px";
     }
   };
 
@@ -386,7 +373,7 @@ export function JournalWriter({ slug }: JournalWriterProps) {
     }
 
     const recognition = new SR();
-    recognition.lang = 'en-US';
+    recognition.lang = "en-US";
     recognition.interimResults = false;
     recognition.continuous = false;
     recognitionRef.current = recognition;
@@ -394,7 +381,7 @@ export function JournalWriter({ slug }: JournalWriterProps) {
     recognition.onresult = (e: SpeechRecognitionEvent) => {
       const transcript = Array.from(e.results)
         .map((r) => r[0].transcript)
-        .join(' ')
+        .join(" ")
         .trim();
 
       if (transcript) {
@@ -402,8 +389,8 @@ export function JournalWriter({ slug }: JournalWriterProps) {
           const joined = prev ? `${prev} ${transcript}` : transcript;
           setTimeout(() => {
             if (textareaRef.current) {
-              textareaRef.current.style.height = 'auto';
-              textareaRef.current.style.height = textareaRef.current.scrollHeight + 'px';
+              textareaRef.current.style.height = "auto";
+              textareaRef.current.style.height = textareaRef.current.scrollHeight + "px";
             }
           }, 0);
           return joined;
@@ -435,8 +422,8 @@ export function JournalWriter({ slug }: JournalWriterProps) {
       setTimeout(() => {
         textarea.focus();
         textarea.setSelectionRange(start + emoji.length, start + emoji.length);
-        textarea.style.height = 'auto';
-        textarea.style.height = textarea.scrollHeight + 'px';
+        textarea.style.height = "auto";
+        textarea.style.height = textarea.scrollHeight + "px";
       }, 0);
     } else {
       setContent((prev) => prev + emoji);
@@ -455,7 +442,6 @@ export function JournalWriter({ slug }: JournalWriterProps) {
 
   return (
     <div className="flex flex-col h-screen bg-background overflow-hidden">
-
       {/* ── Header ── */}
       <div className="flex items-center justify-between px-4 pt-5 pb-3 flex-shrink-0">
         <button
@@ -465,23 +451,22 @@ export function JournalWriter({ slug }: JournalWriterProps) {
         >
           <X className="w-5 h-5 text-foreground" />
         </button>
-        <span className="text-sm font-medium text-foreground">
-          {formatHeaderDate()}
-        </span>
+        <span className="text-sm font-medium text-foreground">{formatHeaderDate()}</span>
         {/* Spacer keeps date centered */}
         <div className="w-9 h-9" />
       </div>
 
       {/* ── Scrollable body ── */}
       <div className="flex-1 overflow-y-auto px-5 pb-36">
-
         {isInitialLoading || isLoadingPrompt ? (
           <div className="flex flex-col gap-4 pt-2">
             <Skeleton className="h-3 w-28 rounded" />
             <Skeleton className="h-8 w-full rounded-lg" />
             <Skeleton className="h-8 w-4/5 rounded-lg" />
             <div className="flex gap-4 mt-3">
-              {[0, 1, 2, 3].map((i) => <Skeleton key={i} className="w-5 h-5 rounded" />)}
+              {[0, 1, 2, 3].map((i) => (
+                <Skeleton key={i} className="w-5 h-5 rounded" />
+              ))}
             </div>
             <Skeleton className="h-32 w-full rounded-lg mt-2" />
           </div>
@@ -510,9 +495,7 @@ export function JournalWriter({ slug }: JournalWriterProps) {
                     Today&apos;s Prompt
                   </p>
                 )}
-                <h2 className="text-xl font-bold text-foreground leading-snug">
-                  {currentHeading}
-                </h2>
+                <h2 className="text-xl font-bold text-foreground leading-snug">{currentHeading}</h2>
               </div>
             )}
 
@@ -539,10 +522,10 @@ export function JournalWriter({ slug }: JournalWriterProps) {
                 onClick={handleMicToggle}
                 className={
                   isRecording
-                    ? 'text-destructive animate-pulse'
-                    : 'text-muted-foreground/40 hover:text-muted-foreground transition-colors'
+                    ? "text-destructive animate-pulse"
+                    : "text-muted-foreground/40 hover:text-muted-foreground transition-colors"
                 }
-                aria-label={isRecording ? 'Stop recording' : 'Record voice'}
+                aria-label={isRecording ? "Stop recording" : "Record voice"}
               >
                 {isRecording ? <MicOff className="w-5 h-5" /> : <Mic className="w-5 h-5" />}
               </button>
@@ -557,11 +540,7 @@ export function JournalWriter({ slug }: JournalWriterProps) {
                     <Smile className="w-5 h-5" />
                   </button>
                 </PopoverTrigger>
-                <PopoverContent
-                  side="top"
-                  align="start"
-                  className="p-0 border-0 shadow-xl w-auto"
-                >
+                <PopoverContent side="top" align="start" className="p-0 border-0 shadow-xl w-auto">
                   <EmojiPicker
                     onEmojiClick={handleEmojiClick}
                     lazyLoadEmojis
@@ -593,7 +572,7 @@ export function JournalWriter({ slug }: JournalWriterProps) {
 
             <Textarea
               ref={textareaRef}
-              placeholder={currentHeading ? 'Start writing…' : "What's on your mind…"}
+              placeholder={currentHeading ? "Start writing…" : "What's on your mind…"}
               value={content}
               onChange={handleContentChange}
               className="resize-none border-none shadow-none bg-transparent focus-visible:ring-0 text-base text-foreground min-h-[200px] overflow-hidden p-0 leading-relaxed placeholder:text-muted-foreground/50"
@@ -612,9 +591,11 @@ export function JournalWriter({ slug }: JournalWriterProps) {
               onClick={isPromptMode ? handleGoDeeper : handlePromptMe}
               disabled={isPrompting || isSaving}
             >
-              {isPrompting
-                ? <Loader2 className="w-4 h-4 animate-spin" />
-                : <Sparkles className="w-4 h-4" />}
+              {isPrompting ? (
+                <Loader2 className="w-4 h-4 animate-spin" />
+              ) : (
+                <Sparkles className="w-4 h-4" />
+              )}
               Go deeper
             </Button>
             <Button
@@ -623,7 +604,7 @@ export function JournalWriter({ slug }: JournalWriterProps) {
               onClick={handleSave}
               disabled={isSaving || isPrompting}
             >
-              {isSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Finish'}
+              {isSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : "Finish"}
             </Button>
           </div>
         ) : (
@@ -632,14 +613,15 @@ export function JournalWriter({ slug }: JournalWriterProps) {
             onClick={isPromptMode ? handleGoDeeper : handlePromptMe}
             disabled={isPrompting || isInitialLoading}
           >
-            {isPrompting
-              ? <Loader2 className="w-4 h-4 animate-spin" />
-              : <Sparkles className="w-4 h-4" />}
+            {isPrompting ? (
+              <Loader2 className="w-4 h-4 animate-spin" />
+            ) : (
+              <Sparkles className="w-4 h-4" />
+            )}
             Go Deeper
           </Button>
         )}
       </div>
-
     </div>
   );
 }

@@ -21,16 +21,16 @@
  *
  * LAST UPDATED: 2026-04-23 — migrated custom header div to PageHeader; added file header
  */
-'use client';
+"use client";
 
-import Link from 'next/link';
-import { Plus, CalendarX, AlertCircle } from 'lucide-react';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Button } from '@/components/ui/button';
-import { Skeleton } from '@/components/ui/skeleton';
-import { PageHeader } from '@/components/shared/navigation/page-header';
-import { AppointmentCard } from '@/components/appointments/appointment-card';
-import { useAppointments } from '@/hooks/appointments/use-appointments-page';
+import { AppointmentCard } from "@/components/appointments/appointment-card";
+import { PageHeader } from "@/components/shared/navigation/page-header";
+import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useAppointments } from "@/hooks/appointments/use-appointments-page";
+import { AlertCircle, CalendarX, Plus } from "lucide-react";
+import Link from "next/link";
 
 export default function AppointmentsPage() {
   const { upcoming, past, isLoading, error } = useAppointments();
@@ -44,7 +44,9 @@ export default function AppointmentsPage() {
       {isLoading && (
         <div className="px-4 space-y-3">
           <Skeleton className="h-10 w-full rounded-full" />
-          {[0, 1, 2].map(i => <Skeleton key={i} className="h-20 w-full rounded-2xl" />)}
+          {[0, 1, 2].map((i) => (
+            <Skeleton key={i} className="h-20 w-full rounded-2xl" />
+          ))}
         </div>
       )}
 
@@ -54,7 +56,7 @@ export default function AppointmentsPage() {
           <div>
             <p className="text-lg font-semibold text-destructive">Failed to load appointments</p>
             <p className="text-sm text-muted-foreground mt-1 max-w-xs mx-auto">
-              {error.message || 'Something went wrong'}
+              {error.message || "Something went wrong"}
             </p>
           </div>
           <Button onClick={() => window.location.reload()} className="rounded-full px-8">
@@ -105,13 +107,17 @@ export default function AppointmentsPage() {
                   </Button>
                 </div>
               ) : (
-                upcoming.map((apt) => <AppointmentCard key={apt.id} appointment={apt} isPast={false} />)
+                upcoming.map((apt) => (
+                  <AppointmentCard key={apt.id} appointment={apt} isPast={false} />
+                ))
               )}
             </TabsContent>
 
             <TabsContent value="past" className="space-y-3 mt-0">
               {past.length === 0 ? (
-                <p className="text-center text-muted-foreground text-sm py-10">No past appointments</p>
+                <p className="text-center text-muted-foreground text-sm py-10">
+                  No past appointments
+                </p>
               ) : (
                 past.map((apt) => <AppointmentCard key={apt.id} appointment={apt} isPast />)
               )}

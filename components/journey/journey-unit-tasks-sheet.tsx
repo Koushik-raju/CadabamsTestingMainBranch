@@ -1,10 +1,10 @@
-'use client';
+"use client";
 
-import { Lock, ChevronRight } from 'lucide-react';
-import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
-import { getTypeColor } from './path-node';
-import type { NodeTaskType } from './path-node';
-import type { JourneyTask } from '@/types/journey';
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
+import type { JourneyTask } from "@/types/journey";
+import { ChevronRight, Lock } from "lucide-react";
+import { getTypeColor } from "./path-node";
+import type { NodeTaskType } from "./path-node";
 
 export interface UnitTask {
   title: string;
@@ -24,19 +24,30 @@ interface JourneyUnitTasksSheetProps {
 }
 
 const TYPE_EMOJI: Record<string, string> = {
-  video: '🎥', audio: '🎧', assessment: '📋', journal: '✍️',
-  book: '📅', gift: '💙', trophy: '🏆', read: '📖',
+  video: "🎥",
+  audio: "🎧",
+  assessment: "📋",
+  journal: "✍️",
+  book: "📅",
+  gift: "💙",
+  trophy: "🏆",
+  read: "📖",
 };
 
 export function JourneyUnitTasksSheet({
-  open, onClose, unitTitle, summary, tasks, onTaskTap,
+  open,
+  onClose,
+  unitTitle,
+  summary,
+  tasks,
+  onTaskTap,
 }: JourneyUnitTasksSheetProps) {
   return (
     <Sheet open={open} onOpenChange={(v) => !v && onClose()}>
       <SheetContent
         side="bottom"
         className="rounded-t-3xl px-0 pb-10 pt-4 overflow-y-auto"
-        style={{ maxHeight: '80vh' }}
+        style={{ maxHeight: "80vh" }}
       >
         <div className="mx-auto w-10 h-1 bg-border rounded-full mb-4" />
         <SheetHeader className="px-5 mb-3 text-left">
@@ -57,7 +68,7 @@ export function JourneyUnitTasksSheet({
         <div className="flex flex-col divide-y divide-border/40">
           {tasks.map((item, idx) => {
             const color = getTypeColor(item.type);
-            const emoji = TYPE_EMOJI[item.type] ?? '⭐';
+            const emoji = TYPE_EMOJI[item.type] ?? "⭐";
 
             return (
               <button
@@ -70,11 +81,11 @@ export function JourneyUnitTasksSheet({
                 <div
                   className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 text-base"
                   style={{
-                    backgroundColor: item.isLocked ? 'hsl(var(--muted))' : `${color.bg}18`,
-                    color: item.isLocked ? 'hsl(var(--muted-foreground))' : color.bg,
+                    backgroundColor: item.isLocked ? "hsl(var(--muted))" : `${color.bg}18`,
+                    color: item.isLocked ? "hsl(var(--muted-foreground))" : color.bg,
                   }}
                 >
-                  {item.isCompleted ? '✓' : emoji}
+                  {item.isCompleted ? "✓" : emoji}
                 </div>
 
                 {/* Text */}
@@ -82,14 +93,19 @@ export function JourneyUnitTasksSheet({
                   <p className="text-sm font-semibold leading-snug truncate text-foreground">
                     {item.title || color.label}
                   </p>
-                  <p className="text-[11px] font-medium mt-0.5" style={{ color: item.isLocked ? 'hsl(var(--muted-foreground))' : color.bg }}>
+                  <p
+                    className="text-[11px] font-medium mt-0.5"
+                    style={{ color: item.isLocked ? "hsl(var(--muted-foreground))" : color.bg }}
+                  >
                     {color.label}
                   </p>
                 </div>
 
                 {/* Status */}
                 {item.isCompleted ? (
-                  <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700 flex-shrink-0">Done</span>
+                  <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700 flex-shrink-0">
+                    Done
+                  </span>
                 ) : item.isLocked ? (
                   <Lock className="w-3.5 h-3.5 text-muted-foreground/50 flex-shrink-0" />
                 ) : (

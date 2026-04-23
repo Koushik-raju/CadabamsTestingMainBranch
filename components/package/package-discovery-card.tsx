@@ -1,11 +1,11 @@
-'use client';
+"use client";
 
-import { useRouter } from 'next/navigation';
-import { Layers, ArrowRight } from 'lucide-react';
-import { Card, CardContent } from '@/components/ui/card';
-import { cn } from '@/lib/utils';
-import { getPackagePalette } from '@/lib/package-colors';
-import type { PackageResponseDto } from '@/sdk/backend-v2';
+import { Card, CardContent } from "@/components/ui/card";
+import { getPackagePalette } from "@/lib/package-colors";
+import { cn } from "@/lib/utils";
+import type { PackageResponseDto } from "@/sdk/backend-v2";
+import { ArrowRight, Layers } from "lucide-react";
+import { useRouter } from "next/navigation";
 
 interface PackageDiscoveryCardProps {
   pkg: PackageResponseDto;
@@ -16,32 +16,43 @@ export function PackageDiscoveryCard({ pkg, className }: PackageDiscoveryCardPro
   const router = useRouter();
   const palette = getPackagePalette(pkg.id);
 
-  const initials = (pkg.package_name ?? '')
-    .split(' ')
+  const initials = (pkg.package_name ?? "")
+    .split(" ")
     .slice(0, 2)
-    .map((w) => w[0] ?? '')
-    .join('')
+    .map((w) => w[0] ?? "")
+    .join("")
     .toUpperCase();
 
   return (
     <Card
       className={cn(
-        'cursor-pointer hover:shadow-lg transition-all border-0 overflow-hidden pt-0 active:scale-[0.97]',
-        className
+        "cursor-pointer hover:shadow-lg transition-all border-0 overflow-hidden pt-0 active:scale-[0.97]",
+        className,
       )}
       onClick={() => router.push(`/packages/browse/${pkg.id}`)}
     >
       {/* Coloured header */}
-      <div className={cn('relative h-28 bg-gradient-to-br', palette.gradient)}>
+      <div className={cn("relative h-28 bg-gradient-to-br", palette.gradient)}>
         <div className="absolute inset-0 opacity-20 bg-[radial-gradient(circle_at_80%_20%,white,transparent_55%)]" />
         {/* Initials circle */}
-        <div className={cn('absolute top-3 left-3 w-9 h-9 rounded-xl flex items-center justify-center font-bold text-sm text-white', palette.iconBg)}>
+        <div
+          className={cn(
+            "absolute top-3 left-3 w-9 h-9 rounded-xl flex items-center justify-center font-bold text-sm text-white",
+            palette.iconBg,
+          )}
+        >
           {initials}
         </div>
         {/* Price badge */}
         <div className="absolute bottom-3 right-3">
-          <span className={cn('text-[10px] font-bold px-2 py-0.5 rounded-full backdrop-blur-sm', palette.badgeBg, 'text-white')}>
-            ₹{(pkg.amount_total ?? 0).toLocaleString('en-IN')}
+          <span
+            className={cn(
+              "text-[10px] font-bold px-2 py-0.5 rounded-full backdrop-blur-sm",
+              palette.badgeBg,
+              "text-white",
+            )}
+          >
+            ₹{(pkg.amount_total ?? 0).toLocaleString("en-IN")}
           </span>
         </div>
         {/* Arrow */}

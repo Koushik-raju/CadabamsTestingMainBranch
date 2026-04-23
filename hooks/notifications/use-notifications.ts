@@ -1,16 +1,16 @@
-'use client';
+"use client";
 
-import useSWR from 'swr';
+import { useAuth } from "@/hooks/shared/auth/use-auth";
 import {
-  crmControllerGetNotificationSettings,
   crmControllerEnableNotifications,
-} from '@/sdk/backend-v2';
-import type { NotificationSettingsResponseDto } from '@/sdk/backend-v2';
-import { useAuth } from '@/hooks/shared/auth/use-auth';
+  crmControllerGetNotificationSettings,
+} from "@/sdk/backend-v2";
+import type { NotificationSettingsResponseDto } from "@/sdk/backend-v2";
+import useSWR from "swr";
 
 // ─── Local notification storage (push notifications) ─────────────────────────
 
-const LOCAL_KEY = 'local_notifications';
+const LOCAL_KEY = "local_notifications";
 
 export interface LocalNotification {
   id: string;
@@ -23,7 +23,7 @@ export interface LocalNotification {
 }
 
 export function getStoredNotifications(): LocalNotification[] {
-  if (typeof window === 'undefined') return [];
+  if (typeof window === "undefined") return [];
   try {
     const raw = localStorage.getItem(LOCAL_KEY);
     return raw ? (JSON.parse(raw) as LocalNotification[]) : [];
@@ -33,9 +33,9 @@ export function getStoredNotifications(): LocalNotification[] {
 }
 
 export function storeNotification(
-  notification: Omit<LocalNotification, 'id' | 'read' | 'receivedAt'>
+  notification: Omit<LocalNotification, "id" | "read" | "receivedAt">,
 ): void {
-  if (typeof window === 'undefined') return;
+  if (typeof window === "undefined") return;
   const existing = getStoredNotifications();
   const next: LocalNotification = {
     ...notification,
@@ -47,15 +47,13 @@ export function storeNotification(
 }
 
 export function markNotificationAsRead(id: string): void {
-  if (typeof window === 'undefined') return;
-  const updated = getStoredNotifications().map((n) =>
-    n.id === id ? { ...n, read: true } : n
-  );
+  if (typeof window === "undefined") return;
+  const updated = getStoredNotifications().map((n) => (n.id === id ? { ...n, read: true } : n));
   localStorage.setItem(LOCAL_KEY, JSON.stringify(updated));
 }
 
 export function clearAllNotifications(): void {
-  if (typeof window === 'undefined') return;
+  if (typeof window === "undefined") return;
   localStorage.removeItem(LOCAL_KEY);
 }
 
@@ -77,7 +75,7 @@ export function useNotificationSettings() {
       });
       return (res.data as NotificationSettingsResponseDto) ?? null;
     },
-    { revalidateOnFocus: false }
+    { revalidateOnFocus: false },
   );
 
   async function enableNotifications(params: Record<string, unknown>) {

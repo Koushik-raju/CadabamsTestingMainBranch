@@ -1,9 +1,9 @@
-'use client';
+"use client";
 
-import { Crown, Medal, Award } from 'lucide-react';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { cn } from '@/lib/utils';
-import type { LeaderboardEntryData } from './leaderboard-entry';
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { cn } from "@/lib/utils";
+import { Award, Crown, Medal } from "lucide-react";
+import type { LeaderboardEntryData } from "./leaderboard-entry";
 
 interface PodiumProps {
   top3: LeaderboardEntryData[];
@@ -16,43 +16,48 @@ interface PodiumSlotProps {
 
 function PodiumSlot({ entry, position }: PodiumSlotProps) {
   const initials = entry.name
-    ? entry.name.split(' ').map((n) => n[0]).join('').toUpperCase().slice(0, 2)
-    : '?';
+    ? entry.name
+        .split(" ")
+        .map((n) => n[0])
+        .join("")
+        .toUpperCase()
+        .slice(0, 2)
+    : "?";
 
   const config = {
     1: {
       icon: <Crown className="w-5 h-5 text-yellow-500" />,
-      barHeight: 'h-20',
-      barClass: 'leaderboard-podium-gold',
-      avatarRing: 'ring-2 ring-yellow-400',
-      label: '1st',
-      order: 'order-2',
+      barHeight: "h-20",
+      barClass: "leaderboard-podium-gold",
+      avatarRing: "ring-2 ring-yellow-400",
+      label: "1st",
+      order: "order-2",
     },
     2: {
       icon: <Medal className="w-5 h-5 text-slate-400" />,
-      barHeight: 'h-14',
-      barClass: 'leaderboard-podium-silver',
-      avatarRing: 'ring-2 ring-slate-400',
-      label: '2nd',
-      order: 'order-1',
+      barHeight: "h-14",
+      barClass: "leaderboard-podium-silver",
+      avatarRing: "ring-2 ring-slate-400",
+      label: "2nd",
+      order: "order-1",
     },
     3: {
       icon: <Award className="w-5 h-5 text-amber-600" />,
-      barHeight: 'h-10',
-      barClass: 'leaderboard-podium-bronze',
-      avatarRing: 'ring-2 ring-amber-500',
-      label: '3rd',
-      order: 'order-3',
+      barHeight: "h-10",
+      barClass: "leaderboard-podium-bronze",
+      avatarRing: "ring-2 ring-amber-500",
+      label: "3rd",
+      order: "order-3",
     },
   }[position];
 
   return (
-    <div className={cn('flex flex-col items-center gap-1 flex-1', config.order)}>
+    <div className={cn("flex flex-col items-center gap-1 flex-1", config.order)}>
       {/* Crown/Medal icon */}
       <div aria-hidden="true">{config.icon}</div>
 
       {/* Avatar */}
-      <Avatar className={cn('w-12 h-12', config.avatarRing)}>
+      <Avatar className={cn("w-12 h-12", config.avatarRing)}>
         <AvatarImage src={entry.profileImage} alt={entry.name} />
         <AvatarFallback className="bg-primary/20 text-primary font-bold text-sm">
           {initials}
@@ -61,7 +66,7 @@ function PodiumSlot({ entry, position }: PodiumSlotProps) {
 
       {/* Name */}
       <p className="text-xs font-semibold text-center text-foreground truncate w-full px-1 max-w-[80px]">
-        {entry.name.split(' ')[0]}
+        {entry.name.split(" ")[0]}
       </p>
 
       {/* Score */}
@@ -72,7 +77,7 @@ function PodiumSlot({ entry, position }: PodiumSlotProps) {
       {/* Podium bar */}
       <div
         className={cn(
-          'w-full rounded-t-lg flex items-center justify-center font-bold text-white text-sm',
+          "w-full rounded-t-lg flex items-center justify-center font-bold text-white text-sm",
           config.barHeight,
           config.barClass,
         )}

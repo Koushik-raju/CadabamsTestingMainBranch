@@ -1,3 +1,7 @@
+import { journeysKey } from "@/lib/swr-keys";
+import { cmsJourneysControllerList } from "@/sdk/backend-v2";
+import type { JourneyResponseDto } from "@/sdk/backend-v2";
+import type { JourneyItem } from "@/types/journey";
 /**
  * FILE: hooks/journeys/use-journeys-page.ts
  *
@@ -21,27 +25,23 @@
  *
  * LAST UPDATED: 2026-04-16 — map extraTaskDescription and explicit ID arrays (audioIds, assessmentIds, worksheetIds, videoIds, subJournalingIds)
  */
-import useSWR from 'swr';
-import { cmsJourneysControllerList } from '@/sdk/backend-v2';
-import type { JourneyResponseDto } from '@/sdk/backend-v2';
-import { journeysKey } from '@/lib/swr-keys';
-import type { JourneyItem } from '@/types/journey';
+import useSWR from "swr";
 
 // ---------------------------------------------------------------------------
 // Mapping helper
 // ---------------------------------------------------------------------------
 
 function extractStringFromObj(val: unknown): string {
-  if (!val) return '';
-  if (typeof val === 'string') return val;
-  if (typeof val === 'object') {
+  if (!val) return "";
+  if (typeof val === "string") return val;
+  if (typeof val === "object") {
     const obj = val as Record<string, unknown>;
     // Try URL/src patterns for icons
-    for (const key of ['url', 'src', 'href', 'en', 'text', 'value']) {
-      if (typeof obj[key] === 'string') return obj[key] as string;
+    for (const key of ["url", "src", "href", "en", "text", "value"]) {
+      if (typeof obj[key] === "string") return obj[key] as string;
     }
   }
-  return '';
+  return "";
 }
 
 export function mapV2Journey(dto: JourneyResponseDto): JourneyItem {
@@ -110,7 +110,7 @@ export function useJourneys(options?: { limit?: number; search?: string; categor
       const res = await cmsJourneysControllerList({
         query: {
           limit: options?.limit ?? 50,
-          status: 'PUBLISHED',
+          status: "PUBLISHED",
           search: options?.search,
         },
       });
@@ -121,7 +121,7 @@ export function useJourneys(options?: { limit?: number; search?: string; categor
       revalidateOnFocus: false,
       revalidateIfStale: false,
       dedupingInterval: 300_000,
-    }
+    },
   );
 
   return { journeys: data ?? [], isLoading, error };

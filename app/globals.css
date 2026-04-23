@@ -51,8 +51,12 @@
 }
 
 @keyframes shimmer {
-  0% { background-position: 200% center; }
-  100% { background-position: -200% center; }
+  0% {
+    background-position: 200% center;
+  }
+  100% {
+    background-position: -200% center;
+  }
 }
 
 :root {
@@ -62,7 +66,7 @@
   --card-foreground: oklch(0.145 0 0);
   --popover: oklch(1 0 0);
   --popover-foreground: oklch(0.145 0 0);
-  --primary: oklch(0.63 0.2 37);   /* #E7590F brand orange */
+  --primary: oklch(0.63 0.2 37); /* #E7590F brand orange */
   --primary-foreground: oklch(1 0 0);
   --secondary: oklch(0.97 0 0);
   --secondary-foreground: oklch(0.205 0 0);
@@ -126,8 +130,8 @@
 
 /* Brand + safe area (added for Cadabams migration) */
 :root {
-  --brand: #E7590F;
-  --brand-foreground: #FFFFFF;
+  --brand: #e7590f;
+  --brand-foreground: #ffffff;
   --brand-bg: #f6f4f2;
   /* Safe area insets — updated at runtime by lib/capacitor/safe-area.ts on native */
   --safe-area-inset-top: env(safe-area-inset-top, 0px);
@@ -137,22 +141,37 @@
   /* Keyboard height — updated at runtime by lib/capacitor/keyboard.ts */
   --keyboard-height: 0px;
   /* Home header gradient — centralized here so components stay color-free */
-  --home-gradient-from: #FF7EC7;
-  --home-gradient-via: #9735E7;
-  --home-gradient-to: #FF8C42;
+  --home-gradient-from: #ff7ec7;
+  --home-gradient-via: #9735e7;
+  --home-gradient-to: #ff8c42;
 }
 
 /* Safe area utility classes */
-.pt-safe { padding-top: var(--safe-area-inset-top); }
-.pb-safe { padding-bottom: max(var(--safe-area-inset-bottom), 1rem); }
-.pl-safe { padding-left: var(--safe-area-inset-left); }
-.pr-safe { padding-right: var(--safe-area-inset-right); }
+.pt-safe {
+  padding-top: var(--safe-area-inset-top);
+}
+.pb-safe {
+  padding-bottom: max(var(--safe-area-inset-bottom), 1rem);
+}
+.pl-safe {
+  padding-left: var(--safe-area-inset-left);
+}
+.pr-safe {
+  padding-right: var(--safe-area-inset-right);
+}
 
 /* Hide bottom navigation when the software keyboard is open */
-.keyboard-open .bottom-nav { display: none; }
+.keyboard-open .bottom-nav {
+  display: none;
+}
 
 .home-header-gradient {
-  background: linear-gradient(135deg, var(--home-gradient-from), var(--home-gradient-via), var(--home-gradient-to));
+  background: linear-gradient(
+    135deg,
+    var(--home-gradient-from),
+    var(--home-gradient-via),
+    var(--home-gradient-to)
+  );
 }
 
 .scrollbar-hide {
@@ -199,7 +218,9 @@
   animation-delay: 0.4s;
 }
 @keyframes typing {
-  0%, 60%, 100% {
+  0%,
+  60%,
+  100% {
     opacity: 0.2;
     transform: translateY(0);
   }
@@ -211,28 +232,101 @@
 
 /* Breathing exercise animations (Phase 6 — stress management) */
 @keyframes breathe-expand {
-  from { transform: scale(1); opacity: 0.8; }
-  to   { transform: scale(1.4); opacity: 1; }
+  from {
+    transform: scale(1);
+    opacity: 0.8;
+  }
+  to {
+    transform: scale(1.4);
+    opacity: 1;
+  }
 }
 @keyframes breathe-shrink {
-  from { transform: scale(1.4); opacity: 1; }
-  to   { transform: scale(1); opacity: 0.8; }
+  from {
+    transform: scale(1.4);
+    opacity: 1;
+  }
+  to {
+    transform: scale(1);
+    opacity: 0.8;
+  }
 }
-.breathing-circle-expand-outer    { width: 240px; height: 240px; animation: breathe-expand 4s ease-in-out forwards; }
-.breathing-circle-shrink-outer    { width: 240px; height: 240px; animation: breathe-shrink 4s ease-in-out forwards; }
-.breathing-circle-hold-big-outer  { width: 240px; height: 240px; transform: scale(1.4); opacity: 1; }
-.breathing-circle-hold-small-outer { width: 240px; height: 240px; transform: scale(1); opacity: 0.8; }
-.breathing-circle-idle-outer      { width: 240px; height: 240px; }
-.breathing-circle-expand-middle    { width: 192px; height: 192px; animation: breathe-expand 4s ease-in-out forwards; }
-.breathing-circle-shrink-middle    { width: 192px; height: 192px; animation: breathe-shrink 4s ease-in-out forwards; }
-.breathing-circle-hold-big-middle  { width: 192px; height: 192px; transform: scale(1.4); opacity: 1; }
-.breathing-circle-hold-small-middle { width: 192px; height: 192px; transform: scale(1); opacity: 0.8; }
-.breathing-circle-idle-middle      { width: 192px; height: 192px; }
-.breathing-circle-expand-inner    { width: 144px; height: 144px; animation: breathe-expand 4s ease-in-out forwards; }
-.breathing-circle-shrink-inner    { width: 144px; height: 144px; animation: breathe-shrink 4s ease-in-out forwards; }
-.breathing-circle-hold-big-inner  { width: 144px; height: 144px; transform: scale(1.4); }
-.breathing-circle-hold-small-inner { width: 144px; height: 144px; transform: scale(1); }
-.breathing-circle-idle-inner      { width: 144px; height: 144px; }
+.breathing-circle-expand-outer {
+  width: 240px;
+  height: 240px;
+  animation: breathe-expand 4s ease-in-out forwards;
+}
+.breathing-circle-shrink-outer {
+  width: 240px;
+  height: 240px;
+  animation: breathe-shrink 4s ease-in-out forwards;
+}
+.breathing-circle-hold-big-outer {
+  width: 240px;
+  height: 240px;
+  transform: scale(1.4);
+  opacity: 1;
+}
+.breathing-circle-hold-small-outer {
+  width: 240px;
+  height: 240px;
+  transform: scale(1);
+  opacity: 0.8;
+}
+.breathing-circle-idle-outer {
+  width: 240px;
+  height: 240px;
+}
+.breathing-circle-expand-middle {
+  width: 192px;
+  height: 192px;
+  animation: breathe-expand 4s ease-in-out forwards;
+}
+.breathing-circle-shrink-middle {
+  width: 192px;
+  height: 192px;
+  animation: breathe-shrink 4s ease-in-out forwards;
+}
+.breathing-circle-hold-big-middle {
+  width: 192px;
+  height: 192px;
+  transform: scale(1.4);
+  opacity: 1;
+}
+.breathing-circle-hold-small-middle {
+  width: 192px;
+  height: 192px;
+  transform: scale(1);
+  opacity: 0.8;
+}
+.breathing-circle-idle-middle {
+  width: 192px;
+  height: 192px;
+}
+.breathing-circle-expand-inner {
+  width: 144px;
+  height: 144px;
+  animation: breathe-expand 4s ease-in-out forwards;
+}
+.breathing-circle-shrink-inner {
+  width: 144px;
+  height: 144px;
+  animation: breathe-shrink 4s ease-in-out forwards;
+}
+.breathing-circle-hold-big-inner {
+  width: 144px;
+  height: 144px;
+  transform: scale(1.4);
+}
+.breathing-circle-hold-small-inner {
+  width: 144px;
+  height: 144px;
+  transform: scale(1);
+}
+.breathing-circle-idle-inner {
+  width: 144px;
+  height: 144px;
+}
 
 @layer base {
   * {
@@ -248,31 +342,106 @@
 
 /* ── Breathing exercise animations (Phase 6) ───────────────── */
 @keyframes breathe-expand {
-  0%, 100% { transform: scale(1); opacity: 0.8; }
-  50% { transform: scale(1.4); opacity: 1; }
+  0%,
+  100% {
+    transform: scale(1);
+    opacity: 0.8;
+  }
+  50% {
+    transform: scale(1.4);
+    opacity: 1;
+  }
 }
 @keyframes breathe-shrink {
-  0%, 100% { transform: scale(1.4); opacity: 1; }
-  50% { transform: scale(1); opacity: 0.8; }
+  0%,
+  100% {
+    transform: scale(1.4);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1);
+    opacity: 0.8;
+  }
 }
 
 /* Outer ring */
-.breathing-circle-expand-outer    { width: 240px; height: 240px; animation: breathe-expand 4s ease-in-out forwards; }
-.breathing-circle-shrink-outer    { width: 240px; height: 240px; animation: breathe-shrink 4s ease-in-out forwards; }
-.breathing-circle-hold-big-outer  { width: 240px; height: 240px; transform: scale(1.4); opacity: 1; }
-.breathing-circle-hold-small-outer { width: 240px; height: 240px; transform: scale(1); opacity: 0.8; }
-.breathing-circle-idle-outer      { width: 240px; height: 240px; }
+.breathing-circle-expand-outer {
+  width: 240px;
+  height: 240px;
+  animation: breathe-expand 4s ease-in-out forwards;
+}
+.breathing-circle-shrink-outer {
+  width: 240px;
+  height: 240px;
+  animation: breathe-shrink 4s ease-in-out forwards;
+}
+.breathing-circle-hold-big-outer {
+  width: 240px;
+  height: 240px;
+  transform: scale(1.4);
+  opacity: 1;
+}
+.breathing-circle-hold-small-outer {
+  width: 240px;
+  height: 240px;
+  transform: scale(1);
+  opacity: 0.8;
+}
+.breathing-circle-idle-outer {
+  width: 240px;
+  height: 240px;
+}
 
 /* Middle ring */
-.breathing-circle-expand-middle    { width: 192px; height: 192px; animation: breathe-expand 4s ease-in-out forwards; }
-.breathing-circle-shrink-middle    { width: 192px; height: 192px; animation: breathe-shrink 4s ease-in-out forwards; }
-.breathing-circle-hold-big-middle  { width: 192px; height: 192px; transform: scale(1.4); opacity: 1; }
-.breathing-circle-hold-small-middle { width: 192px; height: 192px; transform: scale(1); opacity: 0.8; }
-.breathing-circle-idle-middle      { width: 192px; height: 192px; }
+.breathing-circle-expand-middle {
+  width: 192px;
+  height: 192px;
+  animation: breathe-expand 4s ease-in-out forwards;
+}
+.breathing-circle-shrink-middle {
+  width: 192px;
+  height: 192px;
+  animation: breathe-shrink 4s ease-in-out forwards;
+}
+.breathing-circle-hold-big-middle {
+  width: 192px;
+  height: 192px;
+  transform: scale(1.4);
+  opacity: 1;
+}
+.breathing-circle-hold-small-middle {
+  width: 192px;
+  height: 192px;
+  transform: scale(1);
+  opacity: 0.8;
+}
+.breathing-circle-idle-middle {
+  width: 192px;
+  height: 192px;
+}
 
 /* Inner circle */
-.breathing-circle-expand-inner    { width: 144px; height: 144px; animation: breathe-expand 4s ease-in-out forwards; }
-.breathing-circle-shrink-inner    { width: 144px; height: 144px; animation: breathe-shrink 4s ease-in-out forwards; }
-.breathing-circle-hold-big-inner  { width: 144px; height: 144px; transform: scale(1.4); }
-.breathing-circle-hold-small-inner { width: 144px; height: 144px; transform: scale(1); }
-.breathing-circle-idle-inner      { width: 144px; height: 144px; }
+.breathing-circle-expand-inner {
+  width: 144px;
+  height: 144px;
+  animation: breathe-expand 4s ease-in-out forwards;
+}
+.breathing-circle-shrink-inner {
+  width: 144px;
+  height: 144px;
+  animation: breathe-shrink 4s ease-in-out forwards;
+}
+.breathing-circle-hold-big-inner {
+  width: 144px;
+  height: 144px;
+  transform: scale(1.4);
+}
+.breathing-circle-hold-small-inner {
+  width: 144px;
+  height: 144px;
+  transform: scale(1);
+}
+.breathing-circle-idle-inner {
+  width: 144px;
+  height: 144px;
+}

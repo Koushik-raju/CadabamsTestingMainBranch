@@ -1,28 +1,28 @@
 "use client";
 
-import { useState } from "react";
-import {
-  X,
-  Check,
-  Stethoscope,
-  Pill,
-  Users,
-  HelpCircle,
-  Monitor,
-  Building2,
-  MapPin,
-} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
-  useFindTherapist,
-  PROFESSION_OPTIONS,
+  Building2,
+  Check,
+  HelpCircle,
+  MapPin,
+  Monitor,
+  Pill,
+  Stethoscope,
+  Users,
+  X,
+} from "lucide-react";
+import { useState } from "react";
+import {
   ALL_ISSUES,
-  CITIES,
   CENTERS_BY_CITY,
-  LANGUAGES_TOP,
+  CITIES,
   LANGUAGES_MORE,
+  LANGUAGES_TOP,
+  PROFESSION_OPTIONS,
   type ProfessionValue,
+  useFindTherapist,
 } from "./context";
 
 // ---------------------------------------------------------------------------
@@ -45,10 +45,7 @@ function SheetShell({
   children: React.ReactNode;
 }) {
   return (
-    <div
-      className="fixed inset-0 z-50 bg-black/40 flex items-end"
-      onClick={onClose}
-    >
+    <div className="fixed inset-0 z-50 bg-black/40 flex items-end" onClick={onClose}>
       <div
         className="bg-background w-full rounded-t-2xl max-h-[80vh] flex flex-col"
         onClick={(e) => e.stopPropagation()}
@@ -96,15 +93,11 @@ export function DoctorTypeSheet({ onClose }: SheetProps) {
             onClose();
           }}
           className={`w-full flex items-center justify-between px-4 py-3 rounded-xl border transition-colors ${
-            profession === null
-              ? "border-primary bg-primary/5"
-              : "border-border hover:bg-muted/50"
+            profession === null ? "border-primary bg-primary/5" : "border-border hover:bg-muted/50"
           }`}
         >
           <span className="font-medium">All types</span>
-          {profession === null && (
-            <Check className="h-4 w-4 text-primary shrink-0" />
-          )}
+          {profession === null && <Check className="h-4 w-4 text-primary shrink-0" />}
         </button>
 
         {PROFESSION_OPTIONS.map((opt) => {
@@ -118,9 +111,7 @@ export function DoctorTypeSheet({ onClose }: SheetProps) {
                 onClose();
               }}
               className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl border transition-colors text-left ${
-                isSelected
-                  ? "border-primary bg-primary/5"
-                  : "border-border hover:bg-muted/50"
+                isSelected ? "border-primary bg-primary/5" : "border-border hover:bg-muted/50"
               }`}
             >
               <Icon
@@ -129,22 +120,14 @@ export function DoctorTypeSheet({ onClose }: SheetProps) {
                 }`}
               />
               <div className="flex-1 min-w-0">
-                <p
-                  className={`text-sm font-medium ${
-                    isSelected ? "text-primary" : ""
-                  }`}
-                >
+                <p className={`text-sm font-medium ${isSelected ? "text-primary" : ""}`}>
                   {opt.label}
                 </p>
                 {opt.desc && (
-                  <p className="text-xs text-muted-foreground mt-0.5 truncate">
-                    {opt.desc}
-                  </p>
+                  <p className="text-xs text-muted-foreground mt-0.5 truncate">{opt.desc}</p>
                 )}
               </div>
-              {isSelected && (
-                <Check className="h-4 w-4 text-primary shrink-0" />
-              )}
+              {isSelected && <Check className="h-4 w-4 text-primary shrink-0" />}
             </button>
           );
         })}
@@ -158,8 +141,7 @@ export function DoctorTypeSheet({ onClose }: SheetProps) {
 // ---------------------------------------------------------------------------
 
 export function ModeSheet({ onClose }: SheetProps) {
-  const { mode, setMode, city, setCity, center, setCenter } =
-    useFindTherapist();
+  const { mode, setMode, city, setCity, center, setCenter } = useFindTherapist();
 
   return (
     <SheetShell onClose={onClose}>
@@ -181,9 +163,7 @@ export function ModeSheet({ onClose }: SheetProps) {
         <button
           onClick={() => setMode(null)}
           className={`w-full flex items-center justify-between px-4 py-3 rounded-xl border transition-colors ${
-            mode === null
-              ? "border-primary bg-primary/5"
-              : "border-border hover:bg-muted/50"
+            mode === null ? "border-primary bg-primary/5" : "border-border hover:bg-muted/50"
           }`}
         >
           <span className="font-medium">Any mode</span>
@@ -194,9 +174,7 @@ export function ModeSheet({ onClose }: SheetProps) {
         <button
           onClick={() => setMode("online")}
           className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl border transition-colors text-left ${
-            mode === "online"
-              ? "border-primary bg-primary/5"
-              : "border-border hover:bg-muted/50"
+            mode === "online" ? "border-primary bg-primary/5" : "border-border hover:bg-muted/50"
           }`}
         >
           <Monitor
@@ -205,29 +183,19 @@ export function ModeSheet({ onClose }: SheetProps) {
             }`}
           />
           <div className="flex-1 min-w-0">
-            <p
-              className={`text-sm font-medium ${
-                mode === "online" ? "text-primary" : ""
-              }`}
-            >
+            <p className={`text-sm font-medium ${mode === "online" ? "text-primary" : ""}`}>
               Online
             </p>
-            <p className="text-xs text-muted-foreground mt-0.5">
-              Consult from anywhere
-            </p>
+            <p className="text-xs text-muted-foreground mt-0.5">Consult from anywhere</p>
           </div>
-          {mode === "online" && (
-            <Check className="h-4 w-4 text-primary shrink-0" />
-          )}
+          {mode === "online" && <Check className="h-4 w-4 text-primary shrink-0" />}
         </button>
 
         {/* In-person */}
         <button
           onClick={() => setMode("in-person")}
           className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl border transition-colors text-left ${
-            mode === "in-person"
-              ? "border-primary bg-primary/5"
-              : "border-border hover:bg-muted/50"
+            mode === "in-person" ? "border-primary bg-primary/5" : "border-border hover:bg-muted/50"
           }`}
         >
           <Building2
@@ -236,20 +204,12 @@ export function ModeSheet({ onClose }: SheetProps) {
             }`}
           />
           <div className="flex-1 min-w-0">
-            <p
-              className={`text-sm font-medium ${
-                mode === "in-person" ? "text-primary" : ""
-              }`}
-            >
+            <p className={`text-sm font-medium ${mode === "in-person" ? "text-primary" : ""}`}>
               In-person
             </p>
-            <p className="text-xs text-muted-foreground mt-0.5">
-              Visit a center near you
-            </p>
+            <p className="text-xs text-muted-foreground mt-0.5">Visit a center near you</p>
           </div>
-          {mode === "in-person" && (
-            <Check className="h-4 w-4 text-primary shrink-0" />
-          )}
+          {mode === "in-person" && <Check className="h-4 w-4 text-primary shrink-0" />}
         </button>
 
         {/* Inline city + center picker when in-person is selected */}
@@ -275,9 +235,7 @@ export function ModeSheet({ onClose }: SheetProps) {
                   >
                     <MapPin
                       className={`h-4 w-4 shrink-0 ${
-                        isSelectedCity
-                          ? "text-primary"
-                          : "text-muted-foreground"
+                        isSelectedCity ? "text-primary" : "text-muted-foreground"
                       }`}
                     />
                     <span
@@ -287,53 +245,47 @@ export function ModeSheet({ onClose }: SheetProps) {
                     >
                       {c.name}
                     </span>
-                    {isSelectedCity && (
-                      <Check className="h-4 w-4 text-primary shrink-0" />
-                    )}
+                    {isSelectedCity && <Check className="h-4 w-4 text-primary shrink-0" />}
                   </button>
 
                   {/* Centers for this city */}
-                  {isSelectedCity &&
-                    CENTERS_BY_CITY[c.id] &&
-                    CENTERS_BY_CITY[c.id].length > 0 && (
-                      <div className="mt-2 ml-4 space-y-2">
-                        <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
-                          Select center
-                        </p>
-                        {CENTERS_BY_CITY[c.id].map((ct) => {
-                          const isSelectedCenter = center?.campus_id === ct.campus_id;
-                          return (
-                            <button
-                              key={ct.campus_id}
-                              onClick={() => setCenter(ct)}
-                              className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg border transition-colors text-left ${
-                                isSelectedCenter
-                                  ? "border-primary bg-primary/5"
-                                  : "border-border hover:bg-muted/50"
+                  {isSelectedCity && CENTERS_BY_CITY[c.id] && CENTERS_BY_CITY[c.id].length > 0 && (
+                    <div className="mt-2 ml-4 space-y-2">
+                      <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+                        Select center
+                      </p>
+                      {CENTERS_BY_CITY[c.id].map((ct) => {
+                        const isSelectedCenter = center?.campus_id === ct.campus_id;
+                        return (
+                          <button
+                            key={ct.campus_id}
+                            onClick={() => setCenter(ct)}
+                            className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg border transition-colors text-left ${
+                              isSelectedCenter
+                                ? "border-primary bg-primary/5"
+                                : "border-border hover:bg-muted/50"
+                            }`}
+                          >
+                            <Building2
+                              className={`h-4 w-4 shrink-0 ${
+                                isSelectedCenter ? "text-primary" : "text-muted-foreground"
+                              }`}
+                            />
+                            <span
+                              className={`text-sm flex-1 ${
+                                isSelectedCenter ? "text-primary font-medium" : ""
                               }`}
                             >
-                              <Building2
-                                className={`h-4 w-4 shrink-0 ${
-                                  isSelectedCenter
-                                    ? "text-primary"
-                                    : "text-muted-foreground"
-                                }`}
-                              />
-                              <span
-                                className={`text-sm flex-1 ${
-                                  isSelectedCenter ? "text-primary font-medium" : ""
-                                }`}
-                              >
-                                {ct.name}
-                              </span>
-                              {isSelectedCenter && (
-                                <Check className="h-4 w-4 text-primary shrink-0" />
-                              )}
-                            </button>
-                          );
-                        })}
-                      </div>
-                    )}
+                              {ct.name}
+                            </span>
+                            {isSelectedCenter && (
+                              <Check className="h-4 w-4 text-primary shrink-0" />
+                            )}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  )}
                 </div>
               );
             })}
@@ -424,9 +376,7 @@ export function ExperiencingSheet({ onClose }: SheetProps) {
   const [search, setSearch] = useState("");
 
   const filtered = search.trim()
-    ? ALL_ISSUES.filter((issue) =>
-        issue.name.toLowerCase().includes(search.trim().toLowerCase())
-      )
+    ? ALL_ISSUES.filter((issue) => issue.name.toLowerCase().includes(search.trim().toLowerCase()))
     : ALL_ISSUES;
 
   return (
@@ -531,15 +481,11 @@ export function LocationSheet({ onClose }: SheetProps) {
             setCenter(null);
           }}
           className={`w-full flex items-center justify-between px-4 py-3 rounded-xl border transition-colors ${
-            city === null
-              ? "border-primary bg-primary/5"
-              : "border-border hover:bg-muted/50"
+            city === null ? "border-primary bg-primary/5" : "border-border hover:bg-muted/50"
           }`}
         >
           <span className="font-medium">Any location</span>
-          {city === null && (
-            <Check className="h-4 w-4 text-primary shrink-0" />
-          )}
+          {city === null && <Check className="h-4 w-4 text-primary shrink-0" />}
         </button>
 
         {CITIES.map((c) => {
@@ -552,9 +498,7 @@ export function LocationSheet({ onClose }: SheetProps) {
                   setCenter(null);
                 }}
                 className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl border transition-colors text-left ${
-                  isSelectedCity
-                    ? "border-primary bg-primary/5"
-                    : "border-border hover:bg-muted/50"
+                  isSelectedCity ? "border-primary bg-primary/5" : "border-border hover:bg-muted/50"
                 }`}
               >
                 <MapPin
@@ -563,59 +507,49 @@ export function LocationSheet({ onClose }: SheetProps) {
                   }`}
                 />
                 <span
-                  className={`text-sm font-medium flex-1 ${
-                    isSelectedCity ? "text-primary" : ""
-                  }`}
+                  className={`text-sm font-medium flex-1 ${isSelectedCity ? "text-primary" : ""}`}
                 >
                   {c.name}
                 </span>
-                {isSelectedCity && (
-                  <Check className="h-4 w-4 text-primary shrink-0" />
-                )}
+                {isSelectedCity && <Check className="h-4 w-4 text-primary shrink-0" />}
               </button>
 
               {/* Centers for selected city */}
-              {isSelectedCity &&
-                CENTERS_BY_CITY[c.id] &&
-                CENTERS_BY_CITY[c.id].length > 0 && (
-                  <div className="mt-2 ml-6 space-y-2">
-                    <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide px-2">
-                      Select center
-                    </p>
-                    {CENTERS_BY_CITY[c.id].map((ct) => {
-                      const isSelectedCenter = center?.campus_id === ct.campus_id;
-                      return (
-                        <button
-                          key={ct.campus_id}
-                          onClick={() => setCenter(ct)}
-                          className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg border transition-colors text-left ${
-                            isSelectedCenter
-                              ? "border-primary bg-primary/5"
-                              : "border-border hover:bg-muted/50"
+              {isSelectedCity && CENTERS_BY_CITY[c.id] && CENTERS_BY_CITY[c.id].length > 0 && (
+                <div className="mt-2 ml-6 space-y-2">
+                  <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide px-2">
+                    Select center
+                  </p>
+                  {CENTERS_BY_CITY[c.id].map((ct) => {
+                    const isSelectedCenter = center?.campus_id === ct.campus_id;
+                    return (
+                      <button
+                        key={ct.campus_id}
+                        onClick={() => setCenter(ct)}
+                        className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg border transition-colors text-left ${
+                          isSelectedCenter
+                            ? "border-primary bg-primary/5"
+                            : "border-border hover:bg-muted/50"
+                        }`}
+                      >
+                        <Building2
+                          className={`h-4 w-4 shrink-0 ${
+                            isSelectedCenter ? "text-primary" : "text-muted-foreground"
+                          }`}
+                        />
+                        <span
+                          className={`text-sm flex-1 ${
+                            isSelectedCenter ? "text-primary font-medium" : ""
                           }`}
                         >
-                          <Building2
-                            className={`h-4 w-4 shrink-0 ${
-                              isSelectedCenter
-                                ? "text-primary"
-                                : "text-muted-foreground"
-                            }`}
-                          />
-                          <span
-                            className={`text-sm flex-1 ${
-                              isSelectedCenter ? "text-primary font-medium" : ""
-                            }`}
-                          >
-                            {ct.name}
-                          </span>
-                          {isSelectedCenter && (
-                            <Check className="h-4 w-4 text-primary shrink-0" />
-                          )}
-                        </button>
-                      );
-                    })}
-                  </div>
-                )}
+                          {ct.name}
+                        </span>
+                        {isSelectedCenter && <Check className="h-4 w-4 text-primary shrink-0" />}
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
             </div>
           );
         })}

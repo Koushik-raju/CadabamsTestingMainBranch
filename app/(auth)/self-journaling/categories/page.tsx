@@ -24,18 +24,15 @@
  */
 "use client";
 
-import { useMemo } from "react";
-import Image from "next/image";
-import { useRouter } from "next/navigation";
-import { BookOpen } from "lucide-react";
-import { Skeleton } from "@/components/ui/skeleton";
 import { PageHeader } from "@/components/shared/navigation/page-header";
-import {
-  useJournalingCategories,
-  type JournalingCategory,
-} from "@/hooks/use-journaling";
+import { Skeleton } from "@/components/ui/skeleton";
+import { type JournalingCategory, useJournalingCategories } from "@/hooks/use-journaling";
 import { getJournalVisual } from "@/lib/journal-visual";
 import { cn } from "@/lib/utils";
+import { BookOpen } from "lucide-react";
+import Image from "next/image";
+import { useRouter } from "next/navigation";
+import { useMemo } from "react";
 
 // ---------------------------------------------------------------------------
 // Grid Card
@@ -124,9 +121,7 @@ export default function AllCategoriesPage() {
             <div className="w-14 h-14 rounded-full bg-muted flex items-center justify-center">
               <BookOpen className="w-7 h-7 text-muted-foreground" />
             </div>
-            <p className="text-sm font-semibold text-foreground">
-              No categories available
-            </p>
+            <p className="text-sm font-semibold text-foreground">No categories available</p>
           </div>
         ) : (
           <div className="grid grid-cols-2 gap-3">
@@ -134,9 +129,7 @@ export default function AllCategoriesPage() {
               <CategoryGridCard
                 key={cat.id}
                 category={cat}
-                onClick={() =>
-                  router.push(`/self-journaling/categories/${cat.id}`)
-                }
+                onClick={() => router.push(`/self-journaling/categories/${cat.id}`)}
               />
             ))}
           </div>

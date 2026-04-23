@@ -17,7 +17,7 @@
  *
  * LAST UPDATED: 2026-04-17 — Refactored to thin wrapper; logic lives in JournalWriter.
  */
-import { JournalWriter } from '@/components/journal/journal-writer';
+import { JournalWriter } from "@/components/journal/journal-writer";
 
 export default function FreeFlowJournalPage() {
   return <JournalWriter />;

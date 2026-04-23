@@ -22,20 +22,20 @@
  *
  * LAST UPDATED: 2026-04-23 — migrated sticky header to PageHeader; added file header
  */
-'use client';
+"use client";
 
-import { useState, useMemo } from 'react';
-import { useRouter } from 'next/navigation';
-import Image from 'next/image';
-import { Search, Play, RefreshCw } from 'lucide-react';
-import { PageHeader } from '@/components/shared/navigation/page-header';
-import { CategoryFilter } from '@/components/wellness/category-filter';
-import { Skeleton } from '@/components/ui/skeleton';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { useVideos } from '@/hooks/wellness/use-videos';
-import { getStrapiImageUrl } from '@/lib/strapi-fetcher';
-import type { VideoItem } from '@/hooks/wellness/use-videos';
+import { PageHeader } from "@/components/shared/navigation/page-header";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Skeleton } from "@/components/ui/skeleton";
+import { CategoryFilter } from "@/components/wellness/category-filter";
+import { useVideos } from "@/hooks/wellness/use-videos";
+import type { VideoItem } from "@/hooks/wellness/use-videos";
+import { getStrapiImageUrl } from "@/lib/strapi-fetcher";
+import { Play, RefreshCw, Search } from "lucide-react";
+import Image from "next/image";
+import { useRouter } from "next/navigation";
+import { useMemo, useState } from "react";
 
 // ─── Video card ───────────────────────────────────────────────────────────────
 function VideoCard({
@@ -48,19 +48,18 @@ function VideoCard({
   featured?: boolean;
 }) {
   const imgUrl =
-    getStrapiImageUrl(
-      video.coverImage?.webImage?.url ?? video.coverImage?.mobileImage?.url
-    ) ?? null;
+    getStrapiImageUrl(video.coverImage?.webImage?.url ?? video.coverImage?.mobileImage?.url) ??
+    null;
 
   if (featured) {
     return (
       <div
         onClick={onClick}
         className="relative w-full rounded-2xl overflow-hidden cursor-pointer group shadow-lg"
-        style={{ aspectRatio: '16/9' }}
+        style={{ aspectRatio: "16/9" }}
         role="button"
         tabIndex={0}
-        onKeyDown={(e) => e.key === 'Enter' && onClick()}
+        onKeyDown={(e) => e.key === "Enter" && onClick()}
         aria-label={`Play: ${video.title}`}
       >
         {imgUrl ? (
@@ -104,10 +103,10 @@ function VideoCard({
       className="bg-card border border-border rounded-xl overflow-hidden cursor-pointer group hover:border-primary/40 transition-all duration-200 shadow-sm hover:shadow-md"
       role="button"
       tabIndex={0}
-      onKeyDown={(e) => e.key === 'Enter' && onClick()}
+      onKeyDown={(e) => e.key === "Enter" && onClick()}
       aria-label={`Play: ${video.title}`}
     >
-      <div className="relative overflow-hidden bg-muted" style={{ aspectRatio: '16/9' }}>
+      <div className="relative overflow-hidden bg-muted" style={{ aspectRatio: "16/9" }}>
         {imgUrl ? (
           <Image
             src={imgUrl}
@@ -150,21 +149,17 @@ function VideoCard({
 export default function VideoPage() {
   const router = useRouter();
   const { videos, categories, isLoading, error, mutate } = useVideos();
-  const [selectedCategory, setSelectedCategory] = useState('All');
-  const [searchQuery, setSearchQuery] = useState('');
+  const [selectedCategory, setSelectedCategory] = useState("All");
+  const [searchQuery, setSearchQuery] = useState("");
 
-  const isFiltered = selectedCategory !== 'All' || !!searchQuery;
+  const isFiltered = selectedCategory !== "All" || !!searchQuery;
 
   const filteredVideos = useMemo(() => {
     return videos.filter((v) => {
       const matchCat =
-        selectedCategory === 'All' ||
-        (v.category ?? []).some(
-          (c) => c.toLowerCase() === selectedCategory.toLowerCase()
-        );
-      const matchSearch =
-        !searchQuery ||
-        v.title.toLowerCase().includes(searchQuery.toLowerCase());
+        selectedCategory === "All" ||
+        (v.category ?? []).some((c) => c.toLowerCase() === selectedCategory.toLowerCase());
+      const matchSearch = !searchQuery || v.title.toLowerCase().includes(searchQuery.toLowerCase());
       return matchCat && matchSearch;
     });
   }, [videos, selectedCategory, searchQuery]);
@@ -192,8 +187,14 @@ export default function VideoPage() {
   return (
     <div className="min-h-screen bg-background flex flex-col">
       <PageHeader
-        title={selectedCategory !== 'All' ? selectedCategory : 'Videos'}
-        subtitle={isLoading ? 'Loading…' : isFiltered ? `${filteredVideos.length} videos` : `${videos.length} videos available`}
+        title={selectedCategory !== "All" ? selectedCategory : "Videos"}
+        subtitle={
+          isLoading
+            ? "Loading…"
+            : isFiltered
+              ? `${filteredVideos.length} videos`
+              : `${videos.length} videos available`
+        }
         fallback="/home"
         className="sticky top-0 z-10 bg-background border-b border-border px-4 py-3"
         right={
@@ -233,20 +234,25 @@ export default function VideoPage() {
         {/* Category filter from API */}
         {!isLoading && categories.length > 0 && (
           <CategoryFilter
-            categories={['All', ...categories]}
+            categories={["All", ...categories]}
             selected={selectedCategory}
-            onSelect={(cat) => { setSelectedCategory(cat); setSearchQuery(''); }}
+            onSelect={(cat) => {
+              setSelectedCategory(cat);
+              setSearchQuery("");
+            }}
           />
         )}
 
         {isLoading ? (
           <div className="space-y-5">
-            <Skeleton className="w-full rounded-2xl" style={{ aspectRatio: '16/9' }} />
+            <Skeleton className="w-full rounded-2xl" style={{ aspectRatio: "16/9" }} />
             <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
               {[1, 2, 3, 4].map((i) => (
                 <div key={i} className="rounded-xl overflow-hidden border border-border">
-                  <Skeleton className="w-full" style={{ aspectRatio: '16/9' }} />
-                  <div className="p-3"><Skeleton className="h-4 w-3/4" /></div>
+                  <Skeleton className="w-full" style={{ aspectRatio: "16/9" }} />
+                  <div className="p-3">
+                    <Skeleton className="h-4 w-3/4" />
+                  </div>
                 </div>
               ))}
             </div>
@@ -255,11 +261,16 @@ export default function VideoPage() {
           <div className="flex flex-col items-center justify-center py-20 gap-3 text-center">
             <span className="text-4xl">🎬</span>
             <p className="text-muted-foreground">
-              {searchQuery ? `No videos matching "${searchQuery}"` : `No videos in "${selectedCategory}"`}
+              {searchQuery
+                ? `No videos matching "${searchQuery}"`
+                : `No videos in "${selectedCategory}"`}
             </p>
             <Button
               variant="ghost"
-              onClick={() => { setSearchQuery(''); setSelectedCategory('All'); }}
+              onClick={() => {
+                setSearchQuery("");
+                setSelectedCategory("All");
+              }}
               className="text-primary"
             >
               Clear filters
@@ -272,21 +283,31 @@ export default function VideoPage() {
                 {!isFiltered && (
                   <div className="flex items-center justify-between">
                     <h3 className="font-bold text-foreground text-[17px]">Featured</h3>
-                    <span className="text-[13px] text-muted-foreground">{filteredVideos.length} videos</span>
+                    <span className="text-[13px] text-muted-foreground">
+                      {filteredVideos.length} videos
+                    </span>
                   </div>
                 )}
-                <VideoCard video={featuredVideo} onClick={() => navigateTo(featuredVideo)} featured />
+                <VideoCard
+                  video={featuredVideo}
+                  onClick={() => navigateTo(featuredVideo)}
+                  featured
+                />
               </div>
             )}
 
             {listVideos.length > 0 && (
               <div className="space-y-3">
                 <h3 className="font-bold text-foreground text-[17px]">
-                  {selectedCategory === 'All' ? 'All Videos' : selectedCategory}
+                  {selectedCategory === "All" ? "All Videos" : selectedCategory}
                 </h3>
                 <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
                   {listVideos.map((video, i) => (
-                    <VideoCard key={video.id ?? i} video={video} onClick={() => navigateTo(video)} />
+                    <VideoCard
+                      key={video.id ?? i}
+                      video={video}
+                      onClick={() => navigateTo(video)}
+                    />
                   ))}
                 </div>
               </div>

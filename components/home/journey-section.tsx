@@ -23,12 +23,12 @@
  * LAST UPDATED: 2026-04-22 — replace placeholder with real enrolled journey data
  */
 
-import Link from 'next/link';
-import { Flame, Route } from 'lucide-react';
-import { Card, CardContent } from '@/components/ui/card';
-import { Skeleton } from '@/components/ui/skeleton';
-import { Separator } from '@/components/ui/separator';
-import { cn } from '@/lib/utils';
+import { Card, CardContent } from "@/components/ui/card";
+import { Separator } from "@/components/ui/separator";
+import { Skeleton } from "@/components/ui/skeleton";
+import { cn } from "@/lib/utils";
+import { Flame, Route } from "lucide-react";
+import Link from "next/link";
 
 export interface HomeEnrollment {
   enrollmentId: string;
@@ -94,10 +94,7 @@ export function JourneySection({ enrollments = [], streak, isLoading = false }: 
                 Start a journey to track your progress here.
               </p>
             </div>
-            <Link
-              href="/journeys"
-              className="text-sm font-semibold text-primary"
-            >
+            <Link href="/journeys" className="text-sm font-semibold text-primary">
               Explore Journeys →
             </Link>
           </CardContent>
@@ -118,9 +115,9 @@ export function JourneySection({ enrollments = [], streak, isLoading = false }: 
                   >
                     <div
                       className={cn(
-                        'relative w-11 h-11 rounded-2xl bg-gradient-to-br flex-shrink-0',
-                        'flex items-center justify-center overflow-hidden shadow-sm',
-                        'from-violet-500 to-purple-600'
+                        "relative w-11 h-11 rounded-2xl bg-gradient-to-br flex-shrink-0",
+                        "flex items-center justify-center overflow-hidden shadow-sm",
+                        "from-violet-500 to-purple-600",
                       )}
                     >
                       <div className="absolute -top-2 -right-2 w-7 h-7 rounded-full bg-white/10" />

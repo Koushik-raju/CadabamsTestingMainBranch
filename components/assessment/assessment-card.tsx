@@ -1,10 +1,10 @@
-'use client';
+"use client";
 
-import Link from 'next/link';
-import { Card, CardContent } from '@/components/ui/card';
-import { ChevronRight, Clock3, CalendarClock, HelpCircle, FileText } from 'lucide-react';
-import type { AssessmentItem } from '@/hooks/use-assessments';
-import { getCategoryInfo } from './assessment-category';
+import { Card, CardContent } from "@/components/ui/card";
+import type { AssessmentItem } from "@/hooks/use-assessments";
+import { CalendarClock, ChevronRight, Clock3, FileText, HelpCircle } from "lucide-react";
+import Link from "next/link";
+import { getCategoryInfo } from "./assessment-category";
 
 interface AssessmentCardProps {
   assessment: AssessmentItem;
@@ -13,11 +13,11 @@ interface AssessmentCardProps {
 
 function extractHintCategory(hint: string | null): string | null {
   if (!hint) return null;
-  const splittedHint = hint.split('|');
+  const splittedHint = hint.split("|");
   if (splittedHint.length < 2) return null;
   const last = splittedHint.at(-1)?.trim();
   if (!last) return null;
-  return last.split(',')[0]?.trim() || null;
+  return last.split(",")[0]?.trim() || null;
 }
 
 // Plain row — used in search results list
@@ -33,9 +33,11 @@ export function AssessmentCard({ assessment, onClick }: AssessmentCardProps) {
       role="button"
       tabIndex={0}
       aria-label={assessment.title}
-      onKeyDown={(e) => e.key === 'Enter' && onClick(assessment)}
+      onKeyDown={(e) => e.key === "Enter" && onClick(assessment)}
     >
-      <div className={`w-12 h-12 ${bgColor} rounded-2xl flex items-center justify-center flex-shrink-0`}>
+      <div
+        className={`w-12 h-12 ${bgColor} rounded-2xl flex items-center justify-center flex-shrink-0`}
+      >
         <Icon className={`w-6 h-6 ${textColor}`} />
       </div>
       <div className="flex-1 min-w-0">
@@ -43,7 +45,7 @@ export function AssessmentCard({ assessment, onClick }: AssessmentCardProps) {
           {assessment.title}
         </p>
         <p className="text-xs text-muted-foreground mt-0.5">
-          {[hintCategory, minutes ? `${minutes} min` : null].filter(Boolean).join(' · ')}
+          {[hintCategory, minutes ? `${minutes} min` : null].filter(Boolean).join(" · ")}
         </p>
       </div>
       <ChevronRight className="w-4 h-4 text-muted-foreground flex-shrink-0" />
@@ -66,22 +68,24 @@ export function AssessmentGridCard({ assessment, onClick }: AssessmentCardProps)
       role="button"
       tabIndex={0}
       aria-label={assessment.title}
-      onKeyDown={(e) => e.key === 'Enter' && onClick(assessment)}
+      onKeyDown={(e) => e.key === "Enter" && onClick(assessment)}
     >
       {/* White muting overlay — softens the pastel bg */}
       <div className="absolute inset-0 bg-white/40 rounded-2xl pointer-events-none" />
 
       {/* Header row: icon + title + chevron */}
       <div className="flex items-start gap-3 relative z-10">
-        <div className={`w-12 h-12 bg-white/60 backdrop-blur-sm rounded-xl flex items-center justify-center flex-shrink-0 shadow-sm`}>
+        <div
+          className={`w-12 h-12 bg-white/60 backdrop-blur-sm rounded-xl flex items-center justify-center flex-shrink-0 shadow-sm`}
+        >
           <Icon className={`w-6 h-6 ${textColor}`} />
         </div>
         <div className="flex-1 min-w-0 pt-0.5">
-          <p className="text-sm font-bold text-foreground leading-snug">
-            {assessment.title}
-          </p>
+          <p className="text-sm font-bold text-foreground leading-snug">{assessment.title}</p>
           {hintCategory && (
-            <span className={`inline-block text-[10px] font-medium ${textColor} bg-white/50 px-2 py-0.5 rounded-full mt-1`}>
+            <span
+              className={`inline-block text-[10px] font-medium ${textColor} bg-white/50 px-2 py-0.5 rounded-full mt-1`}
+            >
               {hintCategory}
             </span>
           )}
@@ -130,10 +134,7 @@ interface RecommendedAssessmentCardProps {
   onClick: (assessment: AssessmentItem) => void;
 }
 
-export function RecommendedAssessmentCard({
-  assessment,
-  onClick,
-}: RecommendedAssessmentCardProps) {
+export function RecommendedAssessmentCard({ assessment, onClick }: RecommendedAssessmentCardProps) {
   const { icon: Icon, textColor } = getCategoryInfo(assessment);
   const hintCategory = extractHintCategory(assessment.hint);
   const minutes = assessment.landingTitle?.minutes;

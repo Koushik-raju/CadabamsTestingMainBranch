@@ -1,25 +1,25 @@
-import type { Metadata, Viewport } from 'next';
-import { Inter, Urbanist } from 'next/font/google';
-import Script from 'next/script';
-import { AppProviders } from '@/providers/app-providers';
-import { CapacitorInit } from '@/components/common/capacitor-init';
-import { siteConfig } from '@/config/site';
-import './globals.css';
+import { CapacitorInit } from "@/components/common/capacitor-init";
+import { siteConfig } from "@/config/site";
+import { AppProviders } from "@/providers/app-providers";
+import type { Metadata, Viewport } from "next";
+import { Inter, Urbanist } from "next/font/google";
+import Script from "next/script";
+import "./globals.css";
 
-const inter = Inter({ variable: '--font-sans', subsets: ['latin'] });
-const urbanist = Urbanist({ variable: '--font-urbanist', subsets: ['latin'] });
+const inter = Inter({ variable: "--font-sans", subsets: ["latin"] });
+const urbanist = Urbanist({ variable: "--font-urbanist", subsets: ["latin"] });
 
 export const metadata: Metadata = {
   title: siteConfig.name,
   description: siteConfig.description,
-  manifest: '/manifest.json',
+  manifest: "/manifest.json",
 };
 
 export const viewport: Viewport = {
-  width: 'device-width',
+  width: "device-width",
   initialScale: 1,
-  viewportFit: 'cover',
-  interactiveWidget: 'resizes-content',
+  viewportFit: "cover",
+  interactiveWidget: "resizes-content",
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
@@ -36,12 +36,16 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <noscript>
           <iframe
             src={`https://www.googletagmanager.com/ns.html?id=${siteConfig.gtmId}`}
-            height="0" width="0"
-            style={{ display: 'none', visibility: 'hidden' }}
+            height="0"
+            width="0"
+            style={{ display: "none", visibility: "hidden" }}
           />
         </noscript>
         {/* Google Analytics */}
-        <Script src={`https://www.googletagmanager.com/gtag/js?id=${siteConfig.gaId}`} strategy="afterInteractive" />
+        <Script
+          src={`https://www.googletagmanager.com/gtag/js?id=${siteConfig.gaId}`}
+          strategy="afterInteractive"
+        />
         <Script id="google-analytics" strategy="afterInteractive">{`
           window.dataLayer=window.dataLayer||[];
           function gtag(){dataLayer.push(arguments);}

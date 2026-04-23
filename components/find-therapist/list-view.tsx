@@ -1,68 +1,60 @@
-'use client';
+"use client";
 
-import { useState, useMemo } from 'react';
-import { Search, ChevronDown, ArrowRight } from 'lucide-react';
-import { BackButton } from '@/components/shared/navigation/back-button';
-import { Input } from '@/components/ui/input';
-import { DoctorCard } from '@/components/find-therapist/doctor-card';
-import { DOCTORS } from '@/data/doctors';
-import { useFindTherapist, PROFESSION_OPTIONS } from './context';
+import { DoctorCard } from "@/components/find-therapist/doctor-card";
+import { BackButton } from "@/components/shared/navigation/back-button";
+import { Input } from "@/components/ui/input";
+import { DOCTORS } from "@/data/doctors";
+import { ArrowRight, ChevronDown, Search } from "lucide-react";
+import { useMemo, useState } from "react";
+import { PROFESSION_OPTIONS, useFindTherapist } from "./context";
 import {
   DoctorTypeSheet,
-  ModeSheet,
-  LangSheet,
   ExperiencingSheet,
+  LangSheet,
   LocationSheet,
-} from './filter-sheets';
+  ModeSheet,
+} from "./filter-sheets";
 
 export function ListView() {
-  const {
-    profession,
-    mode,
-    languages,
-    issues,
-    city,
-    handleBook,
-    startWizard,
-  } = useFindTherapist();
+  const { profession, mode, languages, issues, city, handleBook, startWizard } = useFindTherapist();
 
-  const [search,           setSearch]           = useState('');
-  const [showSearch,       setShowSearch]       = useState(false);
-  const [showDocType,      setShowDocType]      = useState(false);
-  const [showMode,         setShowMode]         = useState(false);
-  const [showLang,         setShowLang]         = useState(false);
+  const [search, setSearch] = useState("");
+  const [showSearch, setShowSearch] = useState(false);
+  const [showDocType, setShowDocType] = useState(false);
+  const [showMode, setShowMode] = useState(false);
+  const [showLang, setShowLang] = useState(false);
   const [showExperiencing, setShowExperiencing] = useState(false);
-  const [showLocation,     setShowLocation]     = useState(false);
+  const [showLocation, setShowLocation] = useState(false);
 
   // ── Derived chip labels ──────────────────────────────────────────────────────
 
   const docTypeLabel = useMemo(() => {
-    if (profession === null) return 'All';
+    if (profession === null) return "All";
     const match = PROFESSION_OPTIONS.find((o) => o.value === profession);
-    return match ? match.label : 'All';
+    return match ? match.label : "All";
   }, [profession]);
 
   const modeLabel = useMemo(() => {
-    if (mode === null) return 'Any mode';
-    if (mode === 'online') return 'Online';
-    if (mode === 'in-person') return 'In-person';
-    return 'Any mode';
+    if (mode === null) return "Any mode";
+    if (mode === "online") return "Online";
+    if (mode === "in-person") return "In-person";
+    return "Any mode";
   }, [mode]);
 
   const langLabel = useMemo(() => {
-    if (languages.length === 0) return 'Language';
+    if (languages.length === 0) return "Language";
     if (languages.length === 1) return languages[0].name;
     return `Language (${languages.length})`;
   }, [languages]);
 
   const experiencingLabel = useMemo(() => {
-    if (issues.length === 0) return 'Experiencing';
+    if (issues.length === 0) return "Experiencing";
     if (issues.length === 1) return issues[0].name;
     return `Experiencing (${issues.length})`;
   }, [issues]);
 
   const locationLabel = useMemo(() => {
-    if (!city) return 'Location';
+    if (!city) return "Location";
     return city.name;
   }, [city]);
 
@@ -72,14 +64,15 @@ export function ListView() {
     let results = [...DOCTORS];
 
     // profession: 1=psychiatrist, 2=psychologist, 'other'=not 1 or 2, 'not_sure'=no filter
-    if (profession !== null && profession !== 'not_sure') {
-      if (profession === 'other') {
+    if (profession !== null && profession !== "not_sure") {
+      if (profession === "other") {
         results = results.filter(
-          (d) => Array.isArray(d.speciality_id) && d.speciality_id[0] !== 1 && d.speciality_id[0] !== 2
+          (d) =>
+            Array.isArray(d.speciality_id) && d.speciality_id[0] !== 1 && d.speciality_id[0] !== 2,
         );
       } else {
         results = results.filter(
-          (d) => Array.isArray(d.speciality_id) && d.speciality_id[0] === profession
+          (d) => Array.isArray(d.speciality_id) && d.speciality_id[0] === profession,
         );
       }
     }
@@ -87,14 +80,18 @@ export function ListView() {
     // issues: illness_treated = [name, id] — match by id (index 1)
     if (issues.length > 0) {
       const ids = new Set(issues.map((i) => i.id));
-      results = results.filter((d) => d.illness_treated?.some(([, id]: [unknown, unknown]) => ids.has(id as number)));
+      results = results.filter((d) =>
+        d.illness_treated?.some(([, id]: [unknown, unknown]) => ids.has(id as number)),
+      );
     }
 
     // languages: language_preference = [name, id] — match by name
     if (languages.length > 0) {
       const names = new Set(languages.map((l) => l.name.toLowerCase()));
       results = results.filter((d) =>
-        d.language_preference?.some(([name]: [unknown, ...unknown[]]) => names.has((name as string).toLowerCase()))
+        d.language_preference?.some(([name]: [unknown, ...unknown[]]) =>
+          names.has((name as string).toLowerCase()),
+        ),
       );
     }
 
@@ -102,7 +99,7 @@ export function ListView() {
     if (city) {
       results = results.filter((d) =>
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        (d as any).city?.some(([name]: [string]) => name.toLowerCase().includes(city.keyword))
+        (d as any).city?.some(([name]: [string]) => name.toLowerCase().includes(city.keyword)),
       );
     }
 
@@ -119,11 +116,11 @@ export function ListView() {
 
   function chipClass(active: boolean) {
     return [
-      'flex items-center gap-1 px-3 py-2 rounded-full border text-sm font-medium whitespace-nowrap shrink-0 cursor-pointer transition-colors',
+      "flex items-center gap-1 px-3 py-2 rounded-full border text-sm font-medium whitespace-nowrap shrink-0 cursor-pointer transition-colors",
       active
-        ? 'border-primary bg-primary/10 text-primary'
-        : 'border-border bg-card text-foreground',
-    ].join(' ');
+        ? "border-primary bg-primary/10 text-primary"
+        : "border-border bg-card text-foreground",
+    ].join(" ");
   }
 
   // ── Render ───────────────────────────────────────────────────────────────────
@@ -134,9 +131,7 @@ export function ListView() {
       <div className="px-5 pt-6 pb-3 flex items-center justify-between">
         <div className="flex items-center gap-2">
           <BackButton fallback="/home" />
-          <h1 className="text-2xl font-bold text-foreground leading-tight">
-            Find your therapist
-          </h1>
+          <h1 className="text-2xl font-bold text-foreground leading-tight">Find your therapist</h1>
         </div>
         <button
           onClick={() => setShowSearch((v) => !v)}
@@ -213,7 +208,7 @@ export function ListView() {
 
         {/* Count heading */}
         <p className="text-sm font-medium text-muted-foreground">
-          {filtered.length} specialist{filtered.length !== 1 ? 's' : ''} available
+          {filtered.length} specialist{filtered.length !== 1 ? "s" : ""} available
         </p>
 
         {/* Doctor list */}
@@ -230,11 +225,11 @@ export function ListView() {
       </div>
 
       {/* Filter sheets */}
-      {showDocType     && <DoctorTypeSheet    onClose={() => setShowDocType(false)} />}
-      {showMode        && <ModeSheet          onClose={() => setShowMode(false)} />}
-      {showLang        && <LangSheet          onClose={() => setShowLang(false)} />}
+      {showDocType && <DoctorTypeSheet onClose={() => setShowDocType(false)} />}
+      {showMode && <ModeSheet onClose={() => setShowMode(false)} />}
+      {showLang && <LangSheet onClose={() => setShowLang(false)} />}
       {showExperiencing && <ExperiencingSheet onClose={() => setShowExperiencing(false)} />}
-      {showLocation    && <LocationSheet      onClose={() => setShowLocation(false)} />}
+      {showLocation && <LocationSheet onClose={() => setShowLocation(false)} />}
     </div>
   );
 }

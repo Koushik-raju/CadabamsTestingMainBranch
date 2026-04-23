@@ -1,7 +1,7 @@
-import { History } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { BackButton } from "@/components/shared/navigation/back-button";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { History } from "lucide-react";
 
 interface ChatHeaderProps {
   onHistoryClick: () => void;

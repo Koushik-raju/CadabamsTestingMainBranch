@@ -1,4 +1,4 @@
-'use client';
+"use client";
 
 interface StressEntry {
   stressLevel: number;
@@ -11,19 +11,19 @@ interface MoodChartProps {
 }
 
 const LEVEL_LABELS: Record<number, string> = {
-  1: 'Very Low',
-  2: 'Low',
-  3: 'Moderate',
-  4: 'High',
-  5: 'Very High',
+  1: "Very Low",
+  2: "Low",
+  3: "Moderate",
+  4: "High",
+  5: "Very High",
 };
 
 const LEVEL_COLORS: Record<number, string> = {
-  1: 'bg-green-400',
-  2: 'bg-lime-400',
-  3: 'bg-yellow-400',
-  4: 'bg-orange-400',
-  5: 'bg-red-500',
+  1: "bg-green-400",
+  2: "bg-lime-400",
+  3: "bg-yellow-400",
+  4: "bg-orange-400",
+  5: "bg-red-500",
 };
 
 export function MoodChart({ entries }: MoodChartProps) {
@@ -40,7 +40,7 @@ export function MoodChart({ entries }: MoodChartProps) {
 
   const formatDate = (iso: string) => {
     const d = new Date(iso);
-    return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+    return d.toLocaleDateString("en-US", { month: "short", day: "numeric" });
   };
 
   return (
@@ -49,10 +49,10 @@ export function MoodChart({ entries }: MoodChartProps) {
       <div className="flex items-end gap-2 h-32">
         {recent.map((entry, i) => {
           const heightPct = (entry.stressLevel / maxLevel) * 100;
-          const colorClass = LEVEL_COLORS[entry.stressLevel] ?? 'bg-muted';
+          const colorClass = LEVEL_COLORS[entry.stressLevel] ?? "bg-muted";
           return (
             <div key={i} className="flex flex-col items-center flex-1 gap-1">
-              <div className="w-full flex items-end justify-center" style={{ height: '96px' }}>
+              <div className="w-full flex items-end justify-center" style={{ height: "96px" }}>
                 <div
                   className={`w-full rounded-t-md ${colorClass} transition-all duration-500`}
                   style={{ height: `${heightPct}%` }}

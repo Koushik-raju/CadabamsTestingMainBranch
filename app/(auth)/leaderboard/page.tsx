@@ -1,14 +1,17 @@
-'use client';
+"use client";
 
-import { Trophy, TrendingUp, Zap, Star } from 'lucide-react';
+import { Star, TrendingUp, Trophy, Zap } from "lucide-react";
 
-import { BackButton } from '@/components/shared/navigation/back-button';
-import { Card, CardContent } from '@/components/ui/card';
-import { Skeleton } from '@/components/ui/skeleton';
-import { Podium } from '@/components/leaderboard/podium';
-import { LeaderboardEntry, type LeaderboardEntryData } from '@/components/leaderboard/leaderboard-entry';
-import { useLeaderboard } from '@/hooks/leaderboard/use-leaderboard';
-import { useAuth } from '@/hooks/use-auth';
+import {
+  LeaderboardEntry,
+  type LeaderboardEntryData,
+} from "@/components/leaderboard/leaderboard-entry";
+import { Podium } from "@/components/leaderboard/podium";
+import { BackButton } from "@/components/shared/navigation/back-button";
+import { Card, CardContent } from "@/components/ui/card";
+import { Skeleton } from "@/components/ui/skeleton";
+import { useLeaderboard } from "@/hooks/leaderboard/use-leaderboard";
+import { useAuth } from "@/hooks/use-auth";
 
 // Shape returned by the backend
 interface RawLeaderboardEntry {
@@ -21,10 +24,14 @@ interface RawLeaderboardEntry {
   profile_image?: string;
 }
 
-function normalize(raw: RawLeaderboardEntry, idx: number, currentMobile?: string): LeaderboardEntryData {
+function normalize(
+  raw: RawLeaderboardEntry,
+  idx: number,
+  currentMobile?: string,
+): LeaderboardEntryData {
   const score = raw.score ?? raw.total_score ?? 0;
-  const mobile = raw.mobile ?? '';
-  const cleanCurrent = currentMobile ? currentMobile.replace(/\D/g, '') : '';
+  const mobile = raw.mobile ?? "";
+  const cleanCurrent = currentMobile ? currentMobile.replace(/\D/g, "") : "";
   return {
     rank: idx + 1,
     name: raw.name ?? `User ${idx + 1}`,
@@ -32,7 +39,7 @@ function normalize(raw: RawLeaderboardEntry, idx: number, currentMobile?: string
     score,
     level: raw.level,
     profileImage: raw.profileImage ?? raw.profile_image,
-    isCurrentUser: Boolean(cleanCurrent && mobile.replace(/\D/g, '') === cleanCurrent),
+    isCurrentUser: Boolean(cleanCurrent && mobile.replace(/\D/g, "") === cleanCurrent),
   };
 }
 
@@ -47,7 +54,9 @@ function ScoreCard({
 }) {
   return (
     <div className="bg-white/20 rounded-lg p-3 text-center backdrop-blur-sm">
-      <div className="flex justify-center mb-1" aria-hidden="true">{icon}</div>
+      <div className="flex justify-center mb-1" aria-hidden="true">
+        {icon}
+      </div>
       <p className="text-2xl font-black text-white">{value}</p>
       <p className="text-xs text-white/70 font-medium">{label}</p>
     </div>
@@ -59,7 +68,8 @@ export default function LeaderboardPage() {
 
   const { data, isLoading, error } = useLeaderboard();
 
-  const currentMobile = (user as { caller_mobile?: string } | null)?.caller_mobile ?? user?.phone_number ?? '';
+  const currentMobile =
+    (user as { caller_mobile?: string } | null)?.caller_mobile ?? user?.phone_number ?? "";
 
   const entries: LeaderboardEntryData[] = Array.isArray(data)
     ? (data as RawLeaderboardEntry[]).map((item, i) => normalize(item, i, currentMobile))
@@ -74,10 +84,7 @@ export default function LeaderboardPage() {
       {/* Header */}
       <header className="bg-primary pb-4 px-4 rounded-b-[2.5rem] shadow-md">
         <div className="flex items-center gap-3 pt-4 pb-2">
-          <BackButton
-            fallback="/"
-            className="text-white hover:bg-white/20"
-          />
+          <BackButton fallback="/" className="text-white hover:bg-white/20" />
           <div>
             <h1 className="text-white text-lg font-bold">Leaderboard</h1>
             <p className="text-white/70 text-xs">See how you rank</p>
@@ -95,7 +102,7 @@ export default function LeaderboardPage() {
               <ScoreCard
                 icon={<Zap className="w-4 h-4 text-white/80" />}
                 label="Level"
-                value={currentEntry.level ?? '—'}
+                value={currentEntry.level ?? "—"}
               />
               <ScoreCard
                 icon={<TrendingUp className="w-4 h-4 text-white/80" />}
@@ -150,9 +157,7 @@ export default function LeaderboardPage() {
             {/* Ranked list for rank 4+ */}
             {rest.length > 0 && (
               <section aria-label="Rankings">
-                <h2 className="text-sm font-semibold text-muted-foreground mb-2 px-1">
-                  Rankings
-                </h2>
+                <h2 className="text-sm font-semibold text-muted-foreground mb-2 px-1">Rankings</h2>
                 <div className="space-y-2" role="list">
                   {rest.map((entry) => (
                     <LeaderboardEntry key={entry.rank} entry={entry} />

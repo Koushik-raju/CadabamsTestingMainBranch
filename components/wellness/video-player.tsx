@@ -1,17 +1,9 @@
-'use client';
+"use client";
 
-import { useRef, useState, useCallback, useEffect } from 'react';
-import {
-  Play,
-  Pause,
-  Volume2,
-  VolumeX,
-  Maximize2,
-  RotateCcw,
-  RotateCw,
-} from 'lucide-react';
-import { Slider } from '@/components/ui/slider';
-import { cn } from '@/lib/utils';
+import { Slider } from "@/components/ui/slider";
+import { cn } from "@/lib/utils";
+import { Maximize2, Pause, Play, RotateCcw, RotateCw, Volume2, VolumeX } from "lucide-react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 interface VideoPlayerProps {
   src: string;
@@ -21,14 +13,14 @@ interface VideoPlayerProps {
 }
 
 function formatTime(seconds: number): string {
-  if (!isFinite(seconds) || isNaN(seconds)) return '0:00';
+  if (!isFinite(seconds) || isNaN(seconds)) return "0:00";
   const m = Math.floor(seconds / 60);
   const s = Math.floor(seconds % 60);
-  return `${m}:${s.toString().padStart(2, '0')}`;
+  return `${m}:${s.toString().padStart(2, "0")}`;
 }
 
 function isYouTube(src: string): boolean {
-  return src.includes('youtube.com') || src.includes('youtu.be');
+  return src.includes("youtube.com") || src.includes("youtu.be");
 }
 
 function getYouTubeEmbedUrl(src: string): string {
@@ -56,10 +48,10 @@ export function VideoPlayer({ src, title, poster, className }: VideoPlayerProps)
   // YouTube embed — no custom controls needed
   if (isYouTube(src)) {
     return (
-      <div className={cn('rounded-2xl overflow-hidden bg-black aspect-video w-full', className)}>
+      <div className={cn("rounded-2xl overflow-hidden bg-black aspect-video w-full", className)}>
         <iframe
           src={getYouTubeEmbedUrl(src)}
-          title={title ?? 'Video player'}
+          title={title ?? "Video player"}
           allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
           allowFullScreen
           className="w-full h-full border-0"
@@ -90,7 +82,13 @@ export function VideoPlayer({ src, title, poster, className }: VideoPlayerProps)
       setIsPlaying(false);
       setShowControls(true);
     } else {
-      v.play().then(() => { setIsPlaying(true); setHasStarted(true); resetHideTimer(); }).catch(() => {});
+      v.play()
+        .then(() => {
+          setIsPlaying(true);
+          setHasStarted(true);
+          resetHideTimer();
+        })
+        .catch(() => {});
     }
   }, [isPlaying, resetHideTimer]);
 
@@ -101,26 +99,34 @@ export function VideoPlayer({ src, title, poster, className }: VideoPlayerProps)
     setIsMuted(!isMuted);
   }, [isMuted]);
 
-  const seek = useCallback((value: number[]) => {
-    const v = videoRef.current;
-    if (!v) return;
-    v.currentTime = value[0];
-    setCurrentTime(value[0]);
-    resetHideTimer();
-  }, [resetHideTimer]);
+  const seek = useCallback(
+    (value: number[]) => {
+      const v = videoRef.current;
+      if (!v) return;
+      v.currentTime = value[0];
+      setCurrentTime(value[0]);
+      resetHideTimer();
+    },
+    [resetHideTimer],
+  );
 
-  const skip = useCallback((secs: number) => {
-    const v = videoRef.current;
-    if (!v) return;
-    v.currentTime = Math.min(Math.max(v.currentTime + secs, 0), v.duration || 0);
-    resetHideTimer();
-  }, [resetHideTimer]);
+  const skip = useCallback(
+    (secs: number) => {
+      const v = videoRef.current;
+      if (!v) return;
+      v.currentTime = Math.min(Math.max(v.currentTime + secs, 0), v.duration || 0);
+      resetHideTimer();
+    },
+    [resetHideTimer],
+  );
 
   const requestFullscreen = useCallback(() => {
     const v = videoRef.current;
     if (!v) return;
     if (v.requestFullscreen) v.requestFullscreen();
-    else if ((v as HTMLVideoElement & { webkitEnterFullscreen?: () => void }).webkitEnterFullscreen) {
+    else if (
+      (v as HTMLVideoElement & { webkitEnterFullscreen?: () => void }).webkitEnterFullscreen
+    ) {
       (v as HTMLVideoElement & { webkitEnterFullscreen?: () => void }).webkitEnterFullscreen?.();
     }
   }, []);
@@ -128,7 +134,7 @@ export function VideoPlayer({ src, title, poster, className }: VideoPlayerProps)
   return (
     <div
       ref={containerRef}
-      className={cn('relative bg-black aspect-video w-full group select-none', className)}
+      className={cn("relative bg-black aspect-video w-full group select-none", className)}
       onMouseMove={resetHideTimer}
       onTouchStart={resetHideTimer}
       onClick={togglePlay}
@@ -141,12 +147,18 @@ export function VideoPlayer({ src, title, poster, className }: VideoPlayerProps)
         preload="metadata"
         className="w-full h-full object-contain"
         onTimeUpdate={(e) => setCurrentTime(e.currentTarget.currentTime)}
-        onLoadedMetadata={(e) => { setDuration(e.currentTarget.duration); setIsLoading(false); }}
+        onLoadedMetadata={(e) => {
+          setDuration(e.currentTarget.duration);
+          setIsLoading(false);
+        }}
         onCanPlay={() => setIsLoading(false)}
         onWaiting={() => setIsLoading(true)}
         onPlaying={() => setIsLoading(false)}
-        onEnded={() => { setIsPlaying(false); setShowControls(true); }}
-        aria-label={title ?? 'Video'}
+        onEnded={() => {
+          setIsPlaying(false);
+          setShowControls(true);
+        }}
+        aria-label={title ?? "Video"}
       />
 
       {/* Big play button before start */}
@@ -168,8 +180,8 @@ export function VideoPlayer({ src, title, poster, className }: VideoPlayerProps)
       {/* Controls overlay */}
       <div
         className={cn(
-          'absolute inset-0 flex flex-col justify-end transition-opacity duration-200 pointer-events-none',
-          showControls || !isPlaying ? 'opacity-100' : 'opacity-0'
+          "absolute inset-0 flex flex-col justify-end transition-opacity duration-200 pointer-events-none",
+          showControls || !isPlaying ? "opacity-100" : "opacity-0",
         )}
         onClick={(e) => e.stopPropagation()}
       >
@@ -212,7 +224,7 @@ export function VideoPlayer({ src, title, poster, className }: VideoPlayerProps)
               onClick={togglePlay}
               disabled={isLoading}
               className="text-white hover:text-white p-1.5 rounded-full hover:bg-white/10 transition-colors disabled:opacity-40"
-              aria-label={isPlaying ? 'Pause' : 'Play'}
+              aria-label={isPlaying ? "Pause" : "Play"}
             >
               {isPlaying ? (
                 <Pause className="h-6 w-6 fill-current" />
@@ -235,7 +247,7 @@ export function VideoPlayer({ src, title, poster, className }: VideoPlayerProps)
             <button
               onClick={toggleMute}
               className="text-white/80 hover:text-white p-1.5 rounded-full hover:bg-white/10 transition-colors"
-              aria-label={isMuted ? 'Unmute' : 'Mute'}
+              aria-label={isMuted ? "Unmute" : "Mute"}
             >
               {isMuted ? <VolumeX className="h-4 w-4" /> : <Volume2 className="h-4 w-4" />}
             </button>

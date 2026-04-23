@@ -1,8 +1,8 @@
-'use client';
+"use client";
 
-import useSWR from 'swr';
-import { fetchVideos } from '@/lib/strapi-fetcher';
-import { videosKey } from '@/lib/swr-keys';
+import { fetchVideos } from "@/lib/strapi-fetcher";
+import { videosKey } from "@/lib/swr-keys";
+import useSWR from "swr";
 export interface VideoItem {
   id: number;
   documentId?: string;
@@ -27,11 +27,9 @@ function buildCategories(videos: VideoItem[]): string[] {
 }
 
 export function useVideos() {
-  const { data, error, isLoading, mutate } = useSWR(
-    videosKey(),
-    fetchVideos,
-    { revalidateOnFocus: false }
-  );
+  const { data, error, isLoading, mutate } = useSWR(videosKey(), fetchVideos, {
+    revalidateOnFocus: false,
+  });
 
   return {
     videos: data ?? [],

@@ -1,10 +1,10 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
-import { ChevronDown, Lock } from 'lucide-react';
-import { cn } from '@/lib/utils';
-import type { JourneyStep } from '@/types/journey';
-import { extractJourneyName } from '@/types/journey';
+import { cn } from "@/lib/utils";
+import type { JourneyStep } from "@/types/journey";
+import { extractJourneyName } from "@/types/journey";
+import { ChevronDown, Lock } from "lucide-react";
+import { useState } from "react";
 
 interface SyllabusAccordionProps {
   steps: JourneyStep[];
@@ -24,18 +24,20 @@ export function SyllabusAccordion({ steps, isSubscribed = false }: SyllabusAccor
           const isLocked = !isSubscribed && idx > 0;
           const isOpen = openIndex === idx;
           const taskCount = step.tasks?.length ?? 0;
-          const startDay = idx === 0 ? 1 : steps.slice(0, idx).reduce((acc, s) => acc + (s.tasks?.length ?? 1), 0) + 1;
+          const startDay =
+            idx === 0
+              ? 1
+              : steps.slice(0, idx).reduce((acc, s) => acc + (s.tasks?.length ?? 1), 0) + 1;
           const endDay = startDay + taskCount - 1;
-          const stepTitle = typeof step.title === 'string'
-            ? step.title
-            : extractJourneyName(step.title as never);
+          const stepTitle =
+            typeof step.title === "string" ? step.title : extractJourneyName(step.title as never);
 
           return (
             <div
               key={step.id ?? idx}
               className={cn(
-                'rounded-2xl border border-border overflow-hidden',
-                isLocked ? 'opacity-70' : ''
+                "rounded-2xl border border-border overflow-hidden",
+                isLocked ? "opacity-70" : "",
               )}
             >
               <button
@@ -44,10 +46,14 @@ export function SyllabusAccordion({ steps, isSubscribed = false }: SyllabusAccor
                 disabled={isLocked}
               >
                 {/* Step number circle */}
-                <div className={cn(
-                  'w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0',
-                  idx === 0 ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground'
-                )}>
+                <div
+                  className={cn(
+                    "w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0",
+                    idx === 0
+                      ? "bg-primary text-primary-foreground"
+                      : "bg-muted text-muted-foreground",
+                  )}
+                >
                   {idx + 1}
                 </div>
 
@@ -65,8 +71,8 @@ export function SyllabusAccordion({ steps, isSubscribed = false }: SyllabusAccor
                 ) : (
                   <ChevronDown
                     className={cn(
-                      'w-4 h-4 text-muted-foreground flex-shrink-0 transition-transform duration-200',
-                      isOpen ? 'rotate-180' : ''
+                      "w-4 h-4 text-muted-foreground flex-shrink-0 transition-transform duration-200",
+                      isOpen ? "rotate-180" : "",
                     )}
                   />
                 )}

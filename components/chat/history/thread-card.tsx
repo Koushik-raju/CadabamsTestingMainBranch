@@ -1,7 +1,7 @@
-import { MessageSquare, ChevronRight } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { MastraThread } from "@/lib/chat";
 import { formatDate } from "@/lib/chat";
+import { ChevronRight, MessageSquare } from "lucide-react";
 
 interface ThreadCardProps {
   thread: MastraThread;

@@ -1,3 +1,5 @@
+import { CONFIG } from "@/config/env";
+import { getAccessToken } from "@/lib/cookies";
 /**
  * FILE: lib/mastra-client.ts
  *
@@ -18,9 +20,7 @@
  *
  * LAST UPDATED: 2026-04-17 — import CONFIG from config/env.ts instead of lib/config
  */
-import { MastraClient } from '@mastra/client-js';
-import { getAccessToken } from '@/lib/cookies';
-import { CONFIG } from '@/config/env';
+import { MastraClient } from "@mastra/client-js";
 
 export async function createMastraClient() {
   const token = await getAccessToken();

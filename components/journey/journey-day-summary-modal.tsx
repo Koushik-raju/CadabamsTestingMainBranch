@@ -26,23 +26,15 @@
  *   fetchSummary from recreating on every parent render (was causing request spam);
  *   added mx-4 + w-[calc(100%-2rem)] so the modal has side margins on mobile.
  */
-'use client';
+"use client";
 
-import { useCallback, useEffect, useRef, useState } from 'react';
-import ReactMarkdown from 'react-markdown';
-import remarkGfm from 'remark-gfm';
-import { Sparkles, Loader2 } from 'lucide-react';
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog';
-import { Skeleton } from '@/components/ui/skeleton';
-import {
-  journeysControllerGetDaySummary,
-  type DaySummaryResponseDto,
-} from '@/sdk/backend-v2';
+import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
+import { Skeleton } from "@/components/ui/skeleton";
+import { type DaySummaryResponseDto, journeysControllerGetDaySummary } from "@/sdk/backend-v2";
+import { Loader2, Sparkles } from "lucide-react";
+import { useCallback, useEffect, useRef, useState } from "react";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 
 interface JourneyDaySummaryModalProps {
   open: boolean;
@@ -70,7 +62,9 @@ export function JourneyDaySummaryModal({
   // that passes a new inline function would recreate fetchSummary, causing
   // the useEffect to re-fire and spam the API.
   const onSummaryGeneratedRef = useRef(onSummaryGenerated);
-  useEffect(() => { onSummaryGeneratedRef.current = onSummaryGenerated; });
+  useEffect(() => {
+    onSummaryGeneratedRef.current = onSummaryGenerated;
+  });
 
   const fetchSummary = useCallback(
     async (signal?: { cancelled: boolean }) => {
@@ -108,13 +102,16 @@ export function JourneyDaySummaryModal({
 
   const summaryText = data?.summary ?? null;
   const allTasksDone =
-    !!data &&
-    data.totalTaskCount > 0 &&
-    data.completedTaskCount >= data.totalTaskCount;
+    !!data && data.totalTaskCount > 0 && data.completedTaskCount >= data.totalTaskCount;
   const canForceGenerate = allTasksDone && !summaryText && !isLoading;
 
   return (
-    <Dialog open={open} onOpenChange={(v) => { if (!v) onClose(); }}>
+    <Dialog
+      open={open}
+      onOpenChange={(v) => {
+        if (!v) onClose();
+      }}
+    >
       <DialogContent className="w-[calc(100vw-2rem)] max-w-md p-0 overflow-hidden rounded-2xl">
         {/* Gradient header */}
         <div className="relative bg-gradient-to-br from-violet-500 to-purple-600 px-5 pt-6 pb-5">
@@ -171,9 +168,7 @@ export function JourneyDaySummaryModal({
             </div>
           ) : (
             <div className="prose prose-sm max-w-none text-foreground [&_p]:leading-relaxed [&_ul]:list-disc [&_ul]:pl-5 [&_ol]:list-decimal [&_ol]:pl-5 [&_strong]:text-foreground">
-              <ReactMarkdown remarkPlugins={[remarkGfm]}>
-                {summaryText}
-              </ReactMarkdown>
+              <ReactMarkdown remarkPlugins={[remarkGfm]}>{summaryText}</ReactMarkdown>
             </div>
           )}
         </div>

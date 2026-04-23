@@ -1,11 +1,11 @@
-'use client';
+"use client";
 
-import { useRouter } from 'next/navigation';
-import { Flame, ChevronRight } from 'lucide-react';
-import { Card, CardContent } from '@/components/ui/card';
-import { Progress } from '@/components/ui/progress';
-import { PremiumBadge } from './premium-badge';
-import { cn } from '@/lib/utils';
+import { Card, CardContent } from "@/components/ui/card";
+import { Progress } from "@/components/ui/progress";
+import { cn } from "@/lib/utils";
+import { ChevronRight, Flame } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { PremiumBadge } from "./premium-badge";
 
 export interface ActiveJourney {
   journeyId: string;
@@ -37,8 +37,8 @@ export function JourneyCard({ journey, className }: JourneyCardProps) {
   return (
     <Card
       className={cn(
-        'cursor-pointer hover:shadow-md transition-shadow border border-border',
-        className
+        "cursor-pointer hover:shadow-md transition-shadow border border-border",
+        className,
       )}
       onClick={handleClick}
     >
@@ -47,11 +47,7 @@ export function JourneyCard({ journey, className }: JourneyCardProps) {
           {journey.icon && (
             <div className="relative w-12 h-12 flex-shrink-0 bg-muted rounded-xl overflow-hidden">
               {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                src={journey.icon}
-                alt={journey.name}
-                className="w-full h-full object-cover"
-              />
+              <img src={journey.icon} alt={journey.name} className="w-full h-full object-cover" />
             </div>
           )}
           <div className="flex-1 min-w-0">

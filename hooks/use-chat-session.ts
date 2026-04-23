@@ -44,14 +44,14 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
-import { useState, useCallback, useRef, useEffect } from "react";
-import { useSWRConfig } from "swr";
+import { CONFIG } from "@/config/env";
+import { createMastraClient } from "@/lib/mastra-client";
+import { threadsKey } from "@/lib/swr-keys";
 import { useChat } from "@ai-sdk/react";
 import { DefaultChatTransport } from "ai";
 import type { UIMessage } from "ai";
-import { createMastraClient } from "@/lib/mastra-client";
-import { CONFIG } from "@/config/env";
-import { threadsKey } from "@/lib/swr-keys";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { useSWRConfig } from "swr";
 
 const PER_PAGE = 10;
 
@@ -80,8 +80,7 @@ function parseMessages(raw: any[]): UIMessage[] {
       parts.push({ type: "text", text: msg.content.content });
     }
 
-    const createdAt =
-      msg.createdAt instanceof Date ? msg.createdAt : new Date(msg.createdAt);
+    const createdAt = msg.createdAt instanceof Date ? msg.createdAt : new Date(msg.createdAt);
 
     return { id: msg.id, role: msg.role, parts, createdAt } as UIMessage;
   });

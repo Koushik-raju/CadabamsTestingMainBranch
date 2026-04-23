@@ -28,29 +28,29 @@
  * LAST UPDATED: 2026-04-23 — converted Ask Dr. Riya from button to real input with send
  */
 
-'use client';
+"use client";
 
-import Image from 'next/image';
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
-import { Sparkles, Mic, SendHorizonal, Bell } from 'lucide-react';
-import { Input } from '@/components/ui/input';
-import { useAuth } from '@/hooks/use-auth';
+import { Input } from "@/components/ui/input";
+import { useAuth } from "@/hooks/use-auth";
+import { Bell, Mic, SendHorizonal, Sparkles } from "lucide-react";
+import Image from "next/image";
+import { useRouter } from "next/navigation";
+import { useState } from "react";
 
 interface Props {
   moodTracker?: Array<{ simily?: { id: number } }>;
   onMoodClick?: () => void;
 }
 
-const MOODS = ['😟', '😐', '😊', '😄', '🤩'];
+const MOODS = ["😟", "😐", "😊", "😄", "🤩"];
 
 export function HomeHeader({ moodTracker, onMoodClick }: Props) {
   const router = useRouter();
   const { user } = useAuth();
-  const [inputText, setInputText] = useState('');
+  const [inputText, setInputText] = useState("");
 
-  const name = (user?.name as string | undefined) ?? 'There';
-  const firstName = name.split(' ')[0];
+  const name = (user?.name as string | undefined) ?? "There";
+  const firstName = name.split(" ")[0];
   const profileImage = user?.profile_image as string | undefined;
   const currentMoodId = moodTracker?.[0]?.simily?.id;
 
@@ -59,12 +59,12 @@ export function HomeHeader({ moodTracker, onMoodClick }: Props) {
   const handleSend = () => {
     const trimmed = inputText.trim();
     if (!trimmed) {
-      router.push('/chat/new');
+      router.push("/chat/new");
       return;
     }
     const threadId = crypto.randomUUID();
     router.push(`/chat/thread/${threadId}?q=${encodeURIComponent(trimmed)}`);
-    setInputText('');
+    setInputText("");
   };
 
   return (
@@ -73,17 +73,13 @@ export function HomeHeader({ moodTracker, onMoodClick }: Props) {
         {/* Top bar — greeting + actions */}
         <div className="flex justify-between items-center h-12">
           <div className="flex flex-col leading-tight">
-            <span className="text-[13px] font-medium text-white/80">
-              Good Morning,
-            </span>
-            <span className="text-[20px] font-black text-white leading-tight">
-              {firstName}
-            </span>
+            <span className="text-[13px] font-medium text-white/80">Good Morning,</span>
+            <span className="text-[20px] font-black text-white leading-tight">{firstName}</span>
           </div>
 
           <div className="flex items-center gap-2">
             <button
-              onClick={() => router.push('/notifications')}
+              onClick={() => router.push("/notifications")}
               className="w-9 h-9 rounded-full flex items-center justify-center hover:bg-white/20 transition-all active:scale-95"
               aria-label="View notifications"
             >
@@ -91,11 +87,11 @@ export function HomeHeader({ moodTracker, onMoodClick }: Props) {
             </button>
 
             <button
-              onClick={() => router.push('/profile')}
+              onClick={() => router.push("/profile")}
               className="w-10 h-10 rounded-full overflow-hidden border border-white/30 transition-all hover:scale-105 active:scale-95 bg-white/10"
               aria-label="Go to profile"
             >
-              {profileImage && profileImage !== '/profile.png' ? (
+              {profileImage && profileImage !== "/profile.png" ? (
                 <Image
                   src={profileImage}
                   alt={firstName}
@@ -118,8 +114,7 @@ export function HomeHeader({ moodTracker, onMoodClick }: Props) {
         <div className="flex flex-col gap-4 w-full">
           <div className="flex flex-col gap-1.5 max-w-[280px]">
             <h2 className="text-[22px] font-bold leading-[1.15] tracking-tight">
-              Hi <span className="font-black">{firstName}</span>, how are you
-              feeling today?
+              Hi <span className="font-black">{firstName}</span>, how are you feeling today?
             </h2>
             <p className="text-white/80 text-[13px] font-medium leading-relaxed">
               Your check-in helps us shape your home, guidance, and support.
@@ -136,16 +131,14 @@ export function HomeHeader({ moodTracker, onMoodClick }: Props) {
             </span>
             <div className="flex gap-2.5">
               {MOODS.map((emoji, i) => {
-                const isSelected = currentMoodId
-                  ? currentMoodId === i + 1
-                  : false;
+                const isSelected = currentMoodId ? currentMoodId === i + 1 : false;
                 return (
                   <span
                     key={i}
                     className={`text-xl transition-all duration-300 ${
                       isSelected
-                        ? 'bg-black/80 rounded-full w-8 h-8 flex items-center justify-center -mx-0.5 scale-110'
-                        : 'opacity-90 hover:opacity-100 hover:scale-125'
+                        ? "bg-black/80 rounded-full w-8 h-8 flex items-center justify-center -mx-0.5 scale-110"
+                        : "opacity-90 hover:opacity-100 hover:scale-125"
                     }`}
                   >
                     {emoji}
@@ -166,7 +159,7 @@ export function HomeHeader({ moodTracker, onMoodClick }: Props) {
               value={inputText}
               onChange={(e) => setInputText(e.target.value)}
               onKeyDown={(e) => {
-                if (e.key === 'Enter') {
+                if (e.key === "Enter") {
                   e.preventDefault();
                   handleSend();
                 }
@@ -176,7 +169,7 @@ export function HomeHeader({ moodTracker, onMoodClick }: Props) {
             <button
               onClick={handleSend}
               className="w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0 transition-all active:scale-95"
-              aria-label={inputText.trim() ? 'Send message' : 'Open chat'}
+              aria-label={inputText.trim() ? "Send message" : "Open chat"}
             >
               {inputText.trim() ? (
                 <div className="w-9 h-9 rounded-full bg-primary flex items-center justify-center">

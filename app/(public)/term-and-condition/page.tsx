@@ -1,9 +1,9 @@
-import Link from 'next/link';
-import { ChevronLeft } from 'lucide-react';
+import { ChevronLeft } from "lucide-react";
+import Link from "next/link";
 
 export const metadata = {
-  title: 'Terms & Conditions — MindTalk by Cadabams',
-  description: 'Terms and Conditions for using the Cadabams MindTalk application.',
+  title: "Terms & Conditions — MindTalk by Cadabams",
+  description: "Terms and Conditions for using the Cadabams MindTalk application.",
 };
 
 export default function TermsAndConditionsPage() {
@@ -68,8 +68,8 @@ export default function TermsAndConditionsPage() {
             <h2 className="text-xl font-semibold text-foreground">5. Limitation of Liability</h2>
             <p className="text-muted-foreground leading-relaxed">
               To the extent permitted by law, Cadabams MindTalk will not be liable for any indirect,
-              incidental, special, consequential, or punitive damages arising out of or in connection
-              with these Terms or your use of our services.
+              incidental, special, consequential, or punitive damages arising out of or in
+              connection with these Terms or your use of our services.
             </p>
           </section>
 
@@ -93,11 +93,8 @@ export default function TermsAndConditionsPage() {
           <section className="mb-8 space-y-3">
             <h2 className="text-xl font-semibold text-foreground">8. Contact Us</h2>
             <p className="text-muted-foreground leading-relaxed">
-              If you have any questions about these Terms, please contact us at{' '}
-              <a
-                href="mailto:info@cadabams.com"
-                className="text-primary hover:underline"
-              >
+              If you have any questions about these Terms, please contact us at{" "}
+              <a href="mailto:info@cadabams.com" className="text-primary hover:underline">
                 info@cadabams.com
               </a>
               .

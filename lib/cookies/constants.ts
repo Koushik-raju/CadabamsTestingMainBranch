@@ -1,3 +1,4 @@
+import { CONFIG } from "@/config/env";
 /**
  * FILE: lib/cookies/constants.ts
  *
@@ -23,14 +24,13 @@
  *
  * LAST UPDATED: 2026-04-17 — import IS_PRODUCTION from config/env.ts instead of reading process.env directly
  */
-import type { CookieOptions } from './types';
-import { CONFIG } from '@/config/env';
+import type { CookieOptions } from "./types";
 
 export const COOKIE_NAMES = {
-  ACCESS_TOKEN: 'access_token',
-  REFRESH_TOKEN: 'refresh_token',
-  USER: 'user_profile',
-  REDIRECT_PATH: 'redirect_path',
+  ACCESS_TOKEN: "access_token",
+  REFRESH_TOKEN: "refresh_token",
+  USER: "user_profile",
+  REDIRECT_PATH: "redirect_path",
 } as const;
 
 export const DURATIONS = {
@@ -41,34 +41,34 @@ export const DURATIONS = {
 } as const;
 
 export const DEFAULT_COOKIE_OPTIONS: CookieOptions = {
-  path: '/',
+  path: "/",
   secure: CONFIG.IS_PRODUCTION,
-  sameSite: 'lax',
+  sameSite: "lax",
 };
 
 export const ACCESS_TOKEN_OPTIONS: CookieOptions = {
-  path: '/',
+  path: "/",
   httpOnly: false,
   serverOnly: false,
   secure: false,
-  sameSite: 'lax',
+  sameSite: "lax",
   maxAge: DURATIONS.ACCESS_TOKEN,
 };
 
 export const REFRESH_TOKEN_OPTIONS: CookieOptions = {
-  path: '/',
+  path: "/",
   httpOnly: false,
   serverOnly: false,
   secure: false,
-  sameSite: 'lax',
+  sameSite: "lax",
   maxAge: DURATIONS.REFRESH_TOKEN,
 };
 
 export const USER_COOKIE_OPTIONS: CookieOptions = {
-  path: '/',
+  path: "/",
   httpOnly: false,
   serverOnly: false,
   secure: false,
-  sameSite: 'lax',
+  sameSite: "lax",
   maxAge: DURATIONS.REFRESH_TOKEN, // same lifetime as refresh token
 };

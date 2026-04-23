@@ -18,7 +18,7 @@
  *
  * LAST UPDATED: 2026-04-17 — Design compliance: pt-5 header, pb-24 root.
  */
-import { Skeleton } from '@/components/ui/skeleton';
+import { Skeleton } from "@/components/ui/skeleton";
 
 export default function JournalLoading() {
   return (

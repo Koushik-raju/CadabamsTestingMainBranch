@@ -43,18 +43,18 @@
  *   CompletionDetailResponseDto removed from SDK, pending spec update for userResponse
  */
 
-import useSWR from 'swr';
+import { assessmentByIdKey, assessmentSubmissionsKey, completionByIdKey } from "@/lib/swr-keys";
 import {
   cmsAssessmentsControllerFindOne,
-  patientAssessmentsControllerListMine,
+  patientAssessmentsAnalysisControllerAnalyze,
   patientAssessmentsControllerCreateCompletion,
   patientAssessmentsControllerGetCompletion,
-  patientAssessmentsAnalysisControllerAnalyze,
-} from '@/sdk/backend-v2';
-import type { CompletionResponseDto } from '@/sdk/backend-v2';
-import { assessmentByIdKey, assessmentSubmissionsKey, completionByIdKey } from '@/lib/swr-keys';
-import { mapAssessment } from './use-assessments-page';
-import type { AssessmentItem } from './use-assessments-page';
+  patientAssessmentsControllerListMine,
+} from "@/sdk/backend-v2";
+import type { CompletionResponseDto } from "@/sdk/backend-v2";
+import useSWR from "swr";
+import { mapAssessment } from "./use-assessments-page";
+import type { AssessmentItem } from "./use-assessments-page";
 
 export type { AssessmentItem };
 
@@ -63,17 +63,15 @@ export type { AssessmentItem };
 // ---------------------------------------------------------------------------
 
 function deriveScoreSummary(
-  completions: CompletionResponseDto[]
+  completions: CompletionResponseDto[],
 ): { label: string; value: string } | null {
   if (completions.length === 0) return null;
   const latest = completions[0];
   if (latest.severity == null && latest.scorePercentage == null) return null;
   const label = latest.severity
     ? latest.severity.charAt(0).toUpperCase() + latest.severity.slice(1)
-    : 'Completed';
-  const value = latest.scorePercentage != null
-    ? `${label} (${latest.scorePercentage}%)`
-    : label;
+    : "Completed";
+  const value = latest.scorePercentage != null ? `${label} (${latest.scorePercentage}%)` : label;
   return { label, value };
 }
 
@@ -82,49 +80,39 @@ function deriveScoreSummary(
 // ---------------------------------------------------------------------------
 
 export function useAssessmentById(id: string | null) {
-  const { data: raw, isLoading, error } = useSWR(
-    id ? assessmentByIdKey(id) : null,
-    async () => {
-      const res = await cmsAssessmentsControllerFindOne({ path: { id: id! } });
-      if (res.error) throw new Error(JSON.stringify(res.error));
-      return res.data ?? null;
-    }
-  );
+  const {
+    data: raw,
+    isLoading,
+    error,
+  } = useSWR(id ? assessmentByIdKey(id) : null, async () => {
+    const res = await cmsAssessmentsControllerFindOne({ path: { id: id! } });
+    if (res.error) throw new Error(JSON.stringify(res.error));
+    return res.data ?? null;
+  });
 
   const assessment: AssessmentItem | null = raw ? mapAssessment(raw) : null;
 
   return { data: assessment, isLoading, error };
 }
 
-export function useAssessmentSubmissions(
-  leadId: string | null,
-  assessmentId: string | null
-) {
+export function useAssessmentSubmissions(leadId: string | null, assessmentId: string | null) {
   const { data, isLoading, error } = useSWR(
-    leadId && assessmentId
-      ? assessmentSubmissionsKey(leadId, assessmentId)
-      : null,
+    leadId && assessmentId ? assessmentSubmissionsKey(leadId, assessmentId) : null,
     async (): Promise<CompletionResponseDto[]> => {
       const res = await patientAssessmentsControllerListMine({
-        path: { campus: 'cadabams' },
+        path: { campus: "cadabams" },
         query: { assessmentKey: assessmentId! },
       });
       if (res.error) throw new Error(JSON.stringify(res.error));
       return res.data ?? [];
-    }
+    },
   );
 
   return { data: data ?? [], isLoading, error };
 }
 
-export function useAssessmentScoreSummary(
-  leadId: string | null,
-  assessmentId: string | null
-) {
-  const { data: submissions, isLoading, error } = useAssessmentSubmissions(
-    leadId,
-    assessmentId
-  );
+export function useAssessmentScoreSummary(leadId: string | null, assessmentId: string | null) {
+  const { data: submissions, isLoading, error } = useAssessmentSubmissions(leadId, assessmentId);
   return {
     scoreSummary: deriveScoreSummary(submissions),
     submissions,
@@ -140,13 +128,13 @@ export function useAssessmentScoreSummary(
 export async function submitAssessment(
   leadId: string,
   assessmentId: string,
-  answers: Record<string, unknown>
+  answers: Record<string, unknown>,
 ): Promise<string> {
   const answerRows = Object.entries(answers).map(([questionKey, value]) => {
     const v = value as Record<string, unknown>;
     let answerValue: string;
-    const raw = v?.selected ?? v?.text ?? v?.value ?? v?.level ?? v?.subAnswers ?? '';
-    if (Array.isArray(raw) || (typeof raw === 'object' && raw !== null)) {
+    const raw = v?.selected ?? v?.text ?? v?.value ?? v?.level ?? v?.subAnswers ?? "";
+    if (Array.isArray(raw) || (typeof raw === "object" && raw !== null)) {
       answerValue = JSON.stringify(raw);
     } else {
       answerValue = String(raw);
@@ -159,7 +147,7 @@ export async function submitAssessment(
   });
 
   const res = await patientAssessmentsControllerCreateCompletion({
-    path: { campus: 'cadabams' },
+    path: { campus: "cadabams" },
     body: {
       assessmentKey: assessmentId,
       completedAt: new Date().toISOString(),
@@ -167,7 +155,7 @@ export async function submitAssessment(
     },
   });
   if (res.error) throw new Error(JSON.stringify(res.error));
-  if (!res.data?.id) throw new Error('Completion response missing id');
+  if (!res.data?.id) throw new Error("Completion response missing id");
   return res.data.id;
 }
 
@@ -175,14 +163,12 @@ export async function submitAssessment(
 // Analyze a stored completion via backend LLM endpoint
 // ---------------------------------------------------------------------------
 
-export async function analyzeAssessmentCompletion(
-  completionId: string
-): Promise<string> {
+export async function analyzeAssessmentCompletion(completionId: string): Promise<string> {
   const res = await patientAssessmentsAnalysisControllerAnalyze({
     path: { completionId },
   });
   if (res.error) throw new Error(JSON.stringify(res.error));
-  return res.data?.result ?? '';
+  return res.data?.result ?? "";
 }
 
 // ---------------------------------------------------------------------------
@@ -194,11 +180,11 @@ export function useCompletionById(completionId: string | null) {
     completionId ? completionByIdKey(completionId) : null,
     async (): Promise<CompletionResponseDto> => {
       const res = await patientAssessmentsControllerGetCompletion({
-        path: { campus: 'cadabams', id: completionId! },
+        path: { campus: "cadabams", id: completionId! },
       });
       if (res.error) throw new Error(JSON.stringify(res.error));
-      if (!res.data) throw new Error('Completion not found');
+      if (!res.data) throw new Error("Completion not found");
       return res.data;
-    }
+    },
   );
 }

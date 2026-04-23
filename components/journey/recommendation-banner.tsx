@@ -1,7 +1,7 @@
-'use client';
+"use client";
 
-import { ChevronRight, Sparkles } from 'lucide-react';
-import { useRouter } from 'next/navigation';
+import { ChevronRight, Sparkles } from "lucide-react";
+import { useRouter } from "next/navigation";
 
 interface RecommendationBannerProps {
   category?: string;
@@ -35,8 +35,8 @@ export function RecommendationBanner({ category, count, onPress }: Recommendatio
           Recommended for You
         </p>
         <p className="text-xs text-muted-foreground mt-0.5 leading-snug">
-          Based on your {category.toLowerCase()} assessment,
-          we found {count ?? 'some'} journeys that might help.
+          Based on your {category.toLowerCase()} assessment, we found {count ?? "some"} journeys
+          that might help.
         </p>
       </div>
       <ChevronRight className="w-4 h-4 text-primary flex-shrink-0" />

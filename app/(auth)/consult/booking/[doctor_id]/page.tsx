@@ -29,26 +29,26 @@
  */
 "use client";
 
-import { Suspense, useState, useEffect, useCallback, useMemo } from "react";
-import { useRouter, useSearchParams, useParams } from "next/navigation";
-import { Video, Building2, Loader2, AlertCircle } from "lucide-react";
-import { cn } from "@/lib/utils";
-import { Button } from "@/components/ui/button";
-import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
-import { PageHeader } from "@/components/shared/navigation/page-header";
-import { SlotSection } from "@/components/booking/slot-section";
-import { DateStrip, toDateKey } from "@/components/booking/date-strip";
 import { CampusSheet } from "@/components/booking/campus-sheet";
+import { DateStrip, toDateKey } from "@/components/booking/date-strip";
+import { SlotSection } from "@/components/booking/slot-section";
+import { PageHeader } from "@/components/shared/navigation/page-header";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Button } from "@/components/ui/button";
 import { useBooking } from "@/contexts/booking-context";
+import { useAuth } from "@/hooks/shared/auth/use-auth";
+import { cn } from "@/lib/utils";
 import {
-  crmControllerGetDoctorById,
-  crmControllerGetSlots,
-  crmControllerGetSlotPrice,
   crmControllerGetCampuses,
+  crmControllerGetDoctorById,
+  crmControllerGetSlotPrice,
+  crmControllerGetSlots,
   crmControllerRescheduleAppointment,
 } from "@/sdk/backend-v2";
 import type { DoctorBasicResponseDto, SlotResponseDto } from "@/sdk/backend-v2";
-import { useAuth } from "@/hooks/shared/auth/use-auth";
+import { AlertCircle, Building2, Loader2, Video } from "lucide-react";
+import { useParams, useRouter, useSearchParams } from "next/navigation";
+import { Suspense, useCallback, useEffect, useMemo, useState } from "react";
 
 // The API returns additional fields not yet in the generated DTO
 type DoctorResponseDto = DoctorBasicResponseDto & {
@@ -89,9 +89,7 @@ function BookingContent() {
   const { user } = useAuth();
 
   const isReschedule = searchParams.get("reschedule") === "true";
-  const existingSlotId = isReschedule
-    ? Number(searchParams.get("appointment_id"))
-    : null;
+  const existingSlotId = isReschedule ? Number(searchParams.get("appointment_id")) : null;
   const rescheduleAptType = searchParams.get("appointment_type") ?? "";
   const initMode = searchParams.get("mode") ?? "online";
 
@@ -119,7 +117,7 @@ function BookingContent() {
   const [datePage, setDatePage] = useState(0);
   const [selectedDate, setSelectedDate] = useState<Date>(dates[0]);
   const [slots, setSlots] = useState<SlotResponseDto[]>([]);
-  const [newSlotId,    setNewSlotId]    = useState<number | null>(null);
+  const [newSlotId, setNewSlotId] = useState<number | null>(null);
   const [slotPrice, setSlotPrice] = useState<number | null>(null);
   const [loadingSlots, setLoadingSlots] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -128,9 +126,7 @@ function BookingContent() {
   const [sheetOpen, setSheetOpen] = useState(false);
   const [sheetStep, setSheetStep] = useState<"campus" | "sub-campus">("campus");
   const [pendingCampusId, setPendingCampusId] = useState<number | null>(null);
-  const [confirmedCampusId, setConfirmedCampusId] = useState<number | null>(
-    null,
-  );
+  const [confirmedCampusId, setConfirmedCampusId] = useState<number | null>(null);
   const [confirmedSubId, setConfirmedSubId] = useState<number | null>(null);
 
   // ── fetch doctor ─────────────────────────────────────────────────────────────
@@ -178,9 +174,7 @@ function BookingContent() {
             availability: "open",
           },
         });
-        setSlots(
-          Array.isArray(res.data) ? (res.data as SlotResponseDto[]) : [],
-        );
+        setSlots(Array.isArray(res.data) ? (res.data as SlotResponseDto[]) : []);
       } catch (err) {
         console.error(err);
         setError("Failed to load time slots. Please try again.");
@@ -261,16 +255,12 @@ function BookingContent() {
 
   const selectedKey = toDateKey(selectedDate);
   const daySlots = slotsByDate[selectedKey] ?? [];
-  const morningSlots = daySlots.filter(
-    (s) => new Date(s.start_datetime).getHours() < 12,
-  );
+  const morningSlots = daySlots.filter((s) => new Date(s.start_datetime).getHours() < 12);
   const afternoonSlots = daySlots.filter((s) => {
     const h = new Date(s.start_datetime).getHours();
     return h >= 12 && h < 17;
   });
-  const eveningSlots = daySlots.filter(
-    (s) => new Date(s.start_datetime).getHours() >= 17,
-  );
+  const eveningSlots = daySlots.filter((s) => new Date(s.start_datetime).getHours() >= 17);
 
   const slotHeading = selectedDate.toLocaleDateString("en-US", {
     weekday: "short",
@@ -297,9 +287,7 @@ function BookingContent() {
   const confirmedSubName = useMemo(() => {
     if (confirmedSubId === null || confirmedCampusId === null) return null;
     return (
-      getSubCampusOptions(confirmedCampusId).find(
-        (s) => s.id === confirmedSubId,
-      )?.name ?? null
+      getSubCampusOptions(confirmedCampusId).find((s) => s.id === confirmedSubId)?.name ?? null
     );
   }, [confirmedSubId, confirmedCampusId, getSubCampusOptions]);
 
@@ -316,9 +304,7 @@ function BookingContent() {
       return;
     }
     const hasSubs =
-      !isOnline && confirmedCampusId
-        ? getSubCampusOptions(confirmedCampusId).length > 0
-        : false;
+      !isOnline && confirmedCampusId ? getSubCampusOptions(confirmedCampusId).length > 0 : false;
     if (hasSubs && !confirmedSubId) {
       setError("Please select a center to continue.");
       return;
@@ -339,8 +325,8 @@ function BookingContent() {
       try {
         await crmControllerRescheduleAppointment({
           body: {
-            slot_id: existingSlotId,        // existing slot being replaced
-            appointment_id: newSlotId,   // new slot selected by user
+            slot_id: existingSlotId, // existing slot being replaced
+            appointment_id: newSlotId, // new slot selected by user
             lead_id: leadId,
             campus_id: confirmedCampusId ?? 1,
             sub_campus_id: confirmedSubId ?? undefined,
@@ -406,24 +392,16 @@ function BookingContent() {
           <div className="flex items-center gap-3 min-w-0">
             <Avatar className="h-11 w-11 shrink-0 rounded-xl">
               {doctor?.profile_image && (
-                <AvatarImage
-                  src={doctor.profile_image}
-                  alt={displayName(doctor)}
-                />
+                <AvatarImage src={doctor.profile_image} alt={displayName(doctor)} />
               )}
               <AvatarFallback className="bg-primary/10 text-primary font-semibold text-sm rounded-xl">
                 {initials || "DR"}
               </AvatarFallback>
             </Avatar>
             <div className="min-w-0">
-              <p className="font-semibold text-sm truncate">
-                {displayName(doctor)}
-              </p>
+              <p className="font-semibold text-sm truncate">{displayName(doctor)}</p>
               <p className="text-xs text-muted-foreground leading-snug">
-                {[
-                  specialityName(doctor),
-                  sessionDuration ? `${sessionDuration} min session` : null,
-                ]
+                {[specialityName(doctor), sessionDuration ? `${sessionDuration} min session` : null]
                   .filter(Boolean)
                   .join(" · ")}
               </p>
@@ -447,9 +425,7 @@ function BookingContent() {
               onClick={() => handleSessionToggle(true)}
               className={cn(
                 "px-4 py-1.5 rounded-md transition-all",
-                isOnline
-                  ? "bg-background text-foreground shadow-sm"
-                  : "text-muted-foreground",
+                isOnline ? "bg-background text-foreground shadow-sm" : "text-muted-foreground",
               )}
             >
               Online
@@ -459,9 +435,7 @@ function BookingContent() {
               onClick={() => handleSessionToggle(false)}
               className={cn(
                 "px-4 py-1.5 rounded-md transition-all",
-                !isOnline
-                  ? "bg-background text-foreground shadow-sm"
-                  : "text-muted-foreground",
+                !isOnline ? "bg-background text-foreground shadow-sm" : "text-muted-foreground",
               )}
             >
               In-person
@@ -483,9 +457,7 @@ function BookingContent() {
 
         {/* ── Slots ── */}
         <div>
-          <h2 className="font-semibold text-foreground mb-4">
-            Available slots for {slotHeading}
-          </h2>
+          <h2 className="font-semibold text-foreground mb-4">Available slots for {slotHeading}</h2>
 
           {loadingSlots ? (
             <div className="flex justify-center py-10">
@@ -533,16 +505,12 @@ function BookingContent() {
               <Building2 className="h-4 w-4 text-primary" />
             </div>
             <div className="flex-1 min-w-0">
-              <p className="text-xs text-muted-foreground mb-0.5">
-                Selected campus
-              </p>
+              <p className="text-xs text-muted-foreground mb-0.5">Selected campus</p>
               <p className="text-sm font-semibold text-foreground truncate">
                 {confirmedCampusName}
               </p>
               {confirmedSubName && (
-                <p className="text-xs text-muted-foreground truncate">
-                  {confirmedSubName}
-                </p>
+                <p className="text-xs text-muted-foreground truncate">{confirmedSubName}</p>
               )}
             </div>
             <button

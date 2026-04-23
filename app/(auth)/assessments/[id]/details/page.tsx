@@ -37,22 +37,22 @@
  *
  * LAST UPDATED: 2026-04-23 — Replaced BackButton header with PageHeader; hardBack="/assessments"
  */
-'use client';
+"use client";
 
-import { use, useMemo } from 'react';
-import { useRouter } from 'next/navigation';
-import { Button } from '@/components/ui/button';
-import { Skeleton } from '@/components/ui/skeleton';
-import { PageHeader } from '@/components/shared/navigation/page-header';
+import { PageHeader } from "@/components/shared/navigation/page-header";
+import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
+import { useAssessmentById } from "@/hooks/assessments/use-assessment-detail";
 import {
+  AlertCircle,
+  CheckCircle2,
+  ChevronRight,
   Clock,
   ListChecks,
-  ChevronRight,
-  CheckCircle2,
   ShieldCheck,
-  AlertCircle,
-} from 'lucide-react';
-import { useAssessmentById } from '@/hooks/assessments/use-assessment-detail';
+} from "lucide-react";
+import { useRouter } from "next/navigation";
+import { use, useMemo } from "react";
 
 export default function AssessmentDetailsPage({
   params,
@@ -69,13 +69,12 @@ export default function AssessmentDetailsPage({
   const imageUrl = useMemo(() => {
     if (!assessment?.image) return null;
     const url = String(assessment.image);
-    if (url.startsWith('http')) return url.split('?')[0];
-    return `https://admin.mindtalkbuddy.com${url}`.split('?')[0];
+    if (url.startsWith("http")) return url.split("?")[0];
+    return `https://admin.mindtalkbuddy.com${url}`.split("?")[0];
   }, [assessment?.image]);
 
   const questionCount =
-    assessment?.landingTitle?.numberOfQuestion ||
-    String(assessment?.Questions?.length || 0);
+    assessment?.landingTitle?.numberOfQuestion || String(assessment?.Questions?.length || 0);
   const durationMins = assessment?.landingTitle?.minutes || 5;
   const badgeText = assessment?.landingTitle?.badgeText;
   const points = assessment?.landingTitle?.points || [];
@@ -93,7 +92,9 @@ export default function AssessmentDetailsPage({
             <Skeleton className="h-4 w-5/6" />
             <Skeleton className="h-16 w-full rounded-2xl" />
             <div className="space-y-3">
-              {[1, 2, 3].map((i) => <Skeleton key={i} className="h-12 w-full rounded-xl" />)}
+              {[1, 2, 3].map((i) => (
+                <Skeleton key={i} className="h-12 w-full rounded-xl" />
+              ))}
             </div>
           </div>
         </div>
@@ -106,7 +107,7 @@ export default function AssessmentDetailsPage({
       <div className="min-h-screen bg-background flex flex-col items-center justify-center p-6">
         <AlertCircle className="w-12 h-12 text-destructive mb-4" />
         <p className="text-destructive text-center">
-          {error ? String(error) : 'Assessment not found.'}
+          {error ? String(error) : "Assessment not found."}
         </p>
         <Button className="mt-4" variant="outline" onClick={() => router.back()}>
           Go Back
@@ -124,11 +125,7 @@ export default function AssessmentDetailsPage({
         {/* Hero image */}
         {imageUrl ? (
           <div className="w-full aspect-[4/3] bg-muted overflow-hidden">
-            <img
-              src={imageUrl}
-              alt={assessment.title}
-              className="w-full h-full object-cover"
-            />
+            <img src={imageUrl} alt={assessment.title} className="w-full h-full object-cover" />
           </div>
         ) : (
           <div className="w-full aspect-[4/3] bg-muted" />
@@ -151,9 +148,7 @@ export default function AssessmentDetailsPage({
           )}
 
           {/* Title */}
-          <h1 className="text-2xl font-bold text-foreground leading-tight">
-            {assessment.title}
-          </h1>
+          <h1 className="text-2xl font-bold text-foreground leading-tight">{assessment.title}</h1>
 
           {/* Description */}
           {assessment.description && (
@@ -196,8 +191,8 @@ export default function AssessmentDetailsPage({
 
           {/* Privacy note */}
           <p className="text-xs text-muted-foreground text-center pb-2">
-            This assessment is for educational purposes only and is not a diagnostic
-            tool or a substitute for professional medical advice.
+            This assessment is for educational purposes only and is not a diagnostic tool or a
+            substitute for professional medical advice.
           </p>
         </div>
       </div>

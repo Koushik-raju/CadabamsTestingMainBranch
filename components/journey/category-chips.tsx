@@ -1,6 +1,6 @@
-'use client';
+"use client";
 
-import { cn } from '@/lib/utils';
+import { cn } from "@/lib/utils";
 
 interface CategoryChipsProps {
   categories: string[];
@@ -17,10 +17,10 @@ export function CategoryChips({ categories, active, onChange }: CategoryChipsPro
             key={cat}
             onClick={() => onChange(cat)}
             className={cn(
-              'px-4 py-1.5 rounded-2xl text-xs font-bold whitespace-nowrap transition-all border',
+              "px-4 py-1.5 rounded-2xl text-xs font-bold whitespace-nowrap transition-all border",
               active === cat
-                ? 'bg-foreground border-foreground text-background shadow-sm'
-                : 'bg-card border-border text-muted-foreground hover:border-foreground/30'
+                ? "bg-foreground border-foreground text-background shadow-sm"
+                : "bg-card border-border text-muted-foreground hover:border-foreground/30",
             )}
           >
             {cat}

@@ -1,6 +1,6 @@
-import { LayoutGrid } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { LayoutGrid } from "lucide-react";
 
 interface Props {
   onTalk: () => void;
@@ -20,9 +20,7 @@ export function SupportSection({ onTalk, onMatch }: Props) {
               <span className="text-[11px] font-extrabold text-muted-foreground uppercase tracking-[1.5px]">
                 NEED SUPPORT?
               </span>
-              <h4 className="text-lg font-bold leading-tight">
-                Find the right expert for you
-              </h4>
+              <h4 className="text-lg font-bold leading-tight">Find the right expert for you</h4>
             </div>
           </div>
           <div className="flex gap-3">

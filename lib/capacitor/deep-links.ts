@@ -2,8 +2,8 @@
  * Deep link handling for Capacitor.
  * Listens for App 'appUrlOpen' events and navigates using Next.js router.
  */
-import type { AppRouterInstance } from 'next/dist/shared/lib/app-router-context.shared-runtime';
-import { isNative } from './platform';
+import type { AppRouterInstance } from "next/dist/shared/lib/app-router-context.shared-runtime";
+import { isNative } from "./platform";
 
 /**
  * Sets up deep link listeners.
@@ -19,35 +19,35 @@ export async function setupDeepLinks(router: AppRouterInstance): Promise<() => v
   if (!(await isNative())) return () => {};
 
   try {
-    const { App } = await import('@capacitor/app');
+    const { App } = await import("@capacitor/app");
 
-    const handle = await App.addListener('appUrlOpen', ({ url }) => {
+    const handle = await App.addListener("appUrlOpen", ({ url }) => {
       try {
         const u = new URL(url);
 
-        if (u.host !== 'consult.cadabams.com') return;
+        if (u.host !== "consult.cadabams.com") return;
 
         // Normalise the path
-        const path = u.pathname.replace(/\/$/, ''); // strip trailing slash
+        const path = u.pathname.replace(/\/$/, ""); // strip trailing slash
 
         // Explicit route overrides
-        if (path === '/payment-success') {
-          router.push('/consult/booking/success');
+        if (path === "/payment-success") {
+          router.push("/consult/booking/success");
           return;
         }
-        if (path === '/payment-failed') {
-          router.push('/consult/booking/failed');
+        if (path === "/payment-failed") {
+          router.push("/consult/booking/failed");
           return;
         }
-        if (path === '/callback') {
+        if (path === "/callback") {
           router.push(`/callback${u.search}`);
           return;
         }
 
         // Default: navigate to whatever path the URL contains
-        router.push(path + (u.search ?? ''));
+        router.push(path + (u.search ?? ""));
       } catch (e) {
-        console.warn('[DeepLinks] Failed to handle URL:', url, e);
+        console.warn("[DeepLinks] Failed to handle URL:", url, e);
       }
     });
 
@@ -55,7 +55,7 @@ export async function setupDeepLinks(router: AppRouterInstance): Promise<() => v
       handle.remove();
     };
   } catch (e) {
-    console.warn('[DeepLinks] setupDeepLinks failed:', e);
+    console.warn("[DeepLinks] setupDeepLinks failed:", e);
     return () => {};
   }
 }

@@ -1,4 +1,4 @@
-import { redirect } from 'next/navigation';
+import { redirect } from "next/navigation";
 
 export default function SignupRedirect({
   searchParams,
@@ -10,5 +10,5 @@ export default function SignupRedirect({
     if (v) params.set(k, Array.isArray(v) ? v[0] : v);
   }
   const qs = params.toString();
-  redirect(`/auth/signup${qs ? `?${qs}` : ''}`);
+  redirect(`/auth/signup${qs ? `?${qs}` : ""}`);
 }

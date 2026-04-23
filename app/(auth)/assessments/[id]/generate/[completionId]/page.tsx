@@ -24,16 +24,16 @@
  *
  * LAST UPDATED: 2026-04-23 — migrated custom header div to PageHeader
  */
-'use client';
+"use client";
 
-import { use, useEffect, useRef, useState } from 'react';
-import { useRouter } from 'next/navigation';
-import { useSWRConfig } from 'swr';
-import { Button } from '@/components/ui/button';
-import { PageHeader } from '@/components/shared/navigation/page-header';
-import { patientAssessmentsAnalysisControllerAnalyze } from '@/sdk/backend-v2';
-import { assessmentReportsKey } from '@/lib/swr-keys';
-import { Loader2, Sparkles } from 'lucide-react';
+import { PageHeader } from "@/components/shared/navigation/page-header";
+import { Button } from "@/components/ui/button";
+import { assessmentReportsKey } from "@/lib/swr-keys";
+import { patientAssessmentsAnalysisControllerAnalyze } from "@/sdk/backend-v2";
+import { Loader2, Sparkles } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { use, useEffect, useRef, useState } from "react";
+import { useSWRConfig } from "swr";
 
 export default function AssessmentGeneratePage({
   params,
@@ -60,7 +60,7 @@ export default function AssessmentGeneratePage({
       await mutate(assessmentReportsKey(assessmentId));
       router.replace(`/assessments/${assessmentId}/result`);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to generate report');
+      setError(err instanceof Error ? err.message : "Failed to generate report");
       setIsGenerating(false);
     }
   };
@@ -80,16 +80,12 @@ export default function AssessmentGeneratePage({
         <div className="w-16 h-16 rounded-2xl bg-primary/10 flex items-center justify-center mb-5">
           <Sparkles className="w-7 h-7 text-primary" />
         </div>
-        <h1 className="text-xl font-bold text-foreground mb-2">
-          Generate Your Report
-        </h1>
+        <h1 className="text-xl font-bold text-foreground mb-2">Generate Your Report</h1>
         <p className="text-sm text-muted-foreground max-w-xs">
           We&apos;ll analyse your responses and create a personalised AI summary.
         </p>
 
-        {error && (
-          <p className="text-xs text-destructive mt-4 max-w-xs">{error}</p>
-        )}
+        {error && <p className="text-xs text-destructive mt-4 max-w-xs">{error}</p>}
       </div>
 
       <div className="px-5 pb-8">
@@ -104,9 +100,9 @@ export default function AssessmentGeneratePage({
               Generating…
             </>
           ) : error ? (
-            'Try Again'
+            "Try Again"
           ) : (
-            'Generate Report'
+            "Generate Report"
           )}
         </Button>
       </div>

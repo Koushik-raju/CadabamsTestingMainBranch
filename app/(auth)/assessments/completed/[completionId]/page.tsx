@@ -24,20 +24,20 @@
  *
  * LAST UPDATED: 2026-04-23 — migrated custom header div to PageHeader
  */
-'use client';
+"use client";
 
-import { use, useEffect, useRef } from 'react';
-import Link from 'next/link';
-import { useJourneyTaskContinuation } from '@/hooks/journeys/use-journey-task-continuation';
-import { Card, CardContent } from '@/components/ui/card';
-import { Separator } from '@/components/ui/separator';
-import { Skeleton } from '@/components/ui/skeleton';
-import { Button } from '@/components/ui/button';
-import { PageHeader } from '@/components/shared/navigation/page-header';
-import type { CompletionResponseDto } from '@/sdk/backend-v2';
-import { useCompletionById } from '@/hooks/assessments/use-assessment-detail';
-import { AlertCircle, ClipboardList, FileText, Sparkles } from 'lucide-react';
-import { cn } from '@/lib/utils';
+import { PageHeader } from "@/components/shared/navigation/page-header";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { Separator } from "@/components/ui/separator";
+import { Skeleton } from "@/components/ui/skeleton";
+import { useCompletionById } from "@/hooks/assessments/use-assessment-detail";
+import { useJourneyTaskContinuation } from "@/hooks/journeys/use-journey-task-continuation";
+import { cn } from "@/lib/utils";
+import type { CompletionResponseDto } from "@/sdk/backend-v2";
+import { AlertCircle, ClipboardList, FileText, Sparkles } from "lucide-react";
+import Link from "next/link";
+import { use, useEffect, useRef } from "react";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -50,21 +50,55 @@ type SeverityConfig = {
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
-function getSeverityConfig(severity: CompletionResponseDto['severity']): SeverityConfig {
-  if (severity === 'minimal')  return { gradient: 'from-emerald-500 to-teal-600',  badgeBg: 'bg-emerald-100', badgeText: 'text-emerald-700', label: 'Minimal' };
-  if (severity === 'mild')     return { gradient: 'from-sky-500 to-blue-600',       badgeBg: 'bg-sky-100',     badgeText: 'text-sky-700',     label: 'Mild' };
-  if (severity === 'moderate') return { gradient: 'from-amber-400 to-orange-500',   badgeBg: 'bg-amber-100',   badgeText: 'text-amber-700',   label: 'Moderate' };
-  if (severity === 'severe')   return { gradient: 'from-red-500 to-rose-600',       badgeBg: 'bg-red-100',     badgeText: 'text-red-700',     label: 'Severe' };
-  return                        { gradient: 'from-violet-500 to-purple-600', badgeBg: 'bg-muted', badgeText: 'text-muted-foreground', label: 'Completed' };
+function getSeverityConfig(severity: CompletionResponseDto["severity"]): SeverityConfig {
+  if (severity === "minimal")
+    return {
+      gradient: "from-emerald-500 to-teal-600",
+      badgeBg: "bg-emerald-100",
+      badgeText: "text-emerald-700",
+      label: "Minimal",
+    };
+  if (severity === "mild")
+    return {
+      gradient: "from-sky-500 to-blue-600",
+      badgeBg: "bg-sky-100",
+      badgeText: "text-sky-700",
+      label: "Mild",
+    };
+  if (severity === "moderate")
+    return {
+      gradient: "from-amber-400 to-orange-500",
+      badgeBg: "bg-amber-100",
+      badgeText: "text-amber-700",
+      label: "Moderate",
+    };
+  if (severity === "severe")
+    return {
+      gradient: "from-red-500 to-rose-600",
+      badgeBg: "bg-red-100",
+      badgeText: "text-red-700",
+      label: "Severe",
+    };
+  return {
+    gradient: "from-violet-500 to-purple-600",
+    badgeBg: "bg-muted",
+    badgeText: "text-muted-foreground",
+    label: "Completed",
+  };
 }
 
 function formatDate(iso: string): string {
   try {
     return new Date(iso).toLocaleString(undefined, {
-      day: 'numeric', month: 'short', year: 'numeric',
-      hour: '2-digit', minute: '2-digit',
+      day: "numeric",
+      month: "short",
+      year: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
     });
-  } catch { return iso; }
+  } catch {
+    return iso;
+  }
 }
 
 // ─── Page ─────────────────────────────────────────────────────────────────────
@@ -85,7 +119,7 @@ export default function CompletedAssessmentPage({
   // When this report was reached via a journey task, mark the task
   // completed on the backend using this completion as proof, then let
   // the global FAB surface the "Return to journey" CTA.
-  const continuation = useJourneyTaskContinuation('ASSESSMENT');
+  const continuation = useJourneyTaskContinuation("ASSESSMENT");
   const reportedRef = useRef(false);
   useEffect(() => {
     if (reportedRef.current) return;
@@ -95,12 +129,12 @@ export default function CompletedAssessmentPage({
     const pieces = [severityLabel, pct != null ? `${pct}%` : null].filter(Boolean) as string[];
     continuation
       .markCompleted(
-        { kind: 'ASSESSMENT', assessmentCompletionId: completion.id },
-        { proofPreview: pieces.join(' · ') || undefined },
+        { kind: "ASSESSMENT", assessmentCompletionId: completion.id },
+        { proofPreview: pieces.join(" · ") || undefined },
       )
       .catch((err) => {
         reportedRef.current = false;
-        console.error('[CompletedAssessmentPage] journey completion failed', err);
+        console.error("[CompletedAssessmentPage] journey completion failed", err);
       });
   }, [continuation, completion, config.label, pct]);
 
@@ -137,18 +171,26 @@ export default function CompletedAssessmentPage({
         {/* Summary card */}
         <Card>
           <CardContent className="p-4 flex items-center gap-3">
-            <div className={cn(
-              'relative w-11 h-11 rounded-2xl bg-gradient-to-br flex-shrink-0',
-              'flex items-center justify-center overflow-hidden shadow-sm',
-              config.gradient,
-            )}>
+            <div
+              className={cn(
+                "relative w-11 h-11 rounded-2xl bg-gradient-to-br flex-shrink-0",
+                "flex items-center justify-center overflow-hidden shadow-sm",
+                config.gradient,
+              )}
+            >
               <div className="absolute -top-2 -right-2 w-7 h-7 rounded-full bg-white/10" />
               <ClipboardList className="w-5 h-5 text-white" />
             </div>
             <div className="flex-1 min-w-0">
               <p className="text-sm font-medium text-foreground">Assessment Summary</p>
               <div className="flex items-center gap-1.5 mt-1.5 flex-wrap">
-                <span className={cn('text-[10px] font-semibold px-2 py-0.5 rounded-full capitalize', config.badgeBg, config.badgeText)}>
+                <span
+                  className={cn(
+                    "text-[10px] font-semibold px-2 py-0.5 rounded-full capitalize",
+                    config.badgeBg,
+                    config.badgeText,
+                  )}
+                >
                   {config.label}
                 </span>
                 {pct !== null && (
@@ -157,7 +199,7 @@ export default function CompletedAssessmentPage({
                   </span>
                 )}
                 <span className="text-[10px] text-muted-foreground bg-muted px-2 py-0.5 rounded-full">
-                  {rows.length} question{rows.length !== 1 ? 's' : ''}
+                  {rows.length} question{rows.length !== 1 ? "s" : ""}
                 </span>
               </div>
             </div>

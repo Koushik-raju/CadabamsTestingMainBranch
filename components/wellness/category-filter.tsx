@@ -1,8 +1,6 @@
-'use client';
-
-import { Badge } from '@/components/ui/badge';
-import { ScrollArea } from '@/components/ui/scroll-area';
-import { cn } from '@/lib/utils';
+"use client";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { cn } from "@/lib/utils";
 
 interface CategoryFilterProps {
   categories: string[];
@@ -20,10 +18,10 @@ export function CategoryFilter({ categories, selected, onSelect }: CategoryFilte
               key={cat}
               onClick={() => onSelect(cat)}
               className={cn(
-                'px-4 py-1.5 rounded-full text-sm font-semibold whitespace-nowrap border transition-all',
+                "px-4 py-1.5 rounded-full text-sm font-semibold whitespace-nowrap border transition-all",
                 selected === cat
-                  ? 'bg-primary text-primary-foreground border-primary'
-                  : 'bg-background border-border text-muted-foreground hover:border-primary/50'
+                  ? "bg-primary text-primary-foreground border-primary"
+                  : "bg-background border-border text-muted-foreground hover:border-primary/50",
               )}
             >
               {cat}

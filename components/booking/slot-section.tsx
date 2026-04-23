@@ -1,12 +1,12 @@
-'use client';
+"use client";
 
-import { cn } from '@/lib/utils';
-import type { SlotResponseDto as TimeSlot } from '@/sdk/backend-v2';
+import { cn } from "@/lib/utils";
+import type { SlotResponseDto as TimeSlot } from "@/sdk/backend-v2";
 
 export function formatTime(isoStr: string): string {
-  return new Date(isoStr).toLocaleTimeString('en-US', {
-    hour: '2-digit',
-    minute: '2-digit',
+  return new Date(isoStr).toLocaleTimeString("en-US", {
+    hour: "2-digit",
+    minute: "2-digit",
     hour12: true,
   });
 }
@@ -37,10 +37,10 @@ export function SlotSection({ title, slots, selectedId, onSelect }: SlotSectionP
               onClick={() => onSelect(slot.id)}
               aria-pressed={isSelected}
               className={cn(
-                'h-10 rounded-xl text-xs font-medium border transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-primary',
+                "h-10 rounded-xl text-xs font-medium border transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-primary",
                 isSelected
-                  ? 'border-primary bg-primary/10 text-primary'
-                  : 'border-border bg-white text-foreground hover:border-primary/40',
+                  ? "border-primary bg-primary/10 text-primary"
+                  : "border-border bg-white text-foreground hover:border-primary/40",
               )}
             >
               {formatTime(slot.start_datetime)}
@@ -48,10 +48,7 @@ export function SlotSection({ title, slots, selectedId, onSelect }: SlotSectionP
           );
         })}
         {Array.from({ length: padCount }).map((_, i) => (
-          <div
-            key={`pad-${i}`}
-            className="h-10 flex items-center justify-center"
-          >
+          <div key={`pad-${i}`} className="h-10 flex items-center justify-center">
             <span className="text-xs text-muted-foreground">No slots</span>
           </div>
         ))}

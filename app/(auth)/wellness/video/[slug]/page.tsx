@@ -1,18 +1,17 @@
-'use client';
+"use client";
 
-import { useParams } from 'next/navigation';
-import Link from 'next/link';
-import { RefreshCw } from 'lucide-react';
-import { BackButton } from '@/components/shared/navigation/back-button';
-import { VideoPlayer } from '@/components/wellness/video-player';
-import { Skeleton } from '@/components/ui/skeleton';
-import { Button } from '@/components/ui/button';
-import { useVideoDetail } from '@/hooks/wellness/use-video-detail';
-import { getStrapiImageUrl } from '@/lib/strapi-fetcher';
+import { BackButton } from "@/components/shared/navigation/back-button";
+import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
+import { VideoPlayer } from "@/components/wellness/video-player";
+import { useVideoDetail } from "@/hooks/wellness/use-video-detail";
+import { getStrapiImageUrl } from "@/lib/strapi-fetcher";
+import Link from "next/link";
+import { useParams } from "next/navigation";
 
 export default function VideoDetailPage() {
   const params = useParams();
-  const slug = typeof params?.slug === 'string' ? params.slug : '';
+  const slug = typeof params?.slug === "string" ? params.slug : "";
   const { video, isLoading, error } = useVideoDetail(slug);
 
   if (isLoading) {
@@ -23,7 +22,7 @@ export default function VideoDetailPage() {
           <Skeleton className="h-5 w-48 bg-white/10" />
         </div>
         <div className="flex-1 flex items-center justify-center">
-          <Skeleton className="w-full max-w-3xl bg-white/10" style={{ aspectRatio: '16/9' }} />
+          <Skeleton className="w-full max-w-3xl bg-white/10" style={{ aspectRatio: "16/9" }} />
         </div>
         <div className="px-5 py-4 space-y-2">
           <Skeleton className="h-5 w-3/4 bg-white/10" />
@@ -56,22 +55,18 @@ export default function VideoDetailPage() {
   }
 
   const posterUrl =
-    getStrapiImageUrl(
-      video.coverImage?.webImage?.url ?? video.coverImage?.mobileImage?.url
-    ) ?? undefined;
+    getStrapiImageUrl(video.coverImage?.webImage?.url ?? video.coverImage?.mobileImage?.url) ??
+    undefined;
 
   return (
     <div className="min-h-screen bg-black flex flex-col">
       {/* Header */}
       <div className="flex items-center gap-3 px-4 py-3 bg-black/80 backdrop-blur safe-top">
-        <BackButton
-          fallback="/wellness/video"
-          className="text-white/80 hover:text-white"
-        />
+        <BackButton fallback="/wellness/video" className="text-white/80 hover:text-white" />
         <div className="flex-1 min-w-0">
           <h1 className="font-bold text-white text-lg truncate">{video.title}</h1>
           {video.category && video.category.length > 0 && (
-            <p className="text-white/50 text-xs mt-0.5">{video.category.join(' · ')}</p>
+            <p className="text-white/50 text-xs mt-0.5">{video.category.join(" · ")}</p>
           )}
         </div>
       </div>
