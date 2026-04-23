@@ -65,6 +65,7 @@ import { PathChain, getTaskType, type PathChainNode, type ChainItem } from './pa
 import { XpFloat } from './xp-float';
 import { JourneyTaskActionSheet, type TaskActionSheetData } from './journey-task-action-sheet';
 import { JourneyUnitTasksSheet, type UnitTask } from './journey-unit-tasks-sheet';
+import { JourneyDaySummaryModal } from './journey-day-summary-modal';
 import { JourneyPreviewSheet } from './journey-preview-sheet';
 import { JourneyDaySummarySheet } from './journey-day-summary-sheet';
 import type { NodeVariant } from './path-node';
@@ -202,7 +203,8 @@ export function JourneyPathView({ journey, progress, journeyId }: JourneyPathVie
   const [actionSheetData, setActionSheetData]     = useState<TaskActionSheetData | null>(null);
   const [actionSheetOpen, setActionSheetOpen]     = useState(false);
   const [unitTasksOpen, setUnitTasksOpen]         = useState(false);
-  const [unitTasksData, setUnitTasksData]         = useState<{ title: string; tasks: UnitTask[] } | null>(null);
+  const [unitTasksData, setUnitTasksData]         = useState<{ title: string; summary: string | null; tasks: UnitTask[] } | null>(null);
+  const [summaryModalDay, setSummaryModalDay]     = useState<number | null>(null);
 
   // Preview sheet (unsubscribed users)
   const [previewSheetOpen, setPreviewSheetOpen]   = useState(false);
@@ -537,6 +539,18 @@ export function JourneyPathView({ journey, progress, journeyId }: JourneyPathVie
   }
 
   function handleNodeTap(node: PathChainNode) {
+    // Summary node — opens the markdown modal. Locked while the day isn't
+    // complete; the chainItems memo has already decided locked/completed.
+    if (node.taskType === 'summary') {
+      if (node.variant === 'locked') {
+        hapticWarning();
+        return;
+      }
+      hapticLight();
+      setSummaryModalDay((node.stepIdx ?? 0) + 1);
+      return;
+    }
+
     // Unsubscribed: Day 1 nodes are tappable as a free try-out for every
     // journey (including premium). Later days still show the preview
     // sheet so the user understands they need to subscribe.
@@ -602,7 +616,11 @@ export function JourneyPathView({ journey, progress, journeyId }: JourneyPathVie
         task,
       };
     });
-    setUnitTasksData({ title: `Day ${stepIdx + 1}: ${title}`, tasks });
+    setUnitTasksData({
+      title: `Day ${stepIdx + 1}: ${title}`,
+      summary: step.summary ?? null,
+      tasks,
+    });
     setUnitTasksOpen(true);
   }
 
@@ -625,15 +643,18 @@ export function JourneyPathView({ journey, progress, journeyId }: JourneyPathVie
         onClick: () => openUnitTasks(stepIdx),
       });
 
+      const taskVariants: NodeVariant[] = [];
       (step.tasks ?? []).forEach((task, ti) => {
         const nodeId = `${step.id}-${task.id}`;
         const serverEntry = taskStateById.get(task.id);
         const taskType = serverEntry ? mapServerKind(serverEntry.kind) : getTaskType(task);
+        const variant = getVariant(task.id, stepIdx, ti);
+        taskVariants.push(variant);
         items.push({
           kind: 'node',
           node: {
             task,
-            variant: getVariant(task.id, stepIdx, ti),
+            variant,
             taskType,
             nodeId,
             taskTitle: getTaskTitle(task),
@@ -642,6 +663,34 @@ export function JourneyPathView({ journey, progress, journeyId }: JourneyPathVie
             isPremiumStep: isPremium,
           },
         });
+      });
+
+      // Append a synthetic "Summary" node as the final item of every day.
+      // - locked while any sibling task is not yet completed (greyed out)
+      // - completed once all siblings are completed (stays re-openable)
+      // The task payload is a minimal stub because PathChainNode requires one;
+      // handleNodeTap branches on taskType === 'summary' before dereferencing.
+      const allCompleted =
+        taskVariants.length > 0 &&
+        taskVariants.every((v) => v === 'completed');
+      const summaryVariant: NodeVariant = allCompleted ? 'completed' : 'locked';
+      items.push({
+        kind: 'node',
+        node: {
+          task: {
+            id: `summary::${step.id}`,
+            strapiId: 0,
+            stepId: step.id,
+            order: 9999,
+          } as unknown as JourneyTask,
+          variant: summaryVariant,
+          taskType: 'summary',
+          nodeId: `${step.id}-summary`,
+          taskTitle: 'Summary',
+          isMandatory: false,
+          stepIdx,
+          isPremiumStep: isPremium,
+        },
       });
     });
     return items;
@@ -820,6 +869,7 @@ export function JourneyPathView({ journey, progress, journeyId }: JourneyPathVie
         open={unitTasksOpen}
         onClose={() => setUnitTasksOpen(false)}
         unitTitle={unitTasksData?.title ?? ''}
+        summary={unitTasksData?.summary ?? null}
         tasks={unitTasksData?.tasks ?? []}
         onTaskTap={(item) => {
           setUnitTasksOpen(false);
@@ -830,6 +880,17 @@ export function JourneyPathView({ journey, progress, journeyId }: JourneyPathVie
           navigateToTask(item.task, item.task.id);
         }}
       />
+
+      {/* Day summary modal (AI-generated, end-of-day) */}
+      {enrollmentId && summaryModalDay != null && (
+        <JourneyDaySummaryModal
+          open={summaryModalDay != null}
+          onClose={() => setSummaryModalDay(null)}
+          enrollmentId={enrollmentId}
+          dayNumber={summaryModalDay}
+          totalDays={steps.length}
+        />
+      )}
 
       {/* Premium / subscribe sheet */}
       <Sheet open={premiumSheetOpen} onOpenChange={setPremiumSheetOpen}>

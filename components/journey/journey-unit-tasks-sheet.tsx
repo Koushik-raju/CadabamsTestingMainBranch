@@ -18,6 +18,7 @@ interface JourneyUnitTasksSheetProps {
   open: boolean;
   onClose: () => void;
   unitTitle: string;
+  summary?: string | null;
   tasks: UnitTask[];
   onTaskTap: (task: UnitTask) => void;
 }
@@ -28,7 +29,7 @@ const TYPE_EMOJI: Record<string, string> = {
 };
 
 export function JourneyUnitTasksSheet({
-  open, onClose, unitTitle, tasks, onTaskTap,
+  open, onClose, unitTitle, summary, tasks, onTaskTap,
 }: JourneyUnitTasksSheetProps) {
   return (
     <Sheet open={open} onOpenChange={(v) => !v && onClose()}>
@@ -41,6 +42,17 @@ export function JourneyUnitTasksSheet({
         <SheetHeader className="px-5 mb-3 text-left">
           <SheetTitle className="text-base font-bold">{unitTitle}</SheetTitle>
         </SheetHeader>
+
+        {summary ? (
+          <div className="px-5 mb-3">
+            <div className="px-3 py-2.5 rounded-xl bg-muted/60 border border-border/40">
+              <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wide mb-1">
+                Day summary
+              </p>
+              <p className="text-sm leading-relaxed text-foreground">{summary}</p>
+            </div>
+          </div>
+        ) : null}
 
         <div className="flex flex-col divide-y divide-border/40">
           {tasks.map((item, idx) => {

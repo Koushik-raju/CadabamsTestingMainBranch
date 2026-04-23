@@ -100,6 +100,7 @@ export interface JourneyStep {
   orderNo: number;
   title: string;
   description: JourneyRichText[];
+  summary?: string | null;
   icon?: unknown;
   iconId?: unknown;
   extraTaskTitle?: unknown;

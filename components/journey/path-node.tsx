@@ -2,14 +2,14 @@
 
 import {
   Play, BookOpen, Headphones, PenLine, Gift,
-  Trophy, Lock, Check, ClipboardList, Star, FileText,
+  Trophy, Lock, Check, ClipboardList, Star, FileText, Sparkles,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 export type NodeVariant = 'completed' | 'active' | 'locked' | 'default';
 export type NodeTaskType =
   | 'video' | 'book' | 'audio' | 'journal' | 'assessment'
-  | 'gift'  | 'trophy' | 'read' | string;
+  | 'gift'  | 'trophy' | 'read' | 'summary' | string;
 
 export interface TypeColorConfig { bg: string; fg: string; label: string }
 
@@ -22,6 +22,7 @@ export const TYPE_COLORS: Record<string, TypeColorConfig> = {
   gift:       { bg: '#FF6D00', fg: '#ffffff', label: 'Mood Check' }, // deep orange
   trophy:     { bg: '#FFD600', fg: '#1a1a1a', label: 'Trophy'     }, // vivid yellow (dark text)
   read:       { bg: '#E91E8C', fg: '#ffffff', label: 'Read'       }, // hot pink/magenta
+  summary:    { bg: '#8B5CF6', fg: '#ffffff', label: 'Summary'    }, // violet
 };
 
 export function getTypeColor(taskType: NodeTaskType): TypeColorConfig {
@@ -47,6 +48,7 @@ function TaskIcon({ taskType, size = 5 }: { taskType: NodeTaskType; size?: numbe
     case 'gift':       return <Gift       className={cls} />;
     case 'trophy':     return <Trophy     className={cls} />;
     case 'read':       return <FileText   className={cls} />;
+    case 'summary':    return <Sparkles   className={cls} />;
     default:           return <Star       className={cls} />;
   }
 }
