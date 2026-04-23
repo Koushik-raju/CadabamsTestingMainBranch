@@ -65,6 +65,7 @@ import { PathChain, getTaskType, type PathChainNode, type ChainItem } from './pa
 import { XpFloat } from './xp-float';
 import { JourneyTaskActionSheet, type TaskActionSheetData } from './journey-task-action-sheet';
 import { JourneyUnitTasksSheet, type UnitTask } from './journey-unit-tasks-sheet';
+import { JourneyDaySummaryModal } from './journey-day-summary-modal';
 import { JourneyPreviewSheet } from './journey-preview-sheet';
 import { JourneyDaySummarySheet } from './journey-day-summary-sheet';
 import type { NodeVariant } from './path-node';
@@ -202,7 +203,8 @@ export function JourneyPathView({ journey, progress, journeyId }: JourneyPathVie
   const [actionSheetData, setActionSheetData]     = useState<TaskActionSheetData | null>(null);
   const [actionSheetOpen, setActionSheetOpen]     = useState(false);
   const [unitTasksOpen, setUnitTasksOpen]         = useState(false);
-  const [unitTasksData, setUnitTasksData]         = useState<{ title: string; tasks: UnitTask[] } | null>(null);
+  const [unitTasksData, setUnitTasksData]         = useState<{ title: string; summary: string | null; tasks: UnitTask[] } | null>(null);
+  const [summaryModalDay, setSummaryModalDay]     = useState<number | null>(null);
 
   // Preview sheet (unsubscribed users)
   const [previewSheetOpen, setPreviewSheetOpen]   = useState(false);
@@ -537,6 +539,18 @@ export function JourneyPathView({ journey, progress, journeyId }: JourneyPathVie
   }
 
   function handleNodeTap(node: PathChainNode) {
+    // Summary node — opens the markdown modal. Locked while the day isn't
+    // complete; the chainItems memo has already decided locked/completed.
+    if (node.taskType === 'summary') {
+      if (node.variant === 'locked') {
+        hapticWarning();
+        return;
+      }
+      hapticLight();
+      setSummaryModalDay((node.stepIdx ?? 0) + 1);
+      return;
+    }
+
     // Unsubscribed behaviour:
     // - FREE journeys: Day 1 is tappable as a free try-out; later days
     //   route to the preview sheet so the user sees the subscribe CTA.
@@ -618,7 +632,11 @@ export function JourneyPathView({ journey, progress, journeyId }: JourneyPathVie
         task,
       };
     });
-    setUnitTasksData({ title: `Day ${stepIdx + 1}: ${title}`, tasks });
+    setUnitTasksData({
+      title: `Day ${stepIdx + 1}: ${title}`,
+      summary: step.summary ?? null,
+      tasks,
+    });
     setUnitTasksOpen(true);
   }
 
@@ -641,15 +659,18 @@ export function JourneyPathView({ journey, progress, journeyId }: JourneyPathVie
         onClick: () => openUnitTasks(stepIdx),
       });
 
+      const taskVariants: NodeVariant[] = [];
       (step.tasks ?? []).forEach((task, ti) => {
         const nodeId = `${step.id}-${task.id}`;
         const serverEntry = taskStateById.get(task.id);
         const taskType = serverEntry ? mapServerKind(serverEntry.kind) : getTaskType(task);
+        const variant = getVariant(task.id, stepIdx, ti);
+        taskVariants.push(variant);
         items.push({
           kind: 'node',
           node: {
             task,
-            variant: getVariant(task.id, stepIdx, ti),
+            variant,
             taskType,
             nodeId,
             taskTitle: getTaskTitle(task),
@@ -659,10 +680,47 @@ export function JourneyPathView({ journey, progress, journeyId }: JourneyPathVie
           },
         });
       });
+
+      // Append a synthetic "Summary" node as the final item of every day.
+      // Variants:
+      //   locked    — the day's tasks aren't all completed yet (greyed + lock)
+      //   default   — tasks done, no AI summary yet (tappable → Generate flow)
+      //   completed — AI summary already persisted (tappable → View flow)
+      // handleNodeTap branches on taskType === 'summary' before dereferencing
+      // the (stubbed) task payload, so the minimal stub is safe.
+      const dayProgress = progress?.days?.find((d) => d.dayNumber === stepIdx + 1);
+      const allTasksCompleted =
+        taskVariants.length > 0 &&
+        taskVariants.every((v) => v === 'completed');
+      const dayDone = allTasksCompleted || dayProgress?.completed === true;
+      const summaryGenerated = !!dayProgress?.summary;
+      const summaryVariant: NodeVariant = !dayDone
+        ? 'locked'
+        : summaryGenerated
+          ? 'completed'
+          : 'default';
+      items.push({
+        kind: 'node',
+        node: {
+          task: {
+            id: `summary::${step.id}`,
+            strapiId: 0,
+            stepId: step.id,
+            order: 9999,
+          } as unknown as JourneyTask,
+          variant: summaryVariant,
+          taskType: 'summary',
+          nodeId: `${step.id}-summary`,
+          taskTitle: summaryGenerated ? 'View Summary' : 'Summary',
+          isMandatory: false,
+          stepIdx,
+          isPremiumStep: isPremium,
+        },
+      });
     });
     return items;
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [steps, journey.isPremium, taskStateById, isSubscribed]);
+  }, [steps, journey.isPremium, taskStateById, isSubscribed, progress?.days]);
 
   const imageUrl = fixImageUrl(journey.icon);
   const name     = extractJourneyName(journey.name);
@@ -819,6 +877,7 @@ export function JourneyPathView({ journey, progress, journeyId }: JourneyPathVie
         open={unitTasksOpen}
         onClose={() => setUnitTasksOpen(false)}
         unitTitle={unitTasksData?.title ?? ''}
+        summary={unitTasksData?.summary ?? null}
         tasks={unitTasksData?.tasks ?? []}
         onTaskTap={(item) => {
           setUnitTasksOpen(false);
@@ -829,6 +888,22 @@ export function JourneyPathView({ journey, progress, journeyId }: JourneyPathVie
           navigateToTask(item.task, item.task.id);
         }}
       />
+
+      {/* Day summary modal (AI-generated, end-of-day) */}
+      {enrollmentId && summaryModalDay != null && (
+        <JourneyDaySummaryModal
+          open={summaryModalDay != null}
+          onClose={() => setSummaryModalDay(null)}
+          enrollmentId={enrollmentId}
+          dayNumber={summaryModalDay}
+          totalDays={steps.length}
+          onSummaryGenerated={() => {
+            // Refresh enrollment so progress.days[].summary updates and the
+            // summary node flips from 'default' (Generate) to 'completed' (View).
+            void globalMutate(journeyEnrollmentKey(journeyId));
+          }}
+        />
+      )}
 
       {/* Premium / subscribe sheet */}
       <Sheet open={premiumSheetOpen} onOpenChange={setPremiumSheetOpen}>
