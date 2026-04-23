@@ -1,0 +1,7 @@
+echo "▶ Type checking..."
+pnpm run typecheck
+
+echo "▶ Building..."
+pnpm run build
+
+echo "✓ Pre-commit checks passed."
