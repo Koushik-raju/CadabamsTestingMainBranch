@@ -163,22 +163,34 @@ export function DayFeed({ day, isLoading, onOpenItem }: Props) {
     <div className="pb-20">
       {day.journeys.length > 0 && (
         <Section title="Journey activity" icon={Route} accent="bg-violet-500">
-          {day.journeys.map((item, i) => (
-            <Row
-              key={`${item.enrollmentId}-${item.dayNumber}`}
-              onClick={() =>
-                onOpenItem({
-                  title: item.journeyTitle ?? "Journey",
-                  subtitle: `Day ${item.dayNumber} · ${formatTime(item.completedAt)}`,
-                  body: item.summaryText,
-                })
-              }
-              title={`Day ${item.dayNumber} · ${item.journeyTitle ?? "Journey"}`}
-              meta={formatTime(item.completedAt)}
-              preview={item.summaryText}
-              isLast={i === day.journeys.length - 1}
-            />
-          ))}
+          {day.journeys.map((item, i) => {
+            const isDay = item.kind === "day";
+            const rowTitle = isDay
+              ? `Day ${item.dayNumber ?? "?"} · ${item.journeyTitle ?? "Journey"}`
+              : `${item.taskTitle ?? item.taskType ?? "Task"} · ${item.journeyTitle ?? "Journey"}`;
+            const modalTitle = isDay
+              ? (item.journeyTitle ?? "Journey")
+              : (item.taskTitle ?? item.taskType ?? "Task");
+            const modalSubtitle = isDay
+              ? `Day ${item.dayNumber ?? "?"} · ${formatTime(item.completedAt)}`
+              : `${item.journeyTitle ?? "Journey"}${item.dayNumber != null ? ` · Day ${item.dayNumber}` : ""} · ${formatTime(item.completedAt)}`;
+            const body = isDay
+              ? item.summaryText
+              // Task rows have no markdown body to render in the modal —
+              // fall back to a short description so the modal still feels
+              // meaningful when the user taps one.
+              : `_${item.taskType ?? "Task"} completed at ${formatTime(item.completedAt)}._`;
+            return (
+              <Row
+                key={`${item.kind}-${item.enrollmentId}-${item.dayNumber ?? "?"}-${i}`}
+                onClick={() => onOpenItem({ title: modalTitle, subtitle: modalSubtitle, body })}
+                title={rowTitle}
+                meta={formatTime(item.completedAt)}
+                preview={isDay ? item.summaryText : item.taskType}
+                isLast={i === day.journeys.length - 1}
+              />
+            );
+          })}
         </Section>
       )}
 

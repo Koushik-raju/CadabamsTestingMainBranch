@@ -41,11 +41,18 @@ export interface GrowthWeek {
 }
 
 export interface GrowthJourneyItem {
+  /** 'day' = full-day completion with LLM summary; 'task' = individual task (mood/journal/audio/etc.) completed inside a journey. */
+  kind: 'day' | 'task';
   enrollmentId: string;
   journeyId: string;
   journeyTitle: string | null;
-  dayNumber: number;
+  dayNumber: number | null;
+  /** Only populated when kind='day'. */
   summaryText: string | null;
+  /** Only populated when kind='task'. */
+  taskTitle: string | null;
+  /** Only populated when kind='task'. CmsJourneyStepTask.kind enum value. */
+  taskType: string | null;
   completedAt: string;
 }
 
