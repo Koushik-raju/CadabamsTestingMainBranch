@@ -31,6 +31,7 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { PageHeader } from '@/components/shared/navigation/page-header';
 import { WeeklyCalendar } from '@/components/growth/weekly-calendar';
 import { DayFeed, type ModalPayload } from '@/components/growth/day-feed';
@@ -48,20 +49,34 @@ function shiftIso(iso: string, days: number): string {
   return d.toISOString().slice(0, 10);
 }
 
+const ISO_DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
+
 export default function GrowthPage() {
   const today = todayIso();
-  const [selectedDate, setSelectedDate] = useState<string>(today);
-  const [weekAnchor, setWeekAnchor] = useState<string>(today);
+  const searchParams = useSearchParams();
+  // `?date=YYYY-MM-DD` lets external callers (the home widget, deep links)
+  // hand off a specific day and skip the auto-jump. Invalid values are
+  // silently ignored so arbitrary query strings never break navigation.
+  const dateParam = searchParams?.get('date') ?? null;
+  const initialDate = dateParam && ISO_DATE_RE.test(dateParam) ? dateParam : today;
+
+  const [selectedDate, setSelectedDate] = useState<string>(initialDate);
+  const [weekAnchor, setWeekAnchor] = useState<string>(initialDate);
   const [modal, setModal] = useState<ModalPayload | null>(null);
 
-  // First-load auto-jump: if today has no activity but the user has data
-  // elsewhere in their history, snap both the selection and the calendar
-  // anchor to that latest date. The ref gates this to a single run so the
-  // user's manual navigation is never overridden.
+  // First-load auto-jump: only runs when the caller did NOT pass ?date=.
+  // If today has no activity but the user has data elsewhere in their
+  // history, snap both the selection and the calendar anchor to the
+  // best default date. The ref gates this to a single run so the user's
+  // manual navigation is never overridden.
   const { latest } = useGrowthLatestActiveDate();
   const autoJumpedRef = useRef(false);
   useEffect(() => {
     if (autoJumpedRef.current) return;
+    if (dateParam && ISO_DATE_RE.test(dateParam)) {
+      autoJumpedRef.current = true;
+      return;
+    }
     if (!latest) return;
     if (latest === today) {
       autoJumpedRef.current = true;
@@ -70,7 +85,7 @@ export default function GrowthPage() {
     autoJumpedRef.current = true;
     setSelectedDate(latest);
     setWeekAnchor(latest);
-  }, [latest, today]);
+  }, [latest, today, dateParam]);
 
   const { week, isLoading: weekLoading } = useGrowthWeek(weekAnchor);
   const { day, isLoading: dayLoading } = useGrowthDay(selectedDate);
