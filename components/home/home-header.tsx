@@ -25,7 +25,7 @@
  *   useAuth() — provides user name and profile image
  *   useRouter() — for navigation on send
  *
- * LAST UPDATED: 2026-04-23 — converted Ask Dr. Riya from button to real input with send
+ * LAST UPDATED: 2026-04-24 — onMoodClick now passes selected moodId (default 3) so mood-check page can pre-fill
  */
 
 "use client";
@@ -39,7 +39,7 @@ import { useState } from "react";
 
 interface Props {
   moodTracker?: Array<{ simily?: { id: number } }>;
-  onMoodClick?: () => void;
+  onMoodClick?: (moodId: number) => void;
 }
 
 const MOODS = ["😟", "😐", "😊", "😄", "🤩"];
@@ -114,7 +114,7 @@ export function HomeHeader({ moodTracker, onMoodClick }: Props) {
         <div className="flex flex-col gap-4 w-full">
           <div className="flex flex-col gap-1.5 max-w-[280px]">
             <h2 className="text-[22px] font-bold leading-[1.15] tracking-tight">
-              Hi <span className="font-black">{firstName}</span>, how are you feeling today?
+              How are you feeling today?
             </h2>
             <p className="text-white/80 text-[13px] font-medium leading-relaxed">
               Your check-in helps us shape your home, guidance, and support.
@@ -122,7 +122,7 @@ export function HomeHeader({ moodTracker, onMoodClick }: Props) {
           </div>
 
           <button
-            onClick={onMoodClick}
+            onClick={() => onMoodClick?.(currentMoodId ?? 3)}
             className="flex items-center bg-white/15 backdrop-blur-md rounded-xl px-4 py-2 gap-2.5 border border-white/10 w-fit hover:bg-white/20 transition-all"
             aria-label="Select your mood"
           >

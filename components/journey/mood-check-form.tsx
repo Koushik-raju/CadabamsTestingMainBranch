@@ -23,7 +23,7 @@
  *   shadcn: Card, CardContent, Button. lucide-react: Sparkles, Check.
  *   lib/utils: cn.
  *
- * LAST UPDATED: 2026-04-20 — redesigned to Compact Card UI (hero + emoji selector).
+ * LAST UPDATED: 2026-04-24 — added defaultMoodValue prop; all question defaults set to neutral (6).
  */
 "use client";
 
@@ -45,20 +45,22 @@ interface MoodCheckFormProps {
   title?: string;
   subtitle?: string;
   submitLabel?: string;
+  /** Pre-selected mood value (2–10) from the home header selection. Overrides q_0's default. */
+  defaultMoodValue?: number;
 }
 
 const MOOD_STEPS: { value: number; emoji: string; label: string; gradient: string }[] = [
-  { value: 2, emoji: "😞", label: "Very Low", gradient: "from-red-500 to-rose-600" },
-  { value: 4, emoji: "😕", label: "Low", gradient: "from-orange-500 to-amber-500" },
-  { value: 6, emoji: "😐", label: "Neutral", gradient: "from-amber-400 to-yellow-500" },
-  { value: 8, emoji: "🙂", label: "Good", gradient: "from-emerald-500 to-teal-600" },
-  { value: 10, emoji: "😊", label: "Great", gradient: "from-violet-500 to-purple-600" },
+  { value: 2, emoji: "😟", label: "Very Low", gradient: "from-red-500 to-rose-600" },
+  { value: 4, emoji: "😐", label: "Low", gradient: "from-orange-500 to-amber-500" },
+  { value: 6, emoji: "😊", label: "Neutral", gradient: "from-amber-400 to-yellow-500" },
+  { value: 8, emoji: "😄", label: "Good", gradient: "from-emerald-500 to-teal-600" },
+  { value: 10, emoji: "🤩", label: "Great", gradient: "from-violet-500 to-purple-600" },
 ];
 
 const DEFAULT_QUESTIONS: MoodQuestion[] = [
   { question: "How are you feeling right now?", value: 6 },
-  { question: "How stressed do you feel?", value: 4 },
-  { question: "How energetic do you feel?", value: 8 },
+  { question: "How stressed do you feel?", value: 6 },
+  { question: "How energetic do you feel?", value: 6 },
 ];
 
 function snapToStep(value: number) {
@@ -74,11 +76,15 @@ export function MoodCheckForm({
   title = "How are you feeling?",
   subtitle = "Take a moment to reflect and log your current mood.",
   submitLabel = "Save Mood",
+  defaultMoodValue,
 }: MoodCheckFormProps) {
   const [answers, setAnswers] = useState<Record<string, number>>(() => {
     const initial: Record<string, number> = {};
     questions.forEach((q, i) => {
-      initial[`q_${i}`] = snapToStep(q.value).value;
+      /* q_0 is the primary "how are you feeling" question — override with the
+       * mood the user tapped on the home screen (if provided). */
+      const base = i === 0 && defaultMoodValue != null ? defaultMoodValue : q.value;
+      initial[`q_${i}`] = snapToStep(base).value;
     });
     return initial;
   });

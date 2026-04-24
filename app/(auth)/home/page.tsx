@@ -115,7 +115,7 @@ export default function HomePage() {
 
   return (
     <div className="min-h-screen bg-background">
-      <HomeHeader onMoodClick={() => router.push("/assessment/avym73d4x6258t3ligurl56r")} />
+      <HomeHeader onMoodClick={(moodId) => router.push(`/journeys/mood-check?mood=${moodId}`)} />
 
       {/* Main content — overlaps header by pulling up with negative margin */}
       <div className="relative mt-[-20px] pt-8 pb-20 bg-background rounded-t-2xl z-10 flex flex-col gap-0">

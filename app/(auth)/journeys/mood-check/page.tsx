@@ -19,7 +19,7 @@
  * DEPENDENCIES:
  *   next/navigation (useRouter), PageHeader, MoodCheckForm, Skeleton
  *
- * LAST UPDATED: 2026-04-23 — migrated custom header div to PageHeader
+ * LAST UPDATED: 2026-04-24 — reads ?mood= param and maps to form value to pre-fill MoodCheckForm
  */
 "use client";
 
@@ -27,14 +27,20 @@ import { MoodCheckForm } from "@/components/journey/mood-check-form";
 import { PageHeader } from "@/components/shared/navigation/page-header";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useJourneyTaskContinuation } from "@/hooks/journeys/use-journey-task-continuation";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useState } from "react";
 
 function MoodCheckContent() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const continuation = useJourneyTaskContinuation("MOOD");
 
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  /* Map home-header mood ID (1–5) → form value (2–10) via id × 2.
+   * Falls back to 6 (neutral, middle step) when no param is present. */
+  const moodParam = searchParams.get("mood");
+  const defaultMoodValue = moodParam ? Math.min(10, Math.max(2, Number(moodParam) * 2)) : 6;
 
   // Collapse the multi-question mood form down to the MOOD proof the
   // backend expects (moodBefore + moodAfter, 1..10). We take q_0 as
@@ -83,6 +89,7 @@ function MoodCheckContent() {
           title="How are you feeling?"
           subtitle="Take a moment to reflect and log your current mood."
           submitLabel="Save Mood"
+          defaultMoodValue={defaultMoodValue}
         />
       </div>
     </div>
