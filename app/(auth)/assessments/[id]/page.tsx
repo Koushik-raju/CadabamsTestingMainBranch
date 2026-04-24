@@ -35,7 +35,7 @@
  *   submitAssessment              — SDK call to patientAssessmentsControllerCreateCompletion
  *   QuestionRenderer              — renders question UI by type
  *
- * LAST UPDATED: 2026-04-20 — add Past Reports header link.
+ * LAST UPDATED: 2026-04-24 — make Continue button sticky to bottom with extra bottom padding.
  */
 
 "use client";
@@ -370,9 +370,9 @@ export default function AssessmentFormPage({ params }: { params: Promise<{ id: s
         />
       </div>
 
-      {/* Continue button — hidden on generate steps (they manage their own buttons) */}
+      {/* Continue button — sticky to bottom, hidden on generate steps */}
       {!isGenerateStep && (
-        <div className="px-5 pb-8 pt-3 border-t border-border bg-card">
+        <div className="sticky bottom-0 px-5 pt-3 pb-10 border-t border-border bg-card">
           <Button
             className="w-full bg-primary hover:bg-primary/90 text-white font-semibold h-14 rounded-2xl text-base disabled:opacity-40"
             disabled={!isStepComplete || submitting}
