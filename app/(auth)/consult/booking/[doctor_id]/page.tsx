@@ -25,7 +25,7 @@
  *   useBooking — BookingContext for saving selection before checkout
  *   PageHeader — shared navigation header
  *
- * LAST UPDATED: 2026-04-23 — filter campuses by doctor.campus_ids so only the doctor's campuses show in the sheet
+ * LAST UPDATED: 2026-04-24 — filter out past and in-progress slots so only future slots are shown
  */
 "use client";
 
@@ -254,7 +254,12 @@ function BookingContent() {
   const maxPage = Math.ceil(dates.length / 10) - 1;
 
   const selectedKey = toDateKey(selectedDate);
-  const daySlots = slotsByDate[selectedKey] ?? [];
+  // Only show slots that haven't started yet. Slots with start_datetime <= now are
+  // either already past or currently in progress — both must be hidden.
+  const now = new Date();
+  const daySlots = (slotsByDate[selectedKey] ?? []).filter(
+    (s) => new Date(s.start_datetime) > now,
+  );
   const morningSlots = daySlots.filter((s) => new Date(s.start_datetime).getHours() < 12);
   const afternoonSlots = daySlots.filter((s) => {
     const h = new Date(s.start_datetime).getHours();
