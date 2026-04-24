@@ -20,7 +20,7 @@
  * DEPENDENCIES:
  *   shadcn Card, Skeleton, Separator, Badge
  *
- * LAST UPDATED: 2026-04-22 — replace placeholder with real enrolled journey data
+ * LAST UPDATED: 2026-04-24 — skeleton reduced to single row to match single-journey display
  */
 
 import { Card, CardContent } from "@/components/ui/card";
@@ -67,19 +67,16 @@ export function JourneySection({ enrollments = [], streak, isLoading = false }: 
       {isLoading ? (
         <Card>
           <CardContent className="py-0 px-3">
-            {[0, 1].map((i) => (
-              <div key={i}>
-                <div className="flex items-start gap-3 py-3">
-                  <Skeleton className="w-11 h-11 rounded-2xl flex-shrink-0" />
-                  <div className="flex-1 space-y-1.5 pt-0.5">
-                    <Skeleton className="h-3.5 w-2/3 rounded" />
-                    <Skeleton className="h-2.5 w-1/3 rounded" />
-                    <Skeleton className="h-1.5 w-full rounded-full mt-2" />
-                  </div>
+            <div>
+              <div className="flex items-start gap-3 py-3">
+                <Skeleton className="w-11 h-11 rounded-2xl flex-shrink-0" />
+                <div className="flex-1 space-y-1.5 pt-0.5">
+                  <Skeleton className="h-3.5 w-2/3 rounded" />
+                  <Skeleton className="h-2.5 w-1/3 rounded" />
+                  <Skeleton className="h-1.5 w-full rounded-full mt-2" />
                 </div>
-                {i === 0 && <Separator />}
               </div>
-            ))}
+            </div>
           </CardContent>
         </Card>
       ) : enrollments.length === 0 ? (

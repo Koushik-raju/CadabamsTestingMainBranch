@@ -28,7 +28,7 @@
  *   QuickActions           — 2-column grid of feature shortcuts
  *   JourneySection         — active enrolled journey list with progress
  *
- * LAST UPDATED: 2026-04-22 — pass real enrolled journeys and streak to JourneySection
+ * LAST UPDATED: 2026-04-24 — use bg-secondary for elevated content surface instead of plain white
  */
 
 "use client";
@@ -50,17 +50,21 @@ export default function HomePage() {
   const { enrollments, isLoading: enrollmentsLoading } = useEnrolledJourneys();
   const { gamification } = useGamification();
 
-  const homeEnrollments = useMemo(
-    () =>
-      enrollments.map((e) => ({
-        enrollmentId: e.id,
-        journeyId: e.journeyId,
-        name: e.name ?? "",
-        currentDay: e.currentDay ?? 1,
-        totalDays: e.totalDays ?? 0,
-      })),
-    [enrollments],
-  );
+  /* Take only the most recent enrollment (last in the API response) to show a
+     single active journey card on the home screen. */
+  const homeEnrollments = useMemo(() => {
+    const latest = enrollments[enrollments.length - 1];
+    if (!latest) return [];
+    return [
+      {
+        enrollmentId: latest.id,
+        journeyId: latest.journeyId,
+        name: latest.name ?? "",
+        currentDay: latest.currentDay ?? 1,
+        totalDays: latest.totalDays ?? 0,
+      },
+    ];
+  }, [enrollments]);
 
   const handleAction = (type: string, subtype?: string) => {
     switch (type) {
@@ -114,11 +118,11 @@ export default function HomePage() {
   };
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-secondary">
       <HomeHeader onMoodClick={(moodId) => router.push(`/journeys/mood-check?mood=${moodId}`)} />
 
       {/* Main content — overlaps header by pulling up with negative margin */}
-      <div className="relative mt-[-20px] pt-8 pb-20 bg-background rounded-t-2xl z-10 flex flex-col gap-0">
+      <div className="relative mt-[-20px] pt-8 pb-20 bg-secondary rounded-t-2xl z-10 flex flex-col gap-0">
         <UpcomingSession appointments={appointments} onJoin={() => handleAction("join_session")} />
 
         <SupportSection

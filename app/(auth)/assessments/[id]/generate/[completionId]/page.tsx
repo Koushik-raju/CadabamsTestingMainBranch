@@ -107,9 +107,17 @@ export default function AssessmentGeneratePage({
         <div className="text-center space-y-3">
           <h1 className="text-3xl font-bold text-foreground leading-tight">
             {isGenerating ? (
-              <>Generating<br />Your Report</>
+              <>
+                Generating
+                <br />
+                Your Report
+              </>
             ) : (
-              <>Something<br />Went Wrong</>
+              <>
+                Something
+                <br />
+                Went Wrong
+              </>
             )}
           </h1>
           <p className="text-muted-foreground text-base leading-relaxed max-w-xs mx-auto">
@@ -117,9 +125,7 @@ export default function AssessmentGeneratePage({
               ? "We're analysing your responses and compiling your personalised AI insights."
               : "We couldn't generate your report. Please try again."}
           </p>
-          {error && (
-            <p className="text-xs text-destructive max-w-xs mx-auto">{error}</p>
-          )}
+          {error && <p className="text-xs text-destructive max-w-xs mx-auto">{error}</p>}
         </div>
 
         {/* AI disclaimer card — same as Assessment Complete, shown while generating */}
@@ -129,7 +135,8 @@ export default function AssessmentGeneratePage({
             <div>
               <p className="text-sm font-semibold text-foreground mb-1">AI-Generated Report</p>
               <p className="text-xs text-muted-foreground leading-relaxed">
-                This report is generated using artificial intelligence based on your responses. It is for informational purposes only and does not replace professional medical advice.
+                This report is generated using artificial intelligence based on your responses. It
+                is for informational purposes only and does not replace professional medical advice.
               </p>
             </div>
           </div>
