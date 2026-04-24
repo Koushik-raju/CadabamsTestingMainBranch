@@ -25,7 +25,7 @@
  *   useAuth() — provides user name and profile image
  *   useRouter() — for navigation on send
  *
- * LAST UPDATED: 2026-04-24 — onMoodClick now passes selected moodId (default 3) so mood-check page can pre-fill
+ * LAST UPDATED: 2026-04-24 — mood button radius updated to rounded-[28px] to match Dr. Riya input bar
  */
 
 "use client";
@@ -123,7 +123,7 @@ export function HomeHeader({ moodTracker, onMoodClick }: Props) {
 
           <button
             onClick={() => onMoodClick?.(currentMoodId ?? 3)}
-            className="flex items-center bg-white/15 backdrop-blur-md rounded-xl px-4 py-2 gap-2.5 border border-white/10 w-fit hover:bg-white/20 transition-all"
+            className="flex items-center bg-white/15 backdrop-blur-md rounded-[28px] px-4 py-2 gap-2.5 border border-white/10 w-fit hover:bg-white/20 transition-all"
             aria-label="Select your mood"
           >
             <span className="text-[9px] font-bold text-white uppercase tracking-widest whitespace-nowrap opacity-90">
