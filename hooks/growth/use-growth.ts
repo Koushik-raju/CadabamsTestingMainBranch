@@ -91,13 +91,35 @@ export interface GrowthLatestActiveDate {
   date: string | null;
 }
 
+/**
+ * Browser's IANA timezone — sent to the backend so activity dates are
+ * bucketed by the user's local calendar day, not UTC. Without this an
+ * action taken at 02:00 IST ends up in the previous UTC day.
+ */
+function browserTz(): string {
+  try {
+    return Intl.DateTimeFormat().resolvedOptions().timeZone || 'Asia/Kolkata';
+  } catch {
+    return 'Asia/Kolkata';
+  }
+}
+
+/** Today as a YYYY-MM-DD string in the browser's local timezone. */
 export function todayIso(): string {
-  return new Date().toISOString().slice(0, 10);
+  const parts = new Intl.DateTimeFormat('en-CA', {
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+  }).formatToParts(new Date());
+  const p: Record<string, string> = {};
+  for (const x of parts) if (x.type !== 'literal') p[x.type] = x.value;
+  return `${p.year}-${p.month}-${p.day}`;
 }
 
 async function fetchLatestActiveDate(): Promise<GrowthLatestActiveDate> {
   const { data } = await apiClient.get<GrowthLatestActiveDate>(
     "/api/v1/me/growth/latest-active-date",
+    { params: { tz: browserTz() } },
   );
   return data;
 }
@@ -119,14 +141,14 @@ export function useGrowthLatestActiveDate() {
 
 async function fetchWeek(date: string): Promise<GrowthWeek> {
   const { data } = await apiClient.get<GrowthWeek>("/api/v1/me/growth/week", {
-    params: { date },
+    params: { date, tz: browserTz() },
   });
   return data;
 }
 
 async function fetchDay(date: string): Promise<GrowthDay> {
   const { data } = await apiClient.get<GrowthDay>("/api/v1/me/growth/day", {
-    params: { date },
+    params: { date, tz: browserTz() },
   });
   return data;
 }
