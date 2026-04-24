@@ -10,11 +10,16 @@
  * LOGIC OVERVIEW:
  *   Reads the journey-return context. Renders nothing until the context
  *   is hydrated, when there is no active slot, while the task is still
- *   in-progress (the CTA is meant to surface only on task end/summary
- *   pages after completion), or when the user is already on a
- *   /journeys/* route (the in-page UI is sufficient). Completed →
- *   banner with proof preview, +10 XP nudge, and a primary CTA that
- *   routes to the journey details page.
+ *   in-progress, or on the journey list / landing pages.
+ *
+ *   On /journeys/[id]/details the FAB IS shown when status is completed —
+ *   this covers the case where a task (e.g. an assessment) redirects the
+ *   user directly back to the journey page. In that case the button label
+ *   becomes "Continue your journey" and its action is just clear() (dismiss)
+ *   since the user is already on the right page.
+ *
+ *   On all other non-journey pages the button says "Return to journey" and
+ *   navigates to /journeys/[id]/details before clearing the slot.
  *
  * KEY VARIABLES / PROPS / EXPORTS:
  *   JourneyReturnFab — default export, no props, consumes context only
@@ -24,7 +29,7 @@
  *   next/navigation useRouter, usePathname
  *   shadcn Button — components/ui/button
  *
- * LAST UPDATED: 2026-04-22 — initial creation.
+ * LAST UPDATED: 2026-04-24 — allow FAB on /journeys/[id]/details for post-task redirect; "Continue your journey" dismiss mode.
  */
 "use client";
 
@@ -39,22 +44,30 @@ export function JourneyReturnFab() {
   const pathname = usePathname();
 
   if (!hydrated || !state) return null;
-  // Hide on the journeys list and the journey landing/details pages
-  // (in-page UI already covers the affordance there) but allow the FAB
-  // on task destinations that happen to live under /journeys/* such as
-  // /journeys/mood-check.
+  /* Hide on the journeys list page and the journey landing page.
+     /journeys/[id]/details is intentionally NOT hidden here — when a task
+     redirects the user directly back to the journey page (e.g. assessment
+     skipping the generate/result flow) the FAB must still surface as the
+     completion CTA. It is filtered to completed-only below, so in-progress
+     slots never appear on the journey page. */
   const hideOnJourneyOwnPages =
-    pathname === "/journeys" ||
-    /^\/journeys\/[^/]+$/.test(pathname ?? "") ||
-    /^\/journeys\/[^/]+\/details$/.test(pathname ?? "");
+    pathname === "/journeys" || /^\/journeys\/[^/]+$/.test(pathname ?? "");
   if (hideOnJourneyOwnPages) return null;
   // Only surface the CTA after the task has been marked complete — the
   // in-progress state is tracked so downstream task pages can flip it,
   // but we avoid cluttering unrelated screens with a "return" pill.
   if (state.status !== "completed") return null;
 
+  // True when the user is already on the journey details page (redirected
+  // back after a task completion). The button dismisses rather than navigates.
+  const isOnJourneyPage = /^\/journeys\/[^/]+\/details$/.test(pathname ?? "");
+
   function goBack() {
     if (!state) return;
+    if (isOnJourneyPage) {
+      clear();
+      return;
+    }
     const target = `/journeys/${state.journeyId}/details`;
     clear();
     router.push(target);
@@ -86,7 +99,7 @@ export function JourneyReturnFab() {
         </div>
         <div className="relative mt-3">
           <Button onClick={goBack} className="w-full bg-white text-emerald-700 hover:bg-white/90">
-            Return to journey
+            {isOnJourneyPage ? "Continue your journey" : "Return to journey"}
             <ArrowRight className="ml-1 h-4 w-4" />
           </Button>
         </div>

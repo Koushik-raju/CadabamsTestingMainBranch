@@ -52,13 +52,13 @@ import {
   useJournalingCategories,
   useSelfJournalingEntries,
 } from "@/hooks/use-journaling";
-import { journalSubEntriesKey, journalStreakKey } from "@/lib/swr-keys";
-import { mutate as globalMutate } from "swr";
+import { journalStreakKey, journalSubEntriesKey } from "@/lib/swr-keys";
 import type { EmojiClickData } from "emoji-picker-react";
 import { Hash, ImageIcon, Loader2, Mic, MicOff, Smile, Sparkles, X } from "lucide-react";
 import dynamic from "next/dynamic";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
+import { mutate as globalMutate } from "swr";
 
 const EmojiPicker = dynamic(() => import("emoji-picker-react"), { ssr: false });
 

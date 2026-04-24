@@ -41,15 +41,10 @@
  *   globalMutate (swr) — revalidates enrollment key on return
  *   journeyEnrollmentKey — lib/swr-keys
  *
- * LAST UPDATED: 2026-04-22 — (a) cooldown banner shows whenever the server
- *   reports a future nextDayUnlocksAt (dropped the brittle !allComplete guard);
- *   (b) auto-scroll polls for the target node for up to ~2s instead of firing
- *   a single 400ms setTimeout; (c) navigateToTask falls back to constructing
- *   an id-specific URL from CMS content when destinationPath is empty, and
- *   appends journeyEnrollmentId + journeyTaskId so destination pages can call
- *   completeTask with a proof id on the way back; (d) task NodeTaskType is
- *   sourced from the server-derived kind (EnrollmentTaskDto.kind) when
- *   available, with client getTaskType only as a pre-enrolment fallback.
+ * LAST UPDATED: 2026-04-24 — fall back to getTaskType(task) when server kind
+ *   is OTHER (DB relation not yet connected) so assessment nodes don't render
+ *   as "journal". Previously: cooldown banner, auto-scroll polling, id-specific
+ *   URL fallback, server-kind sourcing with client fallback for pre-enrolment.
  */
 "use client";
 
@@ -726,7 +721,14 @@ export function JourneyPathView({ journey, progress, journeyId }: JourneyPathVie
       (step.tasks ?? []).forEach((task, ti) => {
         const nodeId = `${step.id}-${task.id}`;
         const serverEntry = taskStateById.get(task.id);
-        const taskType = serverEntry ? mapServerKind(serverEntry.kind) : getTaskType(task);
+        /* When the server returns OTHER it means the content-relation join table
+           wasn't populated (assessment/audio/etc. not yet connected in the DB).
+           Fall back to CMS-based detection so the node still renders with the
+           correct type instead of showing "journal" for every unrecognised task. */
+        const taskType =
+          serverEntry && serverEntry.kind !== "OTHER"
+            ? mapServerKind(serverEntry.kind)
+            : getTaskType(task);
         const variant = getVariant(task.id, stepIdx, ti);
         taskVariants.push(variant);
         items.push({

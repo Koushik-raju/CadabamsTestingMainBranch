@@ -18,6 +18,11 @@
  *   - On final step (or Generate Report tap from the generate step), handleSubmit
  *     routes to /assessments/[id]/generate/[completionId]; the completion is only
  *     POSTed once thanks to submittedCompletionIdRef.
+ *   - JOURNEY CONTEXT: when the assessment was opened from a journey task
+ *     (continuation.active), handleSubmit skips the generate + result pages
+ *     entirely — it calls continuation.markCompleted() with the completionId
+ *     as proof and navigates straight back to the journey details page. The
+ *     JourneyReturnFab then surfaces on the journey page.
  *   - A "Past Reports" link in the header links to /assessments/[id]/reports
  *     so users can view prior reports without leaving the wizard.
  *
@@ -30,13 +35,16 @@
  *   submittedCompletionIdRef   — set once the CompletionResponseDto is created, used to
  *                                skip a duplicate POST from handleSubmit
  *   persistCompletion          — memoized-once submit helper returning the completion id
+ *   continuation               — useJourneyTaskContinuation('ASSESSMENT') — non-null active
+ *                                when opened from a journey; drives the fast-return flow
  *
  * DEPENDENCIES:
  *   useAssessmentById             — SWR hook wrapping cmsAssessmentsControllerFindOne
  *   submitAssessment              — SDK call to patientAssessmentsControllerCreateCompletion
  *   QuestionRenderer              — renders question UI by type
+ *   useJourneyTaskContinuation    — hooks/journeys/use-journey-task-continuation
  *
- * LAST UPDATED: 2026-04-24 — fix Continue blocked until answered: remove rating/qa from alwaysComplete, add per-type completion checks
+ * LAST UPDATED: 2026-04-24 — skip generate/result pages when opened from a journey; redirect to journey details with FAB
  */
 
 "use client";
@@ -50,6 +58,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { submitAssessment, useAssessmentById } from "@/hooks/assessments/use-assessment-detail";
+import { useJourneyTaskContinuation } from "@/hooks/journeys/use-journey-task-continuation";
 import { useAuth } from "@/hooks/shared/auth/use-auth";
 import {
   AlertCircle,
@@ -78,6 +87,8 @@ export default function AssessmentFormPage({ params }: { params: Promise<{ id: s
   // Completion id once persisted — tracked to avoid a second submit when the
   // generate step has already created the CompletionResponseDto.
   const submittedCompletionIdRef = useRef<string | null>(null);
+
+  const continuation = useJourneyTaskContinuation("ASSESSMENT");
 
   const { data: assessmentData, isLoading, error: fetchError } = useAssessmentById(assessmentId);
 
@@ -271,6 +282,28 @@ export default function AssessmentFormPage({ params }: { params: Promise<{ id: s
   };
 
   const handleSubmit = async () => {
+    /* When opened from a journey task, skip the AI-generate + result pages.
+       Instead: persist the completion, mark the task done on the backend via
+       the continuation hook, and navigate straight back to the journey details
+       page. The JourneyReturnFab will surface there as the completion CTA. */
+    if (continuation.active) {
+      setSubmitting(true);
+      try {
+        const completionId = await persistCompletion();
+        await continuation.markCompleted(
+          { kind: "ASSESSMENT", assessmentCompletionId: completionId },
+          { proofPreview: "Assessment Complete" },
+        );
+        router.push(`/journeys/${continuation.journeyId}/details`);
+      } catch (err) {
+        console.error("Error submitting assessment from journey:", err);
+        setError("Failed to submit assessment. Please try again.");
+      } finally {
+        setSubmitting(false);
+      }
+      return;
+    }
+
     // Persist the completion (once) and route to the generate page for that
     // specific completionId, which hosts the "Generate Report" CTA.
     if (submittedCompletionIdRef.current) {

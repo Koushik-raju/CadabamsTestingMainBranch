@@ -1,3 +1,33 @@
+/**
+ * FILE: hooks/documents/use-documents.ts
+ *
+ * PURPOSE:
+ *   SWR hook for fetching, uploading, and deleting user documents via the backend S3
+ *   presigned-URL flow.
+ *
+ * LOGIC OVERVIEW:
+ *   1. List: SWR fetches all UPLOADED documents for the current user's lead ID. Each document
+ *      includes a 1-hour presigned GET URL returned by the backend.
+ *   2. uploadDocument:
+ *      a. Calls presign-upload to get a presigned PUT URL and a documentId.
+ *      b. PUTs the binary directly to S3. Response status is checked — an S3 error (403, 400)
+ *         throws immediately so upload-complete is never called with a missing object.
+ *      c. Calls upload-complete; backend runs HeadObject to verify before marking UPLOADED.
+ *      d. Revalidates the SWR list.
+ *   3. deleteDocument: calls the delete endpoint and optimistically removes the item from
+ *      the SWR cache without a network round-trip.
+ *
+ * KEY VARIABLES / PROPS / EXPORTS:
+ *   useDocuments   — main export; returns { documents, isLoading, error, uploadDocument, deleteDocument }
+ *   CAMPUS         — hardcoded campus slug used for all calls
+ *
+ * DEPENDENCIES:
+ *   userDocumentsControllerPresignUpload, userDocumentsControllerUploadComplete,
+ *   userDocumentsControllerList, userDocumentsControllerDelete (sdk/backend-v2)
+ *   SWR
+ *
+ * LAST UPDATED: 2026-04-24 — check S3 PUT response status before calling upload-complete
+ */
 "use client";
 
 import type { DocumentData } from "@/components/documents/document-card";
@@ -65,12 +95,18 @@ export function useDocuments() {
     });
     const { uploadUrl, documentId } = presignRes.data!;
 
-    // 2. PUT file directly to S3
-    await fetch(uploadUrl, {
+    // 2. PUT file directly to S3.
+    // Must check response.ok — fetch does not throw on 4xx/5xx, so a silent
+    // 403 (signature mismatch, CORS, IAM) would let us fall through to
+    // upload-complete and mark a non-existent object as UPLOADED.
+    const putRes = await fetch(uploadUrl, {
       method: "PUT",
       body: file,
       headers: { "Content-Type": file.type },
     });
+    if (!putRes.ok) {
+      throw new Error(`File upload to storage failed (${putRes.status}). Please try again.`);
+    }
 
     // 3. Mark upload complete
     const completeRes = await userDocumentsControllerUploadComplete({

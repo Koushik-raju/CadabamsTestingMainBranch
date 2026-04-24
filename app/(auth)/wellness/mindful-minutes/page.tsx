@@ -79,6 +79,7 @@ export default function MindfulMinutesPage() {
               : "Breath, audio & visual resets · Under 5 min"
         }
         fallback="/home"
+        hardBack="/home"
         className="sticky top-0 z-10 bg-background border-b border-border px-4 py-3"
         right={
           <div className="relative">
@@ -237,7 +238,8 @@ export default function MindfulMinutesPage() {
                         )}
                         {item.audios && item.audios.length > 0 && (
                           <span className="text-[11px] bg-muted text-muted-foreground px-2 py-0.5 rounded font-bold">
-                            {item.audios.length} session{item.audios.length !== 1 ? "s" : ""}
+                            {item.audios.length} session
+                            {item.audios.length !== 1 ? "s" : ""}
                           </span>
                         )}
                       </div>

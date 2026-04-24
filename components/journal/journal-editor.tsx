@@ -16,7 +16,7 @@ import { useRef } from "react";
  *   1. Renders previously saved prompt/response pairs (savedPrompts) above the textarea.
  *   2. Shows the current AI-generated heading if isPromptMode is active.
  *   3. Shows a spinner while isPrompting is true and no heading has arrived yet.
- *   4. Exposes action buttons: Prompt Me, Go Deeper, Finish — rendered conditionally
+ *   4. Exposes action buttons: Prompt Me, Prompt Me, Finish — rendered conditionally
  *      based on whether content exists and which mode is active.
  *
  * KEY VARIABLES / PROPS / EXPORTS:
@@ -127,7 +127,7 @@ export function JournalEditor({
               disabled={isPrompting}
             >
               {isPrompting && <Loader2 className="w-4 h-4 animate-spin mr-2" />}
-              Go Deeper
+              Prompt Me
             </Button>
             <Button className="rounded-full" onClick={onSave} disabled={isLoading}>
               {isLoading && <Loader2 className="w-4 h-4 animate-spin mr-2" />}
