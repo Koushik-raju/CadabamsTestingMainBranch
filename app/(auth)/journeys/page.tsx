@@ -63,10 +63,14 @@ function useLatestAssessmentCategory(_mobile: string | null): string | null {
 function JourneysInner() {
   const searchParams = useSearchParams();
   const { user } = useAuth();
-  const mobile = (user as Record<string, unknown>)?.caller_mobile as string | undefined;
+  const mobile = (user as Record<string, unknown>)?.caller_mobile as
+    | string
+    | undefined;
 
   const [search, setSearch] = useState("");
-  const [activeCategory, setActiveCategory] = useState(searchParams?.get("category") ?? "All");
+  const [activeCategory, setActiveCategory] = useState(
+    searchParams?.get("category") ?? "All",
+  );
 
   const { journeys, isLoading: loadingJourneys } = useJourneys();
   const { enrollments, isLoading: loadingEnrolled } = useEnrolledJourneys();
@@ -74,9 +78,15 @@ function JourneysInner() {
 
   const isLoading = loadingJourneys || loadingEnrolled;
 
-  const journeyMap = useMemo(() => new Map(journeys.map((j) => [j.id, j])), [journeys]);
+  const journeyMap = useMemo(
+    () => new Map(journeys.map((j) => [j.id, j])),
+    [journeys],
+  );
 
-  const enrolledIds = useMemo(() => new Set(enrollments.map((e) => e.journeyId)), [enrollments]);
+  const enrolledIds = useMemo(
+    () => new Set(enrollments.map((e) => e.journeyId)),
+    [enrollments],
+  );
 
   const enrichedEnrollments = useMemo(
     () =>
@@ -150,14 +160,18 @@ function JourneysInner() {
   }, [enrichedEnrollments, sortedFiltered]);
 
   const hasEnrolled = enrichedEnrollments.length > 0;
-  const quickPicks = hasEnrolled ? sortedFiltered.slice(0, 10) : sortedFiltered.slice(5, 15);
+  const quickPicks = hasEnrolled
+    ? sortedFiltered.slice(0, 10)
+    : sortedFiltered.slice(5, 15);
 
   const recommendedCount = useMemo(() => {
     if (!recommendedCategory) return 0;
     return journeys.filter(
       (j) =>
         (j.grade ?? []).includes(recommendedCategory) ||
-        extractJourneyName(j.name).toLowerCase().includes(recommendedCategory.toLowerCase()),
+        extractJourneyName(j.name)
+          .toLowerCase()
+          .includes(recommendedCategory.toLowerCase()),
     ).length;
   }, [journeys, recommendedCategory]);
 
@@ -198,7 +212,9 @@ function JourneysInner() {
             ) : featuredSlides.length > 0 ? (
               <FeaturedJourneyCarousel slides={featuredSlides} />
             ) : (
-              <p className="text-sm text-muted-foreground py-4 text-center">No journeys found.</p>
+              <p className="text-sm text-muted-foreground py-4 text-center">
+                No journeys found.
+              </p>
             )}
           </section>
         </div>
@@ -206,7 +222,10 @@ function JourneysInner() {
         {loadingJourneys ? (
           <div className="flex gap-2 px-4 mb-4 overflow-hidden">
             {[1, 2, 3, 4].map((i) => (
-              <Skeleton key={i} className="h-8 w-20 rounded-2xl flex-shrink-0" />
+              <Skeleton
+                key={i}
+                className="h-8 w-20 rounded-2xl flex-shrink-0"
+              />
             ))}
           </div>
         ) : (
@@ -234,7 +253,7 @@ function JourneysInner() {
                   ))}
                 </div>
               ) : (
-                <div className="grid grid-cols-2 gap-3">
+                <div className="grid grid-cols-2 gap-3 space-x-1">
                   {quickPicks.map((journey) => (
                     <JourneyDiscoveryCard key={journey.id} journey={journey} />
                   ))}
