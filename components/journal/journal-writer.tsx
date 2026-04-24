@@ -15,7 +15,7 @@
  *      on mount (fires once via hasAutoTriggered guard).
  *   3. Toolbar: Mic triggers Web Speech API transcription (appended to textarea);
  *      Smile opens an emoji picker popover (selection appended at cursor).
- *   4. "Go deeper" saves the current response and fetches a follow-up question.
+ *   4. "Prompt Me" saves the current response and fetches a follow-up question.
  *      "Finish" saves everything and navigates back to /self-journaling.
  *   5. Closing with unsaved content auto-saves before navigating away.
  *
@@ -35,9 +35,8 @@
  *   emoji-picker-react          — emoji picker UI
  *   Web Speech API              — browser-native mic transcription
  *
- * LAST UPDATED: 2026-04-23 — Handle both SUB_JOURNAL and JOURNAL journey task kinds;
- *   after journey task completion, navigate to journey details via returnToJourney()
- *   instead of always redirecting to /self-journaling.
+ * LAST UPDATED: 2026-04-24 — After saving, revalidate journalSubEntriesKey and
+ *   journalStreakKey so the journal detail page shows the new entry immediately.
  */
 "use client";
 
@@ -53,6 +52,8 @@ import {
   useJournalingCategories,
   useSelfJournalingEntries,
 } from "@/hooks/use-journaling";
+import { journalSubEntriesKey, journalStreakKey } from "@/lib/swr-keys";
+import { mutate as globalMutate } from "swr";
 import type { EmojiClickData } from "emoji-picker-react";
 import { Hash, ImageIcon, Loader2, Mic, MicOff, Smile, Sparkles, X } from "lucide-react";
 import dynamic from "next/dynamic";
@@ -111,7 +112,11 @@ function fillPromptTemplate(
 }
 
 function buildContextFromEntries(
-  entries: Array<{ entry?: string | null; prompts?: JournalingPrompt[] | null; createdAt: string }>,
+  entries: Array<{
+    entry?: string | null;
+    prompts?: JournalingPrompt[] | null;
+    createdAt: string;
+  }>,
 ): { recentEntriesText: string; memorySummary: string } {
   const recent = entries.slice(0, 5);
   const recentEntriesText = recent
@@ -261,6 +266,14 @@ export function JournalWriter({ slug }: JournalWriterProps) {
         prompts: allPrompts,
         subJournalingId: sub?.id,
       });
+      // Revalidate the detail-page caches so the entries list and streak
+      // reflect the new entry when the user navigates back to the journal.
+      if (slug) {
+        await Promise.all([
+          globalMutate(journalSubEntriesKey(slug)),
+          globalMutate(journalStreakKey(slug)),
+        ]);
+      }
       // Report back to the journey when this writer was opened as a task.
       // On success, navigate directly to journey details instead of the
       // listing page — the user came from a journey and expects to return there.
@@ -596,7 +609,7 @@ export function JournalWriter({ slug }: JournalWriterProps) {
               ) : (
                 <Sparkles className="w-4 h-4" />
               )}
-              Go deeper
+              Prompt Me
             </Button>
             <Button
               variant="outline"
@@ -618,7 +631,7 @@ export function JournalWriter({ slug }: JournalWriterProps) {
             ) : (
               <Sparkles className="w-4 h-4" />
             )}
-            Go Deeper
+            Prompt Me
           </Button>
         )}
       </div>
