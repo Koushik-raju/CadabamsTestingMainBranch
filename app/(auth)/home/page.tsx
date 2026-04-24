@@ -28,7 +28,7 @@
  *   QuickActions           — 2-column grid of feature shortcuts
  *   JourneySection         — active enrolled journey list with progress
  *
- * LAST UPDATED: 2026-04-24 — use bg-secondary for elevated content surface instead of plain white
+ * LAST UPDATED: 2026-04-24 — thread icon field from enrollment into homeEnrollments for JourneySection
  */
 
 "use client";
@@ -62,6 +62,7 @@ export default function HomePage() {
         name: latest.name ?? "",
         currentDay: latest.currentDay ?? 1,
         totalDays: latest.totalDays ?? 0,
+        icon: latest.icon ?? null,
       },
     ];
   }, [enrollments]);
