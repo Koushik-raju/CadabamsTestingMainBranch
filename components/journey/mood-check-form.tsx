@@ -23,7 +23,7 @@
  *   shadcn: Card, CardContent, Button. lucide-react: Sparkles, Check.
  *   lib/utils: cn.
  *
- * LAST UPDATED: 2026-04-24 — no answers pre-selected by default; only q_0 is seeded when defaultMoodValue is explicitly provided.
+ * LAST UPDATED: 2026-04-24 — filter undefined answers before calling onSubmit to satisfy Record<string, number> contract.
  */
 "use client";
 
@@ -93,7 +93,12 @@ export function MoodCheckForm({
   };
 
   const handleSubmit = async () => {
-    await onSubmit(answers);
+    /* Strip undefined entries before handing to parent — state allows undefined
+     * so nothing is pre-selected, but onSubmit contract requires number values. */
+    const defined = Object.fromEntries(
+      Object.entries(answers).filter((entry): entry is [string, number] => entry[1] !== undefined),
+    );
+    await onSubmit(defined);
   };
 
   return (
