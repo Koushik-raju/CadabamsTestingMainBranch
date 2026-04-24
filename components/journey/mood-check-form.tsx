@@ -23,7 +23,7 @@
  *   shadcn: Card, CardContent, Button. lucide-react: Sparkles, Check.
  *   lib/utils: cn.
  *
- * LAST UPDATED: 2026-04-24 — added defaultMoodValue prop; all question defaults set to neutral (6).
+ * LAST UPDATED: 2026-04-24 — no answers pre-selected by default; only q_0 is seeded when defaultMoodValue is explicitly provided.
  */
 "use client";
 
@@ -78,15 +78,14 @@ export function MoodCheckForm({
   submitLabel = "Save Mood",
   defaultMoodValue,
 }: MoodCheckFormProps) {
-  const [answers, setAnswers] = useState<Record<string, number>>(() => {
-    const initial: Record<string, number> = {};
-    questions.forEach((q, i) => {
-      /* q_0 is the primary "how are you feeling" question — override with the
-       * mood the user tapped on the home screen (if provided). */
-      const base = i === 0 && defaultMoodValue != null ? defaultMoodValue : q.value;
-      initial[`q_${i}`] = snapToStep(base).value;
-    });
-    return initial;
+  /* Only seed q_0 when the caller explicitly passes a defaultMoodValue (i.e. user
+   * tapped a mood chip on the home screen). All other questions — and q_0 itself
+   * when no value is passed — start empty so nothing is pre-selected. */
+  const [answers, setAnswers] = useState<Record<string, number | undefined>>(() => {
+    if (defaultMoodValue != null) {
+      return { q_0: snapToStep(defaultMoodValue).value };
+    }
+    return {};
   });
 
   const handleSelect = (key: string, value: number) => {
@@ -119,22 +118,24 @@ export function MoodCheckForm({
         <CardContent className="py-0 px-3">
           {questions.map((q, i) => {
             const key = `q_${i}`;
-            const val = answers[key] ?? q.value;
-            const selected = snapToStep(val);
+            const val = answers[key];
+            const selected = val != null ? snapToStep(val) : null;
             const isLast = i === questions.length - 1;
 
             return (
               <div key={key} className={cn("py-4", !isLast && "border-b border-border")}>
                 <div className="flex items-start justify-between gap-3 mb-3">
                   <p className="text-sm font-medium text-foreground flex-1 min-w-0">{q.question}</p>
-                  <span
-                    className={cn(
-                      "flex-shrink-0 rounded-full px-2 py-0.5 text-[10px] font-semibold text-white bg-gradient-to-br",
-                      selected.gradient,
-                    )}
-                  >
-                    {selected.label}
-                  </span>
+                  {selected && (
+                    <span
+                      className={cn(
+                        "flex-shrink-0 rounded-full px-2 py-0.5 text-[10px] font-semibold text-white bg-gradient-to-br",
+                        selected.gradient,
+                      )}
+                    >
+                      {selected.label}
+                    </span>
+                  )}
                 </div>
 
                 <div className="flex items-center justify-between gap-1.5">

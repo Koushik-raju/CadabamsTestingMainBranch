@@ -19,7 +19,7 @@
  * DEPENDENCIES:
  *   next/navigation (useRouter), PageHeader, MoodCheckForm, Skeleton
  *
- * LAST UPDATED: 2026-04-24 — reads ?mood= param and maps to form value to pre-fill MoodCheckForm
+ * LAST UPDATED: 2026-04-24 — no mood pre-selected unless ?mood= param is present in URL
  */
 "use client";
 
@@ -40,7 +40,7 @@ function MoodCheckContent() {
   /* Map home-header mood ID (1–5) → form value (2–10) via id × 2.
    * Falls back to 6 (neutral, middle step) when no param is present. */
   const moodParam = searchParams.get("mood");
-  const defaultMoodValue = moodParam ? Math.min(10, Math.max(2, Number(moodParam) * 2)) : 6;
+  const defaultMoodValue = moodParam ? Math.min(10, Math.max(2, Number(moodParam) * 2)) : undefined;
 
   // Collapse the multi-question mood form down to the MOOD proof the
   // backend expects (moodBefore + moodAfter, 1..10). We take q_0 as
