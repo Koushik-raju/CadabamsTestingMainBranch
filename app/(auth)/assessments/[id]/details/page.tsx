@@ -35,7 +35,7 @@
  *   lucide-react       — Clock, ListChecks, ChevronRight, CheckCircle2,
  *                        ShieldCheck, AlertCircle
  *
- * LAST UPDATED: 2026-04-23 — Replaced BackButton header with PageHeader; hardBack="/assessments"
+ * LAST UPDATED: 2026-04-24 — Use full signed S3 URL for hero image (don't strip query params)
  */
 "use client";
 
@@ -69,8 +69,8 @@ export default function AssessmentDetailsPage({
   const imageUrl = useMemo(() => {
     if (!assessment?.image) return null;
     const url = String(assessment.image);
-    if (url.startsWith("http")) return url.split("?")[0];
-    return `https://admin.mindtalkbuddy.com${url}`.split("?")[0];
+    if (url.startsWith("http")) return url;
+    return `https://admin.mindtalkbuddy.com${url}`;
   }, [assessment?.image]);
 
   const questionCount =

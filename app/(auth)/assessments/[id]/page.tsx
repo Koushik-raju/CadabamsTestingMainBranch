@@ -36,7 +36,7 @@
  *   submitAssessment              — SDK call to patientAssessmentsControllerCreateCompletion
  *   QuestionRenderer              — renders question UI by type
  *
- * LAST UPDATED: 2026-04-24 — generate step renders custom Assessment Complete screen matching reference design.
+ * LAST UPDATED: 2026-04-24 — fix Continue blocked until answered: remove rating/qa from alwaysComplete, add per-type completion checks
  */
 
 "use client";
@@ -51,7 +51,15 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { submitAssessment, useAssessmentById } from "@/hooks/assessments/use-assessment-detail";
 import { useAuth } from "@/hooks/shared/auth/use-auth";
-import { AlertCircle, ArrowRight, CheckCircle2, ChevronLeft, FileText, Sparkles, X } from "lucide-react";
+import {
+  AlertCircle,
+  ArrowRight,
+  CheckCircle2,
+  ChevronLeft,
+  FileText,
+  Sparkles,
+  X,
+} from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { use, useEffect, useMemo, useRef, useState } from "react";
@@ -167,7 +175,9 @@ export default function AssessmentFormPage({ params }: { params: Promise<{ id: s
     const ans = answers[key];
     const raw = q.type || "";
 
-    // These types are always complete (informational, have defaults, or user can proceed freely)
+    // Always-complete types: informational screens or selectors with meaningful defaults
+    // (smiley/mood default to index 2, level defaults to 0, indicator defaults to 50).
+    // rating and qa are excluded — no pre-selected default, user must explicitly answer.
     const alwaysComplete = [
       "smiley",
       "mood_selector",
@@ -176,8 +186,6 @@ export default function AssessmentFormPage({ params }: { params: Promise<{ id: s
       "view_text",
       "agreement",
       "generate",
-      "rating",
-      "qa",
     ];
     const isAlwaysComplete =
       alwaysComplete.includes(raw) ||
@@ -188,13 +196,24 @@ export default function AssessmentFormPage({ params }: { params: Promise<{ id: s
       raw.includes("view-text") ||
       raw.includes("agreement") ||
       raw.includes("generate") ||
-      raw.includes(".qa") ||
       (q.smileys && q.smileys.length > 0);
 
     if (isAlwaysComplete) {
       setIsStepComplete(true);
+    } else if (raw === "rating") {
+      // rating has no default — requires an explicit tap; stored as number once selected
+      const sel = (ans as { selected?: unknown })?.selected;
+      setIsStepComplete(typeof sel === "number");
     } else if (raw === "text" || raw.includes("text") || raw.includes("speech")) {
       setIsStepComplete(((ans as { text?: string })?.text || "").trim().length > 0);
+    } else if (raw === "qa" || raw.includes("qa")) {
+      // qa with sub-questions: every sub-question must be answered
+      if (Array.isArray(q.questions) && q.questions.length > 0) {
+        const subAnswers = (ans as { subAnswers?: Record<string, string> })?.subAnswers || {};
+        setIsStepComplete(q.questions.every((_, idx) => !!subAnswers[`qa_${idx}`]));
+      } else {
+        setIsStepComplete(((ans as { text?: string })?.text || "").trim().length > 0);
+      }
     } else if (
       raw === "bubble_selector" ||
       raw.includes("bubble-selector") ||
@@ -354,10 +373,13 @@ export default function AssessmentFormPage({ params }: { params: Promise<{ id: s
           {/* Heading + subtext */}
           <div className="text-center space-y-3">
             <h1 className="text-3xl font-bold text-foreground leading-tight">
-              Assessment<br />Complete
+              Assessment
+              <br />
+              Complete
             </h1>
             <p className="text-muted-foreground text-base leading-relaxed max-w-xs mx-auto">
-              You&apos;ve answered all questions. We&apos;re ready to compile your personalized insights.
+              You&apos;ve answered all questions. We&apos;re ready to compile your personalized
+              insights.
             </p>
           </div>
 
@@ -367,7 +389,8 @@ export default function AssessmentFormPage({ params }: { params: Promise<{ id: s
             <div>
               <p className="text-sm font-semibold text-foreground mb-1">AI-Generated Report</p>
               <p className="text-xs text-muted-foreground leading-relaxed">
-                This report is generated using artificial intelligence based on your responses. It is for informational purposes only and does not replace professional medical advice.
+                This report is generated using artificial intelligence based on your responses. It
+                is for informational purposes only and does not replace professional medical advice.
               </p>
             </div>
           </div>
@@ -380,7 +403,9 @@ export default function AssessmentFormPage({ params }: { params: Promise<{ id: s
             disabled={submitting}
             onClick={handleSubmit}
           >
-            {submitting ? "Generating..." : (
+            {submitting ? (
+              "Generating..."
+            ) : (
               <>
                 Generate Report
                 <ArrowRight className="w-4 h-4" />
