@@ -1,13 +1,8 @@
-'use client';
+"use client";
 
-import { CheckCircle2, Plus } from 'lucide-react';
-import { useState } from 'react';
-import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-} from '@/components/ui/sheet';
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
+import { CheckCircle2, Plus } from "lucide-react";
+import { useState } from "react";
 
 export interface DotOption {
   id?: string | number;
@@ -24,7 +19,14 @@ interface DotChooserProps {
   onToggle: (value: string) => void;
 }
 
-export function DotChooser({ title, subTitle, options, selected, maxSlots = 3, onToggle }: DotChooserProps) {
+export function DotChooser({
+  title,
+  subTitle,
+  options,
+  selected,
+  maxSlots = 3,
+  onToggle,
+}: DotChooserProps) {
   const [sheetOpen, setSheetOpen] = useState(false);
   const [replaceIndex, setReplaceIndex] = useState<number | null>(null);
 
@@ -59,11 +61,7 @@ export function DotChooser({ title, subTitle, options, selected, maxSlots = 3, o
           {subTitle}
         </p>
       )}
-      {title && (
-        <h2 className="text-xl font-bold text-foreground mb-2 leading-snug">
-          {title}
-        </h2>
-      )}
+      {title && <h2 className="text-xl font-bold text-foreground mb-2 leading-snug">{title}</h2>}
       <p className="text-sm text-muted-foreground mb-6">
         Selected {selected.length} of {maxSlots}
       </p>
@@ -76,8 +74,8 @@ export function DotChooser({ title, subTitle, options, selected, maxSlots = 3, o
             onClick={() => handleSlotClick(i)}
             className={`w-20 h-20 rounded-full border-2 flex items-center justify-center transition-all duration-200 active:scale-95 ${
               slot
-                ? 'border-primary bg-primary/10'
-                : 'border-dashed border-border bg-card hover:border-primary/30'
+                ? "border-primary bg-primary/10"
+                : "border-dashed border-border bg-card hover:border-primary/30"
             }`}
           >
             {slot ? (

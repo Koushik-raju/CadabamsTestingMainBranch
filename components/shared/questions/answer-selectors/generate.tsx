@@ -25,11 +25,11 @@
  * LAST UPDATED: 2026-04-20 — strip inline LLM call; generation now happens on
  *   /assessments/[id]/generate/[completionId].
  */
-'use client';
+"use client";
 
-import { useEffect } from 'react';
-import { Bot } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import { Button } from "@/components/ui/button";
+import { Bot } from "lucide-react";
+import { useEffect } from "react";
 
 interface GenerateProps {
   title?: string;
@@ -47,12 +47,10 @@ export function Generate({ onComplete, onFinish }: GenerateProps) {
       <div className="w-24 h-24 rounded-full bg-primary/10 flex items-center justify-center mb-6">
         <Bot className="w-12 h-12 text-primary" />
       </div>
-      <h2 className="text-xl font-bold text-foreground text-center mb-2">
-        You&apos;re All Done
-      </h2>
+      <h2 className="text-xl font-bold text-foreground text-center mb-2">You&apos;re All Done</h2>
       <p className="text-sm text-muted-foreground text-center mb-8 max-w-xs">
-        Tap View Report to submit your responses. You&apos;ll generate your
-        AI-powered report on the next screen.
+        Tap View Report to submit your responses. You&apos;ll generate your AI-powered report on the
+        next screen.
       </p>
       <Button
         className="w-full max-w-sm bg-primary hover:bg-primary/90 text-white font-semibold h-14 rounded-2xl text-base"

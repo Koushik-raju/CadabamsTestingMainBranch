@@ -1,4 +1,4 @@
-'use client';
+"use client";
 
 interface YesNoSelectorProps {
   title?: string;
@@ -14,12 +14,12 @@ export function YesNoSelector({
   title,
   subTitle,
   question,
-  yesLabel = 'Yes',
-  noLabel = 'No',
+  yesLabel = "Yes",
+  noLabel = "No",
   selected,
   onSelect,
 }: YesNoSelectorProps) {
-  const heading = title || question || '';
+  const heading = title || question || "";
   return (
     <div className="flex flex-col items-center px-4 pt-4 pb-4 w-full">
       {heading && (
@@ -28,17 +28,15 @@ export function YesNoSelector({
         </h2>
       )}
       {subTitle && (
-        <p className="text-sm text-muted-foreground text-center mb-6 max-w-md">
-          {subTitle}
-        </p>
+        <p className="text-sm text-muted-foreground text-center mb-6 max-w-md">{subTitle}</p>
       )}
       <div className="flex gap-4 sm:gap-6 mt-6 justify-center">
         <button
           onClick={() => onSelect(yesLabel)}
           className={`w-28 sm:w-32 py-4 rounded-2xl border-2 font-semibold text-base transition-all duration-200 active:scale-95 ${
             selected === yesLabel
-              ? 'bg-green-500 border-green-500 text-white shadow-md'
-              : 'bg-card border-border text-foreground hover:border-green-400'
+              ? "bg-green-500 border-green-500 text-white shadow-md"
+              : "bg-card border-border text-foreground hover:border-green-400"
           }`}
           aria-pressed={selected === yesLabel}
         >
@@ -48,8 +46,8 @@ export function YesNoSelector({
           onClick={() => onSelect(noLabel)}
           className={`w-28 sm:w-32 py-4 rounded-2xl border-2 font-semibold text-base transition-all duration-200 active:scale-95 ${
             selected === noLabel
-              ? 'bg-destructive border-destructive text-destructive-foreground shadow-md'
-              : 'bg-card border-border text-foreground hover:border-destructive/50'
+              ? "bg-destructive border-destructive text-destructive-foreground shadow-md"
+              : "bg-card border-border text-foreground hover:border-destructive/50"
           }`}
           aria-pressed={selected === noLabel}
         >

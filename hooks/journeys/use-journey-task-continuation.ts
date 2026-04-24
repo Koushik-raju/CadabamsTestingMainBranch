@@ -34,12 +34,12 @@
  * LAST UPDATED: 2026-04-22 — dropped URL-param reliance; context-only matching
  *   with optional expectedKind narrowing.
  */
-'use client';
+"use client";
 
-import { useCallback, useMemo } from 'react';
-import { useRouter } from 'next/navigation';
-import { useJourneyReturn, type JourneyReturnTaskKind } from '@/contexts/journey-return-context';
-import { updateNodeProgress, type TaskProof } from '@/hooks/journeys/use-journey-detail';
+import { type JourneyReturnTaskKind, useJourneyReturn } from "@/contexts/journey-return-context";
+import { type TaskProof, updateNodeProgress } from "@/hooks/journeys/use-journey-detail";
+import { useRouter } from "next/navigation";
+import { useCallback, useMemo } from "react";
 
 export function useJourneyTaskContinuation(expectedKind?: JourneyReturnTaskKind) {
   const router = useRouter();
@@ -48,7 +48,7 @@ export function useJourneyTaskContinuation(expectedKind?: JourneyReturnTaskKind)
   // Active when there is an unfinished slot and — if the page specified
   // what kind it handles — the slot's kind matches.
   const kindOk = expectedKind == null || state?.taskKind === expectedKind;
-  const active = !!state && state.status !== 'completed' && kindOk;
+  const active = !!state && state.status !== "completed" && kindOk;
 
   const enrollmentId = active ? state!.enrollmentId : null;
   const taskId = active ? state!.taskId : null;

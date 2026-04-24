@@ -7,11 +7,11 @@ export {
   mapAssessment,
   mapStrapiAssessment,
   type AssessmentItem,
-} from '@/hooks/assessments/use-assessments-page';
+} from "@/hooks/assessments/use-assessments-page";
 
 export {
   useAssessmentById,
   useAssessmentSubmissions,
   useAssessmentScoreSummary,
   submitAssessment,
-} from '@/hooks/assessments/use-assessment-detail';
+} from "@/hooks/assessments/use-assessment-detail";

@@ -1,9 +1,9 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
-import { Video, AlertCircle } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { AlertCircle, Video } from "lucide-react";
+import { useState } from "react";
 
 interface ZegoClientProps {
   roomId: string;
@@ -14,7 +14,7 @@ export function ZegoClient({ roomId }: ZegoClientProps) {
   const [isLoaded, setIsLoaded] = useState(false);
 
   // roomId is expected to be the full Zego call URL passed from the app
-  const isValidUrl = roomId.startsWith('http://') || roomId.startsWith('https://');
+  const isValidUrl = roomId.startsWith("http://") || roomId.startsWith("https://");
 
   if (!isValidUrl) {
     return (
@@ -47,7 +47,7 @@ export function ZegoClient({ roomId }: ZegoClientProps) {
               </p>
             </div>
             <Button
-              onClick={() => window.open(roomId, '_blank', 'noopener,noreferrer')}
+              onClick={() => window.open(roomId, "_blank", "noopener,noreferrer")}
               className="w-full"
             >
               <Video className="w-4 h-4 mr-2" aria-hidden="true" />

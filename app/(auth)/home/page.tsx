@@ -28,20 +28,20 @@
  *   QuickActions           — 2-column grid of feature shortcuts
  *   JourneySection         — active enrolled journey list with progress
  *
- * LAST UPDATED: 2026-04-22 — pass real enrolled journeys and streak to JourneySection
+ * LAST UPDATED: 2026-04-24 — thread icon field from enrollment into homeEnrollments for JourneySection
  */
 
 "use client";
 
-import { useRouter } from "next/navigation";
-import { HomeHeader } from "@/components/home/home-header";
-import { SupportSection } from "@/components/home/support-section";
-import { QuickActions } from "@/components/home/quick-actions";
-import { UpcomingSession } from "@/components/home/upcoming-session";
-import { JourneySection } from "@/components/home/journey-section";
 import { GrowthWidget } from "@/components/home/growth-widget";
+import { HomeHeader } from "@/components/home/home-header";
+import { JourneySection } from "@/components/home/journey-section";
+import { QuickActions } from "@/components/home/quick-actions";
+import { SupportSection } from "@/components/home/support-section";
+import { UpcomingSession } from "@/components/home/upcoming-session";
 import { useHomePage } from "@/hooks/home/use-home-page";
 import { useEnrolledJourneys, useGamification } from "@/hooks/journeys/use-journey-detail";
+import { useRouter } from "next/navigation";
 import { useMemo } from "react";
 
 export default function HomePage() {
@@ -50,17 +50,22 @@ export default function HomePage() {
   const { enrollments, isLoading: enrollmentsLoading } = useEnrolledJourneys();
   const { gamification } = useGamification();
 
-  const homeEnrollments = useMemo(
-    () =>
-      enrollments.map((e) => ({
-        enrollmentId: e.id,
-        journeyId: e.journeyId,
-        name: e.name ?? '',
-        currentDay: e.currentDay ?? 1,
-        totalDays: e.totalDays ?? 0,
-      })),
-    [enrollments]
-  );
+  /* Take only the most recent enrollment (last in the API response) to show a
+     single active journey card on the home screen. */
+  const homeEnrollments = useMemo(() => {
+    const latest = enrollments[enrollments.length - 1];
+    if (!latest) return [];
+    return [
+      {
+        enrollmentId: latest.id,
+        journeyId: latest.journeyId,
+        name: latest.name ?? "",
+        currentDay: latest.currentDay ?? 1,
+        totalDays: latest.totalDays ?? 0,
+        icon: latest.icon ?? null,
+      },
+    ];
+  }, [enrollments]);
 
   const handleAction = (type: string, subtype?: string) => {
     switch (type) {
@@ -73,7 +78,7 @@ export default function HomePage() {
             router.push("/consult/find-therapist");
             break;
           case "match":
-            router.push("/consult/find-therapist");
+            router.push("/consult/find-therapist?start=wizard");
             break;
           case "assessment":
             router.push("/assessments");
@@ -114,26 +119,19 @@ export default function HomePage() {
   };
 
   return (
-    <div className="min-h-screen bg-background">
-      <HomeHeader
-        onMoodClick={() => router.push("/assessment/avym73d4x6258t3ligurl56r")}
-      />
+    <div className="min-h-screen bg-gray-50/50">
+      <HomeHeader onMoodClick={(moodId) => router.push(`/journeys/mood-check?mood=${moodId}`)} />
 
       {/* Main content — overlaps header by pulling up with negative margin */}
-      <div className="relative mt-[-20px] pt-8 pb-20 bg-background rounded-t-2xl z-10 flex flex-col gap-0">
-        <UpcomingSession
-          appointments={appointments}
-          onJoin={() => handleAction("join_session")}
-        />
+      <div className="relative mt-[-20px] pt-8 pb-20 bg-gray-50/50 rounded-t-2xl z-10 flex flex-col gap-0">
+        <UpcomingSession appointments={appointments} onJoin={() => handleAction("join_session")} />
 
         <SupportSection
           onTalk={() => handleAction("quick_action", "therapist")}
           onMatch={() => handleAction("quick_action", "match")}
         />
 
-        <QuickActions
-          onActionClick={(type) => handleAction("quick_action", type)}
-        />
+        <QuickActions onActionClick={(type) => handleAction("quick_action", type)} />
 
         <JourneySection
           enrollments={homeEnrollments}

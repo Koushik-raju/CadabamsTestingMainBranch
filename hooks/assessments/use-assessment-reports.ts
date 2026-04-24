@@ -1,3 +1,10 @@
+import { assessmentReportsKey } from "@/lib/swr-keys";
+import {
+  patientAssessmentsAnalysisControllerAnalyze,
+  patientAssessmentsAnalysisControllerList,
+  patientAssessmentsControllerListMine,
+} from "@/sdk/backend-v2";
+import type { AssessmentAnalysisDto, CompletionResponseDto } from "@/sdk/backend-v2";
 /**
  * FILE: hooks/assessments/use-assessment-reports.ts
  *
@@ -32,18 +39,8 @@
  * LAST UPDATED: 2026-04-21 — pass assessmentKey to analyses endpoint; remove
  *   client-side completion sort (backend returns completedAt DESC)
  */
-import { useState } from 'react';
-import useSWR from 'swr';
-import {
-  patientAssessmentsAnalysisControllerAnalyze,
-  patientAssessmentsAnalysisControllerList,
-  patientAssessmentsControllerListMine,
-} from '@/sdk/backend-v2';
-import type {
-  AssessmentAnalysisDto,
-  CompletionResponseDto,
-} from '@/sdk/backend-v2';
-import { assessmentReportsKey } from '@/lib/swr-keys';
+import { useState } from "react";
+import useSWR from "swr";
 
 export interface AssessmentReport extends AssessmentAnalysisDto {
   completion?: CompletionResponseDto;
@@ -57,7 +54,7 @@ interface AssessmentReportsData {
 async function fetchAssessmentData(assessmentId: string): Promise<AssessmentReportsData> {
   const [completionsRes, analysesRes] = await Promise.all([
     patientAssessmentsControllerListMine({
-      path: { campus: 'cadabams' },
+      path: { campus: "cadabams" },
       query: { assessmentKey: assessmentId },
     }),
     patientAssessmentsAnalysisControllerList({
@@ -69,24 +66,20 @@ async function fetchAssessmentData(assessmentId: string): Promise<AssessmentRepo
 
   // Backend returns completions sorted completedAt DESC — no client sort needed
   const completions = completionsRes.data ?? [];
-  const byId = new Map<string, CompletionResponseDto>(
-    completions.map((c) => [c.id, c])
-  );
+  const byId = new Map<string, CompletionResponseDto>(completions.map((c) => [c.id, c]));
   const analyses = analysesRes.data?.items ?? [];
   // Filter to analyses belonging to this assessment's completions, sort by createdAt DESC
   const reports: AssessmentReport[] = analyses
     .filter((a) => byId.has(a.completionId))
     .map((a) => ({ ...a, completion: byId.get(a.completionId) }))
-    .sort(
-      (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-    );
+    .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
   return { reports, completions };
 }
 
 export function useAssessmentReports(assessmentId: string | null) {
   const { data, isLoading, error } = useSWR(
     assessmentId ? assessmentReportsKey(assessmentId) : null,
-    () => fetchAssessmentData(assessmentId!)
+    () => fetchAssessmentData(assessmentId!),
   );
 
   return { reports: data?.reports ?? [], isLoading, error };
@@ -95,7 +88,7 @@ export function useAssessmentReports(assessmentId: string | null) {
 export function useLatestAssessmentResult(assessmentId: string | null) {
   const { data, isLoading, error, mutate } = useSWR(
     assessmentId ? assessmentReportsKey(assessmentId) : null,
-    () => fetchAssessmentData(assessmentId!)
+    () => fetchAssessmentData(assessmentId!),
   );
 
   const [isRegenerating, setIsRegenerating] = useState(false);
@@ -117,7 +110,7 @@ export function useLatestAssessmentResult(assessmentId: string | null) {
       if (res.error) throw new Error(JSON.stringify(res.error));
       await mutate();
     } catch (err) {
-      setRegenerateError(err instanceof Error ? err.message : 'Regenerate failed');
+      setRegenerateError(err instanceof Error ? err.message : "Regenerate failed");
       throw err;
     } finally {
       setIsRegenerating(false);

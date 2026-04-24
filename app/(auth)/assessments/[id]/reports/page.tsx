@@ -26,26 +26,29 @@
  *
  * LAST UPDATED: 2026-04-23 — migrated custom header div to PageHeader
  */
-'use client';
+"use client";
 
-import { use, useState } from 'react';
-import Markdown from 'react-markdown';
-import { Card, CardContent } from '@/components/ui/card';
-import { Separator } from '@/components/ui/separator';
-import { Skeleton } from '@/components/ui/skeleton';
-import { Button } from '@/components/ui/button';
-import { PageHeader } from '@/components/shared/navigation/page-header';
-import { useAssessmentReports, type AssessmentReport } from '@/hooks/assessments/use-assessment-reports';
-import { AlertCircle, ChevronDown, ChevronUp, FileText, Sparkles } from 'lucide-react';
+import { PageHeader } from "@/components/shared/navigation/page-header";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { Separator } from "@/components/ui/separator";
+import { Skeleton } from "@/components/ui/skeleton";
+import {
+  type AssessmentReport,
+  useAssessmentReports,
+} from "@/hooks/assessments/use-assessment-reports";
+import { AlertCircle, ChevronDown, ChevronUp, FileText, Sparkles } from "lucide-react";
+import { use, useState } from "react";
+import Markdown from "react-markdown";
 
 function formatDate(iso: string): string {
   try {
     return new Date(iso).toLocaleString(undefined, {
-      day: '2-digit',
-      month: 'short',
-      year: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
+      day: "2-digit",
+      month: "short",
+      year: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
     });
   } catch {
     return iso;
@@ -53,7 +56,10 @@ function formatDate(iso: string): string {
 }
 
 function excerpt(md: string, max = 140): string {
-  const stripped = md.replace(/[#>*_`\-]/g, '').replace(/\s+/g, ' ').trim();
+  const stripped = md
+    .replace(/[#>*_`\-]/g, "")
+    .replace(/\s+/g, " ")
+    .trim();
   return stripped.length > max ? `${stripped.slice(0, max)}…` : stripped;
 }
 
@@ -85,7 +91,9 @@ export default function AssessmentReportsPage({
           </div>
         )}
 
-        {!isLoading && !error && reports.length === 0 && <ReportsEmpty assessmentId={assessmentId} />}
+        {!isLoading && !error && reports.length === 0 && (
+          <ReportsEmpty assessmentId={assessmentId} />
+        )}
 
         {!isLoading && !error && reports.length > 0 && (
           <Card>
@@ -139,7 +147,7 @@ function ReportRow({
             {formatDate(report.createdAt)}
           </p>
           <p className="text-xs text-muted-foreground mt-0.5 truncate">
-            {excerpt(report.result) || 'View full report'}
+            {excerpt(report.result) || "View full report"}
           </p>
           {(severity || pct != null) && (
             <div className="flex items-center gap-2 mt-1.5">
@@ -149,9 +157,7 @@ function ReportRow({
                 </span>
               )}
               {pct != null && (
-                <span className="text-[10px] font-semibold text-muted-foreground">
-                  {pct}%
-                </span>
+                <span className="text-[10px] font-semibold text-muted-foreground">{pct}%</span>
               )}
             </div>
           )}
@@ -167,14 +173,28 @@ function ReportRow({
         <div className="mt-3 rounded-xl border border-border bg-card p-4">
           <Markdown
             components={{
-              h1: ({ children }) => <h1 className="text-lg font-bold text-foreground mb-3">{children}</h1>,
-              h2: ({ children }) => <h2 className="text-base font-bold text-foreground mt-4 mb-2">{children}</h2>,
-              h3: ({ children }) => <h3 className="text-sm font-bold text-foreground mt-3 mb-1.5">{children}</h3>,
-              p: ({ children }) => <p className="text-sm text-foreground/80 leading-relaxed mb-3">{children}</p>,
+              h1: ({ children }) => (
+                <h1 className="text-lg font-bold text-foreground mb-3">{children}</h1>
+              ),
+              h2: ({ children }) => (
+                <h2 className="text-base font-bold text-foreground mt-4 mb-2">{children}</h2>
+              ),
+              h3: ({ children }) => (
+                <h3 className="text-sm font-bold text-foreground mt-3 mb-1.5">{children}</h3>
+              ),
+              p: ({ children }) => (
+                <p className="text-sm text-foreground/80 leading-relaxed mb-3">{children}</p>
+              ),
               ul: ({ children }) => <ul className="list-disc pl-5 mb-3 space-y-1">{children}</ul>,
-              ol: ({ children }) => <ol className="list-decimal pl-5 mb-3 space-y-1">{children}</ol>,
-              li: ({ children }) => <li className="text-sm text-foreground/80 leading-relaxed">{children}</li>,
-              strong: ({ children }) => <strong className="font-semibold text-foreground">{children}</strong>,
+              ol: ({ children }) => (
+                <ol className="list-decimal pl-5 mb-3 space-y-1">{children}</ol>
+              ),
+              li: ({ children }) => (
+                <li className="text-sm text-foreground/80 leading-relaxed">{children}</li>
+              ),
+              strong: ({ children }) => (
+                <strong className="font-semibold text-foreground">{children}</strong>
+              ),
             }}
           >
             {report.result}

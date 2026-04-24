@@ -1,13 +1,8 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
-import { ChevronDown, CheckCircle2 } from 'lucide-react';
-import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-} from '@/components/ui/sheet';
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
+import { CheckCircle2, ChevronDown } from "lucide-react";
+import { useState } from "react";
 
 export interface SubQuestion {
   id: string | number;
@@ -41,9 +36,7 @@ export function MultiDropdownSelector({
           {subTitle}
         </p>
       )}
-      {title && (
-        <h2 className="text-xl font-bold text-foreground mb-2 leading-snug">{title}</h2>
-      )}
+      {title && <h2 className="text-xl font-bold text-foreground mb-2 leading-snug">{title}</h2>}
       <p className="text-sm text-muted-foreground mb-6">
         Tap to choose a response for each line before continuing.
       </p>
@@ -62,13 +55,11 @@ export function MultiDropdownSelector({
                 onClick={() => setOpenSheetFor(sq.id)}
                 className={`flex items-center justify-between w-full px-4 py-3 rounded-xl border transition-colors ${
                   selectedLabel
-                    ? 'border-primary bg-primary/5 text-primary'
-                    : 'border-border bg-card text-muted-foreground'
+                    ? "border-primary bg-primary/5 text-primary"
+                    : "border-border bg-card text-muted-foreground"
                 }`}
               >
-                <span className="text-sm font-medium">
-                  {selectedLabel || 'Select an option'}
-                </span>
+                <span className="text-sm font-medium">{selectedLabel || "Select an option"}</span>
                 <ChevronDown className="w-4 h-4 flex-shrink-0" />
               </button>
             </div>
@@ -96,13 +87,13 @@ export function MultiDropdownSelector({
                     }}
                     className={`flex items-center justify-between px-4 py-3.5 rounded-xl border transition-colors ${
                       isSelected
-                        ? 'border-primary bg-primary/5'
-                        : 'border-border bg-card hover:bg-muted/50'
+                        ? "border-primary bg-primary/5"
+                        : "border-border bg-card hover:bg-muted/50"
                     }`}
                   >
                     <span
                       className={`text-sm font-medium ${
-                        isSelected ? 'text-primary' : 'text-foreground'
+                        isSelected ? "text-primary" : "text-foreground"
                       }`}
                     >
                       {opt.label}

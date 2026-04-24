@@ -1,12 +1,12 @@
-'use client';
+"use client";
 
-import { useRouter } from 'next/navigation';
-import Link from 'next/link';
-import { ChevronLeft, Wind, Brain, ClipboardCheck, TrendingUp, Plus } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { MoodChart } from '@/components/stress/mood-chart';
+import { MoodChart } from "@/components/stress/mood-chart";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { Brain, ChevronLeft, ClipboardCheck, Plus, TrendingUp, Wind } from "lucide-react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
 
 interface StressEntry {
   id: string;
@@ -22,25 +22,25 @@ export default function StressManagementPage() {
 
   const tools = [
     {
-      label: 'Breathing',
-      description: 'Guided breathing exercises',
+      label: "Breathing",
+      description: "Guided breathing exercises",
       icon: Wind,
-      href: '/stress-management/breathing',
-      color: 'text-blue-600 bg-blue-50',
+      href: "/stress-management/breathing",
+      color: "text-blue-600 bg-blue-50",
     },
     {
-      label: 'Body Scan',
-      description: 'Progressive muscle relaxation',
+      label: "Body Scan",
+      description: "Progressive muscle relaxation",
       icon: Brain,
-      href: '/stress-management/body-scan',
-      color: 'text-purple-600 bg-purple-50',
+      href: "/stress-management/body-scan",
+      color: "text-purple-600 bg-purple-50",
     },
     {
-      label: 'Assessments',
-      description: 'Explore & track your wellbeing',
+      label: "Assessments",
+      description: "Explore & track your wellbeing",
       icon: ClipboardCheck,
-      href: '/assessments',
-      color: 'text-primary bg-primary/10',
+      href: "/assessments",
+      color: "text-primary bg-primary/10",
     },
   ];
 
@@ -53,7 +53,7 @@ export default function StressManagementPage() {
             variant="ghost"
             size="icon"
             className="text-primary-foreground hover:bg-white/20"
-            onClick={() => router.push('/home')}
+            onClick={() => router.push("/home")}
           >
             <ChevronLeft className="w-5 h-5" />
           </Button>
@@ -93,7 +93,9 @@ export default function StressManagementPage() {
                       <tool.icon className="w-5 h-5" />
                     </div>
                     <span className="text-xs font-semibold text-foreground">{tool.label}</span>
-                    <span className="text-[10px] text-muted-foreground leading-tight">{tool.description}</span>
+                    <span className="text-[10px] text-muted-foreground leading-tight">
+                      {tool.description}
+                    </span>
                   </CardContent>
                 </Card>
               </Link>

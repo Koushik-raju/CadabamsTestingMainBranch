@@ -19,7 +19,7 @@
  *
  * LAST UPDATED: 2026-04-17 — Created. Guided path: /self-journaling/new/[slug].
  */
-import { JournalWriter } from '@/components/journal/journal-writer';
+import { JournalWriter } from "@/components/journal/journal-writer";
 
 interface Props {
   params: Promise<{ slug: string }>;

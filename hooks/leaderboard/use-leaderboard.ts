@@ -1,8 +1,8 @@
-'use client';
+"use client";
 
-import useSWR from 'swr';
-import { CONFIG } from '@/config/env';
-import { getAccessToken } from '@/lib/cookies';
+import { CONFIG } from "@/config/env";
+import { getAccessToken } from "@/lib/cookies";
+import useSWR from "swr";
 
 async function fetchLeaderboard(params?: Record<string, unknown>) {
   const token = await getAccessToken();
@@ -14,8 +14,8 @@ async function fetchLeaderboard(params?: Record<string, unknown>) {
   }
   const res = await fetch(url.toString(), {
     headers: {
-      Authorization: token ? `Bearer ${token}` : '',
-      'Content-Type': 'application/json',
+      Authorization: token ? `Bearer ${token}` : "",
+      "Content-Type": "application/json",
     },
   });
   if (!res.ok) throw new Error(`Leaderboard fetch failed: ${res.status}`);
@@ -23,11 +23,9 @@ async function fetchLeaderboard(params?: Record<string, unknown>) {
 }
 
 export function useLeaderboard(params?: Record<string, unknown>) {
-  const { data, isLoading, error, mutate } = useSWR(
-    'leaderboard',
-    () => fetchLeaderboard(params),
-    { revalidateOnFocus: false }
-  );
+  const { data, isLoading, error, mutate } = useSWR("leaderboard", () => fetchLeaderboard(params), {
+    revalidateOnFocus: false,
+  });
 
   return { data, isLoading, error, mutate };
 }

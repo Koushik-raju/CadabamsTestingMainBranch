@@ -34,10 +34,10 @@
 
 "use client";
 
-import { ReactNode } from "react";
-import { useRouter } from "next/navigation";
 import { BackButton } from "@/components/shared/navigation/back-button";
 import { cn } from "@/lib/utils";
+import { useRouter } from "next/navigation";
+import { ReactNode } from "react";
 
 interface PageHeaderProps {
   title: string;
@@ -65,26 +65,15 @@ export function PageHeader({
   const resolvedOnBack = onBack ?? (hardBack ? () => router.replace(hardBack) : undefined);
 
   return (
-    <div
-      className={cn(
-        "flex items-center gap-2 px-4 pt-5 pb-1",
-        className,
-      )}
-    >
+    <div className={cn("flex items-center gap-2 px-4 pt-5 pb-1", className)}>
       <BackButton fallback={fallback} onClick={resolvedOnBack} />
 
       <div className="flex-1 min-w-0">
-        <h1 className="text-lg font-bold text-foreground leading-tight">
-          {title}
-        </h1>
-        {subtitle && (
-          <p className="text-xs text-muted-foreground mt-0.5">{subtitle}</p>
-        )}
+        <h1 className="text-lg font-bold text-foreground leading-tight">{title}</h1>
+        {subtitle && <p className="text-xs text-muted-foreground mt-0.5">{subtitle}</p>}
       </div>
 
-      {right && (
-        <div className="flex-shrink-0 flex items-center gap-1">{right}</div>
-      )}
+      {right && <div className="flex-shrink-0 flex items-center gap-1">{right}</div>}
     </div>
   );
 }

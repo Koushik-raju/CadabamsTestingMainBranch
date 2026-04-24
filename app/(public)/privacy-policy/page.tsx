@@ -1,9 +1,9 @@
-import Link from 'next/link';
-import { ChevronLeft } from 'lucide-react';
+import { ChevronLeft } from "lucide-react";
+import Link from "next/link";
 
 export const metadata = {
-  title: 'Privacy Policy — MindTalk by Cadabams',
-  description: 'How Cadabams Consult collects, uses, and protects your personal data.',
+  title: "Privacy Policy — MindTalk by Cadabams",
+  description: "How Cadabams Consult collects, uses, and protects your personal data.",
 };
 
 export default function PrivacyPolicyPage() {
@@ -32,15 +32,17 @@ export default function PrivacyPolicyPage() {
             <h2 className="text-xl font-semibold text-foreground">1. Introduction</h2>
             <p className="text-muted-foreground leading-relaxed">
               Cadabams Consult supported by Cadabam Hospitals Enterprises Private Limited
-              (&ldquo;we&rdquo;, &ldquo;us&rdquo;, &ldquo;our&rdquo;) respects your privacy and
-              is committed to protecting your personal data. This privacy policy will inform you
-              about how we look after your personal data when you use our application (&ldquo;App&rdquo;)
+              (&ldquo;we&rdquo;, &ldquo;us&rdquo;, &ldquo;our&rdquo;) respects your privacy and is
+              committed to protecting your personal data. This privacy policy will inform you about
+              how we look after your personal data when you use our application (&ldquo;App&rdquo;)
               and tell you about your privacy rights and how the law protects you.
             </p>
           </section>
 
           <section className="mb-8 space-y-3">
-            <h2 className="text-xl font-semibold text-foreground">2. The Data We Collect About You</h2>
+            <h2 className="text-xl font-semibold text-foreground">
+              2. The Data We Collect About You
+            </h2>
             <p className="text-muted-foreground leading-relaxed">
               We may collect, use, store, and transfer different kinds of personal data about you
               which we have grouped together as follows:
@@ -56,7 +58,9 @@ export default function PrivacyPolicyPage() {
           </section>
 
           <section className="mb-8 space-y-3">
-            <h2 className="text-xl font-semibold text-foreground">3. How We Use Your Personal Data</h2>
+            <h2 className="text-xl font-semibold text-foreground">
+              3. How We Use Your Personal Data
+            </h2>
             <p className="text-muted-foreground leading-relaxed">
               We will only use your personal data when the law allows us to. Most commonly, we will
               use your personal data in the following circumstances:
@@ -81,17 +85,17 @@ export default function PrivacyPolicyPage() {
           <section className="mb-8 space-y-3">
             <h2 className="text-xl font-semibold text-foreground">5. Data Retention</h2>
             <p className="text-muted-foreground leading-relaxed">
-              We will only retain your personal data for as long as necessary to fulfil the
-              purposes we collected it for, including for the purposes of satisfying any legal,
-              accounting, or reporting requirements.
+              We will only retain your personal data for as long as necessary to fulfil the purposes
+              we collected it for, including for the purposes of satisfying any legal, accounting,
+              or reporting requirements.
             </p>
           </section>
 
           <section className="mb-8 space-y-3">
             <h2 className="text-xl font-semibold text-foreground">6. Your Legal Rights</h2>
             <p className="text-muted-foreground leading-relaxed">
-              Under certain circumstances, you have rights under data protection laws in relation
-              to your personal data. These include the right to:
+              Under certain circumstances, you have rights under data protection laws in relation to
+              your personal data. These include the right to:
             </p>
             <ul className="list-disc pl-5 space-y-2 text-muted-foreground">
               <li>Request access to your personal data.</li>
@@ -109,8 +113,8 @@ export default function PrivacyPolicyPage() {
               7. Changes to the Privacy Policy
             </h2>
             <p className="text-muted-foreground leading-relaxed">
-              This version was last updated on January 23, 2024. It may change and if it does,
-              these changes will be posted on this page and, where appropriate, notified to you.
+              This version was last updated on January 23, 2024. It may change and if it does, these
+              changes will be posted on this page and, where appropriate, notified to you.
             </p>
           </section>
 
@@ -118,11 +122,8 @@ export default function PrivacyPolicyPage() {
             <h2 className="text-xl font-semibold text-foreground">8. Contact Details</h2>
             <p className="text-muted-foreground leading-relaxed">
               If you have any questions about this privacy policy or our privacy practices, please
-              contact us at{' '}
-              <a
-                href="mailto:info@cadabams.org"
-                className="text-primary hover:underline"
-              >
+              contact us at{" "}
+              <a href="mailto:info@cadabams.org" className="text-primary hover:underline">
                 info@cadabams.org
               </a>
               .

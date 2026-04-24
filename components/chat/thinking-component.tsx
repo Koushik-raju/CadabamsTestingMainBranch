@@ -25,10 +25,7 @@ export function ThinkingComponent({ isStreaming }: ThinkingComponentProps) {
   const [, forceUpdate] = useState(0);
   const startTimeRef = useRef<number | null>(null);
   const durationRef = useRef<number | null>(null);
-  const stagesRef = useRef<string[]>([
-    FIRST_MESSAGE,
-    ...CHAT_REMAINING_MESSAGES,
-  ]);
+  const stagesRef = useRef<string[]>([FIRST_MESSAGE, ...CHAT_REMAINING_MESSAGES]);
 
   useEffect(() => {
     if (!isStreaming) return;
@@ -44,9 +41,7 @@ export function ThinkingComponent({ isStreaming }: ThinkingComponentProps) {
     return () => {
       clearInterval(id);
       if (startTimeRef.current !== null) {
-        durationRef.current = Math.round(
-          (Date.now() - startTimeRef.current) / 1000,
-        );
+        durationRef.current = Math.round((Date.now() - startTimeRef.current) / 1000);
         startTimeRef.current = null;
       }
     };

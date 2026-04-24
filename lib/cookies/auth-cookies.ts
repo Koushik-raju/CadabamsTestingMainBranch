@@ -2,14 +2,14 @@
 // Tokens and user profile are stored as JS-accessible browser cookies so the
 // Next.js middleware (server/edge) can read them via request.cookies.
 
-import { getCookie, setCookie, removeCookie, cookieExists } from './universal-cookies';
+import type { User } from "@/types";
 import {
-  COOKIE_NAMES,
   ACCESS_TOKEN_OPTIONS,
+  COOKIE_NAMES,
   REFRESH_TOKEN_OPTIONS,
   USER_COOKIE_OPTIONS,
-} from './constants';
-import type { User } from '@/types';
+} from "./constants";
+import { cookieExists, getCookie, removeCookie, setCookie } from "./universal-cookies";
 
 // ── Access token ──────────────────────────────────────────────────────────────
 
@@ -104,7 +104,11 @@ export async function getRedirectPath(): Promise<string | null> {
 }
 
 export async function setRedirectPath(path: string): Promise<boolean> {
-  return setCookie(COOKIE_NAMES.REDIRECT_PATH, path, { path: '/', sameSite: 'lax', maxAge: 60 * 5 });
+  return setCookie(COOKIE_NAMES.REDIRECT_PATH, path, {
+    path: "/",
+    sameSite: "lax",
+    maxAge: 60 * 5,
+  });
 }
 
 export async function removeRedirectPath(): Promise<boolean> {

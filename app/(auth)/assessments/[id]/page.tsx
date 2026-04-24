@@ -11,12 +11,18 @@
  *     shape expected by QuestionRenderer; keyValue is narrowed with a runtime
  *     type guard instead of a blind cast.
  *   - Tracks per-step answers in a Record<string, AnswerValue> state map.
- *   - The generate wizard step no longer runs the LLM; it just shows a
- *     "View Report" button that invokes handleSubmit. The actual analyze call
- *     lives on /assessments/[id]/generate/[completionId].
- *   - On final step (or View Report tap from the generate step), handleSubmit
- *     routes to /assessments/[id]/result; the completion is only POSTed
- *     once thanks to submittedCompletionIdRef.
+ *   - The generate wizard step renders a custom "Assessment Complete" screen
+ *     (checkmark, heading, AI disclaimer card, Generate Report button) instead
+ *     of delegating to QuestionRenderer. The header on that step shows an X
+ *     close button and a full 100% progress bar to match the reference design.
+ *   - On final step (or Generate Report tap from the generate step), handleSubmit
+ *     routes to /assessments/[id]/generate/[completionId]; the completion is only
+ *     POSTed once thanks to submittedCompletionIdRef.
+ *   - JOURNEY CONTEXT: when the assessment was opened from a journey task
+ *     (continuation.active), handleSubmit skips the generate + result pages
+ *     entirely — it calls continuation.markCompleted() with the completionId
+ *     as proof and navigates straight back to the journey details page. The
+ *     JourneyReturnFab then surfaces on the journey page.
  *   - A "Past Reports" link in the header links to /assessments/[id]/reports
  *     so users can view prior reports without leaving the wizard.
  *
@@ -29,30 +35,43 @@
  *   submittedCompletionIdRef   — set once the CompletionResponseDto is created, used to
  *                                skip a duplicate POST from handleSubmit
  *   persistCompletion          — memoized-once submit helper returning the completion id
+ *   continuation               — useJourneyTaskContinuation('ASSESSMENT') — non-null active
+ *                                when opened from a journey; drives the fast-return flow
  *
  * DEPENDENCIES:
  *   useAssessmentById             — SWR hook wrapping cmsAssessmentsControllerFindOne
  *   submitAssessment              — SDK call to patientAssessmentsControllerCreateCompletion
  *   QuestionRenderer              — renders question UI by type
+ *   useJourneyTaskContinuation    — hooks/journeys/use-journey-task-continuation
  *
- * LAST UPDATED: 2026-04-20 — add Past Reports header link.
+ * LAST UPDATED: 2026-04-24 — skip generate/result pages when opened from a journey; redirect to journey details with FAB
  */
 
-'use client';
+"use client";
 
-import { useState, use, useMemo, useEffect, useRef } from 'react';
-import { useRouter } from 'next/navigation';
-import Link from 'next/link';
-import { Button } from '@/components/ui/button';
-import { Skeleton } from '@/components/ui/skeleton';
-import { BackButton } from '@/components/shared/navigation/back-button';
-import { QuestionRenderer, type Question, type AnswerValue } from '@/components/shared/questions/question-renderer';
-import { ChevronLeft, AlertCircle, FileText } from 'lucide-react';
+import { BackButton } from "@/components/shared/navigation/back-button";
 import {
-  useAssessmentById,
-  submitAssessment,
-} from '@/hooks/assessments/use-assessment-detail';
-import { useAuth } from '@/hooks/shared/auth/use-auth';
+  type AnswerValue,
+  type Question,
+  QuestionRenderer,
+} from "@/components/shared/questions/question-renderer";
+import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
+import { submitAssessment, useAssessmentById } from "@/hooks/assessments/use-assessment-detail";
+import { useJourneyTaskContinuation } from "@/hooks/journeys/use-journey-task-continuation";
+import { useAuth } from "@/hooks/shared/auth/use-auth";
+import {
+  AlertCircle,
+  ArrowRight,
+  CheckCircle2,
+  ChevronLeft,
+  FileText,
+  Sparkles,
+  X,
+} from "lucide-react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { use, useEffect, useMemo, useRef, useState } from "react";
 
 export default function AssessmentFormPage({ params }: { params: Promise<{ id: string }> }) {
   const { id: assessmentId } = use(params);
@@ -69,6 +88,8 @@ export default function AssessmentFormPage({ params }: { params: Promise<{ id: s
   // generate step has already created the CompletionResponseDto.
   const submittedCompletionIdRef = useRef<string | null>(null);
 
+  const continuation = useJourneyTaskContinuation("ASSESSMENT");
+
   const { data: assessmentData, isLoading, error: fetchError } = useAssessmentById(assessmentId);
 
   const assessment = assessmentData;
@@ -81,16 +102,22 @@ export default function AssessmentFormPage({ params }: { params: Promise<{ id: s
       label: q.label ?? undefined,
       type: q.type,
       description: q.subtitle ?? undefined,
-      options: q.options?.map((o) => ({ id: o.id, option: o.label, label: o.label, value: o.value })),
+      options: q.options?.map((o) => ({
+        id: o.id,
+        option: o.label,
+        label: o.label,
+        value: o.value,
+      })),
       subtitle: q.subtitle ?? undefined,
       smileys: q.smileys,
       text: q.text ?? undefined,
       count: q.count ?? undefined,
-      keyValue: typeof q.keyValue === 'string'
-        ? q.keyValue
-        : q.keyValue !== null && typeof q.keyValue === 'object'
-          ? (q.keyValue as Record<string, string>)
-          : undefined,
+      keyValue:
+        typeof q.keyValue === "string"
+          ? q.keyValue
+          : q.keyValue !== null && typeof q.keyValue === "object"
+            ? (q.keyValue as Record<string, string>)
+            : undefined,
       prompt: q.prompt ?? undefined,
       answer: q.answer ?? undefined,
       questions: q.questions ?? undefined,
@@ -104,21 +131,30 @@ export default function AssessmentFormPage({ params }: { params: Promise<{ id: s
     const initial: Record<string, AnswerValue> = {};
     questions.forEach((q, index) => {
       const key = `q_${q.id}_step_${index}`;
-      const raw = q.type || '';
+      const raw = q.type || "";
       // Normalize the type the same way as QuestionRenderer
-      const isSmiley = raw === 'smiley' || raw.includes('smiley') || !!q.smileys?.length;
-      const isMood = raw === 'mood_selector' || raw.includes('mood-selector') || raw.includes('mood_selector');
-      const isLevel = raw === 'level_selector' || raw.includes('level-selector') || raw.includes('level_selector');
-      const isBubble = raw === 'bubble_selector' || raw.includes('bubble-selector') || raw.includes('bubble_selector');
-      const isDot = raw === 'dot_chooser' || raw.includes('dot-chooser') || raw.includes('dot_chooser');
-      const isIndicator = raw === 'indicator' || raw.includes('indicator');
-      const isViewText = raw === 'view_text' || raw.includes('view-text') || raw.includes('view_text');
-      const isAgreement = raw === 'agreement' || raw.includes('agreement');
-      const isGenerate = raw === 'generate' || raw.includes('generate');
-      const isQa = raw === 'qa' || raw.includes('.qa');
+      const isSmiley = raw === "smiley" || raw.includes("smiley") || !!q.smileys?.length;
+      const isMood =
+        raw === "mood_selector" || raw.includes("mood-selector") || raw.includes("mood_selector");
+      const isLevel =
+        raw === "level_selector" ||
+        raw.includes("level-selector") ||
+        raw.includes("level_selector");
+      const isBubble =
+        raw === "bubble_selector" ||
+        raw.includes("bubble-selector") ||
+        raw.includes("bubble_selector");
+      const isDot =
+        raw === "dot_chooser" || raw.includes("dot-chooser") || raw.includes("dot_chooser");
+      const isIndicator = raw === "indicator" || raw.includes("indicator");
+      const isViewText =
+        raw === "view_text" || raw.includes("view-text") || raw.includes("view_text");
+      const isAgreement = raw === "agreement" || raw.includes("agreement");
+      const isGenerate = raw === "generate" || raw.includes("generate");
+      const isQa = raw === "qa" || raw.includes(".qa");
       const isQaWithSubs = isQa && Array.isArray(q.questions) && q.questions.length > 0;
-      const isYesNo = raw === 'yes_no' || raw.includes('yes') || raw.includes('no');
-      const isText = raw === 'text' || raw.includes('text') || raw.includes('speech');
+      const isYesNo = raw === "yes_no" || raw.includes("yes") || raw.includes("no");
+      const isText = raw === "text" || raw.includes("text") || raw.includes("speech");
 
       if (isSmiley || isMood) {
         initial[key] = { selected: 2 };
@@ -133,11 +169,11 @@ export default function AssessmentFormPage({ params }: { params: Promise<{ id: s
       } else if (isQaWithSubs) {
         initial[key] = { subAnswers: {} };
       } else if (isQa || isText) {
-        initial[key] = { text: '' };
+        initial[key] = { text: "" };
       } else if (isYesNo) {
-        initial[key] = { selected: '' };
+        initial[key] = { selected: "" };
       } else {
-        initial[key] = { selected: '' };
+        initial[key] = { selected: "" };
       }
     });
     setAnswers(initial);
@@ -148,34 +184,66 @@ export default function AssessmentFormPage({ params }: { params: Promise<{ id: s
     const q = questions[currentStep];
     const key = `q_${q.id}_step_${currentStep}`;
     const ans = answers[key];
-    const raw = q.type || '';
+    const raw = q.type || "";
 
-    // These types are always complete (informational, have defaults, or user can proceed freely)
-    const alwaysComplete = ['smiley', 'mood_selector', 'level_selector', 'indicator',
-      'view_text', 'agreement', 'generate', 'rating', 'qa'];
-    const isAlwaysComplete = alwaysComplete.includes(raw)
-      || raw.includes('smiley') || raw.includes('mood-selector') || raw.includes('level-selector')
-      || raw.includes('indicator') || raw.includes('view-text') || raw.includes('agreement')
-      || raw.includes('generate') || raw.includes('.qa')
-      || (q.smileys && q.smileys.length > 0);
+    // Always-complete types: informational screens or selectors with meaningful defaults
+    // (smiley/mood default to index 2, level defaults to 0, indicator defaults to 50).
+    // rating and qa are excluded — no pre-selected default, user must explicitly answer.
+    const alwaysComplete = [
+      "smiley",
+      "mood_selector",
+      "level_selector",
+      "indicator",
+      "view_text",
+      "agreement",
+      "generate",
+    ];
+    const isAlwaysComplete =
+      alwaysComplete.includes(raw) ||
+      raw.includes("smiley") ||
+      raw.includes("mood-selector") ||
+      raw.includes("level-selector") ||
+      raw.includes("indicator") ||
+      raw.includes("view-text") ||
+      raw.includes("agreement") ||
+      raw.includes("generate") ||
+      (q.smileys && q.smileys.length > 0);
 
     if (isAlwaysComplete) {
       setIsStepComplete(true);
-    } else if (raw === 'text' || raw.includes('text') || raw.includes('speech')) {
-      setIsStepComplete(((ans as { text?: string })?.text || '').trim().length > 0);
-    } else if (raw === 'bubble_selector' || raw.includes('bubble-selector') || raw.includes('bubble_selector')
-      || raw === 'dot_chooser' || raw.includes('dot-chooser') || raw.includes('dot_chooser')) {
+    } else if (raw === "rating") {
+      // rating has no default — requires an explicit tap; stored as number once selected
+      const sel = (ans as { selected?: unknown })?.selected;
+      setIsStepComplete(typeof sel === "number");
+    } else if (raw === "text" || raw.includes("text") || raw.includes("speech")) {
+      setIsStepComplete(((ans as { text?: string })?.text || "").trim().length > 0);
+    } else if (raw === "qa" || raw.includes("qa")) {
+      // qa with sub-questions: every sub-question must be answered
+      if (Array.isArray(q.questions) && q.questions.length > 0) {
+        const subAnswers = (ans as { subAnswers?: Record<string, string> })?.subAnswers || {};
+        setIsStepComplete(q.questions.every((_, idx) => !!subAnswers[`qa_${idx}`]));
+      } else {
+        setIsStepComplete(((ans as { text?: string })?.text || "").trim().length > 0);
+      }
+    } else if (
+      raw === "bubble_selector" ||
+      raw.includes("bubble-selector") ||
+      raw.includes("bubble_selector") ||
+      raw === "dot_chooser" ||
+      raw.includes("dot-chooser") ||
+      raw.includes("dot_chooser")
+    ) {
       const arr = (ans as { selected?: string[] })?.selected;
       setIsStepComplete(Array.isArray(arr) && arr.length > 0);
     } else {
       // mcq, yes_no, and other string-selected types
-      setIsStepComplete(!!((ans as { selected?: string })?.selected));
+      setIsStepComplete(!!(ans as { selected?: string })?.selected);
     }
   }, [currentStep, answers, questions]);
 
   const currentKey = questions[currentStep]
     ? `q_${questions[currentStep].id}_step_${currentStep}`
-    : '';
+    : "";
 
   const handleAnswer = (value: AnswerValue) => {
     setAnswers((prev) => ({ ...prev, [currentKey]: value }));
@@ -199,13 +267,13 @@ export default function AssessmentFormPage({ params }: { params: Promise<{ id: s
 
   const persistCompletion = async (): Promise<string> => {
     if (submittedCompletionIdRef.current) return submittedCompletionIdRef.current;
-    const leadId = user?.lead_id ? String(user.lead_id) : '';
+    const leadId = user?.lead_id ? String(user.lead_id) : "";
     const formattedAnswers: Record<string, unknown> = {};
     questions.forEach((q, index) => {
       const key = `q_${q.id}_step_${index}`;
       formattedAnswers[key] = {
         ...answers[key],
-        questionText: q.title || q.label || 'Unknown Question',
+        questionText: q.title || q.label || "Unknown Question",
       };
     });
     const id = await submitAssessment(leadId, assessmentId, formattedAnswers);
@@ -214,6 +282,28 @@ export default function AssessmentFormPage({ params }: { params: Promise<{ id: s
   };
 
   const handleSubmit = async () => {
+    /* When opened from a journey task, skip the AI-generate + result pages.
+       Instead: persist the completion, mark the task done on the backend via
+       the continuation hook, and navigate straight back to the journey details
+       page. The JourneyReturnFab will surface there as the completion CTA. */
+    if (continuation.active) {
+      setSubmitting(true);
+      try {
+        const completionId = await persistCompletion();
+        await continuation.markCompleted(
+          { kind: "ASSESSMENT", assessmentCompletionId: completionId },
+          { proofPreview: "Assessment Complete" },
+        );
+        router.push(`/journeys/${continuation.journeyId}/details`);
+      } catch (err) {
+        console.error("Error submitting assessment from journey:", err);
+        setError("Failed to submit assessment. Please try again.");
+      } finally {
+        setSubmitting(false);
+      }
+      return;
+    }
+
     // Persist the completion (once) and route to the generate page for that
     // specific completionId, which hosts the "Generate Report" CTA.
     if (submittedCompletionIdRef.current) {
@@ -225,8 +315,8 @@ export default function AssessmentFormPage({ params }: { params: Promise<{ id: s
       const completionId = await persistCompletion();
       router.push(`/assessments/${assessmentId}/generate/${completionId}`);
     } catch (err) {
-      console.error('Error submitting assessment:', err);
-      setError('Failed to submit assessment. Please try again.');
+      console.error("Error submitting assessment:", err);
+      setError("Failed to submit assessment. Please try again.");
     } finally {
       setSubmitting(false);
     }
@@ -245,7 +335,9 @@ export default function AssessmentFormPage({ params }: { params: Promise<{ id: s
         <div className="flex-1 flex flex-col items-center justify-center p-6 gap-4">
           <Skeleton className="h-8 w-3/4 max-w-sm" />
           <div className="flex flex-col gap-3 w-full max-w-md mt-4">
-            {[1, 2, 3, 4].map((i) => <Skeleton key={i} className="h-14 w-full rounded-2xl" />)}
+            {[1, 2, 3, 4].map((i) => (
+              <Skeleton key={i} className="h-14 w-full rounded-2xl" />
+            ))}
           </div>
         </div>
       </div>
@@ -257,7 +349,7 @@ export default function AssessmentFormPage({ params }: { params: Promise<{ id: s
       <div className="min-h-screen bg-background flex flex-col items-center justify-center p-6">
         <AlertCircle className="w-12 h-12 text-destructive mb-4" />
         <p className="text-destructive text-center font-medium">
-          {error || 'Failed to load assessment.'}
+          {error || "Failed to load assessment."}
         </p>
         <Button className="mt-4" variant="outline" onClick={() => router.back()}>
           Go Back
@@ -280,8 +372,83 @@ export default function AssessmentFormPage({ params }: { params: Promise<{ id: s
   const progress = Math.round(((currentStep + 1) / questions.length) * 100);
   const currentQuestion = questions[currentStep] as Question;
   const isLastStep = currentStep === questions.length - 1;
-  const currentType = currentQuestion?.type || '';
-  const isGenerateStep = currentType === 'generate' || currentType.includes('generate');
+  const currentType = currentQuestion?.type || "";
+  const isGenerateStep = currentType === "generate" || currentType.includes("generate");
+
+  /* Generate step renders a full custom "Assessment Complete" screen instead
+     of the standard question renderer, matching the reference design layout. */
+  if (isGenerateStep) {
+    return (
+      <div className="min-h-screen bg-background flex flex-col">
+        {/* Header: X close + full progress bar */}
+        <div className="flex items-center gap-3 px-3 py-3 bg-card">
+          <button
+            onClick={() => router.push(`/assessments/${assessmentId}/details`)}
+            className="w-9 h-9 flex items-center justify-center rounded-full hover:bg-muted transition-colors shrink-0"
+            aria-label="Close"
+          >
+            <X className="w-5 h-5 text-muted-foreground" />
+          </button>
+          <div className="flex-1 bg-muted h-1.5 rounded-full overflow-hidden">
+            <div className="h-full bg-primary w-full" />
+          </div>
+        </div>
+
+        {/* Content */}
+        <div className="flex-1 flex flex-col items-center justify-center px-6 py-10 gap-6">
+          {/* Checkmark circle */}
+          <div className="w-24 h-24 rounded-full bg-primary/10 flex items-center justify-center">
+            <div className="w-14 h-14 rounded-full bg-primary/20 flex items-center justify-center">
+              <CheckCircle2 className="w-8 h-8 text-primary" strokeWidth={2} />
+            </div>
+          </div>
+
+          {/* Heading + subtext */}
+          <div className="text-center space-y-3">
+            <h1 className="text-3xl font-bold text-foreground leading-tight">
+              Assessment
+              <br />
+              Complete
+            </h1>
+            <p className="text-muted-foreground text-base leading-relaxed max-w-xs mx-auto">
+              You&apos;ve answered all questions. We&apos;re ready to compile your personalized
+              insights.
+            </p>
+          </div>
+
+          {/* AI disclaimer card */}
+          <div className="w-full max-w-sm bg-card border border-border rounded-2xl p-4 flex gap-3 items-start">
+            <Sparkles className="w-5 h-5 text-primary shrink-0 mt-0.5" />
+            <div>
+              <p className="text-sm font-semibold text-foreground mb-1">AI-Generated Report</p>
+              <p className="text-xs text-muted-foreground leading-relaxed">
+                This report is generated using artificial intelligence based on your responses. It
+                is for informational purposes only and does not replace professional medical advice.
+              </p>
+            </div>
+          </div>
+        </div>
+
+        {/* Generate Report button — sticky bottom */}
+        <div className="sticky bottom-0 px-5 pt-3 pb-10 bg-card border-t border-border">
+          <Button
+            className="w-full bg-primary hover:bg-primary/90 text-white font-bold h-14 rounded-2xl text-sm tracking-widest uppercase disabled:opacity-40 flex items-center justify-center gap-2"
+            disabled={submitting}
+            onClick={handleSubmit}
+          >
+            {submitting ? (
+              "Generating..."
+            ) : (
+              <>
+                Generate Report
+                <ArrowRight className="w-4 h-4" />
+              </>
+            )}
+          </Button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
@@ -327,22 +494,20 @@ export default function AssessmentFormPage({ params }: { params: Promise<{ id: s
           answer={answers[currentKey] ?? {}}
           onChange={handleAnswer}
           onComplete={handleComplete}
-          onFinish={isGenerateStep ? handleSubmit : undefined}
+          onFinish={undefined}
         />
       </div>
 
-      {/* Continue button — hidden on generate steps (they manage their own buttons) */}
-      {!isGenerateStep && (
-        <div className="px-5 pb-8 pt-3 border-t border-border bg-card">
-          <Button
-            className="w-full bg-primary hover:bg-primary/90 text-white font-semibold h-14 rounded-2xl text-base disabled:opacity-40"
-            disabled={!isStepComplete || submitting}
-            onClick={handleNext}
-          >
-            {submitting ? 'Submitting...' : isLastStep ? 'Submit Assessment' : 'Continue →'}
-          </Button>
-        </div>
-      )}
+      {/* Continue button — sticky to bottom */}
+      <div className="sticky bottom-0 px-5 pt-3 pb-10 border-t border-border bg-card">
+        <Button
+          className="w-full bg-primary hover:bg-primary/90 text-white font-semibold h-14 rounded-2xl text-base disabled:opacity-40"
+          disabled={!isStepComplete || submitting}
+          onClick={handleNext}
+        >
+          {submitting ? "Submitting..." : isLastStep ? "Submit Assessment" : "Continue →"}
+        </Button>
+      </div>
     </div>
   );
 }

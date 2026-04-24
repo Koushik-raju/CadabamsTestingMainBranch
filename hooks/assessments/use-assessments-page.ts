@@ -37,15 +37,15 @@
  *   returns CompletionResponseDto[] directly
  */
 
-import useSWR from 'swr';
-import useSWRInfinite from 'swr/infinite';
+import { ASSESSMENT_CATEGORIES } from "@/components/assessment/assessment-category";
+import { assessmentsKey, assignedAssessmentsKey } from "@/lib/swr-keys";
 import {
   cmsAssessmentsControllerFindAll,
   patientsControllerGetAssessments,
-} from '@/sdk/backend-v2';
-import type { AssessmentResponseDto, AssessmentPaginationDto } from '@/sdk/backend-v2';
-import { assessmentsKey, assignedAssessmentsKey } from '@/lib/swr-keys';
-import { ASSESSMENT_CATEGORIES } from '@/components/assessment/assessment-category';
+} from "@/sdk/backend-v2";
+import type { AssessmentPaginationDto, AssessmentResponseDto } from "@/sdk/backend-v2";
+import useSWR from "swr";
+import useSWRInfinite from "swr/infinite";
 
 // ---------------------------------------------------------------------------
 // Internal helpers — extract plain values from Strapi v5 JSON-like objects
@@ -53,11 +53,11 @@ import { ASSESSMENT_CATEGORIES } from '@/components/assessment/assessment-catego
 
 function extractString(val: unknown): string | null {
   if (val == null) return null;
-  if (typeof val === 'string') return val.trim() || null;
-  if (typeof val === 'object') {
+  if (typeof val === "string") return val.trim() || null;
+  if (typeof val === "object") {
     const obj = val as Record<string, unknown>;
-    for (const key of ['en', 'value', 'text']) {
-      if (typeof obj[key] === 'string') return (obj[key] as string).trim() || null;
+    for (const key of ["en", "value", "text"]) {
+      if (typeof obj[key] === "string") return (obj[key] as string).trim() || null;
     }
   }
   return String(val) || null;
@@ -65,11 +65,11 @@ function extractString(val: unknown): string | null {
 
 function extractNumber(val: unknown): number | null {
   if (val == null) return null;
-  if (typeof val === 'number') return val;
-  if (typeof val === 'object') {
+  if (typeof val === "number") return val;
+  if (typeof val === "object") {
     const obj = val as Record<string, unknown>;
-    for (const key of ['en', 'value']) {
-      if (typeof obj[key] === 'number') return obj[key] as number;
+    for (const key of ["en", "value"]) {
+      if (typeof obj[key] === "number") return obj[key] as number;
     }
   }
   const n = Number(val);
@@ -91,7 +91,7 @@ export interface AssessmentItem {
   hint: string | null;
   image: string | null;
   citationText: string | null;
-  status: 'DRAFT' | 'PUBLISHED';
+  status: "DRAFT" | "PUBLISHED";
   visibleToAll: boolean;
   forJourney: boolean;
   landingTitle: {
@@ -131,17 +131,13 @@ export interface AssessmentItem {
 
 export function mapAssessment(item: AssessmentResponseDto): AssessmentItem {
   const labelStr = extractString(item.label);
-  const titleStr = item.title || labelStr || '';
+  const titleStr = item.title || labelStr || "";
 
   return {
     id: item.id,
-    title:
-      extractString(item.landingTitle?.title) ||
-      labelStr ||
-      titleStr,
+    title: extractString(item.landingTitle?.title) || labelStr || titleStr,
     description:
-      extractString(item.description) ||
-      extractString(item.landingTitle?.landingDescription),
+      extractString(item.description) || extractString(item.landingTitle?.landingDescription),
     category: item.category ?? [],
     label: labelStr,
     hint: extractString(item.hint),
@@ -167,8 +163,8 @@ export function mapAssessment(item: AssessmentResponseDto): AssessmentItem {
       : null,
     Questions: (item.Questions ?? []).map((q) => ({
       id: q.id,
-      type: extractString(q.type) ?? 'mcq',
-      title: extractString(q.title) ?? '',
+      type: extractString(q.type) ?? "mcq",
+      title: extractString(q.title) ?? "",
       subtitle: extractString(q.subtitle),
       hint: extractString(q.hint),
       continueLabel: extractString(q.continueLabel),
@@ -180,12 +176,19 @@ export function mapAssessment(item: AssessmentResponseDto): AssessmentItem {
       choice: extractString(q.choice),
       answer: extractString(q.answer),
       text: extractString(q.text),
-      keyValue: q.keyValue && typeof q.keyValue === 'object' ? q.keyValue : extractString(q.keyValue),
+      keyValue:
+        q.keyValue && typeof q.keyValue === "object" ? q.keyValue : extractString(q.keyValue),
       questions: Array.isArray(q.questions)
-        ? q.questions.filter((e): e is { question: string } => typeof (e as Record<string, unknown>)?.question === 'string')
+        ? q.questions.filter(
+            (e): e is { question: string } =>
+              typeof (e as Record<string, unknown>)?.question === "string",
+          )
         : null,
       answers: Array.isArray(q.answers)
-        ? q.answers.filter((e): e is { answer: string } => typeof (e as Record<string, unknown>)?.answer === 'string')
+        ? q.answers.filter(
+            (e): e is { answer: string } =>
+              typeof (e as Record<string, unknown>)?.answer === "string",
+          )
         : null,
       options: (q.options ?? []).map((o, i) => ({
         id: o.id,
@@ -211,11 +214,9 @@ export function getDynamicCategories(assessments: AssessmentItem[]): string[] {
       if (cat) seen.add(cat);
     }
   }
-  const inCanonicalOrder = ASSESSMENT_CATEGORIES.filter(
-    (c) => c !== 'All' && seen.has(c)
-  );
+  const inCanonicalOrder = ASSESSMENT_CATEGORIES.filter((c) => c !== "All" && seen.has(c));
   const extras = [...seen].filter((c) => !ASSESSMENT_CATEGORIES.includes(c));
-  return ['All', ...inCanonicalOrder, ...extras];
+  return ["All", ...inCanonicalOrder, ...extras];
 }
 
 // ---------------------------------------------------------------------------
@@ -237,7 +238,7 @@ export function useAssessments() {
         query: {
           limit: PAGE_SIZE,
           offset: offset as number,
-          status: 'PUBLISHED',
+          status: "PUBLISHED",
           publicView: true,
         },
       });
@@ -256,7 +257,7 @@ export function useAssessments() {
       revalidateOnReconnect: false,
       errorRetryCount: 1,
       persistSize: true,
-    }
+    },
   );
 }
 
@@ -271,7 +272,7 @@ export function useFilteredAssessments({
   search?: string | null;
   category?: string | null;
   sortBy?: string | null;
-  sortOrder?: 'asc' | 'desc' | null;
+  sortOrder?: "asc" | "desc" | null;
   minMinutes?: number | null;
   maxMinutes?: number | null;
 }) {
@@ -279,13 +280,13 @@ export function useFilteredAssessments({
   const key = isActive
     ? [
         assessmentsKey(),
-        'filtered',
-        search ?? '',
-        category ?? '',
-        sortBy ?? '',
-        sortOrder ?? '',
-        minMinutes ?? '',
-        maxMinutes ?? '',
+        "filtered",
+        search ?? "",
+        category ?? "",
+        sortBy ?? "",
+        sortOrder ?? "",
+        minMinutes ?? "",
+        maxMinutes ?? "",
       ]
     : null;
 
@@ -296,10 +297,10 @@ export function useFilteredAssessments({
         query: {
           limit: PAGE_SIZE,
           offset: 0,
-          status: 'PUBLISHED',
+          status: "PUBLISHED",
           publicView: true,
           search: search ?? undefined,
-          category: (category && category !== 'All') ? category : undefined,
+          category: category && category !== "All" ? category : undefined,
           sortBy: sortBy ?? undefined,
           sortOrder: sortOrder ?? undefined,
           minMinutes: minMinutes ?? undefined,
@@ -316,19 +317,16 @@ export function useFilteredAssessments({
       dedupingInterval: 600_000,
       keepPreviousData: true,
       errorRetryCount: 1,
-    }
+    },
   );
 }
 
 export function useAssignedAssessments(leadId: string | null) {
-  return useSWR(
-    leadId ? assignedAssessmentsKey(leadId) : null,
-    async () => {
-      const res = await patientsControllerGetAssessments({
-        path: { patientId: leadId! },
-      });
-      if (res.error) throw new Error(JSON.stringify(res.error));
-      return res.data ?? [];
-    }
-  );
+  return useSWR(leadId ? assignedAssessmentsKey(leadId) : null, async () => {
+    const res = await patientsControllerGetAssessments({
+      path: { patientId: leadId! },
+    });
+    if (res.error) throw new Error(JSON.stringify(res.error));
+    return res.data ?? [];
+  });
 }

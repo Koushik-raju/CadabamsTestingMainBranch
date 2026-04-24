@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect, useRef, useLayoutEffect } from "react";
 import type { UIMessage } from "ai";
+import { useEffect, useLayoutEffect, useRef } from "react";
 import { MessageBubble } from "./message-bubble";
 
 interface MessageListProps {
@@ -23,7 +23,13 @@ function getTimestamp(id: string): string {
   return ts;
 }
 
-export function MessageList({ messages, isStreaming, onLoadMore, hasMore, isLoadingMore }: MessageListProps) {
+export function MessageList({
+  messages,
+  isStreaming,
+  onLoadMore,
+  hasMore,
+  isLoadingMore,
+}: MessageListProps) {
   const bottomRef = useRef<HTMLDivElement>(null);
   const prevMessageCount = useRef(0);
   const prevScrollHeight = useRef(0);

@@ -9,26 +9,27 @@
  *   1. Accepts enriched enrollment data and streak count as props from home/page.tsx.
  *   2. Shows a loading skeleton while data is fetching.
  *   3. Shows an empty state with a CTA if the user has no active journeys.
- *   4. Renders each enrolled journey as a row inside a grouped card, with a
- *      gradient icon tile, name, day counter, and progress bar.
+ *   4. Renders each enrolled journey as a row inside a grouped card. The icon
+ *      tile shows the API-provided image when available; falls back to a
+ *      gradient tile with the Route icon when icon is null.
  *
  * KEY VARIABLES / PROPS / EXPORTS:
- *   enrollments     — list of enriched enrollment objects (id, name, currentDay, totalDays)
+ *   enrollments     — list of enriched enrollment objects (id, name, currentDay, totalDays, icon)
  *   streak          — daily streak count from gamification
  *   isLoading       — drives skeleton display
  *
  * DEPENDENCIES:
  *   shadcn Card, Skeleton, Separator, Badge
  *
- * LAST UPDATED: 2026-04-22 — replace placeholder with real enrolled journey data
+ * LAST UPDATED: 2026-04-24 — larger square icon (w-16 h-16), tighter row padding, items-center alignment
  */
 
-import Link from 'next/link';
-import { Flame, Route } from 'lucide-react';
-import { Card, CardContent } from '@/components/ui/card';
-import { Skeleton } from '@/components/ui/skeleton';
-import { Separator } from '@/components/ui/separator';
-import { cn } from '@/lib/utils';
+import { Card, CardContent } from "@/components/ui/card";
+import { Separator } from "@/components/ui/separator";
+import { Skeleton } from "@/components/ui/skeleton";
+import { cn } from "@/lib/utils";
+import { Flame, Route } from "lucide-react";
+import Link from "next/link";
 
 export interface HomeEnrollment {
   enrollmentId: string;
@@ -36,6 +37,7 @@ export interface HomeEnrollment {
   name: string;
   currentDay: number;
   totalDays: number;
+  icon: string | null;
 }
 
 interface Props {
@@ -67,19 +69,16 @@ export function JourneySection({ enrollments = [], streak, isLoading = false }: 
       {isLoading ? (
         <Card>
           <CardContent className="py-0 px-3">
-            {[0, 1].map((i) => (
-              <div key={i}>
-                <div className="flex items-start gap-3 py-3">
-                  <Skeleton className="w-11 h-11 rounded-2xl flex-shrink-0" />
-                  <div className="flex-1 space-y-1.5 pt-0.5">
-                    <Skeleton className="h-3.5 w-2/3 rounded" />
-                    <Skeleton className="h-2.5 w-1/3 rounded" />
-                    <Skeleton className="h-1.5 w-full rounded-full mt-2" />
-                  </div>
+            <div>
+              <div className="flex items-center gap-3 py-0">
+                <Skeleton className="w-16 h-16 rounded-xl flex-shrink-0" />
+                <div className="flex-1 space-y-1.5 pt-0.5">
+                  <Skeleton className="h-3.5 w-2/3 rounded" />
+                  <Skeleton className="h-2.5 w-1/3 rounded" />
+                  <Skeleton className="h-1.5 w-full rounded-full mt-2" />
                 </div>
-                {i === 0 && <Separator />}
               </div>
-            ))}
+            </div>
           </CardContent>
         </Card>
       ) : enrollments.length === 0 ? (
@@ -94,10 +93,7 @@ export function JourneySection({ enrollments = [], streak, isLoading = false }: 
                 Start a journey to track your progress here.
               </p>
             </div>
-            <Link
-              href="/journeys"
-              className="text-sm font-semibold text-primary"
-            >
+            <Link href="/journeys" className="text-sm font-semibold text-primary">
               Explore Journeys →
             </Link>
           </CardContent>
@@ -114,18 +110,26 @@ export function JourneySection({ enrollments = [], streak, isLoading = false }: 
                 <div key={enrollment.enrollmentId}>
                   <Link
                     href={`/journeys/${enrollment.journeyId}`}
-                    className="flex items-start gap-3 py-3 transition-colors hover:bg-muted/50 active:bg-muted -mx-3 px-3"
+                    className="flex items-center gap-3 py-0 transition-colors hover:bg-muted/50 active:bg-muted -mx-3 px-3"
                   >
-                    <div
-                      className={cn(
-                        'relative w-11 h-11 rounded-2xl bg-gradient-to-br flex-shrink-0',
-                        'flex items-center justify-center overflow-hidden shadow-sm',
-                        'from-violet-500 to-purple-600'
-                      )}
-                    >
-                      <div className="absolute -top-2 -right-2 w-7 h-7 rounded-full bg-white/10" />
-                      <Route className="w-5 h-5 text-white" />
-                    </div>
+                    {enrollment.icon ? (
+                      <img
+                        src={enrollment.icon}
+                        alt={enrollment.name}
+                        className="w-16 h-16 rounded-xl flex-shrink-0 object-cover shadow-sm"
+                      />
+                    ) : (
+                      <div
+                        className={cn(
+                          "relative w-16 h-16 rounded-xl bg-gradient-to-br flex-shrink-0",
+                          "flex items-center justify-center overflow-hidden shadow-sm",
+                          "from-violet-500 to-purple-600",
+                        )}
+                      >
+                        <div className="absolute -top-2 -right-2 w-7 h-7 rounded-full bg-white/10" />
+                        <Route className="w-6 h-6 text-white" />
+                      </div>
+                    )}
 
                     <div className="flex-1 min-w-0 pt-0.5">
                       <p className="text-sm font-medium text-foreground truncate">

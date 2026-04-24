@@ -1,5 +1,5 @@
-import Image from 'next/image';
-import { Play } from 'lucide-react';
+import { Play } from "lucide-react";
+import Image from "next/image";
 
 interface RecommendationItem {
   id: string;
@@ -10,8 +10,20 @@ interface RecommendationItem {
 }
 
 const PLACEHOLDERS: RecommendationItem[] = [
-  { id: 'morning', title: 'Morning Clarity', category: 'Guided Visualization', duration: '5 min', image: '/morning_clarity.png' },
-  { id: 'anxiety', title: 'Anxiety Relief', category: 'Soundscape', duration: '10 min', image: '/anxiety_relief.png' },
+  {
+    id: "morning",
+    title: "Morning Clarity",
+    category: "Guided Visualization",
+    duration: "5 min",
+    image: "/morning_clarity.png",
+  },
+  {
+    id: "anxiety",
+    title: "Anxiety Relief",
+    category: "Soundscape",
+    duration: "10 min",
+    image: "/anxiety_relief.png",
+  },
 ];
 
 interface Props {

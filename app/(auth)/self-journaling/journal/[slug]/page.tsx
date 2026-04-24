@@ -39,27 +39,27 @@
  */
 "use client";
 
-import { useState, use } from "react";
-import Image from "next/image";
-import { useRouter } from "next/navigation";
-import { BookOpen, Flame, Pencil, Clock, CalendarDays } from "lucide-react";
+import { PageHeader } from "@/components/shared/navigation/page-header";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Skeleton } from "@/components/ui/skeleton";
 import { Card, CardContent } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
-import { Badge } from "@/components/ui/badge";
-import { PageHeader } from "@/components/shared/navigation/page-header";
+import { Skeleton } from "@/components/ui/skeleton";
 import {
-  useSubJournalDetail,
-  useJournalingSubscriptions,
-  useJournalingStreak,
-  useSubJournalEntries,
+  type SubJournalEntryDto,
   subscribeToJournal,
   unsubscribeFromJournal,
-  type SubJournalEntryDto,
+  useJournalingStreak,
+  useJournalingSubscriptions,
+  useSubJournalDetail,
+  useSubJournalEntries,
 } from "@/hooks/use-journaling-subscriptions";
-import { cn } from "@/lib/utils";
 import { getJournalVisual } from "@/lib/journal-visual";
+import { cn } from "@/lib/utils";
+import { BookOpen, CalendarDays, Clock, Flame, Pencil } from "lucide-react";
+import Image from "next/image";
+import { useRouter } from "next/navigation";
+import { use, useState } from "react";
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -110,14 +110,10 @@ function EntryRow({ entry }: { entry: SubJournalEntryDto }) {
       </div>
       <div className="flex-1 min-w-0">
         {title && (
-          <p className="text-sm font-medium text-foreground line-clamp-1 mb-0.5">
-            {title}
-          </p>
+          <p className="text-sm font-medium text-foreground line-clamp-1 mb-0.5">{title}</p>
         )}
         {preview && (
-          <p className="text-xs text-muted-foreground line-clamp-2 leading-relaxed">
-            {preview}
-          </p>
+          <p className="text-xs text-muted-foreground line-clamp-2 leading-relaxed">{preview}</p>
         )}
       </div>
       <span className="flex-shrink-0 text-xs text-muted-foreground">
@@ -140,18 +136,11 @@ export default function JournalDetailPage({
   const router = useRouter();
 
   const { sub, isLoading: subLoading } = useSubJournalDetail(slug);
-  const { isSubscribed, isLoading: subListLoading } =
-    useJournalingSubscriptions();
+  const { isSubscribed, isLoading: subListLoading } = useJournalingSubscriptions();
   const subscribed = isSubscribed(slug);
 
-  const { streak, isLoading: streakLoading } = useJournalingStreak(
-    slug,
-    subscribed,
-  );
-  const { entries, isLoading: entriesLoading } = useSubJournalEntries(
-    slug,
-    subscribed,
-  );
+  const { streak, isLoading: streakLoading } = useJournalingStreak(slug, subscribed);
+  const { entries, isLoading: entriesLoading } = useSubJournalEntries(slug, subscribed);
 
   const [isSubscribing, setIsSubscribing] = useState(false);
 
@@ -231,10 +220,7 @@ export default function JournalDetailPage({
               This journal may have been removed.
             </p>
           </div>
-          <Button
-            variant="outline"
-            onClick={() => router.push("/self-journaling")}
-          >
+          <Button variant="outline" onClick={() => router.push("/self-journaling")}>
             Back to journals
           </Button>
         </div>
@@ -260,9 +246,7 @@ export default function JournalDetailPage({
             streak ? (
               <div className="flex items-center gap-1 text-orange-500">
                 <Flame className="w-4 h-4" />
-                <span className="text-sm font-bold">
-                  {streak.currentStreak} Day Streak
-                </span>
+                <span className="text-sm font-bold">{streak.currentStreak} Day Streak</span>
               </div>
             ) : undefined
           }
@@ -272,13 +256,7 @@ export default function JournalDetailPage({
           {/* Hero image */}
           {sub.icon ? (
             <div className="relative w-full h-36 rounded-2xl overflow-hidden shadow-sm">
-              <Image
-                src={sub.icon}
-                alt={sub.title}
-                fill
-                className="object-cover"
-                sizes="100vw"
-              />
+              <Image src={sub.icon} alt={sub.title} fill className="object-cover" sizes="100vw" />
             </div>
           ) : (
             <div
@@ -300,25 +278,17 @@ export default function JournalDetailPage({
             {sub.recommendedCadence && (
               <div className="flex items-center gap-1.5 bg-primary/10 text-primary rounded-full px-3 py-1">
                 <CalendarDays className="w-3.5 h-3.5" />
-                <span className="text-xs font-medium">
-                  {sub.recommendedCadence}
-                </span>
+                <span className="text-xs font-medium">{sub.recommendedCadence}</span>
               </div>
             )}
             {sub.estimatedMinutes != null && sub.estimatedMinutes > 0 && (
               <div className="flex items-center gap-1.5 bg-muted text-muted-foreground rounded-full px-3 py-1">
                 <Clock className="w-3.5 h-3.5" />
-                <span className="text-xs font-medium">
-                  ~{sub.estimatedMinutes} min
-                </span>
+                <span className="text-xs font-medium">~{sub.estimatedMinutes} min</span>
               </div>
             )}
             {sub.tags.map((tag) => (
-              <Badge
-                key={tag}
-                variant="secondary"
-                className="rounded-full text-xs"
-              >
+              <Badge key={tag} variant="secondary" className="rounded-full text-xs">
                 {tag}
               </Badge>
             ))}
@@ -334,10 +304,7 @@ export default function JournalDetailPage({
                   {streak.weekDays.map((day, i) => {
                     const isToday = day.date === today;
                     return (
-                      <div
-                        key={day.date}
-                        className="flex flex-col items-center gap-1.5"
-                      >
+                      <div key={day.date} className="flex flex-col items-center gap-1.5">
                         <span
                           className={cn(
                             "text-[11px] font-medium",
@@ -375,13 +342,9 @@ export default function JournalDetailPage({
           {/* Recent Entries */}
           <section className="mb-5">
             <div className="flex items-center justify-between mb-3">
-              <h2 className="text-base font-bold text-foreground">
-                Recent Entries
-              </h2>
+              <h2 className="text-base font-bold text-foreground">Recent Entries</h2>
               {entries.length > 0 && (
-                <span className="text-xs text-muted-foreground">
-                  {entries.length} total
-                </span>
+                <span className="text-xs text-muted-foreground">{entries.length} total</span>
               )}
             </div>
 
@@ -409,9 +372,7 @@ export default function JournalDetailPage({
                   <BookOpen className="w-8 h-8 text-muted-foreground" />
                 </div>
                 <div>
-                  <p className="font-semibold text-foreground">
-                    No entries yet
-                  </p>
+                  <p className="font-semibold text-foreground">No entries yet</p>
                   <p className="text-sm text-muted-foreground mt-1">
                     Complete your first reflection to start your streak!
                   </p>
@@ -421,9 +382,7 @@ export default function JournalDetailPage({
               <>
                 {entryGroups.map(([dateLabel, groupEntries]) => (
                   <div key={dateLabel} className="mb-4">
-                    <p className="text-xs font-semibold text-muted-foreground mb-2">
-                      {dateLabel}
-                    </p>
+                    <p className="text-xs font-semibold text-muted-foreground mb-2">{dateLabel}</p>
                     <Card className="p-0">
                       <CardContent className="py-0 px-3">
                         {groupEntries.map((entry, i) => (
@@ -445,9 +404,7 @@ export default function JournalDetailPage({
         <div className="fixed bottom-0 left-0 right-0 px-4 pb-10 pt-3 bg-background/95 backdrop-blur-sm">
           <Button
             className="w-full rounded-full h-14 text-base font-semibold gap-2"
-            onClick={() =>
-              router.push(`/self-journaling/new/${encodeURIComponent(slug)}`)
-            }
+            onClick={() => router.push(`/self-journaling/new/${encodeURIComponent(slug)}`)}
           >
             <Pencil className="w-4 h-4" />
             Write Today&apos;s Entry
@@ -469,13 +426,7 @@ export default function JournalDetailPage({
         {/* Hero image */}
         {sub.icon ? (
           <div className="relative w-full h-48 rounded-2xl overflow-hidden shadow-sm">
-            <Image
-              src={sub.icon}
-              alt={sub.title}
-              fill
-              className="object-cover"
-              sizes="100vw"
-            />
+            <Image src={sub.icon} alt={sub.title} fill className="object-cover" sizes="100vw" />
           </div>
         ) : (
           <div
@@ -497,25 +448,17 @@ export default function JournalDetailPage({
           {sub.recommendedCadence && (
             <div className="flex items-center gap-1.5 bg-primary/10 text-primary rounded-full px-3 py-1">
               <CalendarDays className="w-3.5 h-3.5" />
-              <span className="text-xs font-medium">
-                {sub.recommendedCadence}
-              </span>
+              <span className="text-xs font-medium">{sub.recommendedCadence}</span>
             </div>
           )}
           {sub.estimatedMinutes != null && sub.estimatedMinutes > 0 && (
             <div className="flex items-center gap-1.5 bg-muted text-muted-foreground rounded-full px-3 py-1">
               <Clock className="w-3.5 h-3.5" />
-              <span className="text-xs font-medium">
-                ~{sub.estimatedMinutes} min
-              </span>
+              <span className="text-xs font-medium">~{sub.estimatedMinutes} min</span>
             </div>
           )}
           {sub.tags.map((tag) => (
-            <Badge
-              key={tag}
-              variant="secondary"
-              className="rounded-full text-xs"
-            >
+            <Badge key={tag} variant="secondary" className="rounded-full text-xs">
               {tag}
             </Badge>
           ))}
@@ -523,9 +466,7 @@ export default function JournalDetailPage({
 
         {/* Title + description */}
         <div>
-          <h2 className="text-xl font-bold text-foreground leading-snug mb-3">
-            {sub.title}
-          </h2>
+          <h2 className="text-xl font-bold text-foreground leading-snug mb-3">{sub.title}</h2>
           {descriptionText && (
             <p className="text-sm text-muted-foreground whitespace-pre-wrap leading-relaxed">
               {descriptionText}

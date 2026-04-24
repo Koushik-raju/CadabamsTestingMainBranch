@@ -24,13 +24,13 @@
  * LAST UPDATED: 2026-04-21 — replace AssignedAssessmentItem with CompletionResponseDto;
  *   use scorePercentage from DTO; use assessmentTitle field for display
  */
-'use client';
+"use client";
 
-import { Card, CardContent } from '@/components/ui/card';
-import { Separator } from '@/components/ui/separator';
-import { ChevronRight, ClipboardList } from 'lucide-react';
-import { cn } from '@/lib/utils';
-import type { CompletionResponseDto } from '@/sdk/backend-v2';
+import { Card, CardContent } from "@/components/ui/card";
+import { Separator } from "@/components/ui/separator";
+import { cn } from "@/lib/utils";
+import type { CompletionResponseDto } from "@/sdk/backend-v2";
+import { ChevronRight, ClipboardList } from "lucide-react";
 
 interface AssignmentsListProps {
   items: CompletionResponseDto[];
@@ -44,23 +44,52 @@ type SeverityConfig = {
   label: string;
 };
 
-function getSeverityConfig(severity: CompletionResponseDto['severity']): SeverityConfig {
-  if (severity === 'minimal')  return { gradient: 'from-emerald-500 to-teal-600',   badgeBg: 'bg-emerald-100', badgeText: 'text-emerald-700', label: 'Minimal' };
-  if (severity === 'mild')     return { gradient: 'from-sky-500 to-blue-600',        badgeBg: 'bg-sky-100',     badgeText: 'text-sky-700',     label: 'Mild' };
-  if (severity === 'moderate') return { gradient: 'from-amber-400 to-orange-500',    badgeBg: 'bg-amber-100',   badgeText: 'text-amber-700',   label: 'Moderate' };
-  if (severity === 'severe')   return { gradient: 'from-red-500 to-rose-600',        badgeBg: 'bg-red-100',     badgeText: 'text-red-700',     label: 'Severe' };
-  return                        { gradient: 'from-violet-500 to-purple-600',  badgeBg: 'bg-muted',       badgeText: 'text-muted-foreground', label: 'Completed' };
+function getSeverityConfig(severity: CompletionResponseDto["severity"]): SeverityConfig {
+  if (severity === "minimal")
+    return {
+      gradient: "from-emerald-500 to-teal-600",
+      badgeBg: "bg-emerald-100",
+      badgeText: "text-emerald-700",
+      label: "Minimal",
+    };
+  if (severity === "mild")
+    return {
+      gradient: "from-sky-500 to-blue-600",
+      badgeBg: "bg-sky-100",
+      badgeText: "text-sky-700",
+      label: "Mild",
+    };
+  if (severity === "moderate")
+    return {
+      gradient: "from-amber-400 to-orange-500",
+      badgeBg: "bg-amber-100",
+      badgeText: "text-amber-700",
+      label: "Moderate",
+    };
+  if (severity === "severe")
+    return {
+      gradient: "from-red-500 to-rose-600",
+      badgeBg: "bg-red-100",
+      badgeText: "text-red-700",
+      label: "Severe",
+    };
+  return {
+    gradient: "from-violet-500 to-purple-600",
+    badgeBg: "bg-muted",
+    badgeText: "text-muted-foreground",
+    label: "Completed",
+  };
 }
 
 function formatDate(iso: string): string {
   try {
     return new Date(iso).toLocaleDateString(undefined, {
-      day: 'numeric',
-      month: 'short',
-      year: 'numeric',
+      day: "numeric",
+      month: "short",
+      year: "numeric",
     });
   } catch {
-    return '';
+    return "";
   }
 }
 
@@ -82,13 +111,13 @@ export function AssignmentsList({ items, onItemClick }: AssignmentsListProps) {
                 role="button"
                 tabIndex={0}
                 aria-label={title}
-                onKeyDown={(e) => e.key === 'Enter' && onItemClick(item)}
+                onKeyDown={(e) => e.key === "Enter" && onItemClick(item)}
               >
                 {/* Gradient icon tile */}
                 <div
                   className={cn(
-                    'relative w-11 h-11 rounded-2xl bg-gradient-to-br flex-shrink-0',
-                    'flex items-center justify-center overflow-hidden shadow-sm',
+                    "relative w-11 h-11 rounded-2xl bg-gradient-to-br flex-shrink-0",
+                    "flex items-center justify-center overflow-hidden shadow-sm",
                     config.gradient,
                   )}
                 >
@@ -102,15 +131,13 @@ export function AssignmentsList({ items, onItemClick }: AssignmentsListProps) {
                     {title}
                   </p>
 
-                  {date && (
-                    <p className="text-xs text-muted-foreground mt-0.5">{date}</p>
-                  )}
+                  {date && <p className="text-xs text-muted-foreground mt-0.5">{date}</p>}
 
                   {/* Severity + score pills */}
                   <div className="flex items-center gap-1.5 mt-1.5 flex-wrap">
                     <span
                       className={cn(
-                        'text-[10px] font-semibold px-2 py-0.5 rounded-full capitalize',
+                        "text-[10px] font-semibold px-2 py-0.5 rounded-full capitalize",
                         config.badgeBg,
                         config.badgeText,
                       )}

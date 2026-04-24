@@ -1,1 +1,2 @@
-
+echo "▶ Formatting & linting..."
+pnpm run format

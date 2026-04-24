@@ -1,26 +1,33 @@
-'use client';
+"use client";
 
-import { Suspense, useState, useEffect, useCallback, useRef } from 'react';
-import { useRouter } from 'next/navigation';
-import Link from 'next/link';
-import { useForm, Controller } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { z } from 'zod';
-import { toast } from 'react-toastify';
-import { ArrowLeft, Heart } from 'lucide-react';
-import { PhoneInput, type Country } from '@/components/common/phone-input';
-import { OTPInput } from '@/components/common/otp-input';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { Separator } from '@/components/ui/separator';
-import { Skeleton } from '@/components/ui/skeleton';
-import { Dialog, DialogContent, DialogDescription, DialogTitle } from '@/components/ui/dialog';
-import { useAuth } from '@/hooks/use-auth';
-import { useAuthActions } from '@/hooks/use-auth-actions';
-import { cn } from '@/lib/utils';
+import { OTPInput } from "@/components/common/otp-input";
+import { type Country, PhoneInput } from "@/components/common/phone-input";
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Dialog, DialogContent, DialogDescription, DialogTitle } from "@/components/ui/dialog";
+import { Separator } from "@/components/ui/separator";
+import { Skeleton } from "@/components/ui/skeleton";
+import { useAuth } from "@/hooks/use-auth";
+import { useAuthActions } from "@/hooks/use-auth-actions";
+import { cn } from "@/lib/utils";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { ArrowLeft, Heart } from "lucide-react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { Suspense, useCallback, useEffect, useRef, useState } from "react";
+import { Controller, useForm } from "react-hook-form";
+import { toast } from "react-toastify";
+import { z } from "zod";
 
 const phoneSchema = z.object({
-  phone: z.string().min(6, 'Enter a valid phone number'),
+  phone: z.string().min(6, "Enter a valid phone number"),
 });
 type PhoneForm = z.infer<typeof phoneSchema>;
 
@@ -30,16 +37,20 @@ function LoginContent() {
   const { sendOtp, verifyLogin, isSendingOtp, isVerifying } = useAuthActions();
 
   const [country, setCountry] = useState<Country | null>(null);
-  const [step, setStep] = useState<'phone' | 'otp'>('phone');
-  const [otp, setOtp] = useState('');
+  const [step, setStep] = useState<"phone" | "otp">("phone");
+  const [otp, setOtp] = useState("");
   const [timer, setTimer] = useState(0);
   const [redirectModal, setRedirectModal] = useState(false);
   const verifyingRef = useRef(false);
 
-
-  const { control, handleSubmit, getValues, formState: { errors } } = useForm<PhoneForm>({
+  const {
+    control,
+    handleSubmit,
+    getValues,
+    formState: { errors },
+  } = useForm<PhoneForm>({
     resolver: zodResolver(phoneSchema),
-    defaultValues: { phone: '' },
+    defaultValues: { phone: "" },
   });
 
   useEffect(() => {
@@ -50,36 +61,53 @@ function LoginContent() {
 
   const onSendOtp = async ({ phone }: PhoneForm) => {
     try {
-      await sendOtp(phone, 'login');
-      toast.success('OTP sent successfully');
-      setStep('otp');
+      await sendOtp(phone, "login");
+      toast.success("OTP sent successfully");
+      setStep("otp");
       setTimer(30);
     } catch (err: unknown) {
       const e = err as { status?: number };
-      if (e.status === 404) { setRedirectModal(true); return; }
-      if (e.status === 400) { toast.error('Invalid phone number'); return; }
-      toast.error('Failed to send OTP. Try again.');
+      if (e.status === 404) {
+        setRedirectModal(true);
+        return;
+      }
+      if (e.status === 400) {
+        toast.error("Invalid phone number");
+        return;
+      }
+      toast.error("Failed to send OTP. Try again.");
     }
   };
 
-  const handleVerifyOtp = useCallback(async (code: string) => {
-    if (code.length < 4 || verifyingRef.current) return;
-    verifyingRef.current = true;
-    try {
-      await verifyLogin(getValues('phone'), code);
-      toast.success('Welcome back!');
-      login().catch(() => {});
-      router.replace('/home');
-    } catch (err: unknown) {
-      const e = err as { status?: number };
-      if (e.status === 401) { toast.error('Invalid OTP. Try again.'); setOtp(''); return; }
-      if (e.status === 404) { toast.error('Account not found'); setRedirectModal(true); return; }
-      toast.error('Something went wrong. Try again.');
-      setOtp('');
-    } finally {
-      verifyingRef.current = false;
-    }
-  }, [verifyLogin, getValues, login, router]);
+  const handleVerifyOtp = useCallback(
+    async (code: string) => {
+      if (code.length < 4 || verifyingRef.current) return;
+      verifyingRef.current = true;
+      try {
+        await verifyLogin(getValues("phone"), code);
+        toast.success("Welcome back!");
+        login().catch(() => {});
+        router.replace("/home");
+      } catch (err: unknown) {
+        const e = err as { status?: number };
+        if (e.status === 401) {
+          toast.error("Invalid OTP. Try again.");
+          setOtp("");
+          return;
+        }
+        if (e.status === 404) {
+          toast.error("Account not found");
+          setRedirectModal(true);
+          return;
+        }
+        toast.error("Something went wrong. Try again.");
+        setOtp("");
+      } finally {
+        verifyingRef.current = false;
+      }
+    },
+    [verifyLogin, getValues, login, router],
+  );
 
   useEffect(() => {
     if (otp.length === 4) handleVerifyOtp(otp);
@@ -87,7 +115,6 @@ function LoginContent() {
 
   return (
     <div className="min-h-screen flex flex-col bg-background">
-
       {/* Gradient hero */}
       <div className="home-header-gradient px-6 pt-14 pb-12 flex flex-col gap-3">
         <div className="flex items-center gap-3">
@@ -100,25 +127,27 @@ function LoginContent() {
         </div>
         <div>
           <h1 className="text-2xl font-black text-primary-foreground leading-tight">
-            {step === 'phone' ? 'Welcome back.' : 'Verify your number.'}
+            {step === "phone" ? "Welcome back." : "Verify your number."}
           </h1>
-          <p className="text-sm text-primary-foreground/70 mt-1">
-            Mental health care, simplified.
-          </p>
+          <p className="text-sm text-primary-foreground/70 mt-1">Mental health care, simplified.</p>
         </div>
       </div>
 
       {/* Card — overlaps hero */}
       <div className="flex-1 flex flex-col px-4 mt-[-16px] pb-8">
         <Card className="w-full max-w-sm mx-auto">
-
           {/* Step progress */}
           <div className="flex gap-1 px-4 pt-4">
             <div className="h-1 flex-1 rounded-full bg-primary" />
-            <div className={cn('h-1 flex-1 rounded-full transition-colors duration-300', step === 'otp' ? 'bg-primary' : 'bg-border')} />
+            <div
+              className={cn(
+                "h-1 flex-1 rounded-full transition-colors duration-300",
+                step === "otp" ? "bg-primary" : "bg-border",
+              )}
+            />
           </div>
 
-          {step === 'phone' ? (
+          {step === "phone" ? (
             <>
               <CardHeader>
                 <CardTitle>Sign in</CardTitle>
@@ -145,26 +174,32 @@ function LoginContent() {
                     )}
                   />
                   <Button type="submit" size="lg" disabled={isSendingOtp} className="w-full">
-                    {isSendingOtp ? 'Sending…' : 'Send OTP'}
+                    {isSendingOtp ? "Sending…" : "Send OTP"}
                   </Button>
                 </form>
               </CardContent>
 
               <CardFooter className="flex-col gap-3 text-sm">
                 <p className="text-muted-foreground">
-                  Don&apos;t have an account?{' '}
+                  Don&apos;t have an account?{" "}
                   <Button variant="link" asChild className="p-0 h-auto text-sm">
-                    <Link href="/auth/signup">
-                      Sign up
-                    </Link>
+                    <Link href="/auth/signup">Sign up</Link>
                   </Button>
                 </p>
                 <Separator />
                 <div className="flex gap-4">
-                  <Button variant="link" asChild className="p-0 h-auto text-xs text-muted-foreground">
+                  <Button
+                    variant="link"
+                    asChild
+                    className="p-0 h-auto text-xs text-muted-foreground"
+                  >
                     <Link href="/privacy-policy">Privacy Policy</Link>
                   </Button>
-                  <Button variant="link" asChild className="p-0 h-auto text-xs text-muted-foreground">
+                  <Button
+                    variant="link"
+                    asChild
+                    className="p-0 h-auto text-xs text-muted-foreground"
+                  >
                     <Link href="/term-and-condition">Terms &amp; Conditions</Link>
                   </Button>
                 </div>
@@ -177,16 +212,19 @@ function LoginContent() {
                   variant="ghost"
                   size="sm"
                   className="-ml-1 mb-1 w-fit text-muted-foreground"
-                  onClick={() => { setStep('phone'); setOtp(''); }}
+                  onClick={() => {
+                    setStep("phone");
+                    setOtp("");
+                  }}
                 >
                   <ArrowLeft className="size-4" />
                   Change number
                 </Button>
                 <CardTitle>Enter the code</CardTitle>
                 <CardDescription>
-                  Sent to{' '}
+                  Sent to{" "}
                   <span className="font-medium text-foreground">
-                    +{country?.callingCode ?? '91'} {getValues('phone')}
+                    +{country?.callingCode ?? "91"} {getValues("phone")}
                   </span>
                 </CardDescription>
               </CardHeader>
@@ -200,17 +238,22 @@ function LoginContent() {
                   onClick={() => handleVerifyOtp(otp)}
                   disabled={isVerifying || otp.length < 4}
                 >
-                  {isVerifying ? 'Verifying…' : 'Verify & Sign In'}
+                  {isVerifying ? "Verifying…" : "Verify & Sign In"}
                 </Button>
               </CardContent>
 
               <CardFooter className="justify-center">
                 {timer > 0 ? (
                   <p className="text-sm text-muted-foreground">
-                    Resend in <span className="tabular-nums font-medium text-foreground">{timer}s</span>
+                    Resend in{" "}
+                    <span className="tabular-nums font-medium text-foreground">{timer}s</span>
                   </p>
                 ) : (
-                  <Button variant="link" className="p-0 h-auto text-sm" onClick={handleSubmit(onSendOtp)}>
+                  <Button
+                    variant="link"
+                    className="p-0 h-auto text-sm"
+                    onClick={handleSubmit(onSendOtp)}
+                  >
                     Resend OTP
                   </Button>
                 )}
@@ -231,7 +274,10 @@ function LoginContent() {
             <Button variant="outline" className="flex-1" onClick={() => setRedirectModal(false)}>
               Cancel
             </Button>
-            <Button className="flex-1" onClick={() => router.push(`/auth/signup?mobile=${getValues('phone')}`)}>
+            <Button
+              className="flex-1"
+              onClick={() => router.push(`/auth/signup?mobile=${getValues("phone")}`)}
+            >
               Sign Up
             </Button>
           </div>
@@ -243,11 +289,13 @@ function LoginContent() {
 
 export default function LoginPage() {
   return (
-    <Suspense fallback={
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <Skeleton className="h-80 w-80 rounded-xl" />
-      </div>
-    }>
+    <Suspense
+      fallback={
+        <div className="min-h-screen bg-background flex items-center justify-center">
+          <Skeleton className="h-80 w-80 rounded-xl" />
+        </div>
+      }
+    >
       <LoginContent />
     </Suspense>
   );

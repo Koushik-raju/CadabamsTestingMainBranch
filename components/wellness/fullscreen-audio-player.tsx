@@ -25,26 +25,26 @@
  *
  * LAST UPDATED: 2026-04-17 — removed category display (not in MindfulMinuteAudio type)
  */
-'use client';
+"use client";
 
-import { useState, useRef, useEffect, useCallback } from 'react';
-import ReactDOM from 'react-dom';
-import Image from 'next/image';
+import { Button } from "@/components/ui/button";
+import { Slider } from "@/components/ui/slider";
+import type { MindfulMinuteAudio } from "@/hooks/wellness/use-mindful-minutes";
+import { cn } from "@/lib/utils";
 import {
-  Play,
+  ChevronDown,
   Pause,
+  Play,
   RotateCcw,
   RotateCw,
   SkipBack,
   SkipForward,
-  ChevronDown,
   Volume2,
   VolumeX,
-} from 'lucide-react';
-import { Slider } from '@/components/ui/slider';
-import { Button } from '@/components/ui/button';
-import { cn } from '@/lib/utils';
-import type { MindfulMinuteAudio } from '@/hooks/wellness/use-mindful-minutes';
+} from "lucide-react";
+import Image from "next/image";
+import { useCallback, useEffect, useRef, useState } from "react";
+import ReactDOM from "react-dom";
 
 interface FullscreenAudioPlayerProps {
   audios: MindfulMinuteAudio[];
@@ -59,15 +59,20 @@ interface FullscreenAudioPlayerProps {
 
 function isVideoUrl(url?: string): boolean {
   if (!url) return false;
-  const path = url.split('?')[0].toLowerCase();
-  return path.endsWith('.mp4') || path.endsWith('.webm') || path.endsWith('.mov') || path.endsWith('.ogg');
+  const path = url.split("?")[0].toLowerCase();
+  return (
+    path.endsWith(".mp4") ||
+    path.endsWith(".webm") ||
+    path.endsWith(".mov") ||
+    path.endsWith(".ogg")
+  );
 }
 
 function formatTime(seconds: number): string {
-  if (!isFinite(seconds) || isNaN(seconds)) return '0:00';
+  if (!isFinite(seconds) || isNaN(seconds)) return "0:00";
   const m = Math.floor(seconds / 60);
   const s = Math.floor(seconds % 60);
-  return `${m}:${s.toString().padStart(2, '0')}`;
+  return `${m}:${s.toString().padStart(2, "0")}`;
 }
 
 export function FullscreenAudioPlayer({
@@ -97,8 +102,10 @@ export function FullscreenAudioPlayer({
 
   // Lock body scroll
   useEffect(() => {
-    document.body.style.overflow = 'hidden';
-    return () => { document.body.style.overflow = ''; };
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = "";
+    };
   }, []);
 
   // Audio event listeners
@@ -131,7 +138,10 @@ export function FullscreenAudioPlayer({
     const onLoadedMetadata = () => {
       setDuration(audio.duration);
       setIsLoading(false);
-      audio.play().then(() => setIsPlaying(true)).catch(() => {});
+      audio
+        .play()
+        .then(() => setIsPlaying(true))
+        .catch(() => {});
     };
     const onCanPlay = () => setIsLoading(false);
     const onEnded = () => {
@@ -143,20 +153,20 @@ export function FullscreenAudioPlayer({
     };
     const onError = () => setIsLoading(false);
 
-    audio.addEventListener('timeupdate', onTimeUpdate);
-    audio.addEventListener('loadedmetadata', onLoadedMetadata);
-    audio.addEventListener('canplay', onCanPlay);
-    audio.addEventListener('ended', onEnded);
-    audio.addEventListener('error', onError);
+    audio.addEventListener("timeupdate", onTimeUpdate);
+    audio.addEventListener("loadedmetadata", onLoadedMetadata);
+    audio.addEventListener("canplay", onCanPlay);
+    audio.addEventListener("ended", onEnded);
+    audio.addEventListener("error", onError);
 
     return () => {
-      audio.removeEventListener('timeupdate', onTimeUpdate);
-      audio.removeEventListener('loadedmetadata', onLoadedMetadata);
-      audio.removeEventListener('canplay', onCanPlay);
-      audio.removeEventListener('ended', onEnded);
-      audio.removeEventListener('error', onError);
+      audio.removeEventListener("timeupdate", onTimeUpdate);
+      audio.removeEventListener("loadedmetadata", onLoadedMetadata);
+      audio.removeEventListener("canplay", onCanPlay);
+      audio.removeEventListener("ended", onEnded);
+      audio.removeEventListener("error", onError);
     };
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentIndex]);
 
   const togglePlay = useCallback(() => {
@@ -166,7 +176,10 @@ export function FullscreenAudioPlayer({
       audio.pause();
       setIsPlaying(false);
     } else {
-      audio.play().then(() => setIsPlaying(true)).catch(() => {});
+      audio
+        .play()
+        .then(() => setIsPlaying(true))
+        .catch(() => {});
     }
   }, [isPlaying, isLoading]);
 
@@ -219,8 +232,8 @@ export function FullscreenAudioPlayer({
   const content = (
     <div
       className={cn(
-        'fixed inset-0 z-50 flex flex-col transition-transform duration-300 ease-out',
-        isVisible ? 'translate-y-0' : 'translate-y-full'
+        "fixed inset-0 z-50 flex flex-col transition-transform duration-300 ease-out",
+        isVisible ? "translate-y-0" : "translate-y-full",
       )}
     >
       {/* Background */}
@@ -237,13 +250,7 @@ export function FullscreenAudioPlayer({
                 className="absolute inset-0 w-full h-full object-cover"
               />
             ) : (
-              <Image
-                src={bgUrl!}
-                alt=""
-                fill
-                className="object-cover"
-                priority
-              />
+              <Image src={bgUrl!} alt="" fill className="object-cover" priority />
             )}
             <div className="absolute inset-0 bg-black/60 backdrop-blur-xl" />
           </>
@@ -275,7 +282,7 @@ export function FullscreenAudioPlayer({
             size="icon"
             onClick={toggleMute}
             className="text-white/80 hover:text-white hover:bg-white/10 rounded-full"
-            aria-label={isMuted ? 'Unmute' : 'Mute'}
+            aria-label={isMuted ? "Unmute" : "Mute"}
           >
             {isMuted ? <VolumeX className="h-5 w-5" /> : <Volume2 className="h-5 w-5" />}
           </Button>
@@ -369,7 +376,7 @@ export function FullscreenAudioPlayer({
               onClick={togglePlay}
               disabled={isLoading}
               className="h-18 w-18 rounded-full bg-white text-primary hover:bg-white/90 shadow-2xl h-[72px] w-[72px]"
-              aria-label={isPlaying ? 'Pause' : 'Play'}
+              aria-label={isPlaying ? "Pause" : "Play"}
             >
               {isLoading ? (
                 <div className="h-6 w-6 border-2 border-primary border-t-transparent rounded-full animate-spin" />
@@ -407,22 +414,18 @@ export function FullscreenAudioPlayer({
         </div>
       </div>
 
-      <audio
-        ref={audioRef}
-        src={currentTrack.audioUrl}
-        preload="metadata"
-      />
+      <audio ref={audioRef} src={currentTrack.audioUrl} preload="metadata" />
     </div>
   );
 
-  if (typeof window === 'undefined') return null;
+  if (typeof window === "undefined") return null;
   return ReactDOM.createPortal(content, document.body);
 }
 
 // ─── Animated equalizer bars ─────────────────────────────────────────────────
 export function EqualizerBars({ className }: { className?: string }) {
   return (
-    <span className={cn('inline-flex items-end gap-[2px] h-4', className)} aria-hidden>
+    <span className={cn("inline-flex items-end gap-[2px] h-4", className)} aria-hidden>
       {[1, 2, 3].map((i) => (
         <span
           key={i}
@@ -430,7 +433,7 @@ export function EqualizerBars({ className }: { className?: string }) {
           style={{
             height: `${40 + i * 20}%`,
             animationDelay: `${i * 0.15}s`,
-            animationDuration: '0.8s',
+            animationDuration: "0.8s",
           }}
         />
       ))}

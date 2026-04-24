@@ -1,8 +1,8 @@
-'use client';
+"use client";
 
-import { ChevronLeft } from 'lucide-react';
-import { useSafeBack } from '@/hooks/use-safe-back';
-import { Button } from '@/components/ui/button';
+import { Button } from "@/components/ui/button";
+import { useSafeBack } from "@/hooks/use-safe-back";
+import { ChevronLeft } from "lucide-react";
 
 interface BackButtonProps {
   fallback?: string;

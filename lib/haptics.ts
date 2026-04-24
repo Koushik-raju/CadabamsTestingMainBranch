@@ -1,4 +1,4 @@
-import { Haptics, ImpactStyle, NotificationType } from '@capacitor/haptics';
+import { Haptics, ImpactStyle, NotificationType } from "@capacitor/haptics";
 
 export const hapticLight = (): void => {
   Haptics.impact({ style: ImpactStyle.Light }).catch(() => {});

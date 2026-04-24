@@ -23,30 +23,36 @@
  *
  * LAST UPDATED: 2026-04-23 — migrated sticky app bar to PageHeader
  */
-'use client';
+"use client";
 
-import { use, useState, Suspense } from 'react';
-import { useRouter } from 'next/navigation';
-import { Sparkles, MoreVertical, Crown } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Skeleton } from '@/components/ui/skeleton';
-import { PageHeader } from '@/components/shared/navigation/page-header';
-import { JourneyPathView } from '@/components/journey/journey-path-view';
-import { useJourneyDetail, useJourneyProgress, subscribeToJourney } from '@/hooks/journeys/use-journey-detail';
-import { extractJourneyName } from '@/types/journey';
-import { hapticMedium } from '@/lib/haptics';
+import { JourneyPathView } from "@/components/journey/journey-path-view";
+import { PageHeader } from "@/components/shared/navigation/page-header";
+import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
+import {
+  subscribeToJourney,
+  useJourneyDetail,
+  useJourneyProgress,
+} from "@/hooks/journeys/use-journey-detail";
+import { hapticMedium } from "@/lib/haptics";
+import { extractJourneyName } from "@/types/journey";
+import { Crown, MoreVertical, Sparkles } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { Suspense, use, useState } from "react";
 
-interface PageProps { params: Promise<{ id: string }> }
+interface PageProps {
+  params: Promise<{ id: string }>;
+}
 
 function DetailsContent({ params }: PageProps) {
   const { id } = use(params);
   const router = useRouter();
   const [subscribing, setSubscribing] = useState(false);
 
-  const { journey,  isLoading }           = useJourneyDetail(id);
+  const { journey, isLoading } = useJourneyDetail(id);
   const { progress, isLoading: progLoad } = useJourneyProgress(id);
 
-  console.log('[DetailsPage] render', {
+  console.log("[DetailsPage] render", {
     id,
     journeyLoading: isLoading,
     progressLoading: progLoad,
@@ -63,7 +69,9 @@ function DetailsContent({ params }: PageProps) {
           <Skeleton className="h-5 w-48" />
         </div>
         <div className="px-4 flex flex-col items-center gap-6 pt-6">
-          {[1, 2, 3, 4, 5, 6].map(i => <Skeleton key={i} className="w-14 h-14 rounded-full" />)}
+          {[1, 2, 3, 4, 5, 6].map((i) => (
+            <Skeleton key={i} className="w-14 h-14 rounded-full" />
+          ))}
         </div>
       </div>
     );
@@ -73,12 +81,14 @@ function DetailsContent({ params }: PageProps) {
     return (
       <div className="min-h-screen bg-background flex flex-col items-center justify-center gap-4 px-4">
         <p className="text-muted-foreground">Journey not found.</p>
-        <Button variant="outline" onClick={() => router.replace('/journeys')}>Go Back</Button>
+        <Button variant="outline" onClick={() => router.replace("/journeys")}>
+          Go Back
+        </Button>
       </div>
     );
   }
 
-  const name         = extractJourneyName(journey.name);
+  const name = extractJourneyName(journey.name);
   const isSubscribed = !!progress;
 
   // Premium journeys: enrollment happens automatically on the backend when
@@ -88,7 +98,7 @@ function DetailsContent({ params }: PageProps) {
     if (journey!.isPremium) {
       hapticMedium();
       const pkgId = journey!.packageId;
-      router.push(pkgId ? `/packages/browse/${pkgId}` : '/packages');
+      router.push(pkgId ? `/packages/browse/${pkgId}` : "/packages");
       return;
     }
     setSubscribing(true);
@@ -107,26 +117,24 @@ function DetailsContent({ params }: PageProps) {
       className="min-h-screen pb-28"
       style={{
         background:
-          'linear-gradient(180deg, hsl(var(--primary) / 0.14) 0%, hsl(var(--primary) / 0.04) 22%, hsl(var(--background)) 45%, hsl(var(--background)) 82%, hsl(var(--primary) / 0.05) 100%)',
+          "linear-gradient(180deg, hsl(var(--primary) / 0.14) 0%, hsl(var(--primary) / 0.04) 22%, hsl(var(--background)) 45%, hsl(var(--background)) 82%, hsl(var(--primary) / 0.05) 100%)",
       }}
     >
       <PageHeader
         title={name}
-        subtitle={journey.isPremium ? 'Premium Journey' : undefined}
+        subtitle={journey.isPremium ? "Premium Journey" : undefined}
         fallback="/journeys"
         className="sticky top-0 z-20 bg-card/70 backdrop-blur-sm border-b border-border px-4 py-3"
-        right={isSubscribed ? (
-          <button className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-muted transition-colors">
-            <MoreVertical className="w-4 h-4 text-muted-foreground" />
-          </button>
-        ) : undefined}
+        right={
+          isSubscribed ? (
+            <button className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-muted transition-colors">
+              <MoreVertical className="w-4 h-4 text-muted-foreground" />
+            </button>
+          ) : undefined
+        }
       />
 
-      <JourneyPathView
-        journey={journey}
-        progress={progress}
-        journeyId={id}
-      />
+      <JourneyPathView journey={journey} progress={progress} journeyId={id} />
 
       {/* Unenrolled users browse the full journey structure in preview mode.
           Premium → golden "Subscribe to Premium" CTA routes to the package
@@ -174,7 +182,7 @@ function DetailsContent({ params }: PageProps) {
                   onClick={handleSubscribeFromLock}
                   className="shrink-0 bg-white text-primary hover:bg-white/90"
                 >
-                  {subscribing ? '…' : 'Subscribe'}
+                  {subscribing ? "…" : "Subscribe"}
                 </Button>
               </div>
             </div>

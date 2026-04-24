@@ -1,7 +1,7 @@
-import useSWR from 'swr';
-import { crmControllerGetSlots } from '@/sdk/backend-v2';
-import type { SlotResponseDto } from '@/sdk/backend-v2';
-import { slotsKey } from '@/lib/swr-keys';
+import { slotsKey } from "@/lib/swr-keys";
+import { crmControllerGetSlots } from "@/sdk/backend-v2";
+import type { SlotResponseDto } from "@/sdk/backend-v2";
+import useSWR from "swr";
 
 interface UseSlotsResult {
   slots: SlotResponseDto[];
@@ -11,7 +11,7 @@ interface UseSlotsResult {
 
 export function useSlots(
   doctorId: number | string | null,
-  consultTypeId: number | null
+  consultTypeId: number | null,
 ): UseSlotsResult {
   const shouldFetch = doctorId !== null && consultTypeId !== null;
 
@@ -21,12 +21,12 @@ export function useSlots(
       const res = await crmControllerGetSlots({
         query: {
           doctor_id: Number(doctorId),
-          availability: 'open',
+          availability: "open",
         },
       });
       if (res.error) throw new Error(JSON.stringify(res.error));
       return res.data ?? [];
-    }
+    },
   );
 
   return {

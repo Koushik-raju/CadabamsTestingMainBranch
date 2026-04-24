@@ -1,37 +1,51 @@
-import Link from 'next/link';
-import { CalendarCheck, Video } from 'lucide-react';
-import { cn } from '@/lib/utils';
-import { Button } from '@/components/ui/button';
-import type { SlotDetailDto } from '@/hooks/appointments/use-appointments-page';
+import { Button } from "@/components/ui/button";
+import type { SlotDetailDto } from "@/hooks/appointments/use-appointments-page";
+import { cn } from "@/lib/utils";
+import { CalendarCheck, Video } from "lucide-react";
+import Link from "next/link";
 
 interface Props {
   appointments?: SlotDetailDto[];
   onJoin?: () => void;
 }
 
-function getDoctorName(doctor: SlotDetailDto['doctor']): string {
-  if (Array.isArray(doctor) && doctor.length >= 2 && typeof doctor[1] === 'string') {
+function getDoctorName(doctor: SlotDetailDto["doctor"]): string {
+  if (Array.isArray(doctor) && doctor.length >= 2 && typeof doctor[1] === "string") {
     const raw = doctor[1];
-    const name = raw.includes(',') ? raw.split(',').pop()!.trim() : raw.trim();
+    const name = raw.includes(",") ? raw.split(",").pop()!.trim() : raw.trim();
     return /^Dr\.?\s/i.test(name) ? name : `Dr. ${name}`;
   }
-  return 'Doctor';
+  return "Doctor";
 }
 
-function getSpeciality(specialityId: SlotDetailDto['speciality_id']): string {
-  if (Array.isArray(specialityId) && specialityId.length >= 2 && typeof specialityId[1] === 'string') {
+function getSpeciality(specialityId: SlotDetailDto["speciality_id"]): string {
+  if (
+    Array.isArray(specialityId) &&
+    specialityId.length >= 2 &&
+    typeof specialityId[1] === "string"
+  ) {
     return specialityId[1];
   }
-  return '';
+  return "";
 }
 
 function formatDateTime(iso: string): string {
   try {
     const d = new Date(iso);
-    const date = d.toLocaleDateString('en-IN', { weekday: 'short', day: '2-digit', month: 'short' });
-    const time = d.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: true });
+    const date = d.toLocaleDateString("en-IN", {
+      weekday: "short",
+      day: "2-digit",
+      month: "short",
+    });
+    const time = d.toLocaleTimeString("en-IN", {
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: true,
+    });
     return `${date} • ${time}`;
-  } catch { return ''; }
+  } catch {
+    return "";
+  }
 }
 
 export function UpcomingSession({ appointments, onJoin }: Props) {
@@ -41,7 +55,10 @@ export function UpcomingSession({ appointments, onJoin }: Props) {
     <div className="px-4 mb-4">
       <div className="flex items-center justify-between mb-3">
         <span className="text-sm font-medium text-foreground">Upcoming</span>
-        <Link href="/consult/appointments" className="text-sm font-medium text-primary hover:underline">
+        <Link
+          href="/consult/appointments"
+          className="text-sm font-medium text-primary hover:underline"
+        >
           View all →
         </Link>
       </div>
@@ -58,11 +75,13 @@ export function UpcomingSession({ appointments, onJoin }: Props) {
               href={`/consult/appointments/${apt.id}`}
               className="bg-white rounded-xl border border-border p-4 flex items-center gap-3 shadow-sm active:scale-[0.97] transition-transform"
             >
-              <div className={cn(
-                'relative w-11 h-11 rounded-2xl bg-gradient-to-br flex-shrink-0',
-                'flex items-center justify-center overflow-hidden shadow-sm',
-                'from-emerald-500 to-teal-600'
-              )}>
+              <div
+                className={cn(
+                  "relative w-11 h-11 rounded-2xl bg-gradient-to-br flex-shrink-0",
+                  "flex items-center justify-center overflow-hidden shadow-sm",
+                  "from-emerald-500 to-teal-600",
+                )}
+              >
                 <div className="absolute -top-2 -right-2 w-7 h-7 rounded-full bg-white/10" />
                 <CalendarCheck className="w-5 h-5 text-white" />
               </div>

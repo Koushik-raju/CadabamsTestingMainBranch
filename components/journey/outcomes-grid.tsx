@@ -1,6 +1,6 @@
-'use client';
+"use client";
 
-import { Brain, Heart, Sun, Star, Shield, Zap, Smile, Wind } from 'lucide-react';
+import { Brain, Heart, Shield, Smile, Star, Sun, Wind, Zap } from "lucide-react";
 
 const OUTCOME_ICONS = [Brain, Heart, Sun, Star, Shield, Zap, Smile, Wind];
 
@@ -24,16 +24,11 @@ export function OutcomesGrid({ outcomes }: OutcomesGridProps) {
         {items.map((item, i) => {
           const Icon = OUTCOME_ICONS[i % OUTCOME_ICONS.length];
           return (
-            <div
-              key={i}
-              className="flex items-start gap-2.5 bg-muted rounded-2xl p-3"
-            >
+            <div key={i} className="flex items-start gap-2.5 bg-muted rounded-2xl p-3">
               <div className="w-8 h-8 rounded-xl bg-primary/10 flex items-center justify-center flex-shrink-0">
                 <Icon className="w-4 h-4 text-primary" />
               </div>
-              <p className="text-xs font-medium text-foreground leading-snug mt-1">
-                {item.label}
-              </p>
+              <p className="text-xs font-medium text-foreground leading-snug mt-1">{item.label}</p>
             </div>
           );
         })}

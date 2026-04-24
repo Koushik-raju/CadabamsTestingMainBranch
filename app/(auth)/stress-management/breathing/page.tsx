@@ -1,9 +1,9 @@
-'use client';
+"use client";
 
-import { useRouter } from 'next/navigation';
-import { ChevronLeft } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { BreathingExercise } from '@/components/stress/breathing-exercise';
+import { BreathingExercise } from "@/components/stress/breathing-exercise";
+import { Button } from "@/components/ui/button";
+import { ChevronLeft } from "lucide-react";
+import { useRouter } from "next/navigation";
 
 export default function BreathingPage() {
   const router = useRouter();
@@ -12,11 +12,7 @@ export default function BreathingPage() {
     <div className="flex flex-col min-h-screen bg-background pb-28">
       {/* Header */}
       <div className="flex items-center gap-2 px-4 pt-12 pb-4">
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={() => router.back()}
-        >
+        <Button variant="ghost" size="icon" onClick={() => router.back()}>
           <ChevronLeft className="w-5 h-5" />
         </Button>
         <div>

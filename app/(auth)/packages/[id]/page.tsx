@@ -30,72 +30,89 @@
  *
  * LAST UPDATED: 2026-04-17 — added odooTuple guard for campus_id, package_id, product_id many2one fields
  */
-'use client';
+"use client";
 
-import { useState, use } from 'react';
-import { useRouter } from 'next/navigation';
+import { BackButton } from "@/components/shared/navigation/back-button";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { Separator } from "@/components/ui/separator";
+import { Skeleton } from "@/components/ui/skeleton";
+import { useAuth } from "@/hooks/use-auth";
+import { initiatePackagePayment, useManagedPackages } from "@/hooks/use-packages";
+import { odooTuple } from "@/lib/odoo";
+import { getPackagePalette } from "@/lib/package-colors";
+import type { BookedPackageLineDto } from "@/sdk/backend-v2";
 import {
-  IndianRupee,
-  Calendar,
-  Package,
-  Clock,
-  CheckCircle,
-  PlayCircle,
-  CreditCard,
-  BookOpen,
-  CalendarPlus,
-  Loader2,
   AlertCircle,
-  User,
-  MapPin,
-  ListOrdered,
-  Stethoscope,
+  Calendar,
+  CalendarPlus,
+  CheckCircle,
   CheckCircle2,
-} from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Separator } from '@/components/ui/separator';
-import { Skeleton } from '@/components/ui/skeleton';
-import { Card, CardContent } from '@/components/ui/card';
-import { BackButton } from '@/components/shared/navigation/back-button';
-import { useManagedPackages, initiatePackagePayment } from '@/hooks/use-packages';
-import { useAuth } from '@/hooks/use-auth';
-import { getPackagePalette } from '@/lib/package-colors';
-import type { BookedPackageLineDto } from '@/sdk/backend-v2';
-import { odooTuple } from '@/lib/odoo';
+  Clock,
+  CreditCard,
+  IndianRupee,
+  ListOrdered,
+  Loader2,
+  MapPin,
+  Package,
+  PlayCircle,
+  Stethoscope,
+  User,
+} from "lucide-react";
+import { useRouter } from "next/navigation";
+import { use, useState } from "react";
 
 function getStageMeta(stage: string): { label: string; Icon: React.ElementType } {
   switch (stage) {
-    case 'in_progress': return { label: 'Active',           Icon: PlayCircle };
-    case 'confirm':     return { label: 'Confirmed',        Icon: CheckCircle };
-    case 'booked':      return { label: 'Pending Payment',  Icon: Clock };
-    case 'done':        return { label: 'Completed',        Icon: CheckCircle2 };
-    default:            return { label: stage,              Icon: Package };
+    case "in_progress":
+      return { label: "Active", Icon: PlayCircle };
+    case "confirm":
+      return { label: "Confirmed", Icon: CheckCircle };
+    case "booked":
+      return { label: "Pending Payment", Icon: Clock };
+    case "done":
+      return { label: "Completed", Icon: CheckCircle2 };
+    default:
+      return { label: stage, Icon: Package };
   }
 }
 
 function getLineStatusBadge(status: string) {
   switch (status) {
-    case 'done':
+    case "done":
       return (
-        <Badge variant="outline" className="text-[10px] bg-green-50 text-green-700 border-green-200">
+        <Badge
+          variant="outline"
+          className="text-[10px] bg-green-50 text-green-700 border-green-200"
+        >
           Done
         </Badge>
       );
-    case 'scheduled':
+    case "scheduled":
       return (
-        <Badge variant="outline" className="text-[10px] bg-violet-50 text-violet-700 border-violet-200">
+        <Badge
+          variant="outline"
+          className="text-[10px] bg-violet-50 text-violet-700 border-violet-200"
+        >
           Scheduled
         </Badge>
       );
-    case 'cancelled':
+    case "cancelled":
       return (
-        <Badge variant="outline" className="text-[10px] bg-destructive/10 text-destructive border-destructive/20">
+        <Badge
+          variant="outline"
+          className="text-[10px] bg-destructive/10 text-destructive border-destructive/20"
+        >
           Cancelled
         </Badge>
       );
     default:
-      return <Badge variant="outline" className="text-[10px]">Open</Badge>;
+      return (
+        <Badge variant="outline" className="text-[10px]">
+          Open
+        </Badge>
+      );
   }
 }
 
@@ -122,7 +139,7 @@ export default function PackageDetailPage({ params }: { params: Promise<{ id: st
       });
       window.location.href = payData.result.short_url;
     } catch (err: unknown) {
-      setPayError((err as { message?: string })?.message ?? 'Failed to process payment');
+      setPayError((err as { message?: string })?.message ?? "Failed to process payment");
       setPayLoading(false);
     }
   };
@@ -150,7 +167,7 @@ export default function PackageDetailPage({ params }: { params: Promise<{ id: st
         <div className="flex flex-col items-center justify-center px-6 py-16 text-center gap-4">
           <AlertCircle className="h-16 w-16 text-muted-foreground/50" />
           <p className="text-lg font-semibold text-foreground">Package not found</p>
-          <Button variant="outline" onClick={() => router.push('/packages')}>
+          <Button variant="outline" onClick={() => router.push("/packages")}>
             Back to Packages
           </Button>
         </div>
@@ -160,16 +177,16 @@ export default function PackageDetailPage({ params }: { params: Promise<{ id: st
 
   const palette = getPackagePalette(pkg.booked_package_id);
   const { label, Icon } = getStageMeta(pkg.package_stage);
-  const packageName = String(odooTuple(pkg.package_id, 1) ?? 'Package');
-  const campusName = String(odooTuple(pkg.campus_id, 1) ?? '');
+  const packageName = String(odooTuple(pkg.package_id, 1) ?? "Package");
+  const campusName = String(odooTuple(pkg.campus_id, 1) ?? "");
   const lines: BookedPackageLineDto[] = pkg.lines ?? [];
-  const doneCount = lines.filter((l) => l.status === 'done').length;
+  const doneCount = lines.filter((l) => l.status === "done").length;
 
   const initials = packageName
-    .split(' ')
+    .split(" ")
     .slice(0, 2)
-    .map((w) => w[0] ?? '')
-    .join('')
+    .map((w) => w[0] ?? "")
+    .join("")
     .toUpperCase();
 
   return (
@@ -191,7 +208,9 @@ export default function PackageDetailPage({ params }: { params: Promise<{ id: st
             <div className="w-12 h-12 rounded-2xl bg-white/20 backdrop-blur-sm flex items-center justify-center font-bold text-lg text-white shrink-0">
               {initials}
             </div>
-            <Badge className={`${palette.badgeBg} backdrop-blur-sm text-white border-0 hover:opacity-100 gap-1 text-xs font-semibold`}>
+            <Badge
+              className={`${palette.badgeBg} backdrop-blur-sm text-white border-0 hover:opacity-100 gap-1 text-xs font-semibold`}
+            >
               <Icon className="w-3.5 h-3.5" />
               {label}
             </Badge>
@@ -206,7 +225,7 @@ export default function PackageDetailPage({ params }: { params: Promise<{ id: st
             <IndianRupee className="w-4 h-4 text-white/70 shrink-0" />
             <div>
               <p className="text-white font-bold text-base leading-tight">
-                ₹{pkg.package_cost.toLocaleString('en-IN')}
+                ₹{pkg.package_cost.toLocaleString("en-IN")}
               </p>
               <p className="text-white/60 text-[10px]">Package cost</p>
             </div>
@@ -223,7 +242,6 @@ export default function PackageDetailPage({ params }: { params: Promise<{ id: st
 
       {/* Scrollable body */}
       <div className="px-4 pt-4 pb-36 space-y-3">
-
         {/* Patient / Campus details */}
         {(campusName || pkg.patient_name || pkg.caller_name) && (
           <Card>
@@ -234,21 +252,23 @@ export default function PackageDetailPage({ params }: { params: Promise<{ id: st
                     <MapPin className="w-4 h-4 text-sky-600" />
                   </div>
                   <div>
-                    <p className="text-[10px] text-muted-foreground uppercase tracking-wide">Campus</p>
+                    <p className="text-[10px] text-muted-foreground uppercase tracking-wide">
+                      Campus
+                    </p>
                     <p className="text-sm font-semibold text-foreground">{campusName}</p>
                   </div>
                 </div>
               )}
-              {(campusName && (pkg.patient_name || pkg.caller_name)) && (
-                <Separator />
-              )}
+              {campusName && (pkg.patient_name || pkg.caller_name) && <Separator />}
               {pkg.patient_name && (
                 <div className="flex items-center gap-3">
                   <div className="w-8 h-8 rounded-xl bg-violet-100 flex items-center justify-center shrink-0">
                     <User className="w-4 h-4 text-violet-600" />
                   </div>
                   <div>
-                    <p className="text-[10px] text-muted-foreground uppercase tracking-wide">Patient</p>
+                    <p className="text-[10px] text-muted-foreground uppercase tracking-wide">
+                      Patient
+                    </p>
                     <p className="text-sm font-semibold text-foreground">{pkg.patient_name}</p>
                   </div>
                 </div>
@@ -261,7 +281,9 @@ export default function PackageDetailPage({ params }: { params: Promise<{ id: st
                       <User className="w-4 h-4 text-orange-600" />
                     </div>
                     <div>
-                      <p className="text-[10px] text-muted-foreground uppercase tracking-wide">Booked by</p>
+                      <p className="text-[10px] text-muted-foreground uppercase tracking-wide">
+                        Booked by
+                      </p>
                       <p className="text-sm font-semibold text-foreground">{pkg.caller_name}</p>
                     </div>
                   </div>
@@ -275,7 +297,9 @@ export default function PackageDetailPage({ params }: { params: Promise<{ id: st
                       <ListOrdered className="w-4 h-4 text-teal-600" />
                     </div>
                     <p className="text-sm text-foreground">
-                      {pkg.sequence_booking ? 'Sequential booking enabled' : 'Flexible booking order'}
+                      {pkg.sequence_booking
+                        ? "Sequential booking enabled"
+                        : "Flexible booking order"}
                     </p>
                   </div>
                 </>
@@ -302,18 +326,23 @@ export default function PackageDetailPage({ params }: { params: Promise<{ id: st
               </div>
               <div className="space-y-1">
                 {lines.map((line, i) => (
-                  <div key={line.line_id ?? i} className="flex items-center gap-3 py-2.5 border-b border-border last:border-0">
+                  <div
+                    key={line.line_id ?? i}
+                    className="flex items-center gap-3 py-2.5 border-b border-border last:border-0"
+                  >
                     <div className="w-7 h-7 rounded-full bg-muted flex items-center justify-center shrink-0 text-[11px] font-bold text-muted-foreground">
                       {line.sequence_no ?? i + 1}
                     </div>
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-medium text-foreground truncate">
-                        {String(odooTuple(line.product_id, 1) ?? '')}
+                        {String(odooTuple(line.product_id, 1) ?? "")}
                       </p>
                       {line.speciality_id && (
                         <div className="flex items-center gap-1 mt-0.5">
                           <Stethoscope className="w-3 h-3 text-muted-foreground" />
-                          <p className="text-xs text-muted-foreground">{String(line.speciality_id?.[1] ?? '')}</p>
+                          <p className="text-xs text-muted-foreground">
+                            {String(line.speciality_id?.[1] ?? "")}
+                          </p>
                         </div>
                       )}
                     </div>
@@ -322,7 +351,7 @@ export default function PackageDetailPage({ params }: { params: Promise<{ id: st
                       {line.price_subtotal > 0 && (
                         <span className="text-[10px] text-muted-foreground flex items-center gap-0.5">
                           <IndianRupee className="w-2.5 h-2.5" />
-                          {line.price_subtotal.toLocaleString('en-IN')}
+                          {line.price_subtotal.toLocaleString("en-IN")}
                         </span>
                       )}
                     </div>
@@ -344,7 +373,7 @@ export default function PackageDetailPage({ params }: { params: Promise<{ id: st
 
       {/* Sticky action bar */}
       <div className="fixed bottom-0 left-0 right-0 px-4 pb-6 pt-3 bg-background/95 backdrop-blur border-t border-border space-y-2">
-        {pkg.package_stage === 'booked' && (
+        {pkg.package_stage === "booked" && (
           <Button
             className={`w-full rounded-full h-12 text-base font-semibold gap-2 bg-gradient-to-r ${palette.ctaGradient} border-0 text-white`}
             onClick={handlePayNow}
@@ -356,21 +385,20 @@ export default function PackageDetailPage({ params }: { params: Promise<{ id: st
               <CreditCard className="h-5 w-5" />
             )}
             {payLoading
-              ? 'Redirecting to Razorpay…'
-              : `Pay ₹${pkg.package_cost.toLocaleString('en-IN')}`}
+              ? "Redirecting to Razorpay…"
+              : `Pay ₹${pkg.package_cost.toLocaleString("en-IN")}`}
           </Button>
         )}
 
-        {(pkg.package_stage === 'confirm' || pkg.package_stage === 'in_progress') && (
+        {(pkg.package_stage === "confirm" || pkg.package_stage === "in_progress") && (
           <Button
             className={`w-full rounded-full h-12 text-base font-semibold gap-2 bg-gradient-to-r ${palette.ctaGradient} border-0 text-white`}
-            onClick={() => router.push('/consult/find-therapist')}
+            onClick={() => router.push("/consult/find-therapist")}
           >
             <CalendarPlus className="h-5 w-5" />
             Book a Session
           </Button>
         )}
-
       </div>
     </div>
   );

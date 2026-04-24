@@ -1,13 +1,13 @@
-'use client';
+"use client";
 
-import { useRouter } from 'next/navigation';
-import { Layers, ArrowRight, Sparkles } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Card } from '@/components/ui/card';
-import { cn } from '@/lib/utils';
-import { getPackagePalette } from '@/lib/package-colors';
-import type { PackageResponseDto } from '@/sdk/backend-v2';
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
+import { getPackagePalette } from "@/lib/package-colors";
+import { cn } from "@/lib/utils";
+import type { PackageResponseDto } from "@/sdk/backend-v2";
+import { ArrowRight, Layers, Sparkles } from "lucide-react";
+import { useRouter } from "next/navigation";
 
 interface FeaturedPackageCardProps {
   pkg: PackageResponseDto;
@@ -23,7 +23,7 @@ export function FeaturedPackageCard({ pkg }: FeaturedPackageCardProps) {
       style={{ minHeight: 230 }}
       onClick={() => router.push(`/packages/browse/${pkg.id}`)}
     >
-      <div className={cn('absolute inset-0 bg-gradient-to-br', palette.gradient)} />
+      <div className={cn("absolute inset-0 bg-gradient-to-br", palette.gradient)} />
       {/* Decorative circles */}
       <div className="absolute -top-8 -right-8 w-40 h-40 rounded-full bg-white/10" />
       <div className="absolute -bottom-12 -left-6 w-52 h-52 rounded-full bg-white/5" />
@@ -31,7 +31,13 @@ export function FeaturedPackageCard({ pkg }: FeaturedPackageCardProps) {
 
       {/* Top bar */}
       <div className="absolute top-4 left-4 right-4 flex items-center justify-between">
-        <Badge className={cn('text-white text-[10px] font-bold border-0 gap-1', palette.badgeBg, 'hover:opacity-100')}>
+        <Badge
+          className={cn(
+            "text-white text-[10px] font-bold border-0 gap-1",
+            palette.badgeBg,
+            "hover:opacity-100",
+          )}
+        >
           <Sparkles className="w-3 h-3" />
           Featured
         </Badge>
@@ -41,7 +47,12 @@ export function FeaturedPackageCard({ pkg }: FeaturedPackageCardProps) {
       {/* Content */}
       <div className="absolute bottom-0 left-0 right-0 p-5">
         <div className="flex items-center gap-2 mb-3">
-          <Badge className={cn('flex items-center gap-1 text-white text-[10px] font-semibold border-0', palette.badgeBg)}>
+          <Badge
+            className={cn(
+              "flex items-center gap-1 text-white text-[10px] font-semibold border-0",
+              palette.badgeBg,
+            )}
+          >
             <Layers className="w-3 h-3" />
             {pkg.package_product_ids.length} Sessions
           </Badge>
@@ -50,14 +61,12 @@ export function FeaturedPackageCard({ pkg }: FeaturedPackageCardProps) {
         <h2 className="text-white font-bold text-xl leading-tight line-clamp-2 mb-1">
           {pkg.package_name}
         </h2>
-        <p className="text-white/70 text-sm mb-4">
-          ₹{pkg.amount_total.toLocaleString('en-IN')}
-        </p>
+        <p className="text-white/70 text-sm mb-4">₹{pkg.amount_total.toLocaleString("en-IN")}</p>
 
         <Button
           size="sm"
           className="bg-white hover:bg-white/90 font-bold text-xs rounded-full px-5 shadow-md border-0"
-          style={{ color: 'var(--primary)' }}
+          style={{ color: "var(--primary)" }}
           onClick={(e) => {
             e.stopPropagation();
             router.push(`/packages/browse/${pkg.id}`);

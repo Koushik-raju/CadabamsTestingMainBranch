@@ -1,16 +1,16 @@
-'use client';
+"use client";
 
-import { createContext, useContext, useState, useEffect, useCallback } from 'react';
-import useSWR from 'swr';
-import { authControllerMe } from '@/sdk/backend-v2';
-import { logoutPatient } from '@/lib/auth';
-import { getAccessToken, getUser, setUser, clearAuthState } from '@/lib/cookies';
-import { authMeKey } from '@/lib/swr-keys';
-import type { User } from '@/types';
+import { logoutPatient } from "@/lib/auth";
+import { clearAuthState, getAccessToken, getUser, setUser } from "@/lib/cookies";
+import { authMeKey } from "@/lib/swr-keys";
+import { authControllerMe } from "@/sdk/backend-v2";
+import type { User } from "@/types";
+import { createContext, useCallback, useContext, useEffect, useState } from "react";
+import useSWR from "swr";
 
 function getSubFromToken(token: string): string | undefined {
   try {
-    const payload = JSON.parse(atob(token.split('.')[1]));
+    const payload = JSON.parse(atob(token.split(".")[1]));
     return payload.sub as string | undefined;
   } catch {
     return undefined;
@@ -53,7 +53,9 @@ interface AuthContextValue {
 
 export const AuthContext = createContext<AuthContextValue>({
   user: null,
-  login: async () => { throw new Error('AuthProvider not mounted'); },
+  login: async () => {
+    throw new Error("AuthProvider not mounted");
+  },
   logout: async () => {},
 });
 
@@ -81,7 +83,7 @@ export function useAuthProvider(): AuthContextValue {
 
   const login = useCallback(async (): Promise<User> => {
     const userData = await fetchAndBuildUser();
-    if (!userData) throw new Error('Failed to fetch profile');
+    if (!userData) throw new Error("Failed to fetch profile");
     setUserState(userData);
     return userData;
   }, []);

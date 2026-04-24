@@ -9,7 +9,7 @@
  */
 export async function capturePhoto(): Promise<string | null> {
   try {
-    const { Camera, CameraResultType, CameraSource } = await import('@capacitor/camera');
+    const { Camera, CameraResultType, CameraSource } = await import("@capacitor/camera");
     const photo = await Camera.getPhoto({
       resultType: CameraResultType.DataUrl,
       source: CameraSource.Camera,
@@ -18,7 +18,7 @@ export async function capturePhoto(): Promise<string | null> {
     return photo.dataUrl ?? null;
   } catch (e) {
     // User cancelled or permission denied — not a fatal error
-    console.warn('[Camera] capturePhoto cancelled or failed:', e);
+    console.warn("[Camera] capturePhoto cancelled or failed:", e);
     return null;
   }
 }
@@ -29,7 +29,7 @@ export async function capturePhoto(): Promise<string | null> {
  */
 export async function pickFromGallery(): Promise<string | null> {
   try {
-    const { Camera, CameraResultType, CameraSource } = await import('@capacitor/camera');
+    const { Camera, CameraResultType, CameraSource } = await import("@capacitor/camera");
     const photo = await Camera.getPhoto({
       resultType: CameraResultType.DataUrl,
       source: CameraSource.Photos,
@@ -37,7 +37,7 @@ export async function pickFromGallery(): Promise<string | null> {
     });
     return photo.dataUrl ?? null;
   } catch (e) {
-    console.warn('[Camera] pickFromGallery cancelled or failed:', e);
+    console.warn("[Camera] pickFromGallery cancelled or failed:", e);
     return null;
   }
 }

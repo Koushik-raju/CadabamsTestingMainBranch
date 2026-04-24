@@ -1,37 +1,50 @@
-'use client';
+"use client";
 
-import { Suspense, useState, useEffect, useCallback } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Switch } from "@/components/ui/switch";
+import {
+  ArrowLeft,
+  Bluetooth,
+  CalendarIcon,
+  CheckCircle2,
+  Eye,
+  Mail,
+  MapPin,
+  MessageSquare,
+  Phone,
   User,
   Users,
-  CalendarIcon,
-  ArrowLeft,
-  Phone,
-  Mail,
-  MessageSquare,
-  MapPin,
-  Bluetooth,
-  Eye,
-  CheckCircle2,
-} from 'lucide-react';
-import { toast } from 'react-hot-toast';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Switch } from '@/components/ui/switch';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+} from "lucide-react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { Suspense, useCallback, useEffect, useState } from "react";
 
-
-import { crmControllerGetRelationships, crmControllerCreateLead } from '@/sdk/backend-v2';
-import { useAuth } from '@/hooks/use-auth';
-import { cn } from '@/lib/utils';
+import { useAuth } from "@/hooks/use-auth";
+import { cn } from "@/lib/utils";
+import { crmControllerCreateLead, crmControllerGetRelationships } from "@/sdk/backend-v2";
 
 // ─── Types ────────────────────────────────────────────────
 
-type Step = 'service-for' | 'patient-form' | 'date-of-birth' | 'assistance-selection' | 'notification' | 'permissions';
+type Step =
+  | "service-for"
+  | "patient-form"
+  | "date-of-birth"
+  | "assistance-selection"
+  | "notification"
+  | "permissions";
 
-interface Relationship { id: number; name: string; }
+interface Relationship {
+  id: number;
+  name: string;
+}
 
 interface FormData {
   serviceForSelf: boolean;
@@ -49,11 +62,26 @@ interface FormData {
 }
 
 const TAGS = [
-  'Anxiety', 'Depression', 'Stress', 'Relationship Issues', 'Sleep Problems',
-  'Trauma & PTSD', 'Grief & Loss', 'Self-esteem', 'Anger Management', "I'm Not Sure",
+  "Anxiety",
+  "Depression",
+  "Stress",
+  "Relationship Issues",
+  "Sleep Problems",
+  "Trauma & PTSD",
+  "Grief & Loss",
+  "Self-esteem",
+  "Anger Management",
+  "I'm Not Sure",
 ];
 
-const STEPS: Step[] = ['service-for', 'patient-form', 'date-of-birth', 'assistance-selection', 'notification', 'permissions'];
+const STEPS: Step[] = [
+  "service-for",
+  "patient-form",
+  "date-of-birth",
+  "assistance-selection",
+  "notification",
+  "permissions",
+];
 
 // ─── Onboarding ───────────────────────────────────────────
 
@@ -62,17 +90,17 @@ function OnboardingContent() {
   const searchParams = useSearchParams();
   const { user } = useAuth();
 
-  const returnUrl = searchParams.get('returnUrl') ?? '';
+  const returnUrl = searchParams.get("returnUrl") ?? "";
 
-  const [step, setStep] = useState<Step>('service-for');
+  const [step, setStep] = useState<Step>("service-for");
   const [loading, setLoading] = useState(false);
   const [relationships, setRelationships] = useState<Relationship[]>([]);
   const [data, setData] = useState<FormData>({
     serviceForSelf: true,
-    patientFirstName: '',
-    patientLastName: '',
-    relationship: '',
-    dob: '',
+    patientFirstName: "",
+    patientLastName: "",
+    relationship: "",
+    dob: "",
     tags: [],
     notifPhone: true,
     notifEmail: true,
@@ -84,7 +112,9 @@ function OnboardingContent() {
 
   useEffect(() => {
     crmControllerGetRelationships()
-      .then((r) => setRelationships((r.data as Array<{ id: number; name: string }> | undefined) ?? []))
+      .then((r) =>
+        setRelationships((r.data as Array<{ id: number; name: string }> | undefined) ?? []),
+      )
       .catch(() => {});
   }, []);
 
@@ -92,7 +122,7 @@ function OnboardingContent() {
     setData((prev) => ({ ...prev, [key]: value }));
   }, []);
 
-  const visibleSteps = STEPS.filter((s) => s !== 'patient-form' || !data.serviceForSelf);
+  const visibleSteps = STEPS.filter((s) => s !== "patient-form" || !data.serviceForSelf);
   const currentIndex = visibleSteps.indexOf(step);
   const isFirst = currentIndex === 0;
   const isLast = currentIndex === visibleSteps.length - 1;
@@ -112,9 +142,10 @@ function OnboardingContent() {
     try {
       await crmControllerCreateLead({
         body: {
-          caller_mobile: user?.phone_number ?? '',
-          partner_name: `${data.patientFirstName} ${data.patientLastName}`.trim() || (user?.name ?? ''),
-          contact_name: user?.name ?? '',
+          caller_mobile: user?.phone_number ?? "",
+          partner_name:
+            `${data.patientFirstName} ${data.patientLastName}`.trim() || (user?.name ?? ""),
+          contact_name: user?.name ?? "",
         },
       });
     } catch {
@@ -122,12 +153,11 @@ function OnboardingContent() {
     } finally {
       setLoading(false);
     }
-    router.replace(returnUrl ? decodeURIComponent(returnUrl) : '/home');
+    router.replace(returnUrl ? decodeURIComponent(returnUrl) : "/home");
   };
 
   return (
     <div className="flex flex-col min-h-screen bg-[#f6f4f2]">
-
       {/* ── Top bar ── */}
       <div className="px-5 pt-12 pb-4 flex flex-col gap-4">
         {/* Progress segments */}
@@ -136,8 +166,8 @@ function OnboardingContent() {
             <div
               key={s}
               className={cn(
-                'h-1 flex-1 rounded-full transition-all duration-500',
-                i <= currentIndex ? 'bg-primary' : 'bg-black/10'
+                "h-1 flex-1 rounded-full transition-all duration-500",
+                i <= currentIndex ? "bg-primary" : "bg-black/10",
               )}
             />
           ))}
@@ -158,9 +188,8 @@ function OnboardingContent() {
 
       {/* ── Step content ── */}
       <div className="flex flex-col flex-1 px-5 pb-8 overflow-y-auto">
-
         {/* ── service-for ── */}
-        {step === 'service-for' && (
+        {step === "service-for" && (
           <div className="flex flex-col flex-1 gap-6">
             <div className="pt-2">
               <p className="text-[11px] font-bold text-primary uppercase tracking-widest mb-2">
@@ -175,26 +204,28 @@ function OnboardingContent() {
             </div>
 
             <div className="flex flex-col gap-3">
-              {([
-                {
-                  label: 'Myself',
-                  desc: 'Access therapy and wellness tools for your personal journey',
-                  icon: User,
-                  self: true,
-                },
-                {
-                  label: 'Someone Else',
-                  desc: 'Book care for a family member or loved one',
-                  icon: Users,
-                  self: false,
-                },
-              ] as const).map(({ label, desc, icon: Icon, self }) => (
+              {(
+                [
+                  {
+                    label: "Myself",
+                    desc: "Access therapy and wellness tools for your personal journey",
+                    icon: User,
+                    self: true,
+                  },
+                  {
+                    label: "Someone Else",
+                    desc: "Book care for a family member or loved one",
+                    icon: Users,
+                    self: false,
+                  },
+                ] as const
+              ).map(({ label, desc, icon: Icon, self }) => (
                 <button
                   key={label}
                   type="button"
                   onClick={() => {
-                    set('serviceForSelf', self);
-                    setStep(self ? 'date-of-birth' : 'patient-form');
+                    set("serviceForSelf", self);
+                    setStep(self ? "date-of-birth" : "patient-form");
                   }}
                   className="w-full text-left bg-card rounded-2xl border-2 p-5 flex items-start gap-4 transition-all active:scale-[0.98] shadow-sm border-transparent hover:border-primary/30"
                 >
@@ -212,40 +243,50 @@ function OnboardingContent() {
         )}
 
         {/* ── patient-form ── */}
-        {step === 'patient-form' && (
+        {step === "patient-form" && (
           <div className="flex flex-col flex-1 gap-6">
             <div className="pt-2">
               <p className="text-[11px] font-bold text-primary uppercase tracking-widest mb-2">
                 Step {currentIndex + 1} of {visibleSteps.length}
               </p>
-              <h1 className="text-[30px] font-black text-foreground leading-tight">Patient information</h1>
-              <p className="text-[14px] text-muted-foreground mt-2">Tell us about the person you're booking for</p>
+              <h1 className="text-[30px] font-black text-foreground leading-tight">
+                Patient information
+              </h1>
+              <p className="text-[14px] text-muted-foreground mt-2">
+                Tell us about the person you're booking for
+              </p>
             </div>
 
             <div className="bg-card rounded-2xl border border-border shadow-sm p-5 flex flex-col gap-4">
               <div className="grid grid-cols-2 gap-3">
                 <div className="flex flex-col gap-1.5">
-                  <Label htmlFor="pFirst" className="text-[12px] font-semibold text-muted-foreground uppercase tracking-wide">
+                  <Label
+                    htmlFor="pFirst"
+                    className="text-[12px] font-semibold text-muted-foreground uppercase tracking-wide"
+                  >
                     First Name <span className="text-primary">*</span>
                   </Label>
                   <Input
                     id="pFirst"
                     autoComplete="given-name"
                     value={data.patientFirstName}
-                    onChange={(e) => set('patientFirstName', e.target.value)}
+                    onChange={(e) => set("patientFirstName", e.target.value)}
                     placeholder="First"
                     className="h-11"
                   />
                 </div>
                 <div className="flex flex-col gap-1.5">
-                  <Label htmlFor="pLast" className="text-[12px] font-semibold text-muted-foreground uppercase tracking-wide">
+                  <Label
+                    htmlFor="pLast"
+                    className="text-[12px] font-semibold text-muted-foreground uppercase tracking-wide"
+                  >
                     Last Name
                   </Label>
                   <Input
                     id="pLast"
                     autoComplete="family-name"
                     value={data.patientLastName}
-                    onChange={(e) => set('patientLastName', e.target.value)}
+                    onChange={(e) => set("patientLastName", e.target.value)}
                     placeholder="Last"
                     className="h-11"
                   />
@@ -256,13 +297,15 @@ function OnboardingContent() {
                 <Label className="text-[12px] font-semibold text-muted-foreground uppercase tracking-wide">
                   Relationship <span className="text-primary">*</span>
                 </Label>
-                <Select value={data.relationship} onValueChange={(v) => set('relationship', v)}>
+                <Select value={data.relationship} onValueChange={(v) => set("relationship", v)}>
                   <SelectTrigger className="h-11">
                     <SelectValue placeholder="Select relationship" />
                   </SelectTrigger>
                   <SelectContent>
                     {relationships.map((r) => (
-                      <SelectItem key={r.id} value={String(r.id)}>{r.name}</SelectItem>
+                      <SelectItem key={r.id} value={String(r.id)}>
+                        {r.name}
+                      </SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
@@ -280,18 +323,25 @@ function OnboardingContent() {
         )}
 
         {/* ── date-of-birth ── */}
-        {step === 'date-of-birth' && (
+        {step === "date-of-birth" && (
           <div className="flex flex-col flex-1 gap-6">
             <div className="pt-2">
               <p className="text-[11px] font-bold text-primary uppercase tracking-widest mb-2">
                 Step {currentIndex + 1} of {visibleSteps.length}
               </p>
-              <h1 className="text-[30px] font-black text-foreground leading-tight">When were you born?</h1>
-              <p className="text-[14px] text-muted-foreground mt-2">Helps us personalise your care experience</p>
+              <h1 className="text-[30px] font-black text-foreground leading-tight">
+                When were you born?
+              </h1>
+              <p className="text-[14px] text-muted-foreground mt-2">
+                Helps us personalise your care experience
+              </p>
             </div>
 
             <div className="bg-card rounded-2xl border border-border shadow-sm p-5">
-              <Label htmlFor="dob" className="text-[12px] font-semibold text-muted-foreground uppercase tracking-wide">
+              <Label
+                htmlFor="dob"
+                className="text-[12px] font-semibold text-muted-foreground uppercase tracking-wide"
+              >
                 Date of Birth
               </Label>
               <div className="relative mt-2">
@@ -301,9 +351,9 @@ function OnboardingContent() {
                   type="date"
                   autoComplete="bday"
                   value={data.dob}
-                  onChange={(e) => set('dob', e.target.value)}
+                  onChange={(e) => set("dob", e.target.value)}
                   className="pl-9 h-12 text-base"
-                  max={new Date().toISOString().split('T')[0]}
+                  max={new Date().toISOString().split("T")[0]}
                 />
               </div>
             </div>
@@ -319,14 +369,18 @@ function OnboardingContent() {
         )}
 
         {/* ── assistance-selection ── */}
-        {step === 'assistance-selection' && (
+        {step === "assistance-selection" && (
           <div className="flex flex-col flex-1 gap-5">
             <div className="pt-2">
               <p className="text-[11px] font-bold text-primary uppercase tracking-widest mb-2">
                 Step {currentIndex + 1} of {visibleSteps.length}
               </p>
-              <h1 className="text-[30px] font-black text-foreground leading-tight">What brings you here?</h1>
-              <p className="text-[14px] text-muted-foreground mt-2">Select all that apply — no judgement here</p>
+              <h1 className="text-[30px] font-black text-foreground leading-tight">
+                What brings you here?
+              </h1>
+              <p className="text-[14px] text-muted-foreground mt-2">
+                Select all that apply — no judgement here
+              </p>
             </div>
 
             <div className="flex flex-wrap gap-2.5">
@@ -337,13 +391,16 @@ function OnboardingContent() {
                     key={tag}
                     type="button"
                     onClick={() =>
-                      set('tags', selected ? data.tags.filter((t) => t !== tag) : [...data.tags, tag])
+                      set(
+                        "tags",
+                        selected ? data.tags.filter((t) => t !== tag) : [...data.tags, tag],
+                      )
                     }
                     className={cn(
-                      'px-4 py-2 rounded-full text-[13px] font-semibold border-2 transition-all active:scale-95',
+                      "px-4 py-2 rounded-full text-[13px] font-semibold border-2 transition-all active:scale-95",
                       selected
-                        ? 'bg-primary text-white border-primary shadow-sm'
-                        : 'bg-card text-foreground border-transparent shadow-sm hover:border-primary/40'
+                        ? "bg-primary text-white border-primary shadow-sm"
+                        : "bg-card text-foreground border-transparent shadow-sm hover:border-primary/40",
                     )}
                   >
                     {tag}
@@ -353,9 +410,7 @@ function OnboardingContent() {
             </div>
 
             {data.tags.length > 0 && (
-              <p className="text-[12px] text-primary font-medium">
-                {data.tags.length} selected
-              </p>
+              <p className="text-[12px] text-primary font-medium">{data.tags.length} selected</p>
             )}
 
             <Button
@@ -369,39 +424,41 @@ function OnboardingContent() {
         )}
 
         {/* ── notification ── */}
-        {step === 'notification' && (
+        {step === "notification" && (
           <div className="flex flex-col flex-1 gap-5">
             <div className="pt-2">
               <p className="text-[11px] font-bold text-primary uppercase tracking-widest mb-2">
                 Almost there
               </p>
-              <h1 className="text-[30px] font-black text-foreground leading-tight">Stay connected</h1>
+              <h1 className="text-[30px] font-black text-foreground leading-tight">
+                Stay connected
+              </h1>
               <p className="text-[14px] text-muted-foreground mt-2">
                 Choose how you'd like to receive updates
               </p>
             </div>
 
             <div className="bg-card rounded-2xl border border-border shadow-sm divide-y divide-border overflow-hidden">
-              {([
+              {[
                 {
-                  key: 'notifPhone' as const,
-                  label: 'Phone Notifications',
-                  desc: 'SMS alerts for appointments & reminders',
+                  key: "notifPhone" as const,
+                  label: "Phone Notifications",
+                  desc: "SMS alerts for appointments & reminders",
                   icon: Phone,
                 },
                 {
-                  key: 'notifEmail' as const,
-                  label: 'Email Updates',
-                  desc: 'Summaries, receipts, and session notes',
+                  key: "notifEmail" as const,
+                  label: "Email Updates",
+                  desc: "Summaries, receipts, and session notes",
                   icon: Mail,
                 },
                 {
-                  key: 'notifWhatsapp' as const,
-                  label: 'WhatsApp',
-                  desc: 'Quick session reminders via WhatsApp',
+                  key: "notifWhatsapp" as const,
+                  label: "WhatsApp",
+                  desc: "Quick session reminders via WhatsApp",
                   icon: MessageSquare,
                 },
-              ]).map(({ key, label, desc, icon: Icon }) => (
+              ].map(({ key, label, desc, icon: Icon }) => (
                 <div key={key} className="flex items-center gap-4 px-4 py-3.5">
                   <div className="w-9 h-9 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
                     <Icon className="w-4 h-4 text-primary" />
@@ -426,39 +483,41 @@ function OnboardingContent() {
         )}
 
         {/* ── permissions ── */}
-        {step === 'permissions' && (
+        {step === "permissions" && (
           <div className="flex flex-col flex-1 gap-5">
             <div className="pt-2">
               <p className="text-[11px] font-bold text-primary uppercase tracking-widest mb-2">
                 Last step
               </p>
-              <h1 className="text-[30px] font-black text-foreground leading-tight">App permissions</h1>
+              <h1 className="text-[30px] font-black text-foreground leading-tight">
+                App permissions
+              </h1>
               <p className="text-[14px] text-muted-foreground mt-2">
                 Help us personalise your experience — you can change these anytime
               </p>
             </div>
 
             <div className="bg-card rounded-2xl border border-border shadow-sm divide-y divide-border overflow-hidden">
-              {([
+              {[
                 {
-                  key: 'locationPermission' as const,
-                  label: 'Location Access',
-                  desc: 'Find clinics and services near you',
+                  key: "locationPermission" as const,
+                  label: "Location Access",
+                  desc: "Find clinics and services near you",
                   icon: MapPin,
                 },
                 {
-                  key: 'bluetoothPermission' as const,
-                  label: 'Bluetooth',
-                  desc: 'Integrate with wearable health devices',
+                  key: "bluetoothPermission" as const,
+                  label: "Bluetooth",
+                  desc: "Integrate with wearable health devices",
                   icon: Bluetooth,
                 },
                 {
-                  key: 'trackingPermission' as const,
-                  label: 'Activity Tracking',
-                  desc: 'Personalise your wellness journey',
+                  key: "trackingPermission" as const,
+                  label: "Activity Tracking",
+                  desc: "Personalise your wellness journey",
                   icon: Eye,
                 },
-              ]).map(({ key, label, desc, icon: Icon }) => (
+              ].map(({ key, label, desc, icon: Icon }) => (
                 <div key={key} className="flex items-center gap-4 px-4 py-3.5">
                   <div className="w-9 h-9 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
                     <Icon className="w-4 h-4 text-primary" />
@@ -479,7 +538,8 @@ function OnboardingContent() {
             <div className="bg-primary/5 border border-primary/15 rounded-xl p-3.5 flex items-start gap-2.5">
               <CheckCircle2 className="w-4 h-4 text-primary flex-shrink-0 mt-0.5" />
               <p className="text-[12px] text-foreground/70 leading-snug">
-                Your data is encrypted and never shared without your consent. You can revoke permissions at any time from settings.
+                Your data is encrypted and never shared without your consent. You can revoke
+                permissions at any time from settings.
               </p>
             </div>
 
@@ -489,7 +549,7 @@ function OnboardingContent() {
               className="w-full h-12 rounded-xl font-semibold mt-auto gap-2"
             >
               {loading ? (
-                'Saving…'
+                "Saving…"
               ) : (
                 <>
                   <CheckCircle2 className="w-5 h-5" />
@@ -499,12 +559,15 @@ function OnboardingContent() {
             </Button>
           </div>
         )}
-
       </div>
     </div>
   );
 }
 
 export default function OnboardingPage() {
-  return <Suspense><OnboardingContent /></Suspense>;
+  return (
+    <Suspense>
+      <OnboardingContent />
+    </Suspense>
+  );
 }

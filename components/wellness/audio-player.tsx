@@ -1,10 +1,10 @@
-'use client';
+"use client";
 
-import { useState, useRef, useEffect, useCallback } from 'react';
-import { Play, Pause, Volume2, VolumeX, RotateCcw, RotateCw } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Slider } from '@/components/ui/slider';
-import { cn } from '@/lib/utils';
+import { Button } from "@/components/ui/button";
+import { Slider } from "@/components/ui/slider";
+import { cn } from "@/lib/utils";
+import { Pause, Play, RotateCcw, RotateCw, Volume2, VolumeX } from "lucide-react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 interface AudioPlayerProps {
   src: string;
@@ -14,10 +14,10 @@ interface AudioPlayerProps {
 }
 
 function formatTime(seconds: number): string {
-  if (!isFinite(seconds) || isNaN(seconds)) return '0:00';
+  if (!isFinite(seconds) || isNaN(seconds)) return "0:00";
   const m = Math.floor(seconds / 60);
   const s = Math.floor(seconds % 60);
-  return `${m}:${s.toString().padStart(2, '0')}`;
+  return `${m}:${s.toString().padStart(2, "0")}`;
 }
 
 export function AudioPlayer({ src, title, autoPlay = false, className }: AudioPlayerProps) {
@@ -37,22 +37,25 @@ export function AudioPlayer({ src, title, autoPlay = false, className }: AudioPl
       setDuration(audio.duration);
       setIsLoading(false);
       if (autoPlay) {
-        audio.play().then(() => setIsPlaying(true)).catch(() => {});
+        audio
+          .play()
+          .then(() => setIsPlaying(true))
+          .catch(() => {});
       }
     };
     const onEnded = () => setIsPlaying(false);
     const onCanPlay = () => setIsLoading(false);
 
-    audio.addEventListener('timeupdate', onTimeUpdate);
-    audio.addEventListener('loadedmetadata', onLoadedMetadata);
-    audio.addEventListener('ended', onEnded);
-    audio.addEventListener('canplay', onCanPlay);
+    audio.addEventListener("timeupdate", onTimeUpdate);
+    audio.addEventListener("loadedmetadata", onLoadedMetadata);
+    audio.addEventListener("ended", onEnded);
+    audio.addEventListener("canplay", onCanPlay);
 
     return () => {
-      audio.removeEventListener('timeupdate', onTimeUpdate);
-      audio.removeEventListener('loadedmetadata', onLoadedMetadata);
-      audio.removeEventListener('ended', onEnded);
-      audio.removeEventListener('canplay', onCanPlay);
+      audio.removeEventListener("timeupdate", onTimeUpdate);
+      audio.removeEventListener("loadedmetadata", onLoadedMetadata);
+      audio.removeEventListener("ended", onEnded);
+      audio.removeEventListener("canplay", onCanPlay);
     };
   }, [autoPlay]);
 
@@ -63,7 +66,10 @@ export function AudioPlayer({ src, title, autoPlay = false, className }: AudioPl
       audio.pause();
       setIsPlaying(false);
     } else {
-      audio.play().then(() => setIsPlaying(true)).catch(() => {});
+      audio
+        .play()
+        .then(() => setIsPlaying(true))
+        .catch(() => {});
     }
   }, [isPlaying]);
 
@@ -90,12 +96,10 @@ export function AudioPlayer({ src, title, autoPlay = false, className }: AudioPl
   const progress = duration > 0 ? (currentTime / duration) * 100 : 0;
 
   return (
-    <div className={cn('bg-card border border-border rounded-2xl p-5 space-y-4', className)}>
+    <div className={cn("bg-card border border-border rounded-2xl p-5 space-y-4", className)}>
       <audio ref={audioRef} src={src} preload="metadata" />
 
-      {title && (
-        <p className="text-sm font-semibold text-foreground truncate">{title}</p>
-      )}
+      {title && <p className="text-sm font-semibold text-foreground truncate">{title}</p>}
 
       {/* Progress slider */}
       <div className="space-y-1">
@@ -132,7 +136,7 @@ export function AudioPlayer({ src, title, autoPlay = false, className }: AudioPl
           disabled={isLoading}
           size="icon"
           className="h-14 w-14 rounded-full bg-primary text-primary-foreground hover:bg-primary/90 shadow-md"
-          aria-label={isPlaying ? 'Pause' : 'Play'}
+          aria-label={isPlaying ? "Pause" : "Play"}
         >
           {isPlaying ? (
             <Pause className="h-6 w-6 fill-current" />
@@ -155,19 +159,13 @@ export function AudioPlayer({ src, title, autoPlay = false, className }: AudioPl
           variant="ghost"
           size="icon"
           onClick={toggleMute}
-          aria-label={isMuted ? 'Unmute' : 'Mute'}
+          aria-label={isMuted ? "Unmute" : "Mute"}
         >
-          {isMuted ? (
-            <VolumeX className="h-5 w-5" />
-          ) : (
-            <Volume2 className="h-5 w-5" />
-          )}
+          {isMuted ? <VolumeX className="h-5 w-5" /> : <Volume2 className="h-5 w-5" />}
         </Button>
       </div>
 
-      {isLoading && (
-        <p className="text-center text-xs text-muted-foreground">Loading audio…</p>
-      )}
+      {isLoading && <p className="text-center text-xs text-muted-foreground">Loading audio…</p>}
     </div>
   );
 }

@@ -23,15 +23,15 @@
  *
  * LAST UPDATED: 2026-04-17 — added odooTuple guard for product_id many2one field
  */
-'use client';
+"use client";
 
-import { Card, CardContent } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { Separator } from '@/components/ui/separator';
-import { IndianRupee, Layers, Star, CheckCircle2 } from 'lucide-react';
-import type { PackageResponseDto, PackageProductLineDto } from '@/sdk/backend-v2';
-import { odooTuple } from '@/lib/odoo';
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { Separator } from "@/components/ui/separator";
+import { odooTuple } from "@/lib/odoo";
+import type { PackageProductLineDto, PackageResponseDto } from "@/sdk/backend-v2";
+import { CheckCircle2, IndianRupee, Layers, Star } from "lucide-react";
 
 interface PackageCardProps {
   pkg: PackageResponseDto;
@@ -67,7 +67,7 @@ export function PackageCard({ pkg, productLines, onBook }: PackageCardProps) {
             <div>
               <p className="text-xs text-muted-foreground">Total Cost</p>
               <p className="text-sm font-medium text-foreground">
-                ₹{pkg.amount_total.toLocaleString('en-IN')}
+                ₹{pkg.amount_total.toLocaleString("en-IN")}
               </p>
             </div>
           </div>
@@ -78,10 +78,11 @@ export function PackageCard({ pkg, productLines, onBook }: PackageCardProps) {
             </div>
             <div>
               <p className="text-xs text-muted-foreground">Sessions</p>
-              <p className="text-sm font-medium text-foreground">{pkg.package_product_ids.length}</p>
+              <p className="text-sm font-medium text-foreground">
+                {pkg.package_product_ids.length}
+              </p>
             </div>
           </div>
-
         </div>
 
         {/* Services preview */}
@@ -93,7 +94,7 @@ export function PackageCard({ pkg, productLines, onBook }: PackageCardProps) {
                 <li key={line.id} className="flex items-center gap-2">
                   <CheckCircle2 className="w-3 h-3 text-primary shrink-0" />
                   <span className="text-xs text-foreground truncate">
-                    {String(odooTuple(line.product_id, 1) ?? '')}
+                    {String(odooTuple(line.product_id, 1) ?? "")}
                   </span>
                 </li>
               ))}

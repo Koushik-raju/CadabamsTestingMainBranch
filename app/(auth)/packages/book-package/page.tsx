@@ -21,22 +21,22 @@
  *
  * LAST UPDATED: 2026-04-23 — migrated custom header div to PageHeader; added file header
  */
-'use client';
+"use client";
 
-import { Suspense } from 'react';
-import { useRouter } from 'next/navigation';
-import { Button } from '@/components/ui/button';
-import { PageHeader } from '@/components/shared/navigation/page-header';
-import { Badge } from '@/components/ui/badge';
-import { Skeleton } from '@/components/ui/skeleton';
-import { Card, CardContent } from '@/components/ui/card';
-import { PackageOpen, Clock, ChevronRight } from 'lucide-react';
-import { useAvailablePackages } from '@/hooks/use-packages';
-import type { PackageResponseDto } from '@/sdk/backend-v2';
+import { PageHeader } from "@/components/shared/navigation/page-header";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { Skeleton } from "@/components/ui/skeleton";
+import { useAvailablePackages } from "@/hooks/use-packages";
+import type { PackageResponseDto } from "@/sdk/backend-v2";
+import { ChevronRight, Clock, PackageOpen } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { Suspense } from "react";
 
 function storeSelectedPackage(pkg: PackageResponseDto) {
-  if (typeof sessionStorage !== 'undefined') {
-    sessionStorage.setItem('selected_package', JSON.stringify(pkg));
+  if (typeof sessionStorage !== "undefined") {
+    sessionStorage.setItem("selected_package", JSON.stringify(pkg));
   }
 }
 
@@ -74,9 +74,13 @@ function BookPackageContent() {
         subtitle="Comprehensive care plans tailored for you"
         fallback="/packages"
         className="bg-card border-b border-border px-4 py-4"
-        right={!isLoading ? (
-          <Badge variant="secondary" className="text-xs">{packages.length} plans</Badge>
-        ) : undefined}
+        right={
+          !isLoading ? (
+            <Badge variant="secondary" className="text-xs">
+              {packages.length} plans
+            </Badge>
+          ) : undefined
+        }
       />
 
       <div className="px-4 pt-4 space-y-3">
@@ -89,7 +93,9 @@ function BookPackageContent() {
               <p className="font-semibold text-sm text-foreground">Something went wrong</p>
               <p className="text-sm text-muted-foreground mt-1">Failed to load packages.</p>
             </div>
-            <Button variant="outline" size="sm" onClick={() => mutate()}>Try again</Button>
+            <Button variant="outline" size="sm" onClick={() => mutate()}>
+              Try again
+            </Button>
           </div>
         )}
 
@@ -98,40 +104,44 @@ function BookPackageContent() {
             <PackageOpen className="w-12 h-12 text-muted-foreground/30" />
             <div>
               <p className="font-semibold text-sm text-foreground">No packages found</p>
-              <p className="text-sm text-muted-foreground mt-1">No packages are available right now.</p>
+              <p className="text-sm text-muted-foreground mt-1">
+                No packages are available right now.
+              </p>
             </div>
           </div>
         )}
 
-        {!isLoading && !error && packages.map((pkg) => (
-          <Card
-            key={pkg.id}
-            className="cursor-pointer active:scale-[0.98] transition-transform hover:border-primary/30 hover:shadow-sm"
-            onClick={() => handlePackageClick(pkg)}
-          >
-            <CardContent className="p-4">
-              <div className="flex items-start gap-3">
-                <div className="flex-1 min-w-0 space-y-2">
-                  <div className="flex items-start justify-between gap-2">
-                    <p className="font-semibold text-sm text-foreground leading-snug line-clamp-2 flex-1">
-                      {pkg.package_name}
-                    </p>
-                    <span className="text-base font-bold text-primary shrink-0 leading-none mt-0.5">
-                      ₹{(pkg.amount_total ?? 0).toLocaleString('en-IN')}
-                    </span>
+        {!isLoading &&
+          !error &&
+          packages.map((pkg) => (
+            <Card
+              key={pkg.id}
+              className="cursor-pointer active:scale-[0.98] transition-transform hover:border-primary/30 hover:shadow-sm"
+              onClick={() => handlePackageClick(pkg)}
+            >
+              <CardContent className="p-4">
+                <div className="flex items-start gap-3">
+                  <div className="flex-1 min-w-0 space-y-2">
+                    <div className="flex items-start justify-between gap-2">
+                      <p className="font-semibold text-sm text-foreground leading-snug line-clamp-2 flex-1">
+                        {pkg.package_name}
+                      </p>
+                      <span className="text-base font-bold text-primary shrink-0 leading-none mt-0.5">
+                        ₹{(pkg.amount_total ?? 0).toLocaleString("en-IN")}
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Badge variant="outline" className="gap-1 text-xs font-normal h-5 px-2">
+                        <Clock className="w-3 h-3" />
+                        30d
+                      </Badge>
+                    </div>
                   </div>
-                  <div className="flex items-center gap-2">
-                    <Badge variant="outline" className="gap-1 text-xs font-normal h-5 px-2">
-                      <Clock className="w-3 h-3" />
-                      30d
-                    </Badge>
-                  </div>
+                  <ChevronRight className="w-4 h-4 text-muted-foreground shrink-0 mt-1" />
                 </div>
-                <ChevronRight className="w-4 h-4 text-muted-foreground shrink-0 mt-1" />
-              </div>
-            </CardContent>
-          </Card>
-        ))}
+              </CardContent>
+            </Card>
+          ))}
       </div>
     </div>
   );
@@ -139,11 +149,13 @@ function BookPackageContent() {
 
 export default function BookPackagePage() {
   return (
-    <Suspense fallback={
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin" />
-      </div>
-    }>
+    <Suspense
+      fallback={
+        <div className="flex items-center justify-center min-h-screen">
+          <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+        </div>
+      }
+    >
       <BookPackageContent />
     </Suspense>
   );

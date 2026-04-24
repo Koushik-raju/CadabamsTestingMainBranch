@@ -23,12 +23,12 @@
  *
  * LAST UPDATED: 2026-04-22 — add data-node-id attribute for auto-scroll targeting
  */
-'use client';
+"use client";
 
-import { useRef, useEffect, useState } from 'react';
-import { PathNode, type NodeVariant, type NodeTaskType } from './path-node';
-import { UnitHeaderBar } from './unit-header-bar';
-import type { JourneyTask } from '@/types/journey';
+import type { JourneyTask } from "@/types/journey";
+import { useEffect, useRef, useState } from "react";
+import { type NodeTaskType, type NodeVariant, PathNode } from "./path-node";
+import { UnitHeaderBar } from "./unit-header-bar";
 
 export interface PathChainNode {
   task: JourneyTask;
@@ -42,8 +42,8 @@ export interface PathChainNode {
 }
 
 export type ChainItem =
-  | { kind: 'node'; node: PathChainNode }
-  | { kind: 'header'; unitNumber: number; title: string; onClick?: () => void };
+  | { kind: "node"; node: PathChainNode }
+  | { kind: "header"; unitNumber: number; title: string; onClick?: () => void };
 
 interface PathChainProps {
   items: ChainItem[];
@@ -52,64 +52,77 @@ interface PathChainProps {
 
 export function getTaskType(task: JourneyTask): NodeTaskType {
   // 1. Read task — extraTaskTitle + extraTaskDescription together signal a text reading task
-  if (task.extraTaskTitle && task.extraTaskDescription?.length)   return 'read';
+  if (task.extraTaskTitle && task.extraTaskDescription?.length) return "read";
   // 2. Assessments (ID array takes priority over legacy populated array)
-  if (task.assessmentIds?.length || task.assessments?.length)    return 'assessment';
+  if (task.assessmentIds?.length || task.assessments?.length) return "assessment";
   // 3. Worksheets → rendered as journal type visually
-  if (task.worksheetIds?.length || (task.worksheets as unknown[])?.length) return 'journal';
+  if (task.worksheetIds?.length || (task.worksheets as unknown[])?.length) return "journal";
   // 4. Sub-journalings → rendered as journal type visually
-  if (task.subJournalingIds?.length || task.subJournalings?.length) return 'journal';
+  if (task.subJournalingIds?.length || task.subJournalings?.length) return "journal";
   // 5. Audios
-  if (task.audioIds?.length || task.audios?.length)              return 'audio';
+  if (task.audioIds?.length || task.audios?.length) return "audio";
   // 6. Boolean flags
-  if (task.moodCheckIn)                                          return 'gift';
-  if (task.showAppointments || task.showFirstBooking)            return 'book';
-  if (task.fillSelfJournal)                                      return 'journal';
-  return 'journal'; // default fallback
+  if (task.moodCheckIn) return "gift";
+  if (task.showAppointments || task.showFirstBooking) return "book";
+  if (task.fillSelfJournal) return "journal";
+  return "journal"; // default fallback
 }
 
 const LR = [-68, 68]; // px from center, alternating
 
-interface SvgState { d: string; w: number; h: number }
+interface SvgState {
+  d: string;
+  w: number;
+  h: number;
+}
 
 export function PathChain({ items, onNodeTap }: PathChainProps) {
   const containerRef = useRef<HTMLDivElement>(null);
-  const [svg, setSvg]  = useState<SvgState>({ d: '', w: 0, h: 0 });
+  const [svg, setSvg] = useState<SvgState>({ d: "", w: 0, h: 0 });
 
-  const nodeItems = items.filter((i): i is Extract<ChainItem, { kind: 'node' }> => i.kind === 'node');
+  const nodeItems = items.filter(
+    (i): i is Extract<ChainItem, { kind: "node" }> => i.kind === "node",
+  );
 
   // Re-measure whenever items (or their variants) change
-  const key = nodeItems.map(i => `${i.node.nodeId}:${i.node.variant}`).join('|');
+  const key = nodeItems.map((i) => `${i.node.nodeId}:${i.node.variant}`).join("|");
 
   useEffect(() => {
     const container = containerRef.current;
-    if (!container || nodeItems.length < 2) { setSvg({ d: '', w: 0, h: 0 }); return; }
+    if (!container || nodeItems.length < 2) {
+      setSvg({ d: "", w: 0, h: 0 });
+      return;
+    }
 
     let raf1: number, raf2: number;
     raf1 = requestAnimationFrame(() => {
       raf2 = requestAnimationFrame(() => {
-        const cRect   = container.getBoundingClientRect();
-        const circles = Array.from(
-          container.querySelectorAll<HTMLElement>('[data-circle="true"]')
-        );
+        const cRect = container.getBoundingClientRect();
+        const circles = Array.from(container.querySelectorAll<HTMLElement>('[data-circle="true"]'));
         if (circles.length < 2 || cRect.width === 0) return;
 
         const parts: string[] = [];
         for (let i = 0; i < circles.length - 1; i++) {
           const r1 = circles[i].getBoundingClientRect();
           const r2 = circles[i + 1].getBoundingClientRect();
-          const x1 = r1.left - cRect.left + r1.width  / 2;
-          const y1 = r1.top  - cRect.top  + r1.height / 2;
-          const x2 = r2.left - cRect.left + r2.width  / 2;
-          const y2 = r2.top  - cRect.top  + r2.height / 2;
+          const x1 = r1.left - cRect.left + r1.width / 2;
+          const y1 = r1.top - cRect.top + r1.height / 2;
+          const x2 = r2.left - cRect.left + r2.width / 2;
+          const y2 = r2.top - cRect.top + r2.height / 2;
           const mid = (y1 + y2) / 2;
-          parts.push(`M${x1.toFixed(1)},${y1.toFixed(1)} C${x1.toFixed(1)},${mid.toFixed(1)} ${x2.toFixed(1)},${mid.toFixed(1)} ${x2.toFixed(1)},${y2.toFixed(1)}`);
+          parts.push(
+            `M${x1.toFixed(1)},${y1.toFixed(1)} C${x1.toFixed(1)},${mid.toFixed(1)} ${x2.toFixed(1)},${mid.toFixed(1)} ${x2.toFixed(1)},${y2.toFixed(1)}`,
+          );
         }
-        if (parts.length) setSvg({ d: parts.join(' '), w: Math.round(cRect.width), h: container.scrollHeight });
+        if (parts.length)
+          setSvg({ d: parts.join(" "), w: Math.round(cRect.width), h: container.scrollHeight });
       });
     });
-    return () => { cancelAnimationFrame(raf1); cancelAnimationFrame(raf2); };
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    return () => {
+      cancelAnimationFrame(raf1);
+      cancelAnimationFrame(raf2);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [key]);
 
   let nodeIdx = 0;
@@ -136,7 +149,7 @@ export function PathChain({ items, onNodeTap }: PathChainProps) {
       )}
 
       {items.map((item, idx) => {
-        if (item.kind === 'header') {
+        if (item.kind === "header") {
           return (
             <div key={`header-${idx}`} className="w-full z-10 mt-3 mb-1">
               <UnitHeaderBar
@@ -149,8 +162,8 @@ export function PathChain({ items, onNodeTap }: PathChainProps) {
         }
 
         const { node } = item;
-        const xOffset  = LR[nodeIdx % 2];
-        const isActive = node.variant === 'active';
+        const xOffset = LR[nodeIdx % 2];
+        const isActive = node.variant === "active";
         nodeIdx++;
 
         return (
@@ -160,7 +173,7 @@ export function PathChain({ items, onNodeTap }: PathChainProps) {
             style={{ transform: `translateX(${xOffset}px)` }}
             data-node-id={node.task.id}
           >
-            {nodeIdx > 1 && <div className={isActive ? 'h-5' : 'h-4'} />}
+            {nodeIdx > 1 && <div className={isActive ? "h-5" : "h-4"} />}
             <PathNode
               variant={node.variant}
               taskType={node.taskType}

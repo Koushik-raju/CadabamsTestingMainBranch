@@ -1,8 +1,8 @@
-'use client';
+"use client";
 
-import { FileText, FileImage, FileCode, File, Download, Trash2 } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { cn } from '@/lib/utils';
+import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
+import { Download, File, FileCode, FileImage, FileText, Trash2 } from "lucide-react";
 
 export interface DocumentData {
   id: string;
@@ -24,38 +24,41 @@ interface DocumentCardProps {
 }
 
 function formatSize(size?: number): string {
-  if (!size) return '';
+  if (!size) return "";
   if (size > 1024 * 1024) return `${(size / (1024 * 1024)).toFixed(1)} MB`;
   if (size > 1024) return `${(size / 1024).toFixed(1)} KB`;
   return `${size} B`;
 }
 
 function formatDate(isoStr?: string): string {
-  if (!isoStr) return '';
-  return new Date(isoStr).toLocaleDateString('en-IN', {
-    day: '2-digit',
-    month: 'short',
-    year: 'numeric',
+  if (!isoStr) return "";
+  return new Date(isoStr).toLocaleDateString("en-IN", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
   });
 }
 
-function getFileConfig(name: string, type?: string): {
+function getFileConfig(
+  name: string,
+  type?: string,
+): {
   ext: string;
   gradient: string;
   Icon: React.ElementType;
 } {
-  const ext = name.split('.').pop()?.toUpperCase() ?? 'FILE';
-  const mime = type ?? '';
+  const ext = name.split(".").pop()?.toUpperCase() ?? "FILE";
+  const mime = type ?? "";
 
-  if (mime.includes('pdf') || ext === 'PDF')
-    return { ext, gradient: 'from-red-500 to-rose-600', Icon: FileText };
-  if (mime.includes('image') || ['JPG', 'JPEG', 'PNG', 'GIF', 'WEBP', 'HEIC'].includes(ext))
-    return { ext, gradient: 'from-sky-500 to-blue-600', Icon: FileImage };
-  if (mime.includes('word') || ['DOC', 'DOCX'].includes(ext))
-    return { ext, gradient: 'from-indigo-500 to-violet-600', Icon: FileText };
-  if (['TXT', 'CSV', 'JSON', 'XML'].includes(ext))
-    return { ext, gradient: 'from-slate-400 to-slate-600', Icon: FileCode };
-  return { ext, gradient: 'from-teal-500 to-emerald-600', Icon: File };
+  if (mime.includes("pdf") || ext === "PDF")
+    return { ext, gradient: "from-red-500 to-rose-600", Icon: FileText };
+  if (mime.includes("image") || ["JPG", "JPEG", "PNG", "GIF", "WEBP", "HEIC"].includes(ext))
+    return { ext, gradient: "from-sky-500 to-blue-600", Icon: FileImage };
+  if (mime.includes("word") || ["DOC", "DOCX"].includes(ext))
+    return { ext, gradient: "from-indigo-500 to-violet-600", Icon: FileText };
+  if (["TXT", "CSV", "JSON", "XML"].includes(ext))
+    return { ext, gradient: "from-slate-400 to-slate-600", Icon: FileCode };
+  return { ext, gradient: "from-teal-500 to-emerald-600", Icon: File };
 }
 
 export function DocumentCard({
@@ -72,25 +75,31 @@ export function DocumentCard({
   const date = formatDate(doc.createdAt);
 
   return (
-    <div
-      className="flex items-center gap-3 py-3 px-1"
-      role="listitem"
-      aria-label={displayName}
-    >
+    <div className="flex items-center gap-3 py-3 px-1" role="listitem" aria-label={displayName}>
       {/* Colored file-type icon */}
-      <div className={cn('relative w-12 h-12 rounded-2xl bg-gradient-to-br flex-shrink-0 flex flex-col items-center justify-center overflow-hidden shadow-sm', gradient)}>
+      <div
+        className={cn(
+          "relative w-12 h-12 rounded-2xl bg-gradient-to-br flex-shrink-0 flex flex-col items-center justify-center overflow-hidden shadow-sm",
+          gradient,
+        )}
+      >
         <div className="absolute -top-2 -right-2 w-8 h-8 rounded-full bg-white/10" />
         <Icon className="w-5 h-5 text-white" aria-hidden="true" />
-        <span className="text-[8px] font-bold text-white/80 leading-none mt-0.5">{ext.slice(0, 4)}</span>
+        <span className="text-[8px] font-bold text-white/80 leading-none mt-0.5">
+          {ext.slice(0, 4)}
+        </span>
       </div>
 
       {/* Info */}
       <div className="flex-1 min-w-0">
-        <p className="text-sm font-medium text-foreground truncate leading-snug" title={displayName}>
+        <p
+          className="text-sm font-medium text-foreground truncate leading-snug"
+          title={displayName}
+        >
           {displayName}
         </p>
         <p className="text-xs text-muted-foreground mt-0.5">
-          {[size, date].filter(Boolean).join(' · ')}
+          {[size, date].filter(Boolean).join(" · ")}
         </p>
       </div>
 

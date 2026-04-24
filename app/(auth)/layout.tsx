@@ -24,24 +24,25 @@
  *
  * LAST UPDATED: 2026-04-22 — add JourneyReturnProvider + global FAB mount.
  */
-'use client';
+"use client";
 
-import { SWRConfig } from 'swr';
-import { BookingProvider } from '@/contexts/booking-context';
-import { JourneyReturnProvider } from '@/contexts/journey-return-context';
-import { JourneyReturnFab } from '@/components/journey/journey-return-fab';
+import { JourneyReturnFab } from "@/components/journey/journey-return-fab";
+import { BookingProvider } from "@/contexts/booking-context";
+import { JourneyReturnProvider } from "@/contexts/journey-return-context";
+import { SWRConfig } from "swr";
 
 const swrConfig = { revalidateOnFocus: false };
-const layoutStyle = { paddingTop: 'var(--safe-area-inset-top)', paddingBottom: 'var(--safe-area-inset-bottom)' };
+const layoutStyle = {
+  paddingTop: "var(--safe-area-inset-top)",
+  paddingBottom: "var(--safe-area-inset-bottom)",
+};
 
 export default function AuthLayout({ children }: { children: React.ReactNode }) {
   return (
     <SWRConfig value={swrConfig}>
       <BookingProvider>
         <JourneyReturnProvider>
-          <div style={layoutStyle}>
-            {children}
-          </div>
+          <div style={layoutStyle}>{children}</div>
           <JourneyReturnFab />
         </JourneyReturnProvider>
       </BookingProvider>

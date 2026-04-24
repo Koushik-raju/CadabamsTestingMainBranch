@@ -23,46 +23,46 @@
  * LAST UPDATED: 2026-04-17 — Initial creation for unique journal card visuals.
  */
 
-import type { ElementType } from 'react';
 import {
-  Brain,
-  Heart,
-  Moon,
-  Users,
-  Target,
-  Smile,
-  Briefcase,
   Activity,
-  Feather,
-  Zap,
+  BookOpen,
+  Brain,
+  Briefcase,
   CloudRain,
-  TrendingUp,
-  UserCircle,
+  Eye,
+  Feather,
+  Flame,
+  Heart,
+  Leaf,
+  Moon,
   Palette,
+  ShieldCheck,
+  Smile,
+  Sparkles,
   Star,
   Sun,
-  Leaf,
+  Target,
+  TrendingUp,
+  UserCircle,
+  Users,
   Wind,
-  BookOpen,
-  ShieldCheck,
-  Flame,
-  Sparkles,
-  Eye,
-} from 'lucide-react';
+  Zap,
+} from "lucide-react";
+import type { ElementType } from "react";
 
 // ---------------------------------------------------------------------------
 // Gradient palette — 8 visually distinct options
 // ---------------------------------------------------------------------------
 
 const GRADIENTS = [
-  'from-violet-500 to-purple-700',
-  'from-emerald-500 to-teal-600',
-  'from-sky-500 to-blue-600',
-  'from-orange-400 to-amber-600',
-  'from-rose-500 to-pink-600',
-  'from-indigo-500 to-violet-700',
-  'from-cyan-500 to-sky-700',
-  'from-lime-500 to-green-600',
+  "from-violet-500 to-purple-700",
+  "from-emerald-500 to-teal-600",
+  "from-sky-500 to-blue-600",
+  "from-orange-400 to-amber-600",
+  "from-rose-500 to-pink-600",
+  "from-indigo-500 to-violet-700",
+  "from-cyan-500 to-sky-700",
+  "from-lime-500 to-green-600",
 ] as const;
 
 // ---------------------------------------------------------------------------

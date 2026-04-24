@@ -28,20 +28,20 @@
  *
  * LAST UPDATED: 2026-04-23 — initial implementation
  */
-'use client';
+"use client";
 
-import { useEffect, useRef, useState } from 'react';
-import { useSearchParams } from 'next/navigation';
-import { PageHeader } from '@/components/shared/navigation/page-header';
-import { WeeklyCalendar } from '@/components/growth/weekly-calendar';
-import { DayFeed, type ModalPayload } from '@/components/growth/day-feed';
-import { MarkdownModal } from '@/components/growth/markdown-modal';
+import { useSearchParams } from "next/navigation";
+import { DayFeed, type ModalPayload } from "@/components/growth/day-feed";
+import { MarkdownModal } from "@/components/growth/markdown-modal";
+import { WeeklyCalendar } from "@/components/growth/weekly-calendar";
+import { PageHeader } from "@/components/shared/navigation/page-header";
 import {
   todayIso,
   useGrowthDay,
   useGrowthLatestActiveDate,
   useGrowthWeek,
-} from '@/hooks/growth/use-growth';
+} from "@/hooks/growth/use-growth";
+import { useEffect, useRef, useState } from "react";
 
 function shiftIso(iso: string, days: number): string {
   const d = new Date(`${iso}T00:00:00.000Z`);
@@ -100,11 +100,7 @@ export default function GrowthPage() {
 
   return (
     <div className="min-h-screen bg-background pb-24">
-      <PageHeader
-        title="Growth"
-        subtitle="Your reflection timeline"
-        fallback="/home"
-      />
+      <PageHeader title="Growth" subtitle="Your reflection timeline" fallback="/home" />
 
       <div className="bg-card border-b border-border">
         <WeeklyCalendar
@@ -117,11 +113,7 @@ export default function GrowthPage() {
       </div>
 
       <div className="pt-4">
-        <DayFeed
-          day={day}
-          isLoading={dayLoading}
-          onOpenItem={(payload) => setModal(payload)}
-        />
+        <DayFeed day={day} isLoading={dayLoading} onOpenItem={(payload) => setModal(payload)} />
       </div>
 
       <MarkdownModal
@@ -129,7 +121,7 @@ export default function GrowthPage() {
         onOpenChange={(open) => {
           if (!open) setModal(null);
         }}
-        title={modal?.title ?? ''}
+        title={modal?.title ?? ""}
         subtitle={modal?.subtitle}
         body={modal?.body ?? null}
       />

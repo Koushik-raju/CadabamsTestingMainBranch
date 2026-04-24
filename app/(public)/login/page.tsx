@@ -1,4 +1,4 @@
-import { redirect } from 'next/navigation';
+import { redirect } from "next/navigation";
 
 export default function LoginRedirect({
   searchParams,
@@ -10,5 +10,5 @@ export default function LoginRedirect({
     if (v) params.set(k, Array.isArray(v) ? v[0] : v);
   }
   const qs = params.toString();
-  redirect(`/auth/login${qs ? `?${qs}` : ''}`);
+  redirect(`/auth/login${qs ? `?${qs}` : ""}`);
 }

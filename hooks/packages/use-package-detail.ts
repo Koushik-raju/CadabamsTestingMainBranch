@@ -1,7 +1,7 @@
-import useSWR from 'swr';
-import { crmControllerGetPackageProductDetails } from '@/sdk/backend-v2';
-import type { PackageProductLineDto } from '@/sdk/backend-v2';
-import { packageByIdKey } from '@/lib/swr-keys';
+import { packageByIdKey } from "@/lib/swr-keys";
+import { crmControllerGetPackageProductDetails } from "@/sdk/backend-v2";
+import type { PackageProductLineDto } from "@/sdk/backend-v2";
+import useSWR from "swr";
 
 export function usePackageDetail(packageId: number | string | null) {
   const { data, isLoading, error } = useSWR(
@@ -9,7 +9,7 @@ export function usePackageDetail(packageId: number | string | null) {
     async () => {
       const res = await crmControllerGetPackageProductDetails({ path: { id: Number(packageId) } });
       return (res.data as PackageProductLineDto[] | undefined) ?? [];
-    }
+    },
   );
   return { lines: data ?? [], isLoading, error };
 }

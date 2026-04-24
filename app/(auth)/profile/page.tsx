@@ -36,24 +36,8 @@
 
 "use client";
 
-import { useRouter } from "next/navigation";
-import useSWR from "swr";
-import { toast } from "react-toastify";
-import {
-  LogOut,
-  User,
-  Phone,
-  Mail,
-  Hash,
-  CalendarCheck2,
-  CalendarClock,
-  CheckCircle2,
-  CreditCard,
-} from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Skeleton } from "@/components/ui/skeleton";
-import { Card, CardContent } from "@/components/ui/card";
-import { Separator } from "@/components/ui/separator";
+import { PackageListCard } from "@/components/package/package-list-card";
+import { BackButton } from "@/components/shared/navigation/back-button";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -65,15 +49,31 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import { BackButton } from "@/components/shared/navigation/back-button";
-import { useAuth } from "@/hooks/use-auth";
-import { crmControllerGetAppointmentDashboard } from "@/sdk/backend-v2";
-import type { AppointmentDashboardResponseDto } from "@/sdk/backend-v2";
-import { PackageListCard } from "@/components/package/package-list-card";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { Separator } from "@/components/ui/separator";
+import { Skeleton } from "@/components/ui/skeleton";
 import { useManagedPackages } from "@/hooks/packages/use-packages";
 import { useAuthMe } from "@/hooks/shared/auth/use-auth";
-import type { BookedPackageDto } from "@/sdk/backend-v2";
+import { useAuth } from "@/hooks/use-auth";
 import { cn } from "@/lib/utils";
+import { crmControllerGetAppointmentDashboard } from "@/sdk/backend-v2";
+import type { AppointmentDashboardResponseDto } from "@/sdk/backend-v2";
+import type { BookedPackageDto } from "@/sdk/backend-v2";
+import {
+  CalendarCheck2,
+  CalendarClock,
+  CheckCircle2,
+  CreditCard,
+  Hash,
+  LogOut,
+  Mail,
+  Phone,
+  User,
+} from "lucide-react";
+import { useRouter } from "next/navigation";
+import { toast } from "react-toastify";
+import useSWR from "swr";
 
 /* ------------------------------------------------------------------
  * InfoRow — a single row inside the contact info grouped card.
@@ -96,7 +96,7 @@ function InfoRow({
         className={cn(
           "relative w-11 h-11 rounded-2xl bg-gradient-to-br flex-shrink-0",
           "flex items-center justify-center overflow-hidden shadow-sm",
-          gradient
+          gradient,
         )}
       >
         <div className="absolute -top-2 -right-2 w-7 h-7 rounded-full bg-white/10" />
@@ -131,7 +131,7 @@ function StatTile({
         className={cn(
           "relative w-11 h-11 rounded-2xl bg-gradient-to-br flex-shrink-0",
           "flex items-center justify-center overflow-hidden shadow-sm",
-          gradient
+          gradient,
         )}
       >
         <div className="absolute -top-2 -right-2 w-7 h-7 rounded-full bg-white/10" />
@@ -159,7 +159,7 @@ export default function ProfilePage() {
       });
       if (error) throw error;
       return data as AppointmentDashboardResponseDto;
-    }
+    },
   );
 
   const { packages: rawPackages, isLoading: packagesLoading } = useManagedPackages();
@@ -169,8 +169,7 @@ export default function ProfilePage() {
     router.replace("/auth/login");
   };
 
-  const displayName =
-    (profile?.contact_name as string) || (profile?.partner_name as string) || "—";
+  const displayName = (profile?.contact_name as string) || (profile?.partner_name as string) || "—";
   const initials = displayName
     .split(" ")
     .slice(0, 2)
@@ -185,7 +184,7 @@ export default function ProfilePage() {
   const bookedPackages = rawPackages as BookedPackageDto[];
   const pendingPayments = bookedPackages.filter((p) => p.package_stage === "booked");
   const activePackages = bookedPackages.filter(
-    (p) => p.package_stage === "confirm" || p.package_stage === "in_progress"
+    (p) => p.package_stage === "confirm" || p.package_stage === "in_progress",
   );
   const donePackages = bookedPackages.filter((p) => p.package_stage === "done");
 
@@ -375,9 +374,7 @@ export default function ProfilePage() {
                 <AlertDialogCancel>Cancel</AlertDialogCancel>
                 <AlertDialogAction
                   className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                  onClick={() =>
-                    toast.info("Please contact support to delete your account.")
-                  }
+                  onClick={() => toast.info("Please contact support to delete your account.")}
                 >
                   Delete Account
                 </AlertDialogAction>

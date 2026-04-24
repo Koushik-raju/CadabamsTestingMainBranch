@@ -21,20 +21,20 @@
  * LAST UPDATED: 2026-04-23 — migrated custom header div to PageHeader
  */
 
-'use client';
+"use client";
 
-import { PageHeader } from '@/components/shared/navigation/page-header';
-import { PrescriptionCard } from '@/components/prescription/prescription-card';
-import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
-import { Separator } from '@/components/ui/separator';
-import { Skeleton } from '@/components/ui/skeleton';
-import { ClipboardList, AlertCircle } from 'lucide-react';
-import { usePrescriptions } from '@/hooks/prescriptions/use-prescriptions';
-import { useRouter } from 'next/navigation';
-import dayjs from 'dayjs';
-import type { PrescriptionItemDto } from '@/sdk/backend-v2';
+import { PrescriptionCard } from "@/components/prescription/prescription-card";
+import { PageHeader } from "@/components/shared/navigation/page-header";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { Separator } from "@/components/ui/separator";
+import { Skeleton } from "@/components/ui/skeleton";
+import { usePrescriptions } from "@/hooks/prescriptions/use-prescriptions";
+import type { PrescriptionItemDto } from "@/sdk/backend-v2";
+import dayjs from "dayjs";
+import { AlertCircle, ClipboardList } from "lucide-react";
+import { useRouter } from "next/navigation";
 
 export default function PrescriptionsPage() {
   const router = useRouter();
@@ -42,7 +42,7 @@ export default function PrescriptionsPage() {
 
   const handleDownload = (prescription: PrescriptionItemDto) => {
     if (prescription.download_url) {
-      window.open(prescription.download_url, '_blank');
+      window.open(prescription.download_url, "_blank");
     }
   };
 
@@ -50,7 +50,7 @@ export default function PrescriptionsPage() {
     <div className="min-h-screen bg-background pb-24">
       <PageHeader
         title="My Prescriptions"
-        subtitle={dayjs().format('ddd, DD MMM YYYY')}
+        subtitle={dayjs().format("ddd, DD MMM YYYY")}
         fallback="/home"
       />
 
@@ -101,7 +101,7 @@ export default function PrescriptionsPage() {
                 Your prescriptions will appear here after your doctor consultations.
               </p>
             </div>
-            <Button variant="outline" onClick={() => router.push('/home')}>
+            <Button variant="outline" onClick={() => router.push("/home")}>
               Go Home
             </Button>
           </div>

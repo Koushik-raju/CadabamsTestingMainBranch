@@ -1,20 +1,20 @@
-'use client';
+"use client";
 
-import { Clock, ShieldCheck, Sparkles, ChevronRight, ArrowLeft } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Card, CardContent } from '@/components/ui/card';
-import type { AssessmentItem } from '@/hooks/assessments/use-assessments-page';
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import type { AssessmentItem } from "@/hooks/assessments/use-assessments-page";
+import { ArrowLeft, ChevronRight, Clock, ShieldCheck, Sparkles } from "lucide-react";
 
 function extractTextFromRich(val: unknown): string {
-  if (!val) return '';
-  if (typeof val === 'string') return val;
-  if (typeof val === 'object') {
+  if (!val) return "";
+  if (typeof val === "string") return val;
+  if (typeof val === "object") {
     const obj = val as Record<string, unknown>;
-    if (obj.text && typeof obj.text === 'string') return obj.text;
-    if (obj.en && typeof obj.en === 'string') return obj.en;
+    if (obj.text && typeof obj.text === "string") return obj.text;
+    if (obj.en && typeof obj.en === "string") return obj.en;
   }
-  return '';
+  return "";
 }
 
 interface AssessmentLandingProps {
@@ -26,11 +26,13 @@ interface AssessmentLandingProps {
 export function AssessmentLanding({ assessment, onStart, onBack }: AssessmentLandingProps) {
   const landing = assessment.landingTitle;
   const landingTitle = landing?.title ? extractTextFromRich(landing.title) : assessment.title;
-  const landingDescription = landing?.landingDescription ?? assessment.description ?? '';
+  const landingDescription = landing?.landingDescription ?? assessment.description ?? "";
   const minutes = landing?.minutes;
   const questionCount = landing?.numberOfQuestion;
   const badgeText = landing?.badgeText ? extractTextFromRich(landing.badgeText) : null;
-  const actionLabel = landing?.actionLabel ? extractTextFromRich(landing.actionLabel) : 'Start Assessment';
+  const actionLabel = landing?.actionLabel
+    ? extractTextFromRich(landing.actionLabel)
+    : "Start Assessment";
   const points = landing?.points ?? [];
 
   return (
@@ -52,13 +54,9 @@ export function AssessmentLanding({ assessment, onStart, onBack }: AssessmentLan
               {badgeText}
             </Badge>
           )}
-          <h1 className="text-2xl font-semibold tracking-tight text-foreground">
-            {landingTitle}
-          </h1>
+          <h1 className="text-2xl font-semibold tracking-tight text-foreground">{landingTitle}</h1>
           {landingDescription && (
-            <p className="text-sm text-muted-foreground leading-relaxed">
-              {landingDescription}
-            </p>
+            <p className="text-sm text-muted-foreground leading-relaxed">{landingDescription}</p>
           )}
         </div>
       </header>
@@ -80,7 +78,9 @@ export function AssessmentLanding({ assessment, onStart, onBack }: AssessmentLan
           {minutes && (
             <Card>
               <CardContent className="p-4 flex flex-col gap-1">
-                <span className="text-xs uppercase tracking-wide text-primary font-medium">Duration</span>
+                <span className="text-xs uppercase tracking-wide text-primary font-medium">
+                  Duration
+                </span>
                 <span className="text-sm font-semibold text-foreground flex items-center gap-1">
                   <Clock className="w-4 h-4" />
                   {minutes} min
@@ -91,7 +91,9 @@ export function AssessmentLanding({ assessment, onStart, onBack }: AssessmentLan
           {questionCount && (
             <Card>
               <CardContent className="p-4 flex flex-col gap-1">
-                <span className="text-xs uppercase tracking-wide text-primary font-medium">Questions</span>
+                <span className="text-xs uppercase tracking-wide text-primary font-medium">
+                  Questions
+                </span>
                 <span className="text-sm font-semibold text-foreground flex items-center gap-1">
                   <Sparkles className="w-4 h-4" />
                   {questionCount}
@@ -112,7 +114,10 @@ export function AssessmentLanding({ assessment, onStart, onBack }: AssessmentLan
               </div>
               <ul className="space-y-3">
                 {points.map((point, index) => (
-                  <li key={point.id ?? index} className="flex items-start gap-3 text-sm text-foreground">
+                  <li
+                    key={point.id ?? index}
+                    className="flex items-start gap-3 text-sm text-foreground"
+                  >
                     <div className="w-5 h-5 rounded-full bg-primary/10 text-primary flex items-center justify-center flex-shrink-0 mt-0.5">
                       <span className="text-xs font-bold">{index + 1}</span>
                     </div>
@@ -133,11 +138,7 @@ export function AssessmentLanding({ assessment, onStart, onBack }: AssessmentLan
       </main>
 
       <footer className="sticky bottom-0 inset-x-0 bg-background/95 backdrop-blur px-5 pb-8 pt-4 border-t border-border">
-        <Button
-          size="lg"
-          className="w-full rounded-full"
-          onClick={onStart}
-        >
+        <Button size="lg" className="w-full rounded-full" onClick={onStart}>
           {actionLabel}
           <ChevronRight className="w-4 h-4 ml-2" />
         </Button>

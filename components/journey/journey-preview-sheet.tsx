@@ -21,53 +21,70 @@
  *
  * LAST UPDATED: 2026-04-22 — initial creation
  */
-'use client';
+"use client";
 
+import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet";
 import {
-  Play, Headphones, ClipboardList, PenLine,
-  BookOpen, Gift, Trophy, FileText, Star,
-  Lock, Zap,
-} from 'lucide-react';
-import { Sheet, SheetContent, SheetTitle } from '@/components/ui/sheet';
-import { getTypeColor } from './path-node';
-import type { NodeTaskType } from './path-node';
+  BookOpen,
+  ClipboardList,
+  FileText,
+  Gift,
+  Headphones,
+  Lock,
+  PenLine,
+  Play,
+  Star,
+  Trophy,
+  Zap,
+} from "lucide-react";
+import { getTypeColor } from "./path-node";
+import type { NodeTaskType } from "./path-node";
 
 // ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
 
 function cn(...classes: (string | boolean | undefined)[]) {
-  return classes.filter(Boolean).join(' ');
+  return classes.filter(Boolean).join(" ");
 }
 
 function TaskIconLarge({ taskType }: { taskType: NodeTaskType }) {
-  const cls = 'w-7 h-7';
+  const cls = "w-7 h-7";
   switch (taskType) {
-    case 'video':      return <Play          className={cn(cls, 'fill-current')} />;
-    case 'audio':      return <Headphones    className={cls} />;
-    case 'assessment': return <ClipboardList className={cls} />;
-    case 'journal':    return <PenLine       className={cls} />;
-    case 'book':       return <BookOpen      className={cls} />;
-    case 'gift':       return <Gift          className={cls} />;
-    case 'trophy':     return <Trophy        className={cls} />;
-    case 'read':       return <FileText      className={cls} />;
-    default:           return <Star          className={cls} />;
+    case "video":
+      return <Play className={cn(cls, "fill-current")} />;
+    case "audio":
+      return <Headphones className={cls} />;
+    case "assessment":
+      return <ClipboardList className={cls} />;
+    case "journal":
+      return <PenLine className={cls} />;
+    case "book":
+      return <BookOpen className={cls} />;
+    case "gift":
+      return <Gift className={cls} />;
+    case "trophy":
+      return <Trophy className={cls} />;
+    case "read":
+      return <FileText className={cls} />;
+    default:
+      return <Star className={cls} />;
   }
 }
 
 const TYPE_EMOJI: Record<string, string> = {
-  video:      '🎥',
-  audio:      '🎧',
-  assessment: '📋',
-  journal:    '✍️',
-  book:       '📅',
-  gift:       '💙',
-  trophy:     '🏆',
-  read:       '📖',
+  video: "🎥",
+  audio: "🎧",
+  assessment: "📋",
+  journal: "✍️",
+  book: "📅",
+  gift: "💙",
+  trophy: "🏆",
+  read: "📖",
 };
 
 function getTypeEmoji(taskType: NodeTaskType): string {
-  return TYPE_EMOJI[taskType as string] ?? '⭐';
+  return TYPE_EMOJI[taskType as string] ?? "⭐";
 }
 
 // ---------------------------------------------------------------------------
@@ -82,8 +99,8 @@ interface JourneyPreviewSheetProps {
   taskDescription?: string; // plain text, optional
   isPremium: boolean;
   isSubscribing: boolean;
-  onSubscribe: () => void;   // free journey CTA → calls subscribeToJourney externally
-  onViewPlans: () => void;   // premium journey CTA → router.push('/packages')
+  onSubscribe: () => void; // free journey CTA → calls subscribeToJourney externally
+  onViewPlans: () => void; // premium journey CTA → router.push('/packages')
 }
 
 // ---------------------------------------------------------------------------
@@ -109,11 +126,10 @@ export function JourneyPreviewSheet({
       <SheetContent
         side="bottom"
         className="rounded-t-3xl p-0 overflow-hidden"
-        style={{ maxHeight: '85vh' }}
+        style={{ maxHeight: "85vh" }}
       >
         <SheetTitle className="sr-only">{taskTitle}</SheetTitle>
         <div className="overflow-y-auto max-h-[85vh]">
-
           {/* ── Coloured header ── */}
           <div
             className="px-5 pt-3 pb-5"
@@ -237,11 +253,7 @@ export function JourneyPreviewSheet({
                         stroke="currentColor"
                         strokeWidth="4"
                       />
-                      <path
-                        className="opacity-75"
-                        fill="currentColor"
-                        d="M4 12a8 8 0 018-8v8H4z"
-                      />
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
                     </svg>
                     Starting…
                   </span>
@@ -259,7 +271,6 @@ export function JourneyPreviewSheet({
               Subscribe to access this task and track your progress.
             </p>
           </div>
-
         </div>
       </SheetContent>
     </Sheet>

@@ -1,4 +1,4 @@
-export type SameSite = 'strict' | 'lax' | 'none';
+export type SameSite = "strict" | "lax" | "none";
 
 export interface CookieOptions {
   maxAge?: number;

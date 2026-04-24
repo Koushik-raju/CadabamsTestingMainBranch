@@ -1,25 +1,20 @@
-'use client';
+"use client";
 
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
+import { cn } from "@/lib/utils";
+import type { JourneyTask } from "@/types/journey";
 import {
+  BookOpen,
+  Check,
   ClipboardList,
+  Gift,
   Headphones,
   PenLine,
-  BookOpen,
-  Gift,
   Play,
   Star,
   Zap,
-  Check,
-} from 'lucide-react';
-import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-} from '@/components/ui/sheet';
-import { cn } from '@/lib/utils';
-import type { NodeVariant, NodeTaskType } from './path-node';
-import type { JourneyTask } from '@/types/journey';
+} from "lucide-react";
+import type { NodeTaskType, NodeVariant } from "./path-node";
 
 interface TaskPreviewSheetProps {
   task: JourneyTask | null;
@@ -37,50 +32,52 @@ const TYPE_CONFIG: Record<
   { label: string; icon: React.ReactNode; bg: string; text: string }
 > = {
   assessment: {
-    label: 'Assessment',
+    label: "Assessment",
     icon: <ClipboardList className="w-3.5 h-3.5" />,
-    bg: 'bg-purple-500/10',
-    text: 'text-purple-600 dark:text-purple-400',
+    bg: "bg-purple-500/10",
+    text: "text-purple-600 dark:text-purple-400",
   },
   audio: {
-    label: 'Audio',
+    label: "Audio",
     icon: <Headphones className="w-3.5 h-3.5" />,
-    bg: 'bg-blue-500/10',
-    text: 'text-blue-600 dark:text-blue-400',
+    bg: "bg-blue-500/10",
+    text: "text-blue-600 dark:text-blue-400",
   },
   journal: {
-    label: 'Journal',
+    label: "Journal",
     icon: <PenLine className="w-3.5 h-3.5" />,
-    bg: 'bg-amber-500/10',
-    text: 'text-amber-600 dark:text-amber-400',
+    bg: "bg-amber-500/10",
+    text: "text-amber-600 dark:text-amber-400",
   },
   book: {
-    label: 'Appointment',
+    label: "Appointment",
     icon: <BookOpen className="w-3.5 h-3.5" />,
-    bg: 'bg-teal-500/10',
-    text: 'text-teal-600 dark:text-teal-400',
+    bg: "bg-teal-500/10",
+    text: "text-teal-600 dark:text-teal-400",
   },
   gift: {
-    label: 'Mood Check',
+    label: "Mood Check",
     icon: <Gift className="w-3.5 h-3.5" />,
-    bg: 'bg-pink-500/10',
-    text: 'text-pink-600 dark:text-pink-400',
+    bg: "bg-pink-500/10",
+    text: "text-pink-600 dark:text-pink-400",
   },
   video: {
-    label: 'Lesson',
+    label: "Lesson",
     icon: <Play className="w-3.5 h-3.5 fill-current" />,
-    bg: 'bg-primary/10',
-    text: 'text-primary',
+    bg: "bg-primary/10",
+    text: "text-primary",
   },
 };
 
 function getTypeConfig(type: NodeTaskType) {
-  return TYPE_CONFIG[type] ?? {
-    label: 'Activity',
-    icon: <Star className="w-3.5 h-3.5" />,
-    bg: 'bg-muted',
-    text: 'text-muted-foreground',
-  };
+  return (
+    TYPE_CONFIG[type] ?? {
+      label: "Activity",
+      icon: <Star className="w-3.5 h-3.5" />,
+      bg: "bg-muted",
+      text: "text-muted-foreground",
+    }
+  );
 }
 
 export function TaskPreviewSheet({
@@ -96,8 +93,8 @@ export function TaskPreviewSheet({
   if (!task) return null;
 
   const config = getTypeConfig(taskType);
-  const isCompleted = variant === 'completed';
-  const displayTitle = taskTitle || 'Activity';
+  const isCompleted = variant === "completed";
+  const displayTitle = taskTitle || "Activity";
 
   return (
     <Sheet open={open} onOpenChange={(v) => !v && onClose()}>
@@ -109,9 +106,9 @@ export function TaskPreviewSheet({
           <div className="flex items-center gap-2 mb-3 flex-wrap">
             <span
               className={cn(
-                'flex items-center gap-1.5 text-xs font-bold px-2.5 py-1 rounded-full',
+                "flex items-center gap-1.5 text-xs font-bold px-2.5 py-1 rounded-full",
                 config.bg,
-                config.text
+                config.text,
               )}
             >
               {config.icon}
@@ -149,13 +146,13 @@ export function TaskPreviewSheet({
         <button
           onClick={onStart}
           className={cn(
-            'w-full h-14 rounded-2xl font-extrabold text-base tracking-wide transition-all active:scale-[0.98] shadow-sm',
+            "w-full h-14 rounded-2xl font-extrabold text-base tracking-wide transition-all active:scale-[0.98] shadow-sm",
             isCompleted
-              ? 'bg-muted text-foreground hover:bg-muted/80'
-              : 'bg-primary text-primary-foreground shadow-primary/30 shadow-md'
+              ? "bg-muted text-foreground hover:bg-muted/80"
+              : "bg-primary text-primary-foreground shadow-primary/30 shadow-md",
           )}
         >
-          {isCompleted ? 'Review' : 'Start'}
+          {isCompleted ? "Review" : "Start"}
         </button>
       </SheetContent>
     </Sheet>

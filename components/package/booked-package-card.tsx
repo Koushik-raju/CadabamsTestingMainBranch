@@ -23,24 +23,24 @@
  *
  * LAST UPDATED: 2026-04-17 — added odooTuple guard for package_id many2one field
  */
-'use client';
+"use client";
 
-import { Card, CardContent } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { Separator } from '@/components/ui/separator';
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { Separator } from "@/components/ui/separator";
+import { odooTuple } from "@/lib/odoo";
+import type { BookedPackageDto } from "@/sdk/backend-v2";
 import {
-  IndianRupee,
-  Hash,
   CalendarDays,
   CheckCircle,
-  PlayCircle,
   Clock,
-  Package,
   CreditCard,
-} from 'lucide-react';
-import type { BookedPackageDto } from '@/sdk/backend-v2';
-import { odooTuple } from '@/lib/odoo';
+  Hash,
+  IndianRupee,
+  Package,
+  PlayCircle,
+} from "lucide-react";
 
 interface BookedPackageCardProps {
   pkg: BookedPackageDto;
@@ -50,20 +50,20 @@ interface BookedPackageCardProps {
 
 type StageConfig = {
   label: string;
-  variant: 'default' | 'secondary' | 'destructive' | 'outline';
+  variant: "default" | "secondary" | "destructive" | "outline";
   icon: React.ComponentType<{ className?: string }>;
 };
 
 function getStageConfig(stage: string): StageConfig {
   switch (stage) {
-    case 'confirm':
-      return { label: 'Confirmed', variant: 'default', icon: CheckCircle };
-    case 'in_progress':
-      return { label: 'Active', variant: 'secondary', icon: PlayCircle };
-    case 'booked':
-      return { label: 'Payment Pending', variant: 'outline', icon: Clock };
+    case "confirm":
+      return { label: "Confirmed", variant: "default", icon: CheckCircle };
+    case "in_progress":
+      return { label: "Active", variant: "secondary", icon: PlayCircle };
+    case "booked":
+      return { label: "Payment Pending", variant: "outline", icon: Clock };
     default:
-      return { label: stage, variant: 'secondary', icon: Package };
+      return { label: stage, variant: "secondary", icon: Package };
   }
 }
 
@@ -81,7 +81,7 @@ export function BookedPackageCard({
         {/* Header */}
         <div className="flex items-start justify-between gap-2">
           <h3 className="font-semibold text-foreground text-sm leading-snug flex-1 min-w-0 line-clamp-2">
-            {String(odooTuple(pkg.package_id, 1) ?? 'Package')}
+            {String(odooTuple(pkg.package_id, 1) ?? "Package")}
           </h3>
           <Badge variant={stageConfig.variant} className="shrink-0 text-xs gap-1">
             <StageIcon className="w-3 h-3" />
@@ -100,7 +100,7 @@ export function BookedPackageCard({
             <div>
               <p className="text-xs text-muted-foreground">Cost</p>
               <p className="text-sm font-medium text-foreground">
-                ₹{pkg.package_cost.toLocaleString('en-IN')}
+                ₹{pkg.package_cost.toLocaleString("en-IN")}
               </p>
             </div>
           </div>
@@ -127,7 +127,7 @@ export function BookedPackageCard({
         </div>
 
         {/* Action buttons */}
-        {pkg.package_stage === 'booked' && onPayNow && (
+        {pkg.package_stage === "booked" && onPayNow && (
           <div className="flex gap-2">
             <Button
               size="sm"
@@ -136,7 +136,7 @@ export function BookedPackageCard({
               disabled={paymentLoading}
             >
               <CreditCard className="w-3.5 h-3.5" />
-              {paymentLoading ? 'Processing...' : 'Pay Now'}
+              {paymentLoading ? "Processing..." : "Pay Now"}
             </Button>
           </div>
         )}

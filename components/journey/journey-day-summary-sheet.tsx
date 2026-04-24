@@ -22,19 +22,16 @@
  * LAST UPDATED: 2026-04-23 — Render summary through ReactMarkdown so bold
  *   labels and bullet lists from AI-generated markdown display correctly.
  */
-'use client';
+"use client";
 
-import { useState, useEffect } from 'react';
-import ReactMarkdown from 'react-markdown';
-import remarkGfm from 'remark-gfm';
-import { Sheet, SheetContent, SheetTitle } from '@/components/ui/sheet';
-import { Skeleton } from '@/components/ui/skeleton';
-import { Trophy, Flame, CheckCircle2 } from 'lucide-react';
-import {
-  journeysControllerGetDaySummary,
-  type DaySummaryResponseDto,
-} from '@/sdk/backend-v2';
-import { completeJourneyDay } from '@/hooks/journeys/use-journey-detail';
+import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet";
+import { Skeleton } from "@/components/ui/skeleton";
+import { completeJourneyDay } from "@/hooks/journeys/use-journey-detail";
+import { type DaySummaryResponseDto, journeysControllerGetDaySummary } from "@/sdk/backend-v2";
+import { CheckCircle2, Flame, Trophy } from "lucide-react";
+import { useEffect, useState } from "react";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 
 interface JourneyDaySummarySheetProps {
   open: boolean;
@@ -101,15 +98,23 @@ export function JourneyDaySummarySheet({
     try {
       await completeJourneyDay(enrollmentId, journeyId, dayNumber);
     } catch (e) {
-      console.error('[JourneyDaySummarySheet] completeDay failed', e);
+      console.error("[JourneyDaySummarySheet] completeDay failed", e);
     }
     onContinue();
     onClose();
   }
 
   return (
-    <Sheet open={open} onOpenChange={(v) => { if (!v) onClose(); }}>
-      <SheetContent side="bottom" className="rounded-t-3xl px-0 pb-10 pt-0 max-h-[85vh] overflow-y-auto">
+    <Sheet
+      open={open}
+      onOpenChange={(v) => {
+        if (!v) onClose();
+      }}
+    >
+      <SheetContent
+        side="bottom"
+        className="rounded-t-3xl px-0 pb-10 pt-0 max-h-[85vh] overflow-y-auto"
+      >
         {/* Green gradient header tile */}
         <div className="relative w-full overflow-hidden bg-gradient-to-br from-emerald-500 to-teal-600 px-6 pt-8 pb-6">
           {/* Decorative circles */}
@@ -122,7 +127,7 @@ export function JourneyDaySummarySheet({
               <Trophy className="w-8 h-8 text-white" />
             </div>
             <SheetTitle className="text-xl font-bold text-white">
-              {isLastDay ? 'Journey Complete! 🎉' : `Day ${dayNumber} Complete!`}
+              {isLastDay ? "Journey Complete! 🎉" : `Day ${dayNumber} Complete!`}
             </SheetTitle>
           </div>
         </div>
@@ -145,7 +150,7 @@ export function JourneyDaySummarySheet({
                 onClick={handleContinue}
                 className="w-full py-3 rounded-xl bg-primary text-primary-foreground text-sm font-semibold active:scale-[0.97] transition-transform"
               >
-                {isLastDay ? 'View Summary →' : 'Next Day →'}
+                {isLastDay ? "View Summary →" : "Next Day →"}
               </button>
             </div>
           ) : (
@@ -162,9 +167,7 @@ export function JourneyDaySummarySheet({
               {/* Summary text */}
               <div className="px-4 py-3 rounded-xl border bg-card prose prose-sm max-w-none text-muted-foreground [&_p]:leading-relaxed [&_ul]:list-disc [&_ul]:pl-5 [&_strong]:text-foreground [&_strong]:font-semibold">
                 {summary.summary ? (
-                  <ReactMarkdown remarkPlugins={[remarkGfm]}>
-                    {summary.summary}
-                  </ReactMarkdown>
+                  <ReactMarkdown remarkPlugins={[remarkGfm]}>{summary.summary}</ReactMarkdown>
                 ) : (
                   <p>Great work — keep your streak going!</p>
                 )}
@@ -183,7 +186,7 @@ export function JourneyDaySummarySheet({
                 onClick={handleContinue}
                 className="w-full py-3 rounded-xl bg-primary text-primary-foreground text-sm font-semibold active:scale-[0.97] transition-transform mt-1"
               >
-                {isLastDay ? 'View Summary →' : 'Next Day →'}
+                {isLastDay ? "View Summary →" : "Next Day →"}
               </button>
             </>
           )}

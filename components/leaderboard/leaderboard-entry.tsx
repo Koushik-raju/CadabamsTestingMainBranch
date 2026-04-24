@@ -1,8 +1,8 @@
-'use client';
+"use client";
 
-import { Crown, Medal, Award } from 'lucide-react';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { cn } from '@/lib/utils';
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { cn } from "@/lib/utils";
+import { Award, Crown, Medal } from "lucide-react";
 
 export interface LeaderboardEntryData {
   rank: number;
@@ -26,37 +26,37 @@ function RankIcon({ rank }: { rank: number }) {
 }
 
 function rankBadgeClass(rank: number): string {
-  if (rank === 1) return 'leaderboard-rank-gold';
-  if (rank === 2) return 'leaderboard-rank-silver';
-  if (rank === 3) return 'leaderboard-rank-bronze';
-  return 'bg-muted text-muted-foreground';
+  if (rank === 1) return "leaderboard-rank-gold";
+  if (rank === 2) return "leaderboard-rank-silver";
+  if (rank === 3) return "leaderboard-rank-bronze";
+  return "bg-muted text-muted-foreground";
 }
 
 export function LeaderboardEntry({ entry }: LeaderboardEntryProps) {
   const initials = entry.name
     ? entry.name
-        .split(' ')
+        .split(" ")
         .map((n) => n[0])
-        .join('')
+        .join("")
         .toUpperCase()
         .slice(0, 2)
-    : '?';
+    : "?";
 
   return (
     <div
       className={cn(
-        'flex items-center gap-3 rounded-xl px-4 py-3 transition-colors',
+        "flex items-center gap-3 rounded-xl px-4 py-3 transition-colors",
         entry.isCurrentUser
-          ? 'bg-primary/10 border border-primary/30'
-          : 'bg-card hover:bg-muted/50',
+          ? "bg-primary/10 border border-primary/30"
+          : "bg-card hover:bg-muted/50",
       )}
       role="listitem"
-      aria-label={`Rank ${entry.rank}: ${entry.name}, ${entry.score} points${entry.isCurrentUser ? ', this is you' : ''}`}
+      aria-label={`Rank ${entry.rank}: ${entry.name}, ${entry.score} points${entry.isCurrentUser ? ", this is you" : ""}`}
     >
       {/* Rank badge */}
       <div
         className={cn(
-          'flex items-center justify-center w-9 h-9 rounded-full text-sm font-bold flex-shrink-0',
+          "flex items-center justify-center w-9 h-9 rounded-full text-sm font-bold flex-shrink-0",
           rankBadgeClass(entry.rank),
         )}
         aria-hidden="true"
@@ -74,7 +74,7 @@ export function LeaderboardEntry({ entry }: LeaderboardEntryProps) {
 
       {/* Name & level */}
       <div className="flex-1 min-w-0">
-        <p className={cn('font-semibold truncate text-sm', entry.isCurrentUser && 'text-primary')}>
+        <p className={cn("font-semibold truncate text-sm", entry.isCurrentUser && "text-primary")}>
           {entry.name}
           {entry.isCurrentUser && (
             <span className="ml-1 text-xs font-normal text-muted-foreground">(You)</span>
@@ -87,7 +87,12 @@ export function LeaderboardEntry({ entry }: LeaderboardEntryProps) {
 
       {/* Score */}
       <div className="text-right flex-shrink-0">
-        <p className={cn('font-bold text-sm', entry.isCurrentUser ? 'text-primary' : 'text-foreground')}>
+        <p
+          className={cn(
+            "font-bold text-sm",
+            entry.isCurrentUser ? "text-primary" : "text-foreground",
+          )}
+        >
           {entry.score.toLocaleString()}
         </p>
         <p className="text-xs text-muted-foreground">pts</p>

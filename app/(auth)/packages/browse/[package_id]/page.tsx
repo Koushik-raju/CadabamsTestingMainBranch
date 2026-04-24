@@ -28,31 +28,31 @@
  *
  * LAST UPDATED: 2026-04-23 — migrated custom header divs to PageHeader
  */
-'use client';
+"use client";
 
-import { Suspense } from 'react';
-import { useRouter, useParams } from 'next/navigation';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Skeleton } from '@/components/ui/skeleton';
-import { PageHeader } from '@/components/shared/navigation/page-header';
+import { PageHeader } from "@/components/shared/navigation/page-header";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
+import { useAvailablePackages, usePackageProductDetails } from "@/hooks/use-packages";
+import { odooTuple } from "@/lib/odoo";
+import { getPackagePalette } from "@/lib/package-colors";
+import { cn } from "@/lib/utils";
+import type { PackageResponseDto } from "@/sdk/backend-v2";
 import {
-  CheckCircle2,
-  Layers,
-  IndianRupee,
   AlertCircle,
-  Package,
+  CheckCircle2,
   ChevronRight,
-} from 'lucide-react';
-import { useAvailablePackages, usePackageProductDetails } from '@/hooks/use-packages';
-import { getPackagePalette } from '@/lib/package-colors';
-import { cn } from '@/lib/utils';
-import type { PackageResponseDto } from '@/sdk/backend-v2';
-import { odooTuple } from '@/lib/odoo';
+  IndianRupee,
+  Layers,
+  Package,
+} from "lucide-react";
+import { useParams, useRouter } from "next/navigation";
+import { Suspense } from "react";
 
 function storeSelectedPackage(pkg: PackageResponseDto) {
-  if (typeof sessionStorage !== 'undefined') {
-    sessionStorage.setItem('selected_package', JSON.stringify(pkg));
+  if (typeof sessionStorage !== "undefined") {
+    sessionStorage.setItem("selected_package", JSON.stringify(pkg));
   }
 }
 
@@ -69,7 +69,9 @@ function PackageDetailSkeleton() {
           <Skeleton className="h-8 w-3/4" />
           <Skeleton className="h-16 w-full rounded-2xl" />
           <div className="space-y-3">
-            {[1, 2, 3].map((i) => <Skeleton key={i} className="h-12 w-full rounded-xl" />)}
+            {[1, 2, 3].map((i) => (
+              <Skeleton key={i} className="h-12 w-full rounded-xl" />
+            ))}
           </div>
         </div>
       </div>
@@ -95,7 +97,9 @@ function PackageDetailContent({ packageId }: { packageId: string }) {
         <div className="flex-1 flex flex-col items-center justify-center gap-4 px-6 text-center">
           <AlertCircle className="w-12 h-12 text-destructive" />
           <p className="text-destructive font-medium">Package not found.</p>
-          <Button variant="outline" onClick={() => router.back()}>Go Back</Button>
+          <Button variant="outline" onClick={() => router.back()}>
+            Go Back
+          </Button>
         </div>
       </div>
     );
@@ -114,17 +118,27 @@ function PackageDetailContent({ packageId }: { packageId: string }) {
 
       <div className="flex-1 overflow-y-auto pb-32">
         {/* Hero banner */}
-        <div className={cn('w-full h-52 bg-gradient-to-br relative overflow-hidden flex items-end', palette.gradient)}>
+        <div
+          className={cn(
+            "w-full h-52 bg-gradient-to-br relative overflow-hidden flex items-end",
+            palette.gradient,
+          )}
+        >
           <div className="absolute inset-0 opacity-10 bg-[radial-gradient(circle_at_70%_20%,white,transparent_60%)]" />
           <div className="absolute -top-6 -right-6 w-32 h-32 rounded-full bg-white/10" />
           <div className="absolute top-4 left-5">
-            <div className={cn('w-12 h-12 rounded-2xl backdrop-blur-sm flex items-center justify-center', palette.iconBg)}>
+            <div
+              className={cn(
+                "w-12 h-12 rounded-2xl backdrop-blur-sm flex items-center justify-center",
+                palette.iconBg,
+              )}
+            >
               <Package className="w-6 h-6 text-white" />
             </div>
           </div>
           <div className="relative p-5 w-full">
             <p className="text-white/70 text-sm font-semibold mb-1">
-              ₹{pkg.amount_total.toLocaleString('en-IN')}
+              ₹{pkg.amount_total.toLocaleString("en-IN")}
             </p>
             <h1 className="text-white font-bold text-xl leading-tight line-clamp-2">
               {pkg.package_name}
@@ -144,7 +158,7 @@ function PackageDetailContent({ packageId }: { packageId: string }) {
               <IndianRupee className="w-4 h-4 text-primary" />
               <div>
                 <p className="text-sm font-semibold text-foreground">
-                  ₹{pkg.amount_total.toLocaleString('en-IN')}
+                  ₹{pkg.amount_total.toLocaleString("en-IN")}
                 </p>
                 <p className="text-[11px] text-muted-foreground">Total Cost</p>
               </div>
@@ -159,32 +173,35 @@ function PackageDetailContent({ packageId }: { packageId: string }) {
           </div>
 
           {/* What's included */}
-          {lines.length > 0 && (() => {
-            const groups = lines.reduce<{ name: string; count: number }[]>((acc, line) => {
-              const name = String(odooTuple(line.product_id, 1) ?? '');
-              const existing = acc.find((g) => g.name === name);
-              if (existing) { existing.count++; } else { acc.push({ name, count: 1 }); }
-              return acc;
-            }, []);
+          {lines.length > 0 &&
+            (() => {
+              const groups = lines.reduce<{ name: string; count: number }[]>((acc, line) => {
+                const name = String(odooTuple(line.product_id, 1) ?? "");
+                const existing = acc.find((g) => g.name === name);
+                if (existing) {
+                  existing.count++;
+                } else {
+                  acc.push({ name, count: 1 });
+                }
+                return acc;
+              }, []);
 
-            return (
-              <ul className="space-y-3">
-                {groups.map(({ name, count }) => (
-                  <li key={name} className="flex items-center gap-3">
-                    <CheckCircle2 className="w-5 h-5 text-primary flex-shrink-0" />
-                    <p className="text-sm font-medium text-foreground flex-1">{name}</p>
-                    {count > 1 && (
-                      <Badge variant="secondary" className="text-xs font-semibold shrink-0">
-                        ×{count}
-                      </Badge>
-                    )}
-                  </li>
-                ))}
-              </ul>
-            );
-          })()}
-
-
+              return (
+                <ul className="space-y-3">
+                  {groups.map(({ name, count }) => (
+                    <li key={name} className="flex items-center gap-3">
+                      <CheckCircle2 className="w-5 h-5 text-primary flex-shrink-0" />
+                      <p className="text-sm font-medium text-foreground flex-1">{name}</p>
+                      {count > 1 && (
+                        <Badge variant="secondary" className="text-xs font-semibold shrink-0">
+                          ×{count}
+                        </Badge>
+                      )}
+                    </li>
+                  ))}
+                </ul>
+              );
+            })()}
         </div>
       </div>
 
@@ -194,7 +211,7 @@ function PackageDetailContent({ packageId }: { packageId: string }) {
           className="w-full bg-primary hover:bg-primary/90 text-primary-foreground font-semibold text-base h-14 rounded-2xl"
           onClick={handleProceed}
         >
-          Book for ₹{pkg.amount_total.toLocaleString('en-IN')}
+          Book for ₹{pkg.amount_total.toLocaleString("en-IN")}
           <ChevronRight className="w-5 h-5 ml-1" />
         </Button>
       </div>
@@ -207,11 +224,13 @@ export default function PackageDetailPage() {
   const packageId = params.package_id as string;
 
   return (
-    <Suspense fallback={
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin" />
-      </div>
-    }>
+    <Suspense
+      fallback={
+        <div className="flex items-center justify-center min-h-screen">
+          <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+        </div>
+      }
+    >
       <PackageDetailContent packageId={packageId} />
     </Suspense>
   );

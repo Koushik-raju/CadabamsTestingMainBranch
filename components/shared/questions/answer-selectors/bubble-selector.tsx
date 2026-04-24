@@ -1,6 +1,6 @@
-'use client';
+"use client";
 
-import { CheckCircle2 } from 'lucide-react';
+import { CheckCircle2 } from "lucide-react";
 
 export interface BubbleOption {
   id?: string | number;
@@ -16,7 +16,13 @@ interface BubbleSelectorProps {
   onToggle: (value: string) => void;
 }
 
-export function BubbleSelector({ title, subTitle, options, selected, onToggle }: BubbleSelectorProps) {
+export function BubbleSelector({
+  title,
+  subTitle,
+  options,
+  selected,
+  onToggle,
+}: BubbleSelectorProps) {
   return (
     <div className="flex flex-col px-5 pt-6 pb-4 w-full">
       {subTitle && (
@@ -24,14 +30,8 @@ export function BubbleSelector({ title, subTitle, options, selected, onToggle }:
           {subTitle}
         </p>
       )}
-      {title && (
-        <h2 className="text-xl font-bold text-foreground mb-2 leading-snug">
-          {title}
-        </h2>
-      )}
-      <p className="text-sm text-muted-foreground mb-6">
-        Select all that apply
-      </p>
+      {title && <h2 className="text-xl font-bold text-foreground mb-2 leading-snug">{title}</h2>}
+      <p className="text-sm text-muted-foreground mb-6">Select all that apply</p>
 
       <div className="flex flex-wrap gap-3 justify-center">
         {options.map((opt, index) => {
@@ -43,8 +43,8 @@ export function BubbleSelector({ title, subTitle, options, selected, onToggle }:
               onClick={() => onToggle(val)}
               className={`inline-flex items-center gap-1.5 px-4 py-2.5 rounded-full border-2 text-sm font-medium transition-all duration-200 active:scale-95 ${
                 isSelected
-                  ? 'border-primary bg-primary/10 text-primary'
-                  : 'border-border bg-card text-foreground hover:border-primary/30'
+                  ? "border-primary bg-primary/10 text-primary"
+                  : "border-border bg-card text-foreground hover:border-primary/30"
               }`}
               aria-pressed={isSelected}
             >

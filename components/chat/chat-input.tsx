@@ -1,6 +1,6 @@
-import { Send } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Send } from "lucide-react";
 
 interface ChatInputProps {
   text: string;
@@ -9,12 +9,7 @@ interface ChatInputProps {
   isStreaming: boolean;
 }
 
-export function ChatInput({
-  text,
-  onTextChange,
-  onSubmit,
-  isStreaming,
-}: ChatInputProps) {
+export function ChatInput({ text, onTextChange, onSubmit, isStreaming }: ChatInputProps) {
   return (
     <div className="shrink-0 bg-white px-4 pb-[max(env(safe-area-inset-bottom,0px),16px)] pt-3 border-t border-border">
       <form onSubmit={onSubmit} className="flex items-center gap-3">

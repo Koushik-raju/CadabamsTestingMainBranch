@@ -34,35 +34,32 @@
 
 "use client";
 
-import { use, useState, useEffect, Suspense } from "react";
-import { useRouter } from "next/navigation";
+import { PageHeader } from "@/components/shared/navigation/page-header";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
-import { PageHeader } from "@/components/shared/navigation/page-header";
 import {
-  CheckCircle2,
-  Clock,
-  Layers,
-  Timer,
-  ChevronRight,
-  AlertCircle,
-  Zap,
-  Crown,
-} from "lucide-react";
-import {
+  subscribeToJourney,
   useJourneyDetail,
   useJourneyProgress,
-  subscribeToJourney,
 } from "@/hooks/journeys/use-journey-detail";
 import { useAuth } from "@/hooks/shared/auth/use-auth";
-import { extractJourneyName } from "@/types/journey";
-import {
-  BlocksRenderer,
-  type BlocksContent,
-} from "@strapi/blocks-react-renderer";
-import { fixImageUrl } from "@/lib/utils";
 import { hapticMedium } from "@/lib/haptics";
+import { fixImageUrl } from "@/lib/utils";
+import { extractJourneyName } from "@/types/journey";
+import { type BlocksContent, BlocksRenderer } from "@strapi/blocks-react-renderer";
+import {
+  AlertCircle,
+  CheckCircle2,
+  ChevronRight,
+  Clock,
+  Crown,
+  Layers,
+  Timer,
+  Zap,
+} from "lucide-react";
+import { useRouter } from "next/navigation";
+import { Suspense, use, useEffect, useState } from "react";
 
 interface PageProps {
   params: Promise<{ id: string }>;
@@ -74,9 +71,7 @@ function JourneyLandingContent({ params }: PageProps) {
   const { user } = useAuth();
   const mobile =
     (
-      ((user as Record<string, unknown>)?.caller_mobile as
-        | string
-        | undefined) ??
+      ((user as Record<string, unknown>)?.caller_mobile as string | undefined) ??
       ((user as Record<string, unknown>)?.phone_number as string | undefined)
     )?.replace(/\D/g, "") ?? null;
 
@@ -123,11 +118,7 @@ function JourneyLandingContent({ params }: PageProps) {
       <div className="min-h-screen bg-background flex flex-col items-center justify-center p-6">
         <AlertCircle className="w-12 h-12 text-destructive mb-4" />
         <p className="text-destructive text-center">Journey not found.</p>
-        <Button
-          className="mt-4"
-          variant="outline"
-          onClick={() => router.back()}
-        >
+        <Button className="mt-4" variant="outline" onClick={() => router.back()}>
           Go Back
         </Button>
       </div>
@@ -138,20 +129,14 @@ function JourneyLandingContent({ params }: PageProps) {
   const imageUrl = fixImageUrl(journey.icon);
   const isSubscribed = !!progress;
   const stepCount = journey.steps?.length ?? 0;
-  const taskCount = (journey.steps ?? []).reduce(
-    (a, s) => a + (s.tasks?.length ?? 0),
-    0,
-  );
+  const taskCount = (journey.steps ?? []).reduce((a, s) => a + (s.tasks?.length ?? 0), 0);
   const months = Math.max(1, Math.round(stepCount / 30));
 
   // Derive highlights from step titles (first 3)
   const highlights = (journey.steps ?? [])
     .slice(0, 3)
     .map((s) =>
-      (typeof s.title === "string"
-        ? s.title
-        : extractJourneyName(s.title as never)
-      )
+      (typeof s.title === "string" ? s.title : extractJourneyName(s.title as never))
         .replace(/^Day\s*\d+\s*[:\-·]?\s*/i, "")
         .trim(),
     )
@@ -201,11 +186,7 @@ function JourneyLandingContent({ params }: PageProps) {
         {/* Hero image */}
         <div className="w-full aspect-[4/3] bg-muted overflow-hidden">
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            src={imageUrl}
-            alt={name}
-            className="w-full h-full object-cover"
-          />
+          <img src={imageUrl} alt={name} className="w-full h-full object-cover" />
         </div>
 
         <div className="px-5 pt-5 space-y-5">
@@ -218,27 +199,21 @@ function JourneyLandingContent({ params }: PageProps) {
           </div>
 
           {/* Title */}
-          <h1 className="text-2xl font-bold text-foreground leading-tight">
-            {name}
-          </h1>
+          <h1 className="text-2xl font-bold text-foreground leading-tight">{name}</h1>
 
           {/* Stats row */}
           <div className="grid grid-cols-3 py-3 border-y border-border">
             <div className="flex items-center gap-2">
               <Layers className="w-4 h-4 text-primary" />
               <div>
-                <p className="text-sm font-semibold text-foreground">
-                  {stepCount} Days
-                </p>
+                <p className="text-sm font-semibold text-foreground">{stepCount} Days</p>
                 <p className="text-[11px] text-muted-foreground">Units</p>
               </div>
             </div>
             <div className="flex items-center gap-2">
               <Clock className="w-4 h-4 text-primary" />
               <div>
-                <p className="text-sm font-semibold text-foreground">
-                  {taskCount} Tasks
-                </p>
+                <p className="text-sm font-semibold text-foreground">{taskCount} Tasks</p>
                 <p className="text-[11px] text-muted-foreground">Activities</p>
               </div>
             </div>
@@ -254,14 +229,11 @@ function JourneyLandingContent({ params }: PageProps) {
           </div>
 
           {/* Description */}
-          {journey.description &&
-            (journey.description as unknown[]).length > 0 && (
-              <div className="prose prose-sm prose-muted max-w-none text-muted-foreground">
-                <BlocksRenderer
-                  content={journey.description as unknown as BlocksContent}
-                />
-              </div>
-            )}
+          {journey.description && (journey.description as unknown[]).length > 0 && (
+            <div className="prose prose-sm prose-muted max-w-none text-muted-foreground">
+              <BlocksRenderer content={journey.description as unknown as BlocksContent} />
+            </div>
+          )}
 
           {/* Highlights */}
           {highlights.length > 0 && (
@@ -279,8 +251,8 @@ function JourneyLandingContent({ params }: PageProps) {
 
           {/* Disclaimer */}
           <p className="text-xs text-muted-foreground text-center italic pb-2">
-            This journey is for personal growth and wellness purposes and does
-            not replace professional medical or psychological advice.
+            This journey is for personal growth and wellness purposes and does not replace
+            professional medical or psychological advice.
           </p>
         </div>
       </div>

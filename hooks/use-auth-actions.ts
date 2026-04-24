@@ -1,7 +1,7 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
-import { sendPatientOtp, verifyPatientLogin, verifyPatientSignup, logoutPatient } from '@/lib/auth';
+import { logoutPatient, sendPatientOtp, verifyPatientLogin, verifyPatientSignup } from "@/lib/auth";
+import { useState } from "react";
 
 export interface SignupPayload {
   phone: string;
@@ -17,7 +17,7 @@ export function useAuthActions() {
   const [isVerifying, setIsVerifying] = useState(false);
   const [sessionUid, setSessionUid] = useState<string | null>(null);
 
-  const sendOtp = async (phone: string, type: 'login' | 'signup') => {
+  const sendOtp = async (phone: string, type: "login" | "signup") => {
     setIsSendingOtp(true);
     try {
       const data = await sendPatientOtp(phone, type);
@@ -30,7 +30,7 @@ export function useAuthActions() {
   const verifyLogin = async (phone: string, otp: string) => {
     setIsVerifying(true);
     try {
-      await verifyPatientLogin(phone, otp, sessionUid ?? '');
+      await verifyPatientLogin(phone, otp, sessionUid ?? "");
     } finally {
       setIsVerifying(false);
     }
@@ -41,8 +41,8 @@ export function useAuthActions() {
     try {
       await verifyPatientSignup({
         ...payload,
-        lastName: payload.lastName ?? '',
-        uid: sessionUid ?? '',
+        lastName: payload.lastName ?? "",
+        uid: sessionUid ?? "",
       });
     } finally {
       setIsVerifying(false);

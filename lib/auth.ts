@@ -1,11 +1,11 @@
 import {
-  authControllerSendPatientOtp,
-  authControllerVerifyPatientLogin,
+  authControllerLogout,
   authControllerPatientSignupVerify,
   authControllerRefresh,
-  authControllerLogout,
+  authControllerSendPatientOtp,
+  authControllerVerifyPatientLogin,
 } from "@/sdk/backend-v2";
-import { setTokens, clearTokens, getRefreshToken } from "./cookies";
+import { clearTokens, getRefreshToken, setTokens } from "./cookies";
 
 // ── Send OTP ──────────────────────────────────────────────────────────────────
 

@@ -1,22 +1,19 @@
-import useSWR from 'swr';
 import {
+  crmControllerBookAppointment,
   crmControllerGetDoctorById,
   crmControllerGetSlotPrice,
-  crmControllerBookAppointment,
   crmControllerRazorpayPayment,
-} from '@/sdk/backend-v2';
-import type { DoctorListingResponseDto, RazorpayPaymentResponseDto } from '@/sdk/backend-v2';
+} from "@/sdk/backend-v2";
+import type { DoctorListingResponseDto, RazorpayPaymentResponseDto } from "@/sdk/backend-v2";
+import useSWR from "swr";
 
 export type { DoctorListingResponseDto, RazorpayPaymentResponseDto };
 
 export function useCheckoutDoctor(doctorId: number | string | null) {
-  const { data, error, isLoading } = useSWR(
-    doctorId ? `/doctor/${doctorId}` : null,
-    async () => {
-      const res = await crmControllerGetDoctorById({ path: { id: Number(doctorId) } });
-      return res.data ?? null;
-    }
-  );
+  const { data, error, isLoading } = useSWR(doctorId ? `/doctor/${doctorId}` : null, async () => {
+    const res = await crmControllerGetDoctorById({ path: { id: Number(doctorId) } });
+    return res.data ?? null;
+  });
   return { doctor: data ?? null, isLoading, error };
 }
 
@@ -26,7 +23,7 @@ export function useCheckoutSlotPrice(slotId: number | null) {
     async () => {
       const res = await crmControllerGetSlotPrice({ path: { id: slotId! } });
       return res.data?.price ?? null;
-    }
+    },
   );
   return { price: data ?? null, isLoading, error };
 }
@@ -50,8 +47,8 @@ export async function bookAndPay(opts: {
       consultation_type_id: opts.consultationTypeId ?? 1,
       caller_name: opts.callerName,
       patient_name: opts.patientName,
-      appointment_type: 'individual_appointment',
-      payment_mode: 'online',
+      appointment_type: "individual_appointment",
+      payment_mode: "online",
     },
   });
 
@@ -64,6 +61,6 @@ export async function bookAndPay(opts: {
     },
   });
 
-  if (!payRes.data?.result) throw new Error('Payment initiation failed — no data returned');
+  if (!payRes.data?.result) throw new Error("Payment initiation failed — no data returned");
   return payRes.data.result;
 }

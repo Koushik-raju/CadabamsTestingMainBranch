@@ -1,5 +1,5 @@
 // Re-exports from feature-scoped locations — consumers should update imports.
-export { useJourneys } from '@/hooks/journeys/use-journeys-page';
+export { useJourneys } from "@/hooks/journeys/use-journeys-page";
 export {
   useJourneyDetail,
   useJourneyProgress,
@@ -9,4 +9,4 @@ export {
   tickJourney,
   updateNodeProgress,
   type JourneyProgress,
-} from '@/hooks/journeys/use-journey-detail';
+} from "@/hooks/journeys/use-journey-detail";

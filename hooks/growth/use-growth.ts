@@ -1,3 +1,5 @@
+import { apiClient } from "@/api/backend-v2";
+import { growthDayKey, growthWeekKey } from "@/lib/swr-keys";
 /**
  * FILE: hooks/growth/use-growth.ts
  *
@@ -22,9 +24,7 @@
  *
  * LAST UPDATED: 2026-04-23 — initial scaffold
  */
-import useSWR from 'swr';
-import { apiClient } from '@/api/backend-v2';
-import { growthDayKey, growthWeekKey } from '@/lib/swr-keys';
+import useSWR from "swr";
 
 export interface GrowthWeekDay {
   date: string;
@@ -41,11 +41,18 @@ export interface GrowthWeek {
 }
 
 export interface GrowthJourneyItem {
+  /** 'day' = full-day completion with LLM summary; 'task' = individual task (mood/journal/audio/etc.) completed inside a journey. */
+  kind: 'day' | 'task';
   enrollmentId: string;
   journeyId: string;
   journeyTitle: string | null;
-  dayNumber: number;
+  dayNumber: number | null;
+  /** Only populated when kind='day'. */
   summaryText: string | null;
+  /** Only populated when kind='task'. */
+  taskTitle: string | null;
+  /** Only populated when kind='task'. CmsJourneyStepTask.kind enum value. */
+  taskType: string | null;
   completedAt: string;
 }
 
@@ -111,7 +118,7 @@ export function todayIso(): string {
 
 async function fetchLatestActiveDate(): Promise<GrowthLatestActiveDate> {
   const { data } = await apiClient.get<GrowthLatestActiveDate>(
-    '/api/v1/me/growth/latest-active-date',
+    "/api/v1/me/growth/latest-active-date",
     { params: { tz: browserTz() } },
   );
   return data;
@@ -125,7 +132,7 @@ async function fetchLatestActiveDate(): Promise<GrowthLatestActiveDate> {
  */
 export function useGrowthLatestActiveDate() {
   const { data, error, isLoading } = useSWR<GrowthLatestActiveDate>(
-    'growth-latest-active-date',
+    "growth-latest-active-date",
     fetchLatestActiveDate,
     { revalidateOnFocus: false },
   );
@@ -133,14 +140,14 @@ export function useGrowthLatestActiveDate() {
 }
 
 async function fetchWeek(date: string): Promise<GrowthWeek> {
-  const { data } = await apiClient.get<GrowthWeek>('/api/v1/me/growth/week', {
+  const { data } = await apiClient.get<GrowthWeek>("/api/v1/me/growth/week", {
     params: { date, tz: browserTz() },
   });
   return data;
 }
 
 async function fetchDay(date: string): Promise<GrowthDay> {
-  const { data } = await apiClient.get<GrowthDay>('/api/v1/me/growth/day', {
+  const { data } = await apiClient.get<GrowthDay>("/api/v1/me/growth/day", {
     params: { date, tz: browserTz() },
   });
   return data;

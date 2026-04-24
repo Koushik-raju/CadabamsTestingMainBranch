@@ -24,33 +24,40 @@
  *
  * LAST UPDATED: 2026-04-23 — migrated custom header div to PageHeader; added file header
  */
-'use client';
+"use client";
 
-import { useRef, useState, useCallback } from 'react';
-import { useRouter } from 'next/navigation';
-import { Upload, AlertCircle, FolderOpen } from 'lucide-react';
-import { Capacitor } from '@capacitor/core';
-import { PageHeader } from '@/components/shared/navigation/page-header';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
-import { Skeleton } from '@/components/ui/skeleton';
-import { Separator } from '@/components/ui/separator';
-import { DocumentCard, type DocumentData } from '@/components/documents/document-card';
-import { useDocuments } from '@/hooks/documents/use-documents';
+import { DocumentCard, type DocumentData } from "@/components/documents/document-card";
+import { PageHeader } from "@/components/shared/navigation/page-header";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { Separator } from "@/components/ui/separator";
+import { Skeleton } from "@/components/ui/skeleton";
+import { useDocuments } from "@/hooks/documents/use-documents";
+import { Capacitor } from "@capacitor/core";
+import { AlertCircle, FolderOpen, Upload } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { useCallback, useRef, useState } from "react";
 
 async function openDownloadUrl(url: string): Promise<void> {
   if (Capacitor.isNativePlatform()) {
-    const { Browser } = await import('@capacitor/browser');
+    const { Browser } = await import("@capacitor/browser");
     await Browser.open({ url });
     return;
   }
-  window.open(url, '_blank', 'noopener,noreferrer');
+  window.open(url, "_blank", "noopener,noreferrer");
 }
 
 export default function DocumentsPage() {
   const router = useRouter();
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const { documents, isLoading, error: loadError, leadId, uploadDocument, deleteDocument } = useDocuments();
+  const {
+    documents,
+    isLoading,
+    error: loadError,
+    leadId,
+    uploadDocument,
+    deleteDocument,
+  } = useDocuments();
 
   const [error, setError] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
@@ -68,10 +75,10 @@ export default function DocumentsPage() {
     try {
       await uploadDocument(file);
     } catch {
-      setError('Failed to upload document. Please try again.');
+      setError("Failed to upload document. Please try again.");
     } finally {
       setUploading(false);
-      if (fileInputRef.current) fileInputRef.current.value = '';
+      if (fileInputRef.current) fileInputRef.current.value = "";
     }
   };
 
@@ -80,28 +87,31 @@ export default function DocumentsPage() {
     try {
       await openDownloadUrl(docObj.url);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Unable to download file.');
+      setError(err instanceof Error ? err.message : "Unable to download file.");
     } finally {
       setDownloadingId(null);
     }
   }, []);
 
-  const handleDelete = useCallback(async (docObj: DocumentData) => {
-    const confirmed = window.confirm(`Delete "${docObj.name}"?`);
-    if (!confirmed) return;
+  const handleDelete = useCallback(
+    async (docObj: DocumentData) => {
+      const confirmed = window.confirm(`Delete "${docObj.name}"?`);
+      if (!confirmed) return;
 
-    setDeletingId(docObj.id);
-    setError(null);
-    try {
-      await deleteDocument(docObj.id);
-    } catch {
-      setError('Failed to delete document. Please try again.');
-    } finally {
-      setDeletingId(null);
-    }
-  }, [deleteDocument]);
+      setDeletingId(docObj.id);
+      setError(null);
+      try {
+        await deleteDocument(docObj.id);
+      } catch {
+        setError("Failed to delete document. Please try again.");
+      } finally {
+        setDeletingId(null);
+      }
+    },
+    [deleteDocument],
+  );
 
-  const userError = !leadId && !isLoading ? 'User information not found' : null;
+  const userError = !leadId && !isLoading ? "User information not found" : null;
 
   return (
     <main className="min-h-screen bg-background pb-24" role="main" aria-label="My documents">
@@ -118,7 +128,7 @@ export default function DocumentsPage() {
             aria-label="Upload a document"
           >
             <Upload className="w-3.5 h-3.5" />
-            {uploading ? 'Uploading…' : 'Upload'}
+            {uploading ? "Uploading…" : "Upload"}
           </Button>
         }
       />
@@ -139,7 +149,7 @@ export default function DocumentsPage() {
             <CardContent className="py-3 flex items-center gap-2">
               <AlertCircle className="w-4 h-4 text-destructive flex-shrink-0" />
               <p className="text-sm text-destructive" role="alert">
-                {error ?? 'Failed to load documents. Please try again.'}
+                {error ?? "Failed to load documents. Please try again."}
               </p>
             </CardContent>
           </Card>
@@ -155,7 +165,9 @@ export default function DocumentsPage() {
               <p className="font-semibold text-foreground">Something went wrong</p>
               <p className="text-sm text-muted-foreground mt-1">{userError}</p>
             </div>
-            <Button variant="outline" onClick={() => router.push('/')}>Go Home</Button>
+            <Button variant="outline" onClick={() => router.push("/")}>
+              Go Home
+            </Button>
           </div>
         ) : isLoading ? (
           <Card>
@@ -193,7 +205,7 @@ export default function DocumentsPage() {
             <div className="flex items-center justify-between mb-3">
               <h2 className="text-base font-bold text-foreground">All Files</h2>
               <span className="text-xs text-muted-foreground">
-                {documents.length} file{documents.length !== 1 ? 's' : ''}
+                {documents.length} file{documents.length !== 1 ? "s" : ""}
               </span>
             </div>
             <Card>

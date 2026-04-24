@@ -1,3 +1,25 @@
+import {
+  enrolledJourneysKey,
+  gamificationKey,
+  journeyDetailKey,
+  journeyEnrollmentKey,
+} from "@/lib/swr-keys";
+import {
+  cmsJourneysControllerGetById,
+  journeysControllerCompleteDay,
+  journeysControllerCompleteTask,
+  journeysControllerGetByJourneyId,
+  journeysControllerGetDaySummary,
+  journeysControllerGetMyGamification,
+  journeysControllerListMine,
+  journeysControllerTick,
+} from "@/sdk/backend-v2";
+import type {
+  DaySummaryResponseDto,
+  GamificationDto,
+  PatientJourneyResponseDto,
+} from "@/sdk/backend-v2";
+import type { JourneyItem } from "@/types/journey";
 /**
  * FILE: hooks/journeys/use-journey-detail.ts
  *
@@ -37,30 +59,8 @@
  *   or does not match the content linked to the task. Added completeJourneyDay
  *   helper so the day-summary sheet can persist mood + summary on Day Done.
  */
-import useSWR, { mutate as globalMutate } from 'swr';
-import {
-  cmsJourneysControllerGetById,
-  journeysControllerGetByJourneyId,
-  journeysControllerCompleteTask,
-  journeysControllerCompleteDay,
-  journeysControllerTick,
-  journeysControllerListMine,
-  journeysControllerGetMyGamification,
-  journeysControllerGetDaySummary,
-} from '@/sdk/backend-v2';
-import type {
-  PatientJourneyResponseDto,
-  GamificationDto,
-  DaySummaryResponseDto,
-} from '@/sdk/backend-v2';
-import {
-  journeyDetailKey,
-  journeyEnrollmentKey,
-  enrolledJourneysKey,
-  gamificationKey,
-} from '@/lib/swr-keys';
-import { mapV2Journey } from './use-journeys-page';
-import type { JourneyItem } from '@/types/journey';
+import useSWR, { mutate as globalMutate } from "swr";
+import { mapV2Journey } from "./use-journeys-page";
 
 export type JourneyProgress = PatientJourneyResponseDto;
 
@@ -74,13 +74,16 @@ export function useJourneyDetail(id: string | null) {
   const { data, isLoading, error } = useSWR(
     key,
     async () => {
-      console.log('[useJourneyDetail] FETCH start', { id });
+      console.log("[useJourneyDetail] FETCH start", { id });
       const res = await cmsJourneysControllerGetById({ path: { id: id! } });
-      console.log('[useJourneyDetail] FETCH result', { hasError: !!res.error, hasData: !!res.data });
+      console.log("[useJourneyDetail] FETCH result", {
+        hasError: !!res.error,
+        hasData: !!res.data,
+      });
       if (res.error) throw new Error(JSON.stringify(res.error));
       return res.data ? mapV2Journey(res.data) : null;
     },
-    { revalidateOnFocus: false, revalidateIfStale: false }
+    { revalidateOnFocus: false, revalidateIfStale: false },
   );
 
   return { journey: (data ?? null) as JourneyItem | null, isLoading, error };
@@ -92,12 +95,12 @@ export function useJourneyProgress(journeyId: string | null) {
   const { data, isLoading, error } = useSWR(
     key,
     async () => {
-      console.log('[useJourneyProgress] FETCH start', { journeyId, key });
+      console.log("[useJourneyProgress] FETCH start", { journeyId, key });
       const res = await journeysControllerGetByJourneyId({
         path: { journeyId: journeyId! },
         query: { preview: true },
       });
-      console.log('[useJourneyProgress] FETCH result', {
+      console.log("[useJourneyProgress] FETCH result", {
         hasError: !!res.error,
         hasData: !!res.data,
         errorShape: res.error ? Object.keys(res.error as object) : null,
@@ -111,18 +114,18 @@ export function useJourneyProgress(journeyId: string | null) {
           (res as { status?: number }).status ??
           (res.error as { statusCode?: number; status?: number })?.statusCode ??
           (res.error as { statusCode?: number; status?: number })?.status;
-        console.log('[useJourneyProgress] extracted status', status);
+        console.log("[useJourneyProgress] extracted status", status);
         if (status === 404) {
-          console.log('[useJourneyProgress] 404 → return null');
+          console.log("[useJourneyProgress] 404 → return null");
           return null;
         }
-        console.error('[useJourneyProgress] throwing error');
+        console.error("[useJourneyProgress] throwing error");
         throw new Error(JSON.stringify(res.error));
       }
-      console.log('[useJourneyProgress] returning data', { id: res.data?.id });
+      console.log("[useJourneyProgress] returning data", { id: res.data?.id });
       return res.data ?? null;
     },
-    { revalidateOnFocus: false }
+    { revalidateOnFocus: false },
   );
 
   return { progress: data ?? null, isLoading, error };
@@ -136,7 +139,7 @@ export function useEnrolledJourneys() {
       if (res.error) throw new Error(JSON.stringify(res.error));
       return res.data?.items ?? [];
     },
-    { revalidateOnFocus: false }
+    { revalidateOnFocus: false },
   );
   return { enrollments: data ?? [], isLoading, error };
 }
@@ -149,7 +152,7 @@ export function useGamification() {
       if (res.error) throw new Error(JSON.stringify(res.error));
       return res.data ?? null;
     },
-    { revalidateOnFocus: false }
+    { revalidateOnFocus: false },
   );
   return { gamification: data ?? null, isLoading, error };
 }
@@ -172,7 +175,7 @@ async function replaceCache(journeyId: string, enrollment: PatientJourneyRespons
  */
 export async function subscribeToJourney(journey: JourneyItem): Promise<void> {
   if (journey.isPremium) {
-    throw new Error('Purchase the package to get access — you will be auto-subscribed.');
+    throw new Error("Purchase the package to get access — you will be auto-subscribed.");
   }
   // Backend rejects the enroll POST for free journeys — a non-preview GET
   // triggers auto-enrollment server-side.
@@ -187,11 +190,11 @@ export async function subscribeToJourney(journey: JourneyItem): Promise<void> {
 
 /** Idempotent server-driven day advance. Safe to call on mount / focus. */
 export async function tickJourney(enrollmentId: string, journeyId: string): Promise<void> {
-  console.log('[tickJourney] CALL', { enrollmentId, journeyId });
+  console.log("[tickJourney] CALL", { enrollmentId, journeyId });
   const res = await journeysControllerTick({
     path: { id: enrollmentId },
   });
-  console.log('[tickJourney] result', { hasError: !!res.error, hasData: !!res.data });
+  console.log("[tickJourney] result", { hasError: !!res.error, hasData: !!res.data });
   if (res.error) throw new Error(JSON.stringify(res.error));
   if (res.data) await replaceCache(journeyId, res.data);
 }
@@ -202,32 +205,41 @@ export async function tickJourney(enrollmentId: string, journeyId: string): Prom
  * applicable) matches the CMS content linked to the task.
  */
 export type TaskProof =
-  | { kind: 'ASSESSMENT'; assessmentCompletionId: string }
-  | { kind: 'WORKSHEET'; worksheetSubmissionId: string }
-  | { kind: 'SUB_JOURNAL'; selfJournalingId: string }
-  | { kind: 'JOURNAL'; journalEntryId?: string; selfJournalingId?: string }
-  | { kind: 'AUDIO'; audioId: string }
-  | { kind: 'VIDEO'; videoId: string }
-  | { kind: 'MOOD'; moodBefore: number; moodAfter: number }
-  | { kind: 'APPOINTMENT' | 'CONSULT_BOOKING'; appointmentId: string }
-  | { kind: 'READ' | 'OTHER'; note: string };
+  | { kind: "ASSESSMENT"; assessmentCompletionId: string }
+  | { kind: "WORKSHEET"; worksheetSubmissionId: string }
+  | { kind: "SUB_JOURNAL"; selfJournalingId: string }
+  | { kind: "JOURNAL"; journalEntryId?: string; selfJournalingId?: string }
+  | { kind: "AUDIO"; audioId: string }
+  | { kind: "VIDEO"; videoId: string }
+  | { kind: "MOOD"; moodBefore: number; moodAfter: number }
+  | { kind: "APPOINTMENT" | "CONSULT_BOOKING"; appointmentId: string }
+  | { kind: "READ" | "OTHER"; note: string };
 
 function proofToBody(proof: TaskProof): Record<string, unknown> {
   switch (proof.kind) {
-    case 'ASSESSMENT':      return { assessmentCompletionId: proof.assessmentCompletionId };
-    case 'WORKSHEET':       return { worksheetSubmissionId: proof.worksheetSubmissionId };
-    case 'SUB_JOURNAL':     return { selfJournalingId: proof.selfJournalingId };
-    case 'JOURNAL':         return {
-      ...(proof.journalEntryId ? { journalEntryId: proof.journalEntryId } : {}),
-      ...(proof.selfJournalingId ? { selfJournalingId: proof.selfJournalingId } : {}),
-    };
-    case 'AUDIO':           return { audioId: proof.audioId };
-    case 'VIDEO':           return { videoId: proof.videoId };
-    case 'MOOD':            return { moodBefore: proof.moodBefore, moodAfter: proof.moodAfter };
-    case 'APPOINTMENT':
-    case 'CONSULT_BOOKING': return { appointmentId: proof.appointmentId };
-    case 'READ':
-    case 'OTHER':           return { note: proof.note };
+    case "ASSESSMENT":
+      return { assessmentCompletionId: proof.assessmentCompletionId };
+    case "WORKSHEET":
+      return { worksheetSubmissionId: proof.worksheetSubmissionId };
+    case "SUB_JOURNAL":
+      return { selfJournalingId: proof.selfJournalingId };
+    case "JOURNAL":
+      return {
+        ...(proof.journalEntryId ? { journalEntryId: proof.journalEntryId } : {}),
+        ...(proof.selfJournalingId ? { selfJournalingId: proof.selfJournalingId } : {}),
+      };
+    case "AUDIO":
+      return { audioId: proof.audioId };
+    case "VIDEO":
+      return { videoId: proof.videoId };
+    case "MOOD":
+      return { moodBefore: proof.moodBefore, moodAfter: proof.moodAfter };
+    case "APPOINTMENT":
+    case "CONSULT_BOOKING":
+      return { appointmentId: proof.appointmentId };
+    case "READ":
+    case "OTHER":
+      return { note: proof.note };
   }
 }
 
@@ -264,7 +276,7 @@ export async function completeJourneyDay(
 /** Fetch the server-generated day summary for a completed day. Returns null on error. */
 export async function getDaySummary(
   enrollmentId: string,
-  day: number
+  day: number,
 ): Promise<DaySummaryResponseDto | null> {
   const res = await journeysControllerGetDaySummary({
     path: { id: enrollmentId },

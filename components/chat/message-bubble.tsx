@@ -1,7 +1,7 @@
-import { ThinkingComponent } from "@/components/chat/thinking-component";
 import { MessageEnrichments } from "@/components/chat/specialized-components/message-enrichments";
-import { Streamdown } from "streamdown";
+import { ThinkingComponent } from "@/components/chat/thinking-component";
 import type { UIMessage } from "ai";
+import { Streamdown } from "streamdown";
 
 interface MessageBubbleProps {
   message: UIMessage;
@@ -44,9 +44,7 @@ export function MessageBubble({
           </div>
         </div>
       )}
-      {!isUser && !isLastAssistantStreaming && (
-        <MessageEnrichments text={messageText} />
-      )}
+      {!isUser && !isLastAssistantStreaming && <MessageEnrichments text={messageText} />}
       <span
         className={`mt-1 px-1 text-[10px] text-muted-foreground ${
           isUser ? "text-right" : "text-left"

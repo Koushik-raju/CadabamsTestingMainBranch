@@ -26,12 +26,12 @@
  *
  * LAST UPDATED: 2026-04-20 — upgraded from CSS snap scroll to embla carousel
  */
-'use client';
+"use client";
 
-import { useCallback, useEffect, useRef, useState } from 'react';
-import useEmblaCarousel from 'embla-carousel-react';
-import { cn } from '@/lib/utils';
-import { FeaturedJourneyCard } from './featured-journey-card';
+import { cn } from "@/lib/utils";
+import useEmblaCarousel from "embla-carousel-react";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { FeaturedJourneyCard } from "./featured-journey-card";
 
 export interface FeaturedSlide {
   key: string;
@@ -56,7 +56,7 @@ export function FeaturedJourneyCarousel({
 }: FeaturedJourneyCarouselProps) {
   const [emblaRef, emblaApi] = useEmblaCarousel({
     loop: true,
-    align: 'start',
+    align: "start",
     dragFree: false,
   });
   const [active, setActive] = useState(0);
@@ -70,19 +70,19 @@ export function FeaturedJourneyCarousel({
   useEffect(() => {
     if (!emblaApi) return;
     onSelect();
-    emblaApi.on('select', onSelect);
-    emblaApi.on('reInit', onSelect);
+    emblaApi.on("select", onSelect);
+    emblaApi.on("reInit", onSelect);
 
     const onPointerDown = () => (pausedRef.current = true);
     const onPointerUp = () => (pausedRef.current = false);
-    emblaApi.on('pointerDown', onPointerDown);
-    emblaApi.on('pointerUp', onPointerUp);
+    emblaApi.on("pointerDown", onPointerDown);
+    emblaApi.on("pointerUp", onPointerUp);
 
     return () => {
-      emblaApi.off('select', onSelect);
-      emblaApi.off('reInit', onSelect);
-      emblaApi.off('pointerDown', onPointerDown);
-      emblaApi.off('pointerUp', onPointerUp);
+      emblaApi.off("select", onSelect);
+      emblaApi.off("reInit", onSelect);
+      emblaApi.off("pointerDown", onPointerDown);
+      emblaApi.off("pointerUp", onPointerUp);
     };
   }, [emblaApi, onSelect]);
 
@@ -95,10 +95,7 @@ export function FeaturedJourneyCarousel({
     return () => window.clearInterval(id);
   }, [emblaApi, slides.length, autoplayMs]);
 
-  const scrollTo = useCallback(
-    (i: number) => emblaApi?.scrollTo(i),
-    [emblaApi]
-  );
+  const scrollTo = useCallback((i: number) => emblaApi?.scrollTo(i), [emblaApi]);
 
   if (slides.length === 0) return null;
 
@@ -131,8 +128,8 @@ export function FeaturedJourneyCarousel({
               aria-label={`Go to slide ${i + 1}`}
               onClick={() => scrollTo(i)}
               className={cn(
-                'h-1.5 rounded-full transition-all',
-                i === active ? 'w-4 bg-primary' : 'w-1.5 bg-muted'
+                "h-1.5 rounded-full transition-all",
+                i === active ? "w-4 bg-primary" : "w-1.5 bg-muted",
               )}
             />
           ))}

@@ -1,12 +1,16 @@
-import useSWR from 'swr';
+import { selfJournalingKey } from "@/lib/swr-keys";
 import {
-  journalingControllerListMine,
   journalingControllerCreateEntry,
-  journalingControllerUpdateEntry,
   journalingControllerDeleteEntry,
-} from '@/sdk/backend-v2';
-import type { JournalEntryResponseDto, CreateJournalEntryDto, UpdateJournalEntryDto } from '@/sdk/backend-v2';
-import { selfJournalingKey } from '@/lib/swr-keys';
+  journalingControllerListMine,
+  journalingControllerUpdateEntry,
+} from "@/sdk/backend-v2";
+import type {
+  CreateJournalEntryDto,
+  JournalEntryResponseDto,
+  UpdateJournalEntryDto,
+} from "@/sdk/backend-v2";
+import useSWR from "swr";
 
 export type { JournalEntryResponseDto };
 
@@ -24,14 +28,14 @@ export interface JournalEntry {
 }
 
 function extractString(val: unknown): string {
-  if (typeof val === 'string') return val;
-  if (val && typeof val === 'object') {
+  if (typeof val === "string") return val;
+  if (val && typeof val === "object") {
     const o = val as Record<string, unknown>;
-    for (const k of ['en', 'value', 'text', 'content']) {
-      if (typeof o[k] === 'string') return o[k] as string;
+    for (const k of ["en", "value", "text", "content"]) {
+      if (typeof o[k] === "string") return o[k] as string;
     }
   }
-  return '';
+  return "";
 }
 
 function mapPrompts(raw: Array<Array<unknown>>): JournalPrompt[] {
@@ -39,9 +43,9 @@ function mapPrompts(raw: Array<Array<unknown>>): JournalPrompt[] {
     .map((item) => {
       // Each item may be an object { heading, text } or array [heading, text]
       if (Array.isArray(item)) {
-        return { heading: String(item[0] ?? ''), text: String(item[1] ?? '') };
+        return { heading: String(item[0] ?? ""), text: String(item[1] ?? "") };
       }
-      if (item && typeof item === 'object') {
+      if (item && typeof item === "object") {
         const o = item as Record<string, unknown>;
         return { heading: extractString(o.heading), text: extractString(o.text) };
       }
@@ -52,7 +56,10 @@ function mapPrompts(raw: Array<Array<unknown>>): JournalPrompt[] {
 
 export function mapDtoToEntry(dto: JournalEntryResponseDto): JournalEntry {
   const prompts = mapPrompts(dto.prompts ?? []);
-  const entry = extractString(dto.entryText) || prompts.map((p) => `${p.heading}\n${p.text}`).join('\n\n') || undefined;
+  const entry =
+    extractString(dto.entryText) ||
+    prompts.map((p) => `${p.heading}\n${p.text}`).join("\n\n") ||
+    undefined;
   return {
     id: dto.id,
     entry,
@@ -66,27 +73,32 @@ export function useSelfJournaling() {
   const { data, error, isLoading, mutate } = useSWR<JournalEntry[]>(
     selfJournalingKey(),
     async () => {
-      const res = await journalingControllerListMine({ path: { campus: 'cadabams' } });
+      const res = await journalingControllerListMine({ path: { campus: "cadabams" } });
       const entries = (res.data ?? []) as JournalEntryResponseDto[];
       return entries
         .map(mapDtoToEntry)
         .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
-    }
+    },
   );
 
   return { entries: data ?? [], isLoading, error, mutate };
 }
 
-export async function createEntry(body: CreateJournalEntryDto): Promise<JournalEntryResponseDto | null> {
-  const res = await journalingControllerCreateEntry({ path: { campus: 'cadabams' }, body });
+export async function createEntry(
+  body: CreateJournalEntryDto,
+): Promise<JournalEntryResponseDto | null> {
+  const res = await journalingControllerCreateEntry({ path: { campus: "cadabams" }, body });
   return (res.data as JournalEntryResponseDto | undefined) ?? null;
 }
 
-export async function updateEntry(id: string, body: UpdateJournalEntryDto): Promise<JournalEntryResponseDto | null> {
-  const res = await journalingControllerUpdateEntry({ path: { campus: 'cadabams', id }, body });
+export async function updateEntry(
+  id: string,
+  body: UpdateJournalEntryDto,
+): Promise<JournalEntryResponseDto | null> {
+  const res = await journalingControllerUpdateEntry({ path: { campus: "cadabams", id }, body });
   return (res.data as JournalEntryResponseDto | undefined) ?? null;
 }
 
 export async function deleteEntry(id: string): Promise<void> {
-  await journalingControllerDeleteEntry({ path: { campus: 'cadabams', id } });
+  await journalingControllerDeleteEntry({ path: { campus: "cadabams", id } });
 }

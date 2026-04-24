@@ -1,6 +1,6 @@
-'use client';
+"use client";
 
-import { CheckCircle2 } from 'lucide-react';
+import { CheckCircle2 } from "lucide-react";
 
 export interface McqOption {
   id?: string | number;
@@ -25,11 +25,7 @@ export function McqSelector({ title, subTitle, questions, selected, onSelect }: 
           {subTitle}
         </p>
       )}
-      {title && (
-        <h2 className="text-xl font-bold text-foreground mb-6 leading-snug">
-          {title}
-        </h2>
-      )}
+      {title && <h2 className="text-xl font-bold text-foreground mb-6 leading-snug">{title}</h2>}
       <div className="flex flex-col gap-3 w-full">
         {questions.map((q, index) => {
           const label = q.question || q.option || q.value || String(index + 1);
@@ -40,13 +36,13 @@ export function McqSelector({ title, subTitle, questions, selected, onSelect }: 
               onClick={() => onSelect(label)}
               className={`flex items-center justify-between gap-3 px-4 py-4 rounded-2xl border-2 w-full text-left transition-all duration-150 active:scale-[0.98] ${
                 isSelected
-                  ? 'border-primary bg-primary/5'
-                  : 'border-border bg-card hover:border-primary/30'
+                  ? "border-primary bg-primary/5"
+                  : "border-border bg-card hover:border-primary/30"
               }`}
             >
               <span
                 className={`text-sm font-medium leading-snug ${
-                  isSelected ? 'text-primary' : 'text-foreground'
+                  isSelected ? "text-primary" : "text-foreground"
                 }`}
               >
                 {label}

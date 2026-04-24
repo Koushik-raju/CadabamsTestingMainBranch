@@ -1,15 +1,19 @@
-'use client';
+"use client";
 
-import { useState, useEffect, use } from 'react';
-import { useRouter } from 'next/navigation';
-import { Button } from '@/components/ui/button';
-import { Progress } from '@/components/ui/progress';
-import { Skeleton } from '@/components/ui/skeleton';
-import { BackButton } from '@/components/shared/navigation/back-button';
-import { QuestionRenderer, type Question, type AnswerValue } from '@/components/shared/questions/question-renderer';
-import { ChevronRight, ChevronLeft, CheckCircle2, AlertCircle } from 'lucide-react';
-import { cmsWorksheetsControllerFindOne } from '@/sdk/backend-v2';
-import { getUser } from '@/lib/cookies';
+import { BackButton } from "@/components/shared/navigation/back-button";
+import {
+  type AnswerValue,
+  type Question,
+  QuestionRenderer,
+} from "@/components/shared/questions/question-renderer";
+import { Button } from "@/components/ui/button";
+import { Progress } from "@/components/ui/progress";
+import { Skeleton } from "@/components/ui/skeleton";
+import { getUser } from "@/lib/cookies";
+import { cmsWorksheetsControllerFindOne } from "@/sdk/backend-v2";
+import { AlertCircle, CheckCircle2, ChevronLeft, ChevronRight } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { use, useEffect, useState } from "react";
 
 interface WorksheetData {
   title?: string;
@@ -42,22 +46,22 @@ export default function WorksheetFormPage({ params }: { params: Promise<{ id: st
         // Initialize answers
         const initial: Record<string, AnswerValue> = {};
         (data?.Questions || []).forEach((q, index) => {
-          const key = `${q.__component || 'q'}_${q.id}_step_${index}`;
-          const comp = q.__component || '';
-          if (comp.includes('smiley') || q.type === 'smiley') {
+          const key = `${q.__component || "q"}_${q.id}_step_${index}`;
+          const comp = q.__component || "";
+          if (comp.includes("smiley") || q.type === "smiley") {
             initial[key] = { selected: 2 };
-          } else if (comp.includes('yes') || q.type === 'yes_no') {
-            initial[key] = { selected: '' };
-          } else if (comp.includes('text') || q.type === 'text') {
-            initial[key] = { text: '' };
+          } else if (comp.includes("yes") || q.type === "yes_no") {
+            initial[key] = { selected: "" };
+          } else if (comp.includes("text") || q.type === "text") {
+            initial[key] = { text: "" };
           } else {
-            initial[key] = { selected: '' };
+            initial[key] = { selected: "" };
           }
         });
         setAnswers(initial);
       } catch (err) {
-        console.error('Error fetching worksheet:', err);
-        setError('Failed to load worksheet. Please try again.');
+        console.error("Error fetching worksheet:", err);
+        setError("Failed to load worksheet. Please try again.");
       } finally {
         setLoading(false);
       }
@@ -70,25 +74,25 @@ export default function WorksheetFormPage({ params }: { params: Promise<{ id: st
   useEffect(() => {
     if (!questions.length) return;
     const q = questions[currentStep];
-    const key = `${q.__component || 'q'}_${q.id}_step_${currentStep}`;
+    const key = `${q.__component || "q"}_${q.id}_step_${currentStep}`;
     const ans = answers[key];
-    const comp = q.__component || '';
-    const type = q.type || '';
+    const comp = q.__component || "";
+    const type = q.type || "";
 
-    if (comp.includes('smiley') || type === 'smiley') {
+    if (comp.includes("smiley") || type === "smiley") {
       setIsStepComplete(true);
-    } else if (comp.includes('yes') || type === 'yes_no') {
-      setIsStepComplete(!!((ans as { selected?: string })?.selected));
-    } else if (comp.includes('text') || type === 'text') {
-      setIsStepComplete(((ans as { text?: string })?.text || '').trim().length > 0);
+    } else if (comp.includes("yes") || type === "yes_no") {
+      setIsStepComplete(!!(ans as { selected?: string })?.selected);
+    } else if (comp.includes("text") || type === "text") {
+      setIsStepComplete(((ans as { text?: string })?.text || "").trim().length > 0);
     } else {
-      setIsStepComplete(!!((ans as { selected?: string })?.selected));
+      setIsStepComplete(!!(ans as { selected?: string })?.selected);
     }
   }, [currentStep, answers, questions]);
 
   const currentKey = questions[currentStep]
-    ? `${questions[currentStep].__component || 'q'}_${questions[currentStep].id}_step_${currentStep}`
-    : '';
+    ? `${questions[currentStep].__component || "q"}_${questions[currentStep].id}_step_${currentStep}`
+    : "";
 
   const handleAnswer = (value: AnswerValue) => {
     setAnswers((prev) => ({ ...prev, [currentKey]: value }));
@@ -116,22 +120,22 @@ export default function WorksheetFormPage({ params }: { params: Promise<{ id: st
     setSubmitting(true);
     try {
       const user = await getUser();
-      const leadId = String(user?.lead_id || '');
+      const leadId = String(user?.lead_id || "");
 
       // Build payload
       const payload: Record<string, unknown> = { date: new Date().toISOString() };
       questions.forEach((q, index) => {
-        const key = `${q.__component || 'q'}_${q.id}_step_${index}`;
+        const key = `${q.__component || "q"}_${q.id}_step_${index}`;
         payload[key] = {
           ...answers[key],
-          questionText: q.question || q.title || q.label || 'Unknown Question',
+          questionText: q.question || q.title || q.label || "Unknown Question",
         };
       });
 
       setSubmitted(true);
     } catch (err) {
-      console.error('Error submitting worksheet:', err);
-      setError('Failed to submit worksheet. Please try again.');
+      console.error("Error submitting worksheet:", err);
+      setError("Failed to submit worksheet. Please try again.");
     } finally {
       setSubmitting(false);
     }
@@ -148,7 +152,9 @@ export default function WorksheetFormPage({ params }: { params: Promise<{ id: st
           <Skeleton className="h-3 w-full max-w-sm rounded-full" />
           <Skeleton className="h-8 w-3/4 max-w-sm" />
           <div className="flex flex-col gap-3 w-full max-w-md mt-4">
-            {[1, 2, 3].map((i) => <Skeleton key={i} className="h-12 w-full rounded-full" />)}
+            {[1, 2, 3].map((i) => (
+              <Skeleton key={i} className="h-12 w-full rounded-full" />
+            ))}
           </div>
         </div>
       </div>
@@ -177,9 +183,7 @@ export default function WorksheetFormPage({ params }: { params: Promise<{ id: st
         <p className="text-muted-foreground text-sm mb-6 max-w-xs">
           Your responses have been saved. Well done on completing this worksheet.
         </p>
-        <Button onClick={() => router.push('/assessments')}>
-          Back to Assignments
-        </Button>
+        <Button onClick={() => router.push("/assessments")}>Back to Assignments</Button>
       </div>
     );
   }
@@ -198,7 +202,7 @@ export default function WorksheetFormPage({ params }: { params: Promise<{ id: st
   const progress = Math.round(((currentStep + 1) / questions.length) * 100);
   const currentQuestion = questions[currentStep];
   const isLastStep = currentStep === questions.length - 1;
-  const worksheetTitle = worksheet?.title || 'Worksheet';
+  const worksheetTitle = worksheet?.title || "Worksheet";
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
@@ -243,9 +247,9 @@ export default function WorksheetFormPage({ params }: { params: Promise<{ id: st
           onClick={handleNext}
         >
           {submitting ? (
-            'Submitting...'
+            "Submitting..."
           ) : isLastStep ? (
-            'Submit Worksheet'
+            "Submit Worksheet"
           ) : (
             <>
               Continue

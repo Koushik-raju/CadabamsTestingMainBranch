@@ -41,83 +41,88 @@
  *   globalMutate (swr) — revalidates enrollment key on return
  *   journeyEnrollmentKey — lib/swr-keys
  *
- * LAST UPDATED: 2026-04-22 — (a) cooldown banner shows whenever the server
- *   reports a future nextDayUnlocksAt (dropped the brittle !allComplete guard);
- *   (b) auto-scroll polls for the target node for up to ~2s instead of firing
- *   a single 400ms setTimeout; (c) navigateToTask falls back to constructing
- *   an id-specific URL from CMS content when destinationPath is empty, and
- *   appends journeyEnrollmentId + journeyTaskId so destination pages can call
- *   completeTask with a proof id on the way back; (d) task NodeTaskType is
- *   sourced from the server-derived kind (EnrollmentTaskDto.kind) when
- *   available, with client getTaskType only as a pre-enrolment fallback.
+ * LAST UPDATED: 2026-04-24 — fall back to getTaskType(task) when server kind
+ *   is OTHER (DB relation not yet connected) so assessment nodes don't render
+ *   as "journal". Previously: cooldown banner, auto-scroll polling, id-specific
+ *   URL fallback, server-kind sourcing with client fallback for pre-enrolment.
  */
-'use client';
+"use client";
 
-import { useEffect, useMemo, useRef, useState } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
-import { mutate as globalMutate } from 'swr';
-import { toast } from 'react-toastify';
+import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet";
+import { type JourneyReturnTaskKind, useJourneyReturn } from "@/contexts/journey-return-context";
 import {
-  Flame, Zap, Lock, Clock, BarChart2, Timer, Sparkles, Crown,
-} from 'lucide-react';
-import { cn } from '@/lib/utils';
-import { PathChain, getTaskType, type PathChainNode, type ChainItem } from './path-chain';
-import { XpFloat } from './xp-float';
-import { JourneyTaskActionSheet, type TaskActionSheetData } from './journey-task-action-sheet';
-import { JourneyUnitTasksSheet, type UnitTask } from './journey-unit-tasks-sheet';
-import { JourneyDaySummaryModal } from './journey-day-summary-modal';
-import { JourneyPreviewSheet } from './journey-preview-sheet';
-import { JourneyDaySummarySheet } from './journey-day-summary-sheet';
-import type { NodeVariant } from './path-node';
-import {
-  Sheet, SheetContent, SheetTitle,
-} from '@/components/ui/sheet';
-import {
-  subscribeToJourney, updateNodeProgress, tickJourney,
-  type JourneyProgress, type TaskProof,
-} from '@/hooks/journeys/use-journey-detail';
-import { hapticLight, hapticMedium, hapticSuccess, hapticWarning } from '@/lib/haptics';
-import { useJourneyReturn, type JourneyReturnTaskKind } from '@/contexts/journey-return-context';
-import { extractJourneyName, extractJourneyDescription } from '@/types/journey';
-import type { JourneyItem, JourneyTask } from '@/types/journey';
-import { fixImageUrl } from '@/lib/utils';
-import type { EnrollmentTaskDto } from '@/sdk/backend-v2';
-import { journeyEnrollmentKey } from '@/lib/swr-keys';
+  type JourneyProgress,
+  type TaskProof,
+  subscribeToJourney,
+  tickJourney,
+  updateNodeProgress,
+} from "@/hooks/journeys/use-journey-detail";
+import { hapticLight, hapticMedium, hapticSuccess, hapticWarning } from "@/lib/haptics";
+import { journeyEnrollmentKey } from "@/lib/swr-keys";
+import { cn } from "@/lib/utils";
+import { fixImageUrl } from "@/lib/utils";
+import type { EnrollmentTaskDto } from "@/sdk/backend-v2";
+import { extractJourneyDescription, extractJourneyName } from "@/types/journey";
+import type { JourneyItem, JourneyTask } from "@/types/journey";
+import { BarChart2, Clock, Flame, Lock, Sparkles, Timer, Zap } from "lucide-react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { toast } from "react-toastify";
+import { mutate as globalMutate } from "swr";
+import { JourneyDaySummaryModal } from "./journey-day-summary-modal";
+import { JourneyDaySummarySheet } from "./journey-day-summary-sheet";
+import { JourneyPreviewSheet } from "./journey-preview-sheet";
+import { JourneyTaskActionSheet, type TaskActionSheetData } from "./journey-task-action-sheet";
+import { JourneyUnitTasksSheet, type UnitTask } from "./journey-unit-tasks-sheet";
+import { type ChainItem, PathChain, type PathChainNode, getTaskType } from "./path-chain";
+import type { NodeVariant } from "./path-node";
+import { XpFloat } from "./xp-float";
 
 // ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
 
-function mapState(state: EnrollmentTaskDto['state']): NodeVariant {
-  if (state === 'completed') return 'completed';
-  if (state === 'active') return 'active';
-  if (state === 'locked') return 'locked';
-  return 'default'; // 'available'
+function mapState(state: EnrollmentTaskDto["state"]): NodeVariant {
+  if (state === "completed") return "completed";
+  if (state === "active") return "active";
+  if (state === "locked") return "locked";
+  return "default"; // 'available'
 }
 
 // Map the authoritative server-derived kind to the visual NodeTaskType bucket.
 // Kept narrow — if the server ever adds a new kind, fall back to 'journal'.
-function mapServerKind(kind: EnrollmentTaskDto['kind']): 'assessment' | 'audio' | 'video' | 'journal' | 'book' | 'gift' | 'read' {
+function mapServerKind(
+  kind: EnrollmentTaskDto["kind"],
+): "assessment" | "audio" | "video" | "journal" | "book" | "gift" | "read" {
   switch (kind) {
-    case 'ASSESSMENT': return 'assessment';
-    case 'AUDIO':      return 'audio';
-    case 'VIDEO':      return 'video';
-    case 'MOOD':       return 'gift';
-    case 'APPOINTMENT':
-    case 'CONSULT_BOOKING': return 'book';
-    case 'READ':       return 'read';
-    case 'WORKSHEET':
-    case 'JOURNAL':
-    case 'SUB_JOURNAL':
-    case 'OTHER':
-    default:           return 'journal';
+    case "ASSESSMENT":
+      return "assessment";
+    case "AUDIO":
+      return "audio";
+    case "VIDEO":
+      return "video";
+    case "MOOD":
+      return "gift";
+    case "APPOINTMENT":
+    case "CONSULT_BOOKING":
+      return "book";
+    case "READ":
+      return "read";
+    case "WORKSHEET":
+    case "JOURNAL":
+    case "SUB_JOURNAL":
+    case "OTHER":
+    default:
+      return "journal";
   }
 }
 
 function formatCountdown(ms: number): string {
   const total = Math.max(0, Math.ceil(ms / 1000));
-  const mm = Math.floor(total / 60).toString().padStart(2, '0');
-  const ss = (total % 60).toString().padStart(2, '0');
+  const mm = Math.floor(total / 60)
+    .toString()
+    .padStart(2, "0");
+  const ss = (total % 60).toString().padStart(2, "0");
   return `${mm}:${ss}`;
 }
 
@@ -144,12 +149,26 @@ function StatsBar({ progress }: { progress: JourneyProgress }) {
       <div className="flex items-center gap-1.5">
         <div className="relative w-8 h-8">
           <svg className="w-full h-full -rotate-90" viewBox="0 0 32 32">
-            <circle cx="16" cy="16" r="13" fill="none" stroke="currentColor" strokeWidth="3" className="text-muted" />
             <circle
-              cx="16" cy="16" r="13" fill="none" stroke="currentColor" strokeWidth="3"
+              cx="16"
+              cy="16"
+              r="13"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="3"
+              className="text-muted"
+            />
+            <circle
+              cx="16"
+              cy="16"
+              r="13"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="3"
               strokeDasharray={`${2 * Math.PI * 13}`}
               strokeDashoffset={`${2 * Math.PI * 13 * (1 - pct / 100)}`}
-              strokeLinecap="round" className="text-primary transition-all duration-500"
+              strokeLinecap="round"
+              className="text-primary transition-all duration-500"
             />
           </svg>
         </div>
@@ -174,21 +193,21 @@ interface JourneyPathViewProps {
 // ---------------------------------------------------------------------------
 
 export function JourneyPathView({ journey, progress, journeyId }: JourneyPathViewProps) {
-  console.log('[JourneyPathView] render', {
+  console.log("[JourneyPathView] render", {
     journeyId,
     hasProgress: !!progress,
     progressId: progress?.id,
     nextDayUnlocksAt: progress?.nextDayUnlocksAt,
   });
-  const router       = useRouter();
+  const router = useRouter();
   // useSearchParams required to satisfy Next.js hook rules; kept for potential future use.
   useSearchParams();
   const journeyReturn = useJourneyReturn();
 
   const isSubscribed = !!progress;
-  const steps        = journey.steps ?? [];
-  const dayCount     = steps.reduce((a, s) => a + (s.tasks?.length ?? 0), 0);
-  const months       = Math.max(1, Math.round(steps.length / 30));
+  const steps = journey.steps ?? [];
+  const dayCount = steps.reduce((a, s) => a + (s.tasks?.length ?? 0), 0);
+  const months = Math.max(1, Math.round(steps.length / 30));
 
   // Server-owned task state lookup (plain taskId -> EnrollmentTaskDto).
   const taskStateById = useMemo(() => {
@@ -197,45 +216,52 @@ export function JourneyPathView({ journey, progress, journeyId }: JourneyPathVie
     return map;
   }, [progress]);
 
-  const [subscribing, setSubscribing]             = useState(false);
-  const [premiumSheetOpen, setPremiumSheetOpen]   = useState(false);
-  const [showXpFloat, setShowXpFloat]             = useState(false);
-  const [actionSheetData, setActionSheetData]     = useState<TaskActionSheetData | null>(null);
-  const [actionSheetOpen, setActionSheetOpen]     = useState(false);
-  const [unitTasksOpen, setUnitTasksOpen]         = useState(false);
-  const [unitTasksData, setUnitTasksData]         = useState<{ title: string; summary: string | null; tasks: UnitTask[] } | null>(null);
-  const [summaryModalDay, setSummaryModalDay]     = useState<number | null>(null);
+  const [subscribing, setSubscribing] = useState(false);
+  const [premiumSheetOpen, setPremiumSheetOpen] = useState(false);
+  const [showXpFloat, setShowXpFloat] = useState(false);
+  const [actionSheetData, setActionSheetData] = useState<TaskActionSheetData | null>(null);
+  const [actionSheetOpen, setActionSheetOpen] = useState(false);
+  const [unitTasksOpen, setUnitTasksOpen] = useState(false);
+  const [unitTasksData, setUnitTasksData] = useState<{
+    title: string;
+    summary: string | null;
+    tasks: UnitTask[];
+  } | null>(null);
+  const [summaryModalDay, setSummaryModalDay] = useState<number | null>(null);
 
   // Preview sheet (unsubscribed users)
-  const [previewSheetOpen, setPreviewSheetOpen]   = useState(false);
-  const [previewSheetNode, setPreviewSheetNode]   = useState<PathChainNode | null>(null);
+  const [previewSheetOpen, setPreviewSheetOpen] = useState(false);
+  const [previewSheetNode, setPreviewSheetNode] = useState<PathChainNode | null>(null);
 
   // Day summary sheet
-  const [daySummaryOpen, setDaySummaryOpen]       = useState(false);
+  const [daySummaryOpen, setDaySummaryOpen] = useState(false);
 
   // Pulse animation ref (scale effect on scroll-to node)
-  const [pulseNodeId, setPulseNodeId]             = useState<string | null>(null);
+  const [pulseNodeId, setPulseNodeId] = useState<string | null>(null);
 
   // Track previous todayDone to detect day completion in-session
-  const prevTodayDoneRef                          = useRef<number>(-1);
+  const prevTodayDoneRef = useRef<number>(-1);
   // Prevent the countdown-zero tick from firing more than once per unlock timestamp
-  const lastCountdownTickRef                      = useRef<number>(0);
+  const lastCountdownTickRef = useRef<number>(0);
 
   const xpTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  const currentDay    = progress?.currentDay ?? 1;
+  const currentDay = progress?.currentDay ?? 1;
   const currentDayIdx = Math.min(Math.max(0, currentDay - 1), Math.max(0, steps.length - 1));
-  const activeStep    = steps[currentDayIdx];
+  const activeStep = steps[currentDayIdx];
   const activeStepTitle = activeStep
-    ? (typeof activeStep.title === 'string' ? activeStep.title : extractJourneyName(activeStep.title as never))
-    : '';
+    ? typeof activeStep.title === "string"
+      ? activeStep.title
+      : extractJourneyName(activeStep.title as never)
+    : "";
 
   const currentDayTasks = progress?.tasks?.filter((t) => t.dayNumber === currentDay) ?? [];
   const todayTotal = currentDayTasks.length;
-  const todayDone  = currentDayTasks.filter((t) => t.state === 'completed').length;
+  const todayDone = currentDayTasks.filter((t) => t.state === "completed").length;
 
   const allComplete = !!progress?.isCompleted;
-  const isPaidFreePreview = isSubscribed && (journey.isPremium ?? false) && !progress?.canAccessPremium;
+  const isPaidFreePreview =
+    isSubscribed && (journey.isPremium ?? false) && !progress?.canAccessPremium;
 
   // Server-driven day advance — fire once on mount and once more when the
   // countdown hits zero. The endpoint is idempotent.
@@ -244,7 +270,7 @@ export function JourneyPathView({ journey, progress, journeyId }: JourneyPathVie
   progressRef.current = progress;
   const enrollmentId = progress?.id ?? null;
   useEffect(() => {
-    console.log('[JourneyPathView] tick-effect run', { enrollmentId, ticked: tickedRef.current });
+    console.log("[JourneyPathView] tick-effect run", { enrollmentId, ticked: tickedRef.current });
     if (!enrollmentId || tickedRef.current) return;
     tickedRef.current = true;
     tickJourney(enrollmentId, journeyId).catch(console.error);
@@ -255,26 +281,30 @@ export function JourneyPathView({ journey, progress, journeyId }: JourneyPathVie
       sessionStorage.removeItem(`journey-xp-check-${journeyId}`);
       try {
         const prevDoneIds: string[] = JSON.parse(xpCheckStr);
-        const nowDoneIds = progressRef.current?.tasks?.filter(t => t.state === 'completed').map(t => t.taskId) ?? [];
-        const newlyDone = nowDoneIds.filter(id => !prevDoneIds.includes(id));
+        const nowDoneIds =
+          progressRef.current?.tasks?.filter((t) => t.state === "completed").map((t) => t.taskId) ??
+          [];
+        const newlyDone = nowDoneIds.filter((id) => !prevDoneIds.includes(id));
         if (newlyDone.length > 0) {
           hapticSuccess();
           triggerXp();
         }
-      } catch { /* ignore */ }
+      } catch {
+        /* ignore */
+      }
     }
   }, [enrollmentId, journeyId]);
 
   // Return-verification: restore scroll and revalidate enrollment only when
   // returning from a task page (detected via sessionStorage markers).
   useEffect(() => {
-    const savedY      = sessionStorage.getItem(`journey-scroll-${journeyId}`);
+    const savedY = sessionStorage.getItem(`journey-scroll-${journeyId}`);
     const savedDoneStr = sessionStorage.getItem(`journey-done-${journeyId}`);
     const returningFromTask = !!savedY || !!savedDoneStr;
-    console.log('[JourneyPathView] return-verification effect', { journeyId, returningFromTask });
+    console.log("[JourneyPathView] return-verification effect", { journeyId, returningFromTask });
 
     if (savedY) {
-      window.scrollTo({ top: parseInt(savedY, 10), behavior: 'instant' });
+      window.scrollTo({ top: parseInt(savedY, 10), behavior: "instant" });
       sessionStorage.removeItem(`journey-scroll-${journeyId}`);
     }
 
@@ -285,7 +315,9 @@ export function JourneyPathView({ journey, progress, journeyId }: JourneyPathVie
         // XP check runs after SWR re-fetch below; capture prevDone for later
         // comparison via a local variable — progress is stale here so defer.
         sessionStorage.setItem(`journey-xp-check-${journeyId}`, JSON.stringify(prevDoneIds));
-      } catch { /* ignore */ }
+      } catch {
+        /* ignore */
+      }
     }
 
     // Only revalidate when we know we're returning from a task page.
@@ -296,11 +328,13 @@ export function JourneyPathView({ journey, progress, journeyId }: JourneyPathVie
   }, [journeyId]);
 
   // Countdown banner driven by server-provided nextDayUnlocksAt.
-  const nextUnlockMs = progress?.nextDayUnlocksAt ? new Date(progress.nextDayUnlocksAt).getTime() : 0;
+  const nextUnlockMs = progress?.nextDayUnlocksAt
+    ? new Date(progress.nextDayUnlocksAt).getTime()
+    : 0;
   const [now, setNow] = useState(() => Date.now());
   const cooldownRemainingMs = nextUnlockMs > 0 ? Math.max(0, nextUnlockMs - now) : 0;
   const showCooldownBanner = isSubscribed && !progress?.isCompleted && nextUnlockMs > now;
-  console.log('[JourneyPathView] cooldown', {
+  console.log("[JourneyPathView] cooldown", {
     nextDayUnlocksAt: progress?.nextDayUnlocksAt,
     nextUnlockMs,
     now,
@@ -320,8 +354,10 @@ export function JourneyPathView({ journey, progress, journeyId }: JourneyPathVie
   // lastCountdownTickRef prevents re-firing for the same nextDayUnlocksAt timestamp
   // when progress updates (new object reference from replaceCache).
   useEffect(() => {
-    console.log('[JourneyPathView] countdown-zero effect', {
-      enrollmentId, nextUnlockMs, cooldownRemainingMs,
+    console.log("[JourneyPathView] countdown-zero effect", {
+      enrollmentId,
+      nextUnlockMs,
+      cooldownRemainingMs,
       lastTick: lastCountdownTickRef.current,
     });
     if (!enrollmentId) return;
@@ -349,9 +385,11 @@ export function JourneyPathView({ journey, progress, journeyId }: JourneyPathVie
   // Compute the task ID to auto-scroll to (first active/available node today).
   const scrollTargetTaskId = useMemo(() => {
     if (!progress) return null;
-    const currentDayTasks2 = progress.tasks?.filter(t => t.dayNumber === currentDay) ?? [];
-    const firstNonDone = currentDayTasks2.find(t => t.state === 'active' || t.state === 'available');
-    return firstNonDone?.taskId ?? (currentDayTasks2[currentDayTasks2.length - 1]?.taskId ?? null);
+    const currentDayTasks2 = progress.tasks?.filter((t) => t.dayNumber === currentDay) ?? [];
+    const firstNonDone = currentDayTasks2.find(
+      (t) => t.state === "active" || t.state === "available",
+    );
+    return firstNonDone?.taskId ?? currentDayTasks2[currentDayTasks2.length - 1]?.taskId ?? null;
   }, [progress, currentDay]);
 
   // Auto-scroll to current day's first active/available node on first mount.
@@ -369,7 +407,7 @@ export function JourneyPathView({ journey, progress, journeyId }: JourneyPathVie
       if (el) {
         clearInterval(intervalId);
         hasAutoScrolledRef.current = true;
-        el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        el.scrollIntoView({ behavior: "smooth", block: "center" });
         setPulseNodeId(scrollTargetTaskId);
         setTimeout(() => setPulseNodeId(null), 700);
         return;
@@ -383,44 +421,46 @@ export function JourneyPathView({ journey, progress, journeyId }: JourneyPathVie
     if (!scrollTargetTaskId) return;
     const el = document.querySelector<HTMLElement>(`[data-node-id="${scrollTargetTaskId}"]`);
     if (el) {
-      el.scrollIntoView({ behavior: 'smooth', block: 'center' });
-      el.classList.add('scale-110');
-      setTimeout(() => el.classList.remove('scale-110'), 600);
+      el.scrollIntoView({ behavior: "smooth", block: "center" });
+      el.classList.add("scale-110");
+      setTimeout(() => el.classList.remove("scale-110"), 600);
     }
   }
 
   function getVariant(taskId: string, stepIdx: number, taskIdx: number): NodeVariant {
     // Unsubscribed preview: Day 1 first-task active, rest default (non-interactive).
     if (!isSubscribed) {
-      if (stepIdx === 0) return taskIdx === 0 ? 'active' : 'default';
-      return 'locked';
+      if (stepIdx === 0) return taskIdx === 0 ? "active" : "default";
+      return "locked";
     }
     const entry = taskStateById.get(taskId);
-    if (!entry) return 'locked';
+    if (!entry) return "locked";
     return mapState(entry.state);
   }
 
   function getIsMandatory(task: JourneyTask): boolean {
-    return (task.assessmentIds?.length ?? task.assessments?.length ?? 0) > 0
-      || (task.audioIds?.length ?? task.audios?.length ?? 0) > 0
-      || task.fillSelfJournal === true;
+    return (
+      (task.assessmentIds?.length ?? task.assessments?.length ?? 0) > 0 ||
+      (task.audioIds?.length ?? task.audios?.length ?? 0) > 0 ||
+      task.fillSelfJournal === true
+    );
   }
 
   function getTaskTitle(task: JourneyTask): string {
     if (task.extraTaskTitle) return task.extraTaskTitle;
-    if (task.assessments?.length) return task.assessments[0].title ?? '';
-    if (task.audios?.length) return task.audios[0].title ?? '';
+    if (task.assessments?.length) return task.assessments[0].title ?? "";
+    if (task.audios?.length) return task.audios[0].title ?? "";
     const type = getTaskType(task);
     const labels: Record<string, string> = {
-      assessment: 'Assessment',
-      audio: 'Audio Session',
-      video: 'Video',
-      journal: 'Journal Entry',
-      book: 'Book a Session',
-      gift: 'Mood Check-in',
-      read: 'Reading',
+      assessment: "Assessment",
+      audio: "Audio Session",
+      video: "Video",
+      journal: "Journal Entry",
+      book: "Book a Session",
+      gift: "Mood Check-in",
+      read: "Reading",
     };
-    return labels[type] ?? '';
+    return labels[type] ?? "";
   }
 
   function navigateToTask(task: JourneyTask, taskId: string) {
@@ -429,17 +469,27 @@ export function JourneyPathView({ journey, progress, journeyId }: JourneyPathVie
 
     const redirectTo = encodeURIComponent(`/journeys/${journeyId}/details`);
     const entry = taskStateById.get(taskId);
-    let dest = entry?.destinationPath ?? '';
+    let dest = entry?.destinationPath ?? "";
 
     // Fallback: server returned an empty or generic listing path — try to
     // build an id-specific URL from linked CMS content so the user lands on
     // the exact artifact.
-    if (!dest || dest === '/journey' || dest === '/assessments' || dest === '/worksheets' || dest === '/videos' || dest === '/wellness/mindful-minutes') {
+    if (
+      !dest ||
+      dest === "/journey" ||
+      dest === "/assessments" ||
+      dest === "/worksheets" ||
+      dest === "/videos" ||
+      dest === "/wellness/mindful-minutes"
+    ) {
       const a = task.assessmentIds?.[0] ?? task.assessments?.[0]?.id;
-      const w = task.worksheetIds?.[0] ?? (task.worksheets as { id?: string }[] | undefined)?.[0]?.id;
+      const w =
+        task.worksheetIds?.[0] ?? (task.worksheets as { id?: string }[] | undefined)?.[0]?.id;
       const au = task.audioIds?.[0] ?? task.audios?.[0]?.id;
       const v = task.videoIds?.[0] ?? (task.videos as { id?: string }[] | undefined)?.[0]?.id;
-      const sj = task.subJournalingIds?.[0] ?? (task.subJournalings as { id?: string }[] | undefined)?.[0]?.id;
+      const sj =
+        task.subJournalingIds?.[0] ??
+        (task.subJournalings as { id?: string }[] | undefined)?.[0]?.id;
       if (a) dest = `/assessments/${a}`;
       else if (w) dest = `/worksheets/${w}`;
       else if (au) dest = `/wellness/mindful-minutes/${au}`;
@@ -449,9 +499,9 @@ export function JourneyPathView({ journey, progress, journeyId }: JourneyPathVie
       // exposes subJournalingIds, not slugs, so this fallback can only
       // produce /self-journaling/new — the server-built destinationPath
       // is the authoritative slug-carrying URL.
-      else if (sj || task.fillSelfJournal) dest = '/self-journaling/new';
-      else if (task.moodCheckIn) dest = '/journeys/mood-check';
-      else if (task.showAppointments || task.showFirstBooking) dest = '/consult/find-therapist';
+      else if (sj || task.fillSelfJournal) dest = "/self-journaling/new";
+      else if (task.moodCheckIn) dest = "/journeys/mood-check";
+      else if (task.showAppointments || task.showFirstBooking) dest = "/consult/find-therapist";
     }
 
     if (!dest) {
@@ -462,7 +512,8 @@ export function JourneyPathView({ journey, progress, journeyId }: JourneyPathVie
     // Store scroll position before navigating
     sessionStorage.setItem(`journey-scroll-${journeyId}`, String(window.scrollY));
     // Store current completed task IDs for return-verification XP trigger
-    const completedIds = progress?.tasks?.filter(t => t.state === 'completed').map(t => t.taskId) ?? [];
+    const completedIds =
+      progress?.tasks?.filter((t) => t.state === "completed").map((t) => t.taskId) ?? [];
     sessionStorage.setItem(`journey-done-${journeyId}`, JSON.stringify(completedIds));
 
     // Record the in-flight task in the global return context so destination
@@ -470,7 +521,7 @@ export function JourneyPathView({ journey, progress, journeyId }: JourneyPathVie
     // once their flow finishes.
     if (progress?.id) {
       const entryKind = (entry?.kind ?? null) as JourneyReturnTaskKind | null;
-      const fallbackKind: JourneyReturnTaskKind = task.extraTaskTitle ? 'READ' : 'OTHER';
+      const fallbackKind: JourneyReturnTaskKind = task.extraTaskTitle ? "READ" : "OTHER";
       journeyReturn.start({
         journeyId,
         enrollmentId: progress.id,
@@ -483,11 +534,15 @@ export function JourneyPathView({ journey, progress, journeyId }: JourneyPathVie
 
     // Surface enrollment + task IDs so the destination page can POST
     // complete-task with a proof id once the artifact is created.
-    const sep = dest.includes('?') ? '&' : '?';
-    const enrollmentIdParam = progress?.id ? `&journeyEnrollmentId=${encodeURIComponent(progress.id)}` : '';
+    const sep = dest.includes("?") ? "&" : "?";
+    const enrollmentIdParam = progress?.id
+      ? `&journeyEnrollmentId=${encodeURIComponent(progress.id)}`
+      : "";
     const taskIdParam = `&journeyTaskId=${encodeURIComponent(taskId)}`;
     const journeyIdParam = `&journeyId=${encodeURIComponent(journeyId)}`;
-    router.push(`${dest}${sep}redirectTo=${redirectTo}${enrollmentIdParam}${taskIdParam}${journeyIdParam}`);
+    router.push(
+      `${dest}${sep}redirectTo=${redirectTo}${enrollmentIdParam}${taskIdParam}${journeyIdParam}`,
+    );
   }
 
   async function markNodeDone(taskId: string) {
@@ -501,18 +556,19 @@ export function JourneyPathView({ journey, progress, journeyId }: JourneyPathVie
     // completed from its destination page, not from the action sheet.
     let proof: TaskProof | null = null;
     const kind = entry?.kind;
-    if (kind === 'AUDIO') {
+    if (kind === "AUDIO") {
       const audioId = task?.audioIds?.[0] ?? task?.audios?.[0]?.id;
-      if (audioId) proof = { kind: 'AUDIO', audioId };
-    } else if (kind === 'VIDEO') {
-      const videoId = task?.videoIds?.[0] ?? (task?.videos as { id?: string }[] | undefined)?.[0]?.id;
-      if (videoId) proof = { kind: 'VIDEO', videoId };
-    } else if (kind === 'READ' || kind === 'OTHER') {
-      proof = { kind: kind ?? 'OTHER', note: 'Read' };
+      if (audioId) proof = { kind: "AUDIO", audioId };
+    } else if (kind === "VIDEO") {
+      const videoId =
+        task?.videoIds?.[0] ?? (task?.videos as { id?: string }[] | undefined)?.[0]?.id;
+      if (videoId) proof = { kind: "VIDEO", videoId };
+    } else if (kind === "READ" || kind === "OTHER") {
+      proof = { kind: kind ?? "OTHER", note: "Read" };
     }
 
     if (!proof) {
-      toast.error('Open the task to complete it.');
+      toast.error("Open the task to complete it.");
       return;
     }
 
@@ -528,7 +584,7 @@ export function JourneyPathView({ journey, progress, journeyId }: JourneyPathVie
       triggerXp();
     } catch (e) {
       console.error(e);
-      toast.error('Could not mark task done.');
+      toast.error("Could not mark task done.");
     }
   }
 
@@ -541,8 +597,8 @@ export function JourneyPathView({ journey, progress, journeyId }: JourneyPathVie
   function handleNodeTap(node: PathChainNode) {
     // Summary node — opens the markdown modal. Locked while the day isn't
     // complete; the chainItems memo has already decided locked/completed.
-    if (node.taskType === 'summary') {
-      if (node.variant === 'locked') {
+    if (node.taskType === "summary") {
+      if (node.variant === "locked") {
         hapticWarning();
         return;
       }
@@ -571,13 +627,13 @@ export function JourneyPathView({ journey, progress, journeyId }: JourneyPathVie
     }
 
     // Session gate: free-preview users tapping book tasks → go to packages
-    if (isPaidFreePreview && node.taskType === 'book') {
+    if (isPaidFreePreview && node.taskType === "book") {
       hapticWarning();
       router.push(packagePath);
       return;
     }
 
-    if (node.variant === 'locked') {
+    if (node.variant === "locked") {
       hapticWarning();
       if (isPaidFreePreview || (node.isPremiumStep && isSubscribed)) {
         setPremiumSheetOpen(true);
@@ -586,14 +642,14 @@ export function JourneyPathView({ journey, progress, journeyId }: JourneyPathVie
     }
 
     hapticLight();
-    setActionSheetData({ node, isActive: node.variant === 'active' });
+    setActionSheetData({ node, isActive: node.variant === "active" });
     setActionSheetOpen(true);
   }
 
   // Resolves the correct destination for any "subscribe to plan" CTA on
   // this journey. If the journey has a linked packageId, route to the
   // specific package browse page; otherwise fall back to the generic list.
-  const packagePath = journey.packageId ? `/packages/browse/${journey.packageId}` : '/packages';
+  const packagePath = journey.packageId ? `/packages/browse/${journey.packageId}` : "/packages";
 
   // Premium journeys: enrollment is handled automatically on the backend
   // once the user purchases the linked package. The frontend MUST NOT call
@@ -611,7 +667,7 @@ export function JourneyPathView({ journey, progress, journeyId }: JourneyPathVie
       hapticMedium();
     } catch (e) {
       console.error(e);
-      toast.error('Something went wrong. Try again.');
+      toast.error("Something went wrong. Try again.");
     } finally {
       setSubscribing(false);
     }
@@ -620,15 +676,16 @@ export function JourneyPathView({ journey, progress, journeyId }: JourneyPathVie
   function openUnitTasks(stepIdx: number) {
     const step = steps[stepIdx];
     if (!step) return;
-    const raw   = typeof step.title === 'string' ? step.title : extractJourneyName(step.title as never);
-    const title = raw.replace(/^Day\s*\d+\s*[:\-·]?\s*/i, '').trim() || raw;
+    const raw =
+      typeof step.title === "string" ? step.title : extractJourneyName(step.title as never);
+    const title = raw.replace(/^Day\s*\d+\s*[:\-·]?\s*/i, "").trim() || raw;
     const tasks: UnitTask[] = (step.tasks ?? []).map((task, ti) => {
       const variant = getVariant(task.id, stepIdx, ti);
       return {
         title: getTaskTitle(task),
         type: getTaskType(task),
-        isLocked: variant === 'locked',
-        isCompleted: variant === 'completed',
+        isLocked: variant === "locked",
+        isCompleted: variant === "completed",
         task,
       };
     });
@@ -648,12 +705,13 @@ export function JourneyPathView({ journey, progress, journeyId }: JourneyPathVie
   const chainItems = useMemo<ChainItem[]>(() => {
     const items: ChainItem[] = [];
     steps.forEach((step, stepIdx) => {
-      const raw       = typeof step.title === 'string' ? step.title : extractJourneyName(step.title as never);
-      const title     = raw.replace(/^Day\s*\d+\s*[:\-·]?\s*/i, '').trim() || raw;
+      const raw =
+        typeof step.title === "string" ? step.title : extractJourneyName(step.title as never);
+      const title = raw.replace(/^Day\s*\d+\s*[:\-·]?\s*/i, "").trim() || raw;
       const isPremium = (journey.isPremium ?? false) && stepIdx > 0;
 
       items.push({
-        kind: 'header',
+        kind: "header",
         unitNumber: stepIdx + 1,
         title,
         onClick: () => openUnitTasks(stepIdx),
@@ -663,11 +721,18 @@ export function JourneyPathView({ journey, progress, journeyId }: JourneyPathVie
       (step.tasks ?? []).forEach((task, ti) => {
         const nodeId = `${step.id}-${task.id}`;
         const serverEntry = taskStateById.get(task.id);
-        const taskType = serverEntry ? mapServerKind(serverEntry.kind) : getTaskType(task);
+        /* When the server returns OTHER it means the content-relation join table
+           wasn't populated (assessment/audio/etc. not yet connected in the DB).
+           Fall back to CMS-based detection so the node still renders with the
+           correct type instead of showing "journal" for every unrecognised task. */
+        const taskType =
+          serverEntry && serverEntry.kind !== "OTHER"
+            ? mapServerKind(serverEntry.kind)
+            : getTaskType(task);
         const variant = getVariant(task.id, stepIdx, ti);
         taskVariants.push(variant);
         items.push({
-          kind: 'node',
+          kind: "node",
           node: {
             task,
             variant,
@@ -690,17 +755,16 @@ export function JourneyPathView({ journey, progress, journeyId }: JourneyPathVie
       // the (stubbed) task payload, so the minimal stub is safe.
       const dayProgress = progress?.days?.find((d) => d.dayNumber === stepIdx + 1);
       const allTasksCompleted =
-        taskVariants.length > 0 &&
-        taskVariants.every((v) => v === 'completed');
+        taskVariants.length > 0 && taskVariants.every((v) => v === "completed");
       const dayDone = allTasksCompleted || dayProgress?.completed === true;
       const summaryGenerated = !!dayProgress?.summary;
       const summaryVariant: NodeVariant = !dayDone
-        ? 'locked'
+        ? "locked"
         : summaryGenerated
-          ? 'completed'
-          : 'default';
+          ? "completed"
+          : "default";
       items.push({
-        kind: 'node',
+        kind: "node",
         node: {
           task: {
             id: `summary::${step.id}`,
@@ -709,9 +773,9 @@ export function JourneyPathView({ journey, progress, journeyId }: JourneyPathVie
             order: 9999,
           } as unknown as JourneyTask,
           variant: summaryVariant,
-          taskType: 'summary',
+          taskType: "summary",
           nodeId: `${step.id}-summary`,
-          taskTitle: summaryGenerated ? 'View Summary' : 'Summary',
+          taskTitle: summaryGenerated ? "View Summary" : "Summary",
           isMandatory: false,
           stepIdx,
           isPremiumStep: isPremium,
@@ -723,10 +787,12 @@ export function JourneyPathView({ journey, progress, journeyId }: JourneyPathVie
   }, [steps, journey.isPremium, taskStateById, isSubscribed, progress?.days]);
 
   const imageUrl = fixImageUrl(journey.icon);
-  const name     = extractJourneyName(journey.name);
-  const ctaLabel = subscribing ? 'Starting…'
-    : journey.isPremium ? 'Unlock Premium Journey'
-    : 'Start Free Journey →';
+  const name = extractJourneyName(journey.name);
+  const ctaLabel = subscribing
+    ? "Starting…"
+    : journey.isPremium
+      ? "Unlock Premium Journey"
+      : "Start Free Journey →";
 
   return (
     <>
@@ -784,8 +850,12 @@ export function JourneyPathView({ journey, progress, journeyId }: JourneyPathVie
             </div>
           </div>
           <div className="bg-card px-4 py-2.5 flex items-center justify-between">
-            <p className="text-xs text-muted-foreground">Day {progress?.currentDay} done · Day {(progress?.currentDay ?? 1) + 1} unlocks next</p>
-            <span className="text-xs font-bold text-emerald-600">{todayDone}/{todayTotal} tasks</span>
+            <p className="text-xs text-muted-foreground">
+              Day {progress?.currentDay} done · Day {(progress?.currentDay ?? 1) + 1} unlocks next
+            </p>
+            <span className="text-xs font-bold text-emerald-600">
+              {todayDone}/{todayTotal} tasks
+            </span>
           </div>
         </div>
       )}
@@ -794,15 +864,21 @@ export function JourneyPathView({ journey, progress, journeyId }: JourneyPathVie
       {isSubscribed && activeStep && !allComplete && !showCooldownBanner && (
         <div
           className="mx-4 mt-3 mb-0 rounded-2xl px-4 py-3 flex items-center gap-3"
-          style={{ background: 'hsl(var(--primary) / 0.08)', border: '1px solid hsl(var(--primary) / 0.14)' }}
+          style={{
+            background: "hsl(var(--primary) / 0.08)",
+            border: "1px solid hsl(var(--primary) / 0.14)",
+          }}
         >
           <div className="flex-1 min-w-0">
-            <p className="text-[10px] font-bold text-primary uppercase tracking-widest">Today · Day {currentDay}</p>
+            <p className="text-[10px] font-bold text-primary uppercase tracking-widest">
+              Today · Day {currentDay}
+            </p>
             <p className="text-sm font-bold text-foreground truncate">{activeStepTitle}</p>
           </div>
           <div className="text-right flex-shrink-0 flex flex-col items-end gap-1">
             <p className="text-lg font-extrabold text-primary leading-none">
-              {todayDone}<span className="text-sm text-muted-foreground">/{todayTotal}</span>
+              {todayDone}
+              <span className="text-sm text-muted-foreground">/{todayTotal}</span>
             </p>
             <button
               onClick={scrollToCurrentNode}
@@ -818,13 +894,16 @@ export function JourneyPathView({ journey, progress, journeyId }: JourneyPathVie
       {!isSubscribed && (
         <div className="px-4 pt-3 pb-1 flex items-center gap-2 flex-wrap">
           <span className="flex items-center gap-1.5 bg-muted text-muted-foreground text-xs font-semibold px-3 py-1 rounded-full">
-            <BarChart2 className="w-3 h-3" />Beginner
+            <BarChart2 className="w-3 h-3" />
+            Beginner
           </span>
           <span className="flex items-center gap-1.5 bg-muted text-muted-foreground text-xs font-semibold px-3 py-1 rounded-full">
-            <Clock className="w-3 h-3" />{dayCount} Tasks
+            <Clock className="w-3 h-3" />
+            {dayCount} Tasks
           </span>
           <span className="flex items-center gap-1.5 bg-muted text-muted-foreground text-xs font-semibold px-3 py-1 rounded-full">
-            <Timer className="w-3 h-3" />5–10 min/day
+            <Timer className="w-3 h-3" />
+            5–10 min/day
           </span>
         </div>
       )}
@@ -832,11 +911,8 @@ export function JourneyPathView({ journey, progress, journeyId }: JourneyPathVie
       {/* Path */}
       <div className="relative pb-6">
         <XpFloat show={showXpFloat} />
-        <div className={cn(!isSubscribed && 'opacity-[0.85]')}>
-          <PathChain
-            items={chainItems}
-            onNodeTap={handleNodeTap}
-          />
+        <div className={cn(!isSubscribed && "opacity-[0.85]")}>
+          <PathChain items={chainItems} onNodeTap={handleNodeTap} />
         </div>
 
         {/* Premium locked wall */}
@@ -846,7 +922,10 @@ export function JourneyPathView({ journey, progress, journeyId }: JourneyPathVie
               <Lock className="w-5 h-5 text-muted-foreground/50" />
             </div>
             <p className="text-sm font-semibold text-muted-foreground">Unlock more units</p>
-            <button onClick={() => router.push(packagePath)} className="text-xs font-bold text-primary underline underline-offset-2">
+            <button
+              onClick={() => router.push(packagePath)}
+              className="text-xs font-bold text-primary underline underline-offset-2"
+            >
               View Plans →
             </button>
           </div>
@@ -876,12 +955,12 @@ export function JourneyPathView({ journey, progress, journeyId }: JourneyPathVie
       <JourneyUnitTasksSheet
         open={unitTasksOpen}
         onClose={() => setUnitTasksOpen(false)}
-        unitTitle={unitTasksData?.title ?? ''}
+        unitTitle={unitTasksData?.title ?? ""}
         summary={unitTasksData?.summary ?? null}
         tasks={unitTasksData?.tasks ?? []}
         onTaskTap={(item) => {
           setUnitTasksOpen(false);
-          if (isPaidFreePreview && item.type === 'book') {
+          if (isPaidFreePreview && item.type === "book") {
             router.push(packagePath);
             return;
           }
@@ -919,7 +998,8 @@ export function JourneyPathView({ journey, progress, journeyId }: JourneyPathVie
                 <p className="absolute bottom-3 left-4 text-white font-bold text-sm">{name}</p>
               </div>
               <p className="text-sm text-muted-foreground mb-4 leading-relaxed">
-                {extractJourneyDescription(journey.description) || 'Unlock all units and track your progress.'}
+                {extractJourneyDescription(journey.description) ||
+                  "Unlock all units and track your progress."}
               </p>
               <div className="flex gap-2 mb-5 flex-wrap">
                 {[
@@ -927,13 +1007,20 @@ export function JourneyPathView({ journey, progress, journeyId }: JourneyPathVie
                   { icon: <BarChart2 className="w-3 h-3" />, text: `${steps.length} Days` },
                   { icon: <Timer className="w-3 h-3" />, text: `${months}M Duration` },
                 ].map(({ icon, text }) => (
-                  <span key={text} className="flex items-center gap-1.5 bg-muted text-muted-foreground text-xs font-semibold px-3 py-1 rounded-full">
-                    {icon}{text}
+                  <span
+                    key={text}
+                    className="flex items-center gap-1.5 bg-muted text-muted-foreground text-xs font-semibold px-3 py-1 rounded-full"
+                  >
+                    {icon}
+                    {text}
                   </span>
                 ))}
               </div>
               <button
-                onClick={() => { setPremiumSheetOpen(false); router.push(packagePath); }}
+                onClick={() => {
+                  setPremiumSheetOpen(false);
+                  router.push(packagePath);
+                }}
                 className="w-full h-14 rounded-2xl bg-foreground text-background font-bold text-base"
               >
                 View Plans →
@@ -948,11 +1035,15 @@ export function JourneyPathView({ journey, progress, journeyId }: JourneyPathVie
                 </div>
                 <div>
                   <p className="text-base font-bold text-foreground">Premium Journey</p>
-                  <p className="text-xs text-muted-foreground">Day 1 free · full access requires a plan</p>
+                  <p className="text-xs text-muted-foreground">
+                    Day 1 free · full access requires a plan
+                  </p>
                 </div>
               </div>
               <p className="text-sm text-muted-foreground mb-2 leading-relaxed">
-                You're experiencing <span className="font-semibold text-foreground">Day 1 for free</span>. Digital tasks like audio, assessments, and journaling are available.
+                You're experiencing{" "}
+                <span className="font-semibold text-foreground">Day 1 for free</span>. Digital tasks
+                like audio, assessments, and journaling are available.
               </p>
               <p className="text-sm text-muted-foreground mb-6 leading-relaxed">
                 Appointments and all remaining days are included with a package.
@@ -963,13 +1054,20 @@ export function JourneyPathView({ journey, progress, journeyId }: JourneyPathVie
                   { icon: <BarChart2 className="w-3 h-3" />, text: `${steps.length} Days` },
                   { icon: <Timer className="w-3 h-3" />, text: `${months}M Duration` },
                 ].map(({ icon, text }) => (
-                  <span key={text} className="flex items-center gap-1.5 bg-muted text-muted-foreground text-xs font-semibold px-3 py-1 rounded-full">
-                    {icon}{text}
+                  <span
+                    key={text}
+                    className="flex items-center gap-1.5 bg-muted text-muted-foreground text-xs font-semibold px-3 py-1 rounded-full"
+                  >
+                    {icon}
+                    {text}
                   </span>
                 ))}
               </div>
               <button
-                onClick={() => { setPremiumSheetOpen(false); router.push(packagePath); }}
+                onClick={() => {
+                  setPremiumSheetOpen(false);
+                  router.push(packagePath);
+                }}
                 className="w-full h-14 rounded-2xl bg-gradient-to-r from-violet-500 to-purple-600 text-white font-bold text-base"
               >
                 Get Full Access →
@@ -978,9 +1076,14 @@ export function JourneyPathView({ journey, progress, journeyId }: JourneyPathVie
           ) : (
             <>
               <p className="text-lg font-bold text-foreground mb-2">Unlock with a plan</p>
-              <p className="text-sm text-muted-foreground mb-6">Upgrade to unlock all units and track your progress.</p>
+              <p className="text-sm text-muted-foreground mb-6">
+                Upgrade to unlock all units and track your progress.
+              </p>
               <button
-                onClick={() => { setPremiumSheetOpen(false); router.push(packagePath); }}
+                onClick={() => {
+                  setPremiumSheetOpen(false);
+                  router.push(packagePath);
+                }}
                 className="w-full h-14 rounded-2xl bg-primary text-primary-foreground font-bold text-base"
               >
                 View Plans →
@@ -993,13 +1096,22 @@ export function JourneyPathView({ journey, progress, journeyId }: JourneyPathVie
       {/* Preview sheet (unsubscribed users) */}
       <JourneyPreviewSheet
         open={previewSheetOpen}
-        onClose={() => { setPreviewSheetOpen(false); setPreviewSheetNode(null); }}
-        taskType={previewSheetNode?.taskType ?? 'journal'}
-        taskTitle={previewSheetNode?.taskTitle ?? ''}
+        onClose={() => {
+          setPreviewSheetOpen(false);
+          setPreviewSheetNode(null);
+        }}
+        taskType={previewSheetNode?.taskType ?? "journal"}
+        taskTitle={previewSheetNode?.taskTitle ?? ""}
         isPremium={journey.isPremium ?? false}
         isSubscribing={subscribing}
-        onSubscribe={() => { setPreviewSheetOpen(false); handleSubscribe(); }}
-        onViewPlans={() => { setPreviewSheetOpen(false); router.push(packagePath); }}
+        onSubscribe={() => {
+          setPreviewSheetOpen(false);
+          handleSubscribe();
+        }}
+        onViewPlans={() => {
+          setPreviewSheetOpen(false);
+          router.push(packagePath);
+        }}
       />
 
       {/* Day summary sheet */}

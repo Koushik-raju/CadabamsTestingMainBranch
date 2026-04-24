@@ -28,18 +28,18 @@
  */
 "use client";
 
-import Image from "next/image";
-import { useRouter } from "next/navigation";
-import { BookOpen } from "lucide-react";
-import { Skeleton } from "@/components/ui/skeleton";
 import { PageHeader } from "@/components/shared/navigation/page-header";
+import { Skeleton } from "@/components/ui/skeleton";
 import {
+  type SubscriptionWithTitleResponseDto,
   useJournalingSubscriptions,
   useSubJournalDetail,
-  type SubscriptionWithTitleResponseDto,
 } from "@/hooks/use-journaling-subscriptions";
 import { getJournalVisual } from "@/lib/journal-visual";
 import { cn } from "@/lib/utils";
+import { BookOpen } from "lucide-react";
+import Image from "next/image";
+import { useRouter } from "next/navigation";
 
 // ---------------------------------------------------------------------------
 // Grid Card — fetches its own detail to resolve the icon URL
@@ -125,9 +125,7 @@ export default function AllSubscriptionsPage() {
               <BookOpen className="w-7 h-7 text-muted-foreground" />
             </div>
             <div>
-              <p className="text-sm font-semibold text-foreground">
-                No journeys yet
-              </p>
+              <p className="text-sm font-semibold text-foreground">No journeys yet</p>
               <p className="text-xs text-muted-foreground mt-0.5">
                 Subscribe to a guided journal from the home screen.
               </p>
@@ -139,9 +137,7 @@ export default function AllSubscriptionsPage() {
               <SubscriptionGridCard
                 key={sub.id}
                 subscription={sub}
-                onClick={() =>
-                  router.push(`/self-journaling/journal/${sub.slug}`)
-                }
+                onClick={() => router.push(`/self-journaling/journal/${sub.slug}`)}
               />
             ))}
           </div>

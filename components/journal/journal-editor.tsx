@@ -1,9 +1,9 @@
-'use client';
+"use client";
 
-import { useRef } from 'react';
-import { Textarea } from '@/components/ui/textarea';
-import { Button } from '@/components/ui/button';
-import { Loader2 } from 'lucide-react';
+import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
+import { Loader2 } from "lucide-react";
+import { useRef } from "react";
 
 /**
  * FILE: components/journal/journal-editor.tsx
@@ -16,7 +16,7 @@ import { Loader2 } from 'lucide-react';
  *   1. Renders previously saved prompt/response pairs (savedPrompts) above the textarea.
  *   2. Shows the current AI-generated heading if isPromptMode is active.
  *   3. Shows a spinner while isPrompting is true and no heading has arrived yet.
- *   4. Exposes action buttons: Prompt Me, Go Deeper, Finish — rendered conditionally
+ *   4. Exposes action buttons: Prompt Me, Prompt Me, Finish — rendered conditionally
  *      based on whether content exists and which mode is active.
  *
  * KEY VARIABLES / PROPS / EXPORTS:
@@ -70,8 +70,8 @@ export function JournalEditor({
   const handleChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     onChange(e.target.value);
     if (textareaRef.current) {
-      textareaRef.current.style.height = 'auto';
-      textareaRef.current.style.height = textareaRef.current.scrollHeight + 'px';
+      textareaRef.current.style.height = "auto";
+      textareaRef.current.style.height = textareaRef.current.scrollHeight + "px";
     }
   };
 
@@ -85,9 +85,7 @@ export function JournalEditor({
           <div className="border-l-4 border-primary pl-4 py-2 bg-primary/5 rounded-r-md">
             <p className="text-sm font-semibold text-primary">{prompt.heading}</p>
           </div>
-          <p className="text-base text-foreground whitespace-pre-wrap ml-2">
-            {prompt.text}
-          </p>
+          <p className="text-base text-foreground whitespace-pre-wrap ml-2">{prompt.text}</p>
         </div>
       ))}
 
@@ -110,7 +108,7 @@ export function JournalEditor({
       {(isPromptMode || savedPrompts.length === 0) && (
         <Textarea
           ref={textareaRef}
-          placeholder={isPromptMode ? 'Start writing...' : "What's on your mind..."}
+          placeholder={isPromptMode ? "Start writing..." : "What's on your mind..."}
           value={content}
           onChange={handleChange}
           className="resize-none border-none shadow-none bg-transparent focus-visible:ring-0 text-base text-foreground min-h-[120px] overflow-hidden p-0"
@@ -129,13 +127,9 @@ export function JournalEditor({
               disabled={isPrompting}
             >
               {isPrompting && <Loader2 className="w-4 h-4 animate-spin mr-2" />}
-              Go Deeper
+              Prompt Me
             </Button>
-            <Button
-              className="rounded-full"
-              onClick={onSave}
-              disabled={isLoading}
-            >
+            <Button className="rounded-full" onClick={onSave} disabled={isLoading}>
               {isLoading && <Loader2 className="w-4 h-4 animate-spin mr-2" />}
               Finish
             </Button>
@@ -161,11 +155,7 @@ export function JournalEditor({
             </Button>
           </>
         ) : (
-          <Button
-            className="rounded-full"
-            onClick={onPromptMe}
-            disabled={isPrompting}
-          >
+          <Button className="rounded-full" onClick={onPromptMe} disabled={isPrompting}>
             {isPrompting && <Loader2 className="w-4 h-4 animate-spin mr-2" />}
             Prompt me
           </Button>

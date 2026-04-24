@@ -19,28 +19,37 @@
  * DEPENDENCIES:
  *   next/navigation (useRouter), PageHeader, MoodCheckForm, Skeleton
  *
- * LAST UPDATED: 2026-04-23 — migrated custom header div to PageHeader
+ * LAST UPDATED: 2026-04-24 — no mood pre-selected unless ?mood= param is present in URL
  */
-'use client';
+"use client";
 
-import { Suspense, useState } from 'react';
-import { useRouter } from 'next/navigation';
-import { PageHeader } from '@/components/shared/navigation/page-header';
-import { MoodCheckForm } from '@/components/journey/mood-check-form';
-import { Skeleton } from '@/components/ui/skeleton';
-import { useJourneyTaskContinuation } from '@/hooks/journeys/use-journey-task-continuation';
+import { MoodCheckForm } from "@/components/journey/mood-check-form";
+import { PageHeader } from "@/components/shared/navigation/page-header";
+import { Skeleton } from "@/components/ui/skeleton";
+import { useJourneyTaskContinuation } from "@/hooks/journeys/use-journey-task-continuation";
+import { useRouter, useSearchParams } from "next/navigation";
+import { Suspense, useState } from "react";
 
 function MoodCheckContent() {
   const router = useRouter();
-  const continuation = useJourneyTaskContinuation('MOOD');
+  const searchParams = useSearchParams();
+  const continuation = useJourneyTaskContinuation("MOOD");
 
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  /* Map home-header mood ID (1–5) → form value (2–10) via id × 2.
+   * Falls back to 6 (neutral, middle step) when no param is present. */
+  const moodParam = searchParams.get("mood");
+  const defaultMoodValue = moodParam ? Math.min(10, Math.max(2, Number(moodParam) * 2)) : undefined;
 
   // Collapse the multi-question mood form down to the MOOD proof the
   // backend expects (moodBefore + moodAfter, 1..10). We take q_0 as
   // "before" and the last answered question as "after"; both fall back
   // to a neutral 5 when unavailable.
-  function buildMoodProof(answers: Record<string, number>): { moodBefore: number; moodAfter: number } {
+  function buildMoodProof(answers: Record<string, number>): {
+    moodBefore: number;
+    moodAfter: number;
+  } {
     const keys = Object.keys(answers).sort();
     const first = keys[0] ? answers[keys[0]] : undefined;
     const last = keys.length > 1 ? answers[keys[keys.length - 1]] : first;
@@ -57,12 +66,12 @@ function MoodCheckContent() {
       if (continuation.active) {
         const { moodBefore, moodAfter } = buildMoodProof(answers);
         await continuation.markCompleted(
-          { kind: 'MOOD', moodBefore, moodAfter },
+          { kind: "MOOD", moodBefore, moodAfter },
           { proofPreview: `Mood ${moodBefore} → ${moodAfter}` },
         );
       }
     } catch (e) {
-      console.error('[MoodCheckPage] journey completion failed', e);
+      console.error("[MoodCheckPage] journey completion failed", e);
     } finally {
       setIsSubmitting(false);
       router.back();
@@ -80,6 +89,7 @@ function MoodCheckContent() {
           title="How are you feeling?"
           subtitle="Take a moment to reflect and log your current mood."
           submitLabel="Save Mood"
+          defaultMoodValue={defaultMoodValue}
         />
       </div>
     </div>

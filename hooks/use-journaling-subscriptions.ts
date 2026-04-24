@@ -37,28 +37,28 @@
  *
  * LAST UPDATED: 2026-04-17 — Rewritten fetchers to async res.data extraction pattern.
  */
-'use client';
+"use client";
 
-import useSWR, { mutate as globalMutate } from 'swr';
+import { swrConfig } from "@/lib/swr-config";
 import {
-  journalingSubscriptionsControllerListSubscriptions,
-  journalingSubscriptionsControllerSubscribe,
-  journalingSubscriptionsControllerUnsubscribe,
+  journalStreakKey,
+  journalSubDetailKey,
+  journalSubEntriesKey,
+  journalSubscriptionsKey,
+} from "@/lib/swr-keys";
+import {
+  type StreakResponseDto,
+  type SubJournalDetailResponseDto,
+  type SubJournalEntryDto,
+  type SubscriptionWithTitleResponseDto,
   journalingSubscriptionsControllerGetStreak,
   journalingSubscriptionsControllerGetSubJournal,
   journalingSubscriptionsControllerGetSubJournalEntries,
-  type SubscriptionWithTitleResponseDto,
-  type SubJournalDetailResponseDto,
-  type StreakResponseDto,
-  type SubJournalEntryDto,
-} from '@/sdk/backend-v2';
-import { swrConfig } from '@/lib/swr-config';
-import {
-  journalSubscriptionsKey,
-  journalSubDetailKey,
-  journalStreakKey,
-  journalSubEntriesKey,
-} from '@/lib/swr-keys';
+  journalingSubscriptionsControllerListSubscriptions,
+  journalingSubscriptionsControllerSubscribe,
+  journalingSubscriptionsControllerUnsubscribe,
+} from "@/sdk/backend-v2";
+import useSWR, { mutate as globalMutate } from "swr";
 
 export type {
   SubscriptionWithTitleResponseDto,
@@ -138,7 +138,9 @@ export function useSubJournalEntries(slug: string | null, subscribed: boolean) {
   const { data, isLoading, error } = useSWR(
     slug && subscribed ? journalSubEntriesKey(slug) : null,
     async () => {
-      const res = await journalingSubscriptionsControllerGetSubJournalEntries({ path: { slug: slug! } });
+      const res = await journalingSubscriptionsControllerGetSubJournalEntries({
+        path: { slug: slug! },
+      });
       if (res.error) throw new Error(JSON.stringify(res.error));
       return res.data ?? null;
     },

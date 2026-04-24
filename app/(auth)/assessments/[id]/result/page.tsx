@@ -31,34 +31,28 @@
  *
  * LAST UPDATED: 2026-04-23 — migrated custom header div to PageHeader
  */
-'use client';
+"use client";
 
-import { use, useEffect, useRef } from 'react';
-import { useRouter } from 'next/navigation';
-import { useJourneyTaskContinuation } from '@/hooks/journeys/use-journey-task-continuation';
-import Link from 'next/link';
-import Markdown from 'react-markdown';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
-import { Skeleton } from '@/components/ui/skeleton';
-import { PageHeader } from '@/components/shared/navigation/page-header';
-import { useLatestAssessmentResult } from '@/hooks/assessments/use-assessment-reports';
-import {
-  AlertCircle,
-  FileText,
-  Loader2,
-  RefreshCw,
-  Sparkles,
-} from 'lucide-react';
+import { PageHeader } from "@/components/shared/navigation/page-header";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { Skeleton } from "@/components/ui/skeleton";
+import { useLatestAssessmentResult } from "@/hooks/assessments/use-assessment-reports";
+import { useJourneyTaskContinuation } from "@/hooks/journeys/use-journey-task-continuation";
+import { AlertCircle, FileText, Loader2, RefreshCw, Sparkles } from "lucide-react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { use, useEffect, useRef } from "react";
+import Markdown from "react-markdown";
 
 function formatDate(iso: string): string {
   try {
     return new Date(iso).toLocaleString(undefined, {
-      day: '2-digit',
-      month: 'short',
-      year: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
+      day: "2-digit",
+      month: "short",
+      year: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
     });
   } catch {
     return iso;
@@ -72,21 +66,14 @@ export default function AssessmentResultPage({
 }) {
   const { id: assessmentId } = use(params);
   const router = useRouter();
-  const {
-    completion,
-    report,
-    regenerate,
-    isRegenerating,
-    regenerateError,
-    isLoading,
-    error,
-  } = useLatestAssessmentResult(assessmentId);
+  const { completion, report, regenerate, isRegenerating, regenerateError, isLoading, error } =
+    useLatestAssessmentResult(assessmentId);
 
   // Journey continuation — when the user reached this page from a journey
   // task, mark the task completed using the latest completion as proof.
   // Fires once per mount as soon as the completion is available so the
   // global FAB can flip to the "Return to journey" banner.
-  const continuation = useJourneyTaskContinuation('ASSESSMENT');
+  const continuation = useJourneyTaskContinuation("ASSESSMENT");
   const reportedRef = useRef(false);
   useEffect(() => {
     if (reportedRef.current) return;
@@ -100,12 +87,12 @@ export default function AssessmentResultPage({
     ].filter(Boolean) as string[];
     continuation
       .markCompleted(
-        { kind: 'ASSESSMENT', assessmentCompletionId: completion.id },
-        { proofPreview: pieces.join(' · ') || undefined },
+        { kind: "ASSESSMENT", assessmentCompletionId: completion.id },
+        { proofPreview: pieces.join(" · ") || undefined },
       )
       .catch((err) => {
         reportedRef.current = false;
-        console.error('[AssessmentResultPage] journey completion failed', err);
+        console.error("[AssessmentResultPage] journey completion failed", err);
       });
   }, [continuation, completion]);
 
@@ -130,35 +117,33 @@ export default function AssessmentResultPage({
       <PageHeader
         title="Your Report"
         fallback="/assessments"
-        right={report ? (
-          <button
-            type="button"
-            onClick={onRegenerate}
-            disabled={isRegenerating}
-            className="flex items-center gap-1.5 text-[11px] font-semibold text-foreground bg-muted hover:bg-muted/80 disabled:opacity-60 px-2.5 py-1.5 rounded-full transition-colors"
-            aria-label="Regenerate report"
-          >
-            {isRegenerating ? (
-              <Loader2 className="w-3 h-3 animate-spin" />
-            ) : (
-              <RefreshCw className="w-3 h-3" />
-            )}
-            {isRegenerating ? 'Regenerating' : 'Regenerate'}
-          </button>
-        ) : undefined}
+        right={
+          report ? (
+            <button
+              type="button"
+              onClick={onRegenerate}
+              disabled={isRegenerating}
+              className="flex items-center gap-1.5 text-[11px] font-semibold text-foreground bg-muted hover:bg-muted/80 disabled:opacity-60 px-2.5 py-1.5 rounded-full transition-colors"
+              aria-label="Regenerate report"
+            >
+              {isRegenerating ? (
+                <Loader2 className="w-3 h-3 animate-spin" />
+              ) : (
+                <RefreshCw className="w-3 h-3" />
+              )}
+              {isRegenerating ? "Regenerating" : "Regenerate"}
+            </button>
+          ) : undefined
+        }
       />
 
       <div className="px-4">
         {isLoading && <ResultSkeleton />}
 
-        {!isLoading && error && (
-          <ErrorState onRetry={() => window.location.reload()} />
-        )}
+        {!isLoading && error && <ErrorState onRetry={() => window.location.reload()} />}
 
         {!isLoading && !error && !completion && (
-          <NoCompletionState
-            onTake={() => router.push(`/assessments/${assessmentId}/details`)}
-          />
+          <NoCompletionState onTake={() => router.push(`/assessments/${assessmentId}/details`)} />
         )}
 
         {!isLoading && !error && completion && !report && <ResultSkeleton />}
@@ -242,7 +227,7 @@ function ReportView({
   report: string;
   model: string;
   completedAt: string;
-  severity?: 'minimal' | 'mild' | 'moderate' | 'severe';
+  severity?: "minimal" | "mild" | "moderate" | "severe";
   scorePercentage?: number;
   regenerateError: string | null;
 }) {
@@ -292,14 +277,28 @@ function ReportView({
         <CardContent className="p-4">
           <Markdown
             components={{
-              h1: ({ children }) => <h1 className="text-lg font-bold text-foreground mb-3">{children}</h1>,
-              h2: ({ children }) => <h2 className="text-base font-bold text-foreground mt-4 mb-2">{children}</h2>,
-              h3: ({ children }) => <h3 className="text-sm font-bold text-foreground mt-3 mb-1.5">{children}</h3>,
-              p: ({ children }) => <p className="text-sm text-foreground/80 leading-relaxed mb-3">{children}</p>,
+              h1: ({ children }) => (
+                <h1 className="text-lg font-bold text-foreground mb-3">{children}</h1>
+              ),
+              h2: ({ children }) => (
+                <h2 className="text-base font-bold text-foreground mt-4 mb-2">{children}</h2>
+              ),
+              h3: ({ children }) => (
+                <h3 className="text-sm font-bold text-foreground mt-3 mb-1.5">{children}</h3>
+              ),
+              p: ({ children }) => (
+                <p className="text-sm text-foreground/80 leading-relaxed mb-3">{children}</p>
+              ),
               ul: ({ children }) => <ul className="list-disc pl-5 mb-3 space-y-1">{children}</ul>,
-              ol: ({ children }) => <ol className="list-decimal pl-5 mb-3 space-y-1">{children}</ol>,
-              li: ({ children }) => <li className="text-sm text-foreground/80 leading-relaxed">{children}</li>,
-              strong: ({ children }) => <strong className="font-semibold text-foreground">{children}</strong>,
+              ol: ({ children }) => (
+                <ol className="list-decimal pl-5 mb-3 space-y-1">{children}</ol>
+              ),
+              li: ({ children }) => (
+                <li className="text-sm text-foreground/80 leading-relaxed">{children}</li>
+              ),
+              strong: ({ children }) => (
+                <strong className="font-semibold text-foreground">{children}</strong>
+              ),
             }}
           >
             {report}

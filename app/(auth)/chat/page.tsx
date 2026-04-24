@@ -27,14 +27,14 @@
  */
 "use client";
 
-import { useRouter } from "next/navigation";
-import { useContext } from "react";
+import { EmptyState } from "@/components/chat/history/empty-state";
+import { LoadingState } from "@/components/chat/history/loading-state";
+import { ThreadList } from "@/components/chat/history/thread-list";
 import { PageHeader } from "@/components/shared/navigation/page-header";
 import { mastraDataContext } from "@/contexts/mastra-data-context";
 import { useThreads } from "@/hooks/use-threads";
-import { ThreadList } from "@/components/chat/history/thread-list";
-import { LoadingState } from "@/components/chat/history/loading-state";
-import { EmptyState } from "@/components/chat/history/empty-state";
+import { useRouter } from "next/navigation";
+import { useContext } from "react";
 
 export default function ChatHistoryPage() {
   const router = useRouter();

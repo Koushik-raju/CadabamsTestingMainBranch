@@ -23,15 +23,15 @@
  *   shadcn: Card, CardContent, Button. lucide-react: Sparkles, Check.
  *   lib/utils: cn.
  *
- * LAST UPDATED: 2026-04-20 — redesigned to Compact Card UI (hero + emoji selector).
+ * LAST UPDATED: 2026-04-24 — filter undefined answers before calling onSubmit to satisfy Record<string, number> contract.
  */
-'use client';
+"use client";
 
-import { useState } from 'react';
-import { Sparkles, Check } from 'lucide-react';
-import { Card, CardContent } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { cn } from '@/lib/utils';
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { cn } from "@/lib/utils";
+import { Check, Sparkles } from "lucide-react";
+import { useState } from "react";
 
 interface MoodQuestion {
   question: string;
@@ -45,25 +45,27 @@ interface MoodCheckFormProps {
   title?: string;
   subtitle?: string;
   submitLabel?: string;
+  /** Pre-selected mood value (2–10) from the home header selection. Overrides q_0's default. */
+  defaultMoodValue?: number;
 }
 
 const MOOD_STEPS: { value: number; emoji: string; label: string; gradient: string }[] = [
-  { value: 2, emoji: '😞', label: 'Very Low', gradient: 'from-red-500 to-rose-600' },
-  { value: 4, emoji: '😕', label: 'Low', gradient: 'from-orange-500 to-amber-500' },
-  { value: 6, emoji: '😐', label: 'Neutral', gradient: 'from-amber-400 to-yellow-500' },
-  { value: 8, emoji: '🙂', label: 'Good', gradient: 'from-emerald-500 to-teal-600' },
-  { value: 10, emoji: '😊', label: 'Great', gradient: 'from-violet-500 to-purple-600' },
+  { value: 2, emoji: "😟", label: "Very Low", gradient: "from-red-500 to-rose-600" },
+  { value: 4, emoji: "😐", label: "Low", gradient: "from-orange-500 to-amber-500" },
+  { value: 6, emoji: "😊", label: "Neutral", gradient: "from-amber-400 to-yellow-500" },
+  { value: 8, emoji: "😄", label: "Good", gradient: "from-emerald-500 to-teal-600" },
+  { value: 10, emoji: "🤩", label: "Great", gradient: "from-violet-500 to-purple-600" },
 ];
 
 const DEFAULT_QUESTIONS: MoodQuestion[] = [
-  { question: 'How are you feeling right now?', value: 6 },
-  { question: 'How stressed do you feel?', value: 4 },
-  { question: 'How energetic do you feel?', value: 8 },
+  { question: "How are you feeling right now?", value: 6 },
+  { question: "How stressed do you feel?", value: 6 },
+  { question: "How energetic do you feel?", value: 6 },
 ];
 
 function snapToStep(value: number) {
   return MOOD_STEPS.reduce((prev, curr) =>
-    Math.abs(curr.value - value) < Math.abs(prev.value - value) ? curr : prev
+    Math.abs(curr.value - value) < Math.abs(prev.value - value) ? curr : prev,
   );
 }
 
@@ -71,16 +73,19 @@ export function MoodCheckForm({
   questions = DEFAULT_QUESTIONS,
   onSubmit,
   isSubmitting = false,
-  title = 'How are you feeling?',
-  subtitle = 'Take a moment to reflect and log your current mood.',
-  submitLabel = 'Save Mood',
+  title = "How are you feeling?",
+  subtitle = "Take a moment to reflect and log your current mood.",
+  submitLabel = "Save Mood",
+  defaultMoodValue,
 }: MoodCheckFormProps) {
-  const [answers, setAnswers] = useState<Record<string, number>>(() => {
-    const initial: Record<string, number> = {};
-    questions.forEach((q, i) => {
-      initial[`q_${i}`] = snapToStep(q.value).value;
-    });
-    return initial;
+  /* Only seed q_0 when the caller explicitly passes a defaultMoodValue (i.e. user
+   * tapped a mood chip on the home screen). All other questions — and q_0 itself
+   * when no value is passed — start empty so nothing is pre-selected. */
+  const [answers, setAnswers] = useState<Record<string, number | undefined>>(() => {
+    if (defaultMoodValue != null) {
+      return { q_0: snapToStep(defaultMoodValue).value };
+    }
+    return {};
   });
 
   const handleSelect = (key: string, value: number) => {
@@ -88,7 +93,12 @@ export function MoodCheckForm({
   };
 
   const handleSubmit = async () => {
-    await onSubmit(answers);
+    /* Strip undefined entries before handing to parent — state allows undefined
+     * so nothing is pre-selected, but onSubmit contract requires number values. */
+    const defined = Object.fromEntries(
+      Object.entries(answers).filter((entry): entry is [string, number] => entry[1] !== undefined),
+    );
+    await onSubmit(defined);
   };
 
   return (
@@ -113,24 +123,24 @@ export function MoodCheckForm({
         <CardContent className="py-0 px-3">
           {questions.map((q, i) => {
             const key = `q_${i}`;
-            const val = answers[key] ?? q.value;
-            const selected = snapToStep(val);
+            const val = answers[key];
+            const selected = val != null ? snapToStep(val) : null;
             const isLast = i === questions.length - 1;
 
             return (
-              <div key={key} className={cn('py-4', !isLast && 'border-b border-border')}>
+              <div key={key} className={cn("py-4", !isLast && "border-b border-border")}>
                 <div className="flex items-start justify-between gap-3 mb-3">
-                  <p className="text-sm font-medium text-foreground flex-1 min-w-0">
-                    {q.question}
-                  </p>
-                  <span
-                    className={cn(
-                      'flex-shrink-0 rounded-full px-2 py-0.5 text-[10px] font-semibold text-white bg-gradient-to-br',
-                      selected.gradient
-                    )}
-                  >
-                    {selected.label}
-                  </span>
+                  <p className="text-sm font-medium text-foreground flex-1 min-w-0">{q.question}</p>
+                  {selected && (
+                    <span
+                      className={cn(
+                        "flex-shrink-0 rounded-full px-2 py-0.5 text-[10px] font-semibold text-white bg-gradient-to-br",
+                        selected.gradient,
+                      )}
+                    >
+                      {selected.label}
+                    </span>
+                  )}
                 </div>
 
                 <div className="flex items-center justify-between gap-1.5">
@@ -144,10 +154,10 @@ export function MoodCheckForm({
                         aria-label={step.label}
                         aria-pressed={isSelected}
                         className={cn(
-                          'relative flex-1 aspect-square rounded-2xl flex items-center justify-center transition-all active:scale-95',
+                          "relative flex-1 aspect-square rounded-2xl flex items-center justify-center transition-all active:scale-95",
                           isSelected
-                            ? cn('bg-gradient-to-br shadow-md', step.gradient)
-                            : 'bg-muted hover:bg-muted/70'
+                            ? cn("bg-gradient-to-br shadow-md", step.gradient)
+                            : "bg-muted hover:bg-muted/70",
                         )}
                       >
                         {isSelected && (
@@ -157,8 +167,8 @@ export function MoodCheckForm({
                         )}
                         <span
                           className={cn(
-                            'text-2xl transition-transform',
-                            isSelected ? 'scale-110' : 'opacity-70'
+                            "text-2xl transition-transform",
+                            isSelected ? "scale-110" : "opacity-70",
                           )}
                         >
                           {step.emoji}
@@ -173,12 +183,8 @@ export function MoodCheckForm({
         </CardContent>
       </Card>
 
-      <Button
-        className="w-full rounded-xl h-11"
-        onClick={handleSubmit}
-        disabled={isSubmitting}
-      >
-        {isSubmitting ? 'Saving…' : submitLabel}
+      <Button className="w-full rounded-xl h-11" onClick={handleSubmit} disabled={isSubmitting}>
+        {isSubmitting ? "Saving…" : submitLabel}
       </Button>
     </div>
   );
