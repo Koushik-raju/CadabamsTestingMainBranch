@@ -1,0 +1,19 @@
+// Enable JDK toolchain auto-provisioning via foojay-resolver.
+// Any JDK version requested by Capacitor plugins (Java 17, 21, etc.) is
+// downloaded on-demand from foojay.io, so contributors do NOT need to
+// install specific JDK versions manually. The only host requirement is
+// a working JDK (any LTS) to bootstrap Gradle itself.
+pluginManagement {
+    repositories {
+        gradlePluginPortal()
+    }
+}
+plugins {
+    id 'org.gradle.toolchains.foojay-resolver-convention' version '0.8.0'
+}
+
+include ':app'
+include ':capacitor-cordova-android-plugins'
+project(':capacitor-cordova-android-plugins').projectDir = new File('./capacitor-cordova-android-plugins/')
+
+apply from: 'capacitor.settings.gradle'
