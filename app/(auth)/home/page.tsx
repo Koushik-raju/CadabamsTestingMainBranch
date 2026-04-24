@@ -40,10 +40,7 @@ import { QuickActions } from "@/components/home/quick-actions";
 import { SupportSection } from "@/components/home/support-section";
 import { UpcomingSession } from "@/components/home/upcoming-session";
 import { useHomePage } from "@/hooks/home/use-home-page";
-import {
-  useEnrolledJourneys,
-  useGamification,
-} from "@/hooks/journeys/use-journey-detail";
+import { useEnrolledJourneys, useGamification } from "@/hooks/journeys/use-journey-detail";
 import { useRouter } from "next/navigation";
 import { useMemo } from "react";
 
@@ -122,27 +119,18 @@ export default function HomePage() {
 
   return (
     <div className="min-h-screen bg-gray-50/50">
-      <HomeHeader
-        onMoodClick={(moodId) =>
-          router.push(`/journeys/mood-check?mood=${moodId}`)
-        }
-      />
+      <HomeHeader onMoodClick={(moodId) => router.push(`/journeys/mood-check?mood=${moodId}`)} />
 
       {/* Main content — overlaps header by pulling up with negative margin */}
       <div className="relative mt-[-20px] pt-8 pb-20 bg-gray-50/50 rounded-t-2xl z-10 flex flex-col gap-0">
-        <UpcomingSession
-          appointments={appointments}
-          onJoin={() => handleAction("join_session")}
-        />
+        <UpcomingSession appointments={appointments} onJoin={() => handleAction("join_session")} />
 
         <SupportSection
           onTalk={() => handleAction("quick_action", "therapist")}
           onMatch={() => handleAction("quick_action", "match")}
         />
 
-        <QuickActions
-          onActionClick={(type) => handleAction("quick_action", type)}
-        />
+        <QuickActions onActionClick={(type) => handleAction("quick_action", type)} />
 
         <JourneySection
           enrollments={homeEnrollments}

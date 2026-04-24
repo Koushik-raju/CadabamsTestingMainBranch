@@ -21,7 +21,7 @@
  * DEPENDENCIES:
  *   None — pure string-returning functions, no imports.
  *
- * LAST UPDATED: 2026-04-20 — added assessmentReportsKey for per-assessment analyses list
+ * LAST UPDATED: 2026-04-24 — removed wellnessResourcesKey, wellnessResourceDetailKey, videosKey, videoDetailKey (features deleted)
  */
 export function authMeKey(): string {
   return "/auth/me";
@@ -123,33 +123,12 @@ export function journeyProgressKey(mobile: string, journeyId: string): string {
   return `/journey-progress/${mobile}/${journeyId}`;
 }
 
-export function wellnessResourcesKey(
-  page: number,
-  pageSize: number,
-  search: string,
-  category: string,
-): readonly [string, number, number, string, string] {
-  return ["/wellness-resources", page, pageSize, search, category] as const;
-}
-
-export function wellnessResourceDetailKey(slug: string): string {
-  return `/wellness-resources/${slug}`;
-}
-
 export function mindfulMinutesKey(): string {
   return "/mindful-minutes";
 }
 
 export function mindfulMinuteDetailKey(slugOrId: string): string {
   return `/mindful-minutes/detail/${slugOrId}`;
-}
-
-export function videosKey(): string {
-  return "/videos";
-}
-
-export function videoDetailKey(slug: string): string {
-  return `/videos/${slug}`;
 }
 
 export function journalingCategoriesKey(): string {

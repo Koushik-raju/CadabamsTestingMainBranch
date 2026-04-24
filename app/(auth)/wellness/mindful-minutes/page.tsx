@@ -19,10 +19,9 @@
  *   isListView       — true when category is selected or viewMode === 'list'
  *
  * DEPENDENCIES:
- *   useMindfulMinutes() — SWR hook for all collections
- *   getStrapiImageUrl   — resolves Strapi image paths
+ *   useMindfulMinutes() — SWR hook for all collections (SDK-backed, returns pre-signed S3 URLs)
  *
- * LAST UPDATED: 2026-04-23 — migrated sticky header to PageHeader
+ * LAST UPDATED: 2026-04-24 — use coverImageUrl directly (backend returns pre-signed S3 URLs); getStrapiImageUrl stripped signing params
  */
 
 "use client";
@@ -33,7 +32,6 @@ import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { CategoryFilter } from "@/components/wellness/category-filter";
 import { useMindfulMinutes } from "@/hooks/wellness/use-mindful-minutes";
-import { getStrapiImageUrl } from "@/lib/strapi-fetcher";
 import { ChevronRight, RefreshCw, Search } from "lucide-react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
@@ -146,9 +144,10 @@ export default function MindfulMinutesPage() {
                 <div className="relative w-32 h-28 rounded-xl overflow-hidden flex-shrink-0 bg-muted border border-border/50">
                   {featuredItem.coverImageUrl ? (
                     <Image
-                      src={getStrapiImageUrl(featuredItem.coverImageUrl) ?? "/placeholder.png"}
+                      src={featuredItem.coverImageUrl ?? "/placeholder.png"}
                       alt={featuredItem.title}
                       fill
+                      unoptimized
                       className="object-cover"
                     />
                   ) : (
@@ -214,9 +213,10 @@ export default function MindfulMinutesPage() {
                     <div className="relative w-[72px] h-[72px] rounded-xl overflow-hidden flex-shrink-0 bg-muted border border-border/30">
                       {item.coverImageUrl ? (
                         <Image
-                          src={getStrapiImageUrl(item.coverImageUrl) ?? "/placeholder.png"}
+                          src={item.coverImageUrl ?? "/placeholder.png"}
                           alt={item.title}
                           fill
+                          unoptimized
                           className="object-cover"
                         />
                       ) : (
