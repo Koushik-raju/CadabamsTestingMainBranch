@@ -11,12 +11,13 @@
  *     shape expected by QuestionRenderer; keyValue is narrowed with a runtime
  *     type guard instead of a blind cast.
  *   - Tracks per-step answers in a Record<string, AnswerValue> state map.
- *   - The generate wizard step no longer runs the LLM; it just shows a
- *     "View Report" button that invokes handleSubmit. The actual analyze call
- *     lives on /assessments/[id]/generate/[completionId].
- *   - On final step (or View Report tap from the generate step), handleSubmit
- *     routes to /assessments/[id]/result; the completion is only POSTed
- *     once thanks to submittedCompletionIdRef.
+ *   - The generate wizard step renders a custom "Assessment Complete" screen
+ *     (checkmark, heading, AI disclaimer card, Generate Report button) instead
+ *     of delegating to QuestionRenderer. The header on that step shows an X
+ *     close button and a full 100% progress bar to match the reference design.
+ *   - On final step (or Generate Report tap from the generate step), handleSubmit
+ *     routes to /assessments/[id]/generate/[completionId]; the completion is only
+ *     POSTed once thanks to submittedCompletionIdRef.
  *   - A "Past Reports" link in the header links to /assessments/[id]/reports
  *     so users can view prior reports without leaving the wizard.
  *
@@ -35,7 +36,7 @@
  *   submitAssessment              — SDK call to patientAssessmentsControllerCreateCompletion
  *   QuestionRenderer              — renders question UI by type
  *
- * LAST UPDATED: 2026-04-24 — make Continue button sticky to bottom with extra bottom padding.
+ * LAST UPDATED: 2026-04-24 — generate step renders custom Assessment Complete screen matching reference design.
  */
 
 "use client";
@@ -50,7 +51,7 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { submitAssessment, useAssessmentById } from "@/hooks/assessments/use-assessment-detail";
 import { useAuth } from "@/hooks/shared/auth/use-auth";
-import { AlertCircle, ChevronLeft, FileText } from "lucide-react";
+import { AlertCircle, ArrowRight, CheckCircle2, ChevronLeft, FileText, Sparkles, X } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { use, useEffect, useMemo, useRef, useState } from "react";
@@ -322,6 +323,75 @@ export default function AssessmentFormPage({ params }: { params: Promise<{ id: s
   const currentType = currentQuestion?.type || "";
   const isGenerateStep = currentType === "generate" || currentType.includes("generate");
 
+  /* Generate step renders a full custom "Assessment Complete" screen instead
+     of the standard question renderer, matching the reference design layout. */
+  if (isGenerateStep) {
+    return (
+      <div className="min-h-screen bg-background flex flex-col">
+        {/* Header: X close + full progress bar */}
+        <div className="flex items-center gap-3 px-3 py-3 bg-card">
+          <button
+            onClick={() => router.push(`/assessments/${assessmentId}/details`)}
+            className="w-9 h-9 flex items-center justify-center rounded-full hover:bg-muted transition-colors shrink-0"
+            aria-label="Close"
+          >
+            <X className="w-5 h-5 text-muted-foreground" />
+          </button>
+          <div className="flex-1 bg-muted h-1.5 rounded-full overflow-hidden">
+            <div className="h-full bg-primary w-full" />
+          </div>
+        </div>
+
+        {/* Content */}
+        <div className="flex-1 flex flex-col items-center justify-center px-6 py-10 gap-6">
+          {/* Checkmark circle */}
+          <div className="w-24 h-24 rounded-full bg-primary/10 flex items-center justify-center">
+            <div className="w-14 h-14 rounded-full bg-primary/20 flex items-center justify-center">
+              <CheckCircle2 className="w-8 h-8 text-primary" strokeWidth={2} />
+            </div>
+          </div>
+
+          {/* Heading + subtext */}
+          <div className="text-center space-y-3">
+            <h1 className="text-3xl font-bold text-foreground leading-tight">
+              Assessment<br />Complete
+            </h1>
+            <p className="text-muted-foreground text-base leading-relaxed max-w-xs mx-auto">
+              You&apos;ve answered all questions. We&apos;re ready to compile your personalized insights.
+            </p>
+          </div>
+
+          {/* AI disclaimer card */}
+          <div className="w-full max-w-sm bg-card border border-border rounded-2xl p-4 flex gap-3 items-start">
+            <Sparkles className="w-5 h-5 text-primary shrink-0 mt-0.5" />
+            <div>
+              <p className="text-sm font-semibold text-foreground mb-1">AI-Generated Report</p>
+              <p className="text-xs text-muted-foreground leading-relaxed">
+                This report is generated using artificial intelligence based on your responses. It is for informational purposes only and does not replace professional medical advice.
+              </p>
+            </div>
+          </div>
+        </div>
+
+        {/* Generate Report button — sticky bottom */}
+        <div className="sticky bottom-0 px-5 pt-3 pb-10 bg-card border-t border-border">
+          <Button
+            className="w-full bg-primary hover:bg-primary/90 text-white font-bold h-14 rounded-2xl text-sm tracking-widest uppercase disabled:opacity-40 flex items-center justify-center gap-2"
+            disabled={submitting}
+            onClick={handleSubmit}
+          >
+            {submitting ? "Generating..." : (
+              <>
+                Generate Report
+                <ArrowRight className="w-4 h-4" />
+              </>
+            )}
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-background flex flex-col">
       {/* Header with progress */}
@@ -366,22 +436,20 @@ export default function AssessmentFormPage({ params }: { params: Promise<{ id: s
           answer={answers[currentKey] ?? {}}
           onChange={handleAnswer}
           onComplete={handleComplete}
-          onFinish={isGenerateStep ? handleSubmit : undefined}
+          onFinish={undefined}
         />
       </div>
 
-      {/* Continue button — sticky to bottom, hidden on generate steps */}
-      {!isGenerateStep && (
-        <div className="sticky bottom-0 px-5 pt-3 pb-10 border-t border-border bg-card">
-          <Button
-            className="w-full bg-primary hover:bg-primary/90 text-white font-semibold h-14 rounded-2xl text-base disabled:opacity-40"
-            disabled={!isStepComplete || submitting}
-            onClick={handleNext}
-          >
-            {submitting ? "Submitting..." : isLastStep ? "Submit Assessment" : "Continue →"}
-          </Button>
-        </div>
-      )}
+      {/* Continue button — sticky to bottom */}
+      <div className="sticky bottom-0 px-5 pt-3 pb-10 border-t border-border bg-card">
+        <Button
+          className="w-full bg-primary hover:bg-primary/90 text-white font-semibold h-14 rounded-2xl text-base disabled:opacity-40"
+          disabled={!isStepComplete || submitting}
+          onClick={handleNext}
+        >
+          {submitting ? "Submitting..." : isLastStep ? "Submit Assessment" : "Continue →"}
+        </Button>
+      </div>
     </div>
   );
 }
