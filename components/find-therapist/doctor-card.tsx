@@ -1,3 +1,30 @@
+/**
+ * FILE: components/find-therapist/doctor-card.tsx
+ *
+ * PURPOSE:
+ *   Renders a single doctor listing card with avatar, name, speciality, tags, rating,
+ *   and a Book Now button.
+ *
+ * LOGIC OVERVIEW:
+ *   1. processDoctorImage() normalises the raw image field (data URI, JPEG/PNG base64,
+ *      URL, or relative path) into a usable src string.
+ *   2. displayName() strips Odoo's "Company, DR NAME" format and ensures "Dr." prefix.
+ *   3. Avatar is fixed at 64×64px with overflow-hidden so all image types are clipped
+ *      to the same square regardless of their natural dimensions.
+ *   4. Tags show the first 2 illness_treated entries; excess shown as "+N".
+ *   5. Book Now triggers onBook(doctor) to navigate to the booking page.
+ *
+ * KEY VARIABLES / PROPS / EXPORTS:
+ *   doctor    — DoctorListing object from the data layer
+ *   onBook    — callback invoked with the selected doctor when user taps Book Now
+ *   imgSrc    — processed image source string or null (falls back to initials avatar)
+ *
+ * DEPENDENCIES:
+ *   shadcn Avatar, Button
+ *   lucide-react: Star, User
+ *
+ * LAST UPDATED: 2026-04-24 — force image size via background-image div, increased Book Now button size
+ */
 "use client";
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -106,8 +133,8 @@ export function DoctorCard({ doctor, onBook }: DoctorCardProps) {
       <div className="flex items-center justify-between mt-3 pt-3 border-t border-border">
         <p className="text-xs text-muted-foreground">Click to see availability</p>
         <Button
-          size="sm"
-          className="bg-foreground text-background hover:bg-foreground/90 rounded-full px-5"
+          size="default"
+          className="bg-foreground text-background hover:bg-foreground/90 rounded-full px-6"
           onClick={() => onBook(doctor)}
         >
           Book Now
