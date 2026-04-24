@@ -73,7 +73,7 @@ export default function HomePage() {
             router.push("/consult/find-therapist");
             break;
           case "match":
-            router.push("/consult/find-therapist");
+            router.push("/consult/find-therapist?start=wizard");
             break;
           case "assessment":
             router.push("/assessments");

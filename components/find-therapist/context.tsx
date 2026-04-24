@@ -1,7 +1,37 @@
+/**
+ * FILE: components/find-therapist/context.tsx
+ *
+ * PURPOSE:
+ *   Central state and logic provider for the find-therapist flow. Manages wizard
+ *   step progression, filter selections, and navigation to the booking page.
+ *
+ * LOGIC OVERVIEW:
+ *   1. Reads ?start=wizard query param on mount to decide initial view (wizard or list).
+ *   2. Exposes view/step state and all selection state (profession, issues, mode,
+ *      city, center, languages) via FindTherapistContext.
+ *   3. handleNext/handleBack drive step transitions; in-person mode inserts STEP_LOCATION.
+ *   4. Completing the wizard (last step → Next) returns to list view with filters applied.
+ *   5. handleBook builds query params and pushes to the booking page for a given doctor.
+ *
+ * KEY VARIABLES / PROPS / EXPORTS:
+ *   view             — "list" | "wizard"; controls which sub-view renders
+ *   step             — current wizard step (1–5)
+ *   startWizard      — resets step to 1 and sets view to "wizard"
+ *   clearFilters     — resets all filter selections
+ *   handleBook       — navigates to /consult/booking/:id with mode/campus params
+ *   canNext          — per-step boolean map; gates the Next button
+ *
+ * DEPENDENCIES:
+ *   useRouter, useSearchParams — next/navigation
+ *   DoctorListing              — @/data/doctors type
+ *
+ * LAST UPDATED: 2026-04-24 — add file header; init view from ?start=wizard param
+ */
+
 "use client";
 
 import type { DoctorListing as Doctor } from "@/data/doctors";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { createContext, useCallback, useContext, useMemo, useState } from "react";
 
 // ── Types ──────────────────────────────────────────────────────────────────────
@@ -55,13 +85,6 @@ export const PROFESSION_OPTIONS = [
     label: "Other specialist",
     desc: "OT, counselor & more",
     icon: "other",
-  },
-  {
-    id: "not_sure",
-    value: "not_sure" as ProfessionValue,
-    label: "I'm not sure",
-    desc: "Help me decide",
-    icon: "shrug",
   },
 ];
 
@@ -204,8 +227,12 @@ export function FindTherapistProvider({
   children: React.ReactNode;
 }) {
   const router = useRouter();
+  const searchParams = useSearchParams();
 
-  const [view, setView] = useState<View>("list");
+  /* Start directly in wizard mode when navigated from the "Match me" CTA (?start=wizard). */
+  const [view, setView] = useState<View>(
+    searchParams.get("start") === "wizard" ? "wizard" : "list",
+  );
   const [step, setStep] = useState(STEP_PROFESSION);
   const [profession, setProfession] = useState<ProfessionValue | null>(null);
   const [issues, setIssues] = useState<IssueOption[]>([]);
