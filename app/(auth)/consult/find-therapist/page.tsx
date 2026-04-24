@@ -22,10 +22,10 @@
  */
 "use client";
 
-import { Suspense } from "react";
 import { FindTherapistProvider, useFindTherapist } from "@/components/find-therapist/context";
 import { ListView } from "@/components/find-therapist/list-view";
 import { WizardView } from "@/components/find-therapist/wizard-view";
+import { Suspense } from "react";
 
 function FindTherapistInner() {
   const { view } = useFindTherapist();
