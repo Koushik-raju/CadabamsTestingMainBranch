@@ -257,9 +257,7 @@ function BookingContent() {
   // Only show slots that haven't started yet. Slots with start_datetime <= now are
   // either already past or currently in progress — both must be hidden.
   const now = new Date();
-  const daySlots = (slotsByDate[selectedKey] ?? []).filter(
-    (s) => new Date(s.start_datetime) > now,
-  );
+  const daySlots = (slotsByDate[selectedKey] ?? []).filter((s) => new Date(s.start_datetime) > now);
   const morningSlots = daySlots.filter((s) => new Date(s.start_datetime).getHours() < 12);
   const afternoonSlots = daySlots.filter((s) => {
     const h = new Date(s.start_datetime).getHours();
