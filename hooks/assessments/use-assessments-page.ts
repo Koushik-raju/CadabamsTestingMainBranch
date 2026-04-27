@@ -17,31 +17,36 @@
  *   - useFilteredAssessments: SWR hook that delegates search, category, sort,
  *     and duration filtering entirely to the backend query params — no
  *     client-side filter/sort logic.
- *   - useAssignedAssessments: SWR hook over patientsControllerGetAssessments.
- *     Returns CompletionResponseDto[] directly — no custom mapping type needed.
+ *   - useAssignedAssessments: SWR hook over patientAssignedContentControllerListAssigned.
+ *     Returns the doctor-assigned assessments stored in the patient's
+ *     LeadContentAssignment row (assignments.assessments bucket), mapped to a
+ *     typed AssignedAssessmentItem[] for the UI. Mirrors the reference frontned
+ *     "Assigned Assessments" Firestore flow but reads from Postgres via the
+ *     /patient/assigned-content endpoint.
  *
  * KEY VARIABLES / PROPS / EXPORTS:
- *   AssessmentItem          — mapped assessment shape (flattened Strapi rich-text)
- *   mapAssessment           — DTO → AssessmentItem converter (exported for reuse)
- *   useAssessments          — infinite paginated hook
- *   useFilteredAssessments  — server-filtered hook (search/category/sort/duration)
- *   useAssignedAssessments  — hook for a lead's assigned completions (CompletionResponseDto[])
- *   getDynamicCategories    — derives category list from loaded assessments
+ *   AssessmentItem            — mapped assessment shape (flattened Strapi rich-text)
+ *   AssignedAssessmentItem    — flattened doctor-assigned assessment shape
+ *   mapAssessment             — DTO → AssessmentItem converter (exported for reuse)
+ *   useAssessments            — infinite paginated hook
+ *   useFilteredAssessments    — server-filtered hook (search/category/sort/duration)
+ *   useAssignedAssessments    — hook returning AssignedAssessmentItem[] for the lead
+ *   getDynamicCategories      — derives category list from loaded assessments
  *
  * DEPENDENCIES:
- *   cmsAssessmentsControllerFindAll     — SDK: fetch published assessments
- *   patientsControllerGetAssessments    — SDK: fetch lead-assigned assessments
+ *   cmsAssessmentsControllerFindAll                  — SDK: fetch published assessments
+ *   patientAssignedContentControllerListAssigned     — SDK: fetch lead's assigned content row
  *
- * LAST UPDATED: 2026-04-21 — remove AssignedAssessmentItem/AssessmentCategories/StrapiPage/
- *   categorizeAssessments (dead code or replaced by SDK types); useAssignedAssessments now
- *   returns CompletionResponseDto[] directly
+ * LAST UPDATED: 2026-04-28 — switch My Assessments tab from completions
+ *   (patientsControllerGetAssessments) to doctor-assigned assessments
+ *   (patient/assigned-content) so the data matches the reference frontned tab.
  */
 
 import { ASSESSMENT_CATEGORIES } from "@/components/assessment/assessment-category";
 import { assessmentsKey, assignedAssessmentsKey } from "@/lib/swr-keys";
 import {
   cmsAssessmentsControllerFindAll,
-  patientsControllerGetAssessments,
+  patientAssignedContentControllerListAssigned,
 } from "@/sdk/backend-v2";
 import type { AssessmentPaginationDto, AssessmentResponseDto } from "@/sdk/backend-v2";
 import useSWR from "swr";
@@ -321,12 +326,96 @@ export function useFilteredAssessments({
   );
 }
 
+// Doctor-assigned assessments — fetched from LeadContentAssignment.assignments.assessments.
+// The backend endpoint returns at most one row per CRM lead; we flatten its
+// `assignments.assessments` bucket into a typed list. Mirrors the reference
+// frontned `assignedAssessmentService.getAssignedAssessments` Firestore flow,
+// but uses the Postgres-backed `/patient/assigned-content` endpoint instead.
+export interface AssignedAssessmentItem {
+  id: string;
+  documentId: string;
+  title: string;
+  description: string | null;
+  category: string[];
+  assignedAt: string | null;
+  status: string | null;
+  forJourney: boolean;
+  hint: string | null;
+  image: string | null;
+}
+
+type AssignedContentResponse = {
+  crmLeadId: number | string;
+  campus: string | null;
+  items: Array<{
+    id?: string;
+    crmLeadId?: number | string;
+    campus?: string | null;
+    assignments?: {
+      assessments?: unknown[];
+      worksheets?: unknown[];
+      [k: string]: unknown;
+    };
+  }>;
+};
+
+function mapAssignedAssessment(raw: unknown): AssignedAssessmentItem | null {
+  if (!raw || typeof raw !== "object") return null;
+  const obj = raw as Record<string, unknown>;
+  const documentId =
+    (typeof obj.documentId === "string" && obj.documentId) ||
+    (typeof obj.id === "string" && obj.id) ||
+    (obj.id != null ? String(obj.id) : "");
+  if (!documentId) return null;
+
+  const titleRaw = obj.title ?? obj.label;
+  const title = typeof titleRaw === "string" ? titleRaw : "Untitled Assessment";
+  const description = typeof obj.description === "string" ? obj.description : null;
+  const categoryRaw = obj.category;
+  const category = Array.isArray(categoryRaw)
+    ? categoryRaw.filter((c): c is string => typeof c === "string")
+    : typeof categoryRaw === "string"
+      ? [categoryRaw]
+      : [];
+
+  return {
+    id: documentId,
+    documentId,
+    title,
+    description,
+    category,
+    assignedAt: typeof obj.assignedAt === "string" ? obj.assignedAt : null,
+    status: typeof obj.status === "string" ? obj.status : null,
+    forJourney: obj.forJourney === true,
+    hint: typeof obj.hint === "string" ? obj.hint : null,
+    image: typeof obj.image === "string" ? obj.image : null,
+  };
+}
+
 export function useAssignedAssessments(leadId: string | null) {
-  return useSWR(leadId ? assignedAssessmentsKey(leadId) : null, async () => {
-    const res = await patientsControllerGetAssessments({
-      path: { patientId: leadId! },
-    });
-    if (res.error) throw new Error(JSON.stringify(res.error));
-    return res.data ?? [];
-  });
+  return useSWR<AssignedAssessmentItem[]>(
+    leadId ? assignedAssessmentsKey(leadId) : null,
+    async () => {
+      const res = await patientAssignedContentControllerListAssigned();
+      if (res.error) throw new Error(JSON.stringify(res.error));
+      const data = res.data as AssignedContentResponse | undefined;
+      const row = data?.items?.[0];
+      const list = row?.assignments?.assessments ?? [];
+      const seen = new Set<string>();
+      const mapped: AssignedAssessmentItem[] = [];
+      for (const it of list) {
+        const m = mapAssignedAssessment(it);
+        if (!m) continue;
+        if (seen.has(m.documentId)) continue;
+        seen.add(m.documentId);
+        mapped.push(m);
+      }
+      return mapped;
+    },
+    {
+      revalidateOnFocus: false,
+      revalidateOnReconnect: false,
+      dedupingInterval: 60_000,
+    },
+  );
 }
