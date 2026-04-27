@@ -11,10 +11,14 @@
  * LOGIC OVERVIEW:
  *   1. If slug is given, fetches the sub-journal via useSubJournalDetail(slug).
  *      If no slug (free-flow), resolves to the hardcoded FREEFLOW_SUB_ID.
- *   2. Once a subJournalingId is available, auto-triggers generateJournalPrompt
- *      once on mount (hasAutoTriggered guard).
- *   3. "Prompt Me" / "Go Deeper" buttons call generateJournalPrompt again for
- *      follow-up questions.
+ *   2. Guided mode (slug present): auto-triggers generateJournalPrompt once on
+ *      mount so the user lands on a question. Free-flow mode: no auto prompt —
+ *      the user starts with a blank page and must tap "Prompt Me" to opt in.
+ *   3. Bottom action area:
+ *        - Empty state (no prompt, no saved prompts, no content) → single
+ *          "Prompt Me" button that fetches the first AI prompt.
+ *        - Otherwise (a prompt exists OR the user has typed/saved content) →
+ *          two buttons: "Go Deeper" (fetch next prompt) and "Finish" (save).
  *   4. Toolbar: Mic triggers Web Speech API transcription (appended to textarea);
  *      Smile opens an emoji picker popover (selection appended at cursor).
  *   5. "Finish" saves everything and navigates back to /self-journaling.
@@ -37,9 +41,9 @@
  *   emoji-picker-react          — emoji picker UI
  *   Web Speech API              — browser-native mic transcription
  *
- * LAST UPDATED: 2026-04-27 — hasAutoTriggered changed to useRef (fixes StrictMode double-fetch);
- *   fetchPrompt passes currentEntryText built from savedPrompts + content so sequential
- *   aiPrompt templates advance through questions instead of repeating Q1.
+ * LAST UPDATED: 2026-04-27 — free-flow no longer auto-fetches a prompt on mount;
+ *   bottom CTA shows a single "Prompt Me" until a prompt or content exists, then
+ *   switches to "Go Deeper" + "Finish". Guided (slug) mode keeps auto-prompt.
  */
 "use client";
 
@@ -129,7 +133,6 @@ export function JournalWriter({ slug }: JournalWriterProps) {
   const [content, setContent] = useState("");
   const [savedPrompts, setSavedPrompts] = useState<JournalPromptDto[]>([]);
   const [currentHeading, setCurrentHeading] = useState("");
-  const [isPromptMode, setIsPromptMode] = useState(false);
   const [isPrompting, setIsPrompting] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   /*
@@ -177,12 +180,15 @@ export function JournalWriter({ slug }: JournalWriterProps) {
     return generateJournalPrompt(subJournalingId, history.length > 0 ? history : undefined);
   }, [subJournalingId, savedPrompts, content, currentHeading]);
 
-  // Auto-trigger on mount: for guided mode wait until the sub detail resolves;
-  // for free-flow FREEFLOW_SUB_ID is always available so trigger immediately.
+  /*
+   * Auto-trigger on mount applies only to guided mode (slug present): we land
+   * the user on the sub-journal's first AI question. Free-flow intentionally
+   * starts blank — the user must tap "Prompt Me" to opt into prompts.
+   */
   useEffect(() => {
     if (hasAutoTriggeredRef.current || !user) return;
-    // For guided mode, wait for the sub detail to load
-    if (slug && (subsLoading || !sub?.id)) return;
+    if (!slug) return;
+    if (subsLoading || !sub?.id) return;
 
     hasAutoTriggeredRef.current = true;
     setIsPrompting(true);
@@ -190,7 +196,6 @@ export function JournalWriter({ slug }: JournalWriterProps) {
     fetchPrompt().then((question) => {
       if (question) {
         setCurrentHeading(question);
-        setIsPromptMode(true);
       }
       setIsPrompting(false);
     });
@@ -293,14 +298,12 @@ export function JournalWriter({ slug }: JournalWriterProps) {
       if (previousContent) {
         setContent(previousContent);
         setCurrentHeading(previousHeading);
-        setIsPromptMode(true);
       }
       setIsPrompting(false);
       return;
     }
 
     setCurrentHeading(question);
-    setIsPromptMode(true);
     setIsPrompting(false);
   }, [content, currentHeading, savedPrompts, fetchPrompt]);
 
@@ -320,7 +323,6 @@ export function JournalWriter({ slug }: JournalWriterProps) {
     }
     setContent("");
     setCurrentHeading(question);
-    setIsPromptMode(true);
     setIsPrompting(false);
   }, [content, currentHeading, savedPrompts, fetchPrompt]);
 
@@ -565,34 +567,18 @@ export function JournalWriter({ slug }: JournalWriterProps) {
       </div>
 
       {/* ── Fixed bottom actions ── */}
+      {/*
+       * Empty state (no AI prompt yet, nothing typed, no saved prompts) shows a
+       * single "Prompt Me" CTA — this is the free-flow entrypoint where the
+       * user opts into AI prompts. Once a prompt exists OR the user has typed
+       * or saved any content, we switch to "Go Deeper" (fetch next prompt) +
+       * "Finish" (save and exit).
+       */}
       <div className="fixed bottom-0 left-0 right-0 px-5 pb-10 pt-3 bg-background/95 backdrop-blur-sm">
-        {hasContent ? (
-          <div className="flex gap-3">
-            <Button
-              className="flex-1 rounded-full gap-2 h-14 text-base font-semibold"
-              onClick={isPromptMode ? handleGoDeeper : handlePromptMe}
-              disabled={isPrompting || isSaving}
-            >
-              {isPrompting ? (
-                <Loader2 className="w-4 h-4 animate-spin" />
-              ) : (
-                <Sparkles className="w-4 h-4" />
-              )}
-              Prompt Me
-            </Button>
-            <Button
-              variant="outline"
-              className="flex-1 rounded-full h-14 text-base font-semibold border-border"
-              onClick={handleSave}
-              disabled={isSaving || isPrompting}
-            >
-              {isSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : "Finish"}
-            </Button>
-          </div>
-        ) : (
+        {!currentHeading && !hasContent && savedPrompts.length === 0 ? (
           <Button
             className="w-full rounded-full gap-2 h-14 text-base font-semibold"
-            onClick={isPromptMode ? handleGoDeeper : handlePromptMe}
+            onClick={handlePromptMe}
             disabled={isPrompting || isInitialLoading}
           >
             {isPrompting ? (
@@ -602,6 +588,29 @@ export function JournalWriter({ slug }: JournalWriterProps) {
             )}
             Prompt Me
           </Button>
+        ) : (
+          <div className="flex gap-3">
+            <Button
+              className="flex-1 rounded-full gap-2 h-14 text-base font-semibold"
+              onClick={handleGoDeeper}
+              disabled={isPrompting || isSaving}
+            >
+              {isPrompting ? (
+                <Loader2 className="w-4 h-4 animate-spin" />
+              ) : (
+                <Sparkles className="w-4 h-4" />
+              )}
+              Go Deeper
+            </Button>
+            <Button
+              variant="outline"
+              className="flex-1 rounded-full h-14 text-base font-semibold border-border"
+              onClick={handleSave}
+              disabled={isSaving || isPrompting || (!hasContent && savedPrompts.length === 0)}
+            >
+              {isSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : "Finish"}
+            </Button>
+          </div>
         )}
       </div>
     </div>
