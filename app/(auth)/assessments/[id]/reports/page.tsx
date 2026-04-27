@@ -13,6 +13,7 @@
  *     back to the assessment detail page, and a grouped list card of reports.
  *   - Each card row shows completedAt, optional score/severity (from completion),
  *     a short excerpt, and toggles a full markdown view when tapped.
+ *   - Expanded report rows show a "Book Appointment" CTA linking to /consult/find-therapist.
  *
  * KEY VARIABLES / PROPS / EXPORTS:
  *   assessmentId — route param
@@ -24,7 +25,7 @@
  *   PageHeader             — shared navigation header
  *   react-markdown         — renders analysis.result markdown
  *
- * LAST UPDATED: 2026-04-23 — migrated custom header div to PageHeader
+ * LAST UPDATED: 2026-04-27 — added Book Appointment CTA in expanded report view
  */
 "use client";
 
@@ -38,6 +39,7 @@ import {
   useAssessmentReports,
 } from "@/hooks/assessments/use-assessment-reports";
 import { AlertCircle, ChevronDown, ChevronUp, FileText, Sparkles } from "lucide-react";
+import Link from "next/link";
 import { use, useState } from "react";
 import Markdown from "react-markdown";
 
@@ -200,6 +202,13 @@ function ReportRow({
             {report.result}
           </Markdown>
           <p className="text-[10px] text-muted-foreground mt-3">Model: {report.model}</p>
+          <div className="mt-4 pt-3 border-t border-border">
+            <Link href="/consult/find-therapist">
+              <Button asChild className="w-full py-4" size="sm">
+                Book Appointment
+              </Button>
+            </Link>
+          </div>
         </div>
       )}
     </div>

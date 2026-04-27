@@ -29,7 +29,7 @@
  *   PageHeader                — shared navigation header
  *   react-markdown            — renders report.result
  *
- * LAST UPDATED: 2026-04-23 — migrated custom header div to PageHeader
+ * LAST UPDATED: 2026-04-27 — added Book Appointment CTA in ReportView
  */
 "use client";
 
@@ -306,6 +306,10 @@ function ReportView({
           <p className="text-[10px] text-muted-foreground mt-3">Model: {model}</p>
         </CardContent>
       </Card>
+
+      <Button asChild size="lg" className="w-full">
+        <a href="/consult/find-therapist">Book Appointment</a>
+      </Button>
 
       <Link
         href={`/assessments/${assessmentId}/reports`}
