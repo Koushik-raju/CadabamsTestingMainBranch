@@ -85,17 +85,12 @@ export function MarkdownModal({ open, onOpenChange, title, subtitle, body, qa }:
         {/* Scrollable content. pb-10 leaves breathing room so the final
             paragraph never sits flush against the sheet edge. */}
         <div className="flex-1 overflow-y-auto px-5 pb-10">
-          {!hasContent && (
-            <p className="text-muted-foreground text-sm">No details recorded.</p>
-          )}
+          {!hasContent && <p className="text-muted-foreground text-sm">No details recorded.</p>}
 
           {qaPairs.length > 0 && (
             <ul className="flex flex-col gap-3">
               {qaPairs.map((p, i) => (
-                <li
-                  key={i}
-                  className="flex flex-col gap-1 border-l-2 border-primary/40 pl-3"
-                >
+                <li key={i} className="flex flex-col gap-1 border-l-2 border-primary/40 pl-3">
                   {p.question && (
                     <p className="text-xs font-semibold text-foreground/80 leading-snug">
                       {p.question}
@@ -106,9 +101,7 @@ export function MarkdownModal({ open, onOpenChange, title, subtitle, body, qa }:
                       {p.answer}
                     </p>
                   ) : (
-                    <p className="text-xs text-muted-foreground italic">
-                      No answer recorded.
-                    </p>
+                    <p className="text-xs text-muted-foreground italic">No answer recorded.</p>
                   )}
                 </li>
               ))}
