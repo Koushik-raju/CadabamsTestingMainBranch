@@ -176,10 +176,10 @@ export function DayFeed({ day, isLoading, onOpenItem }: Props) {
               : `${item.journeyTitle ?? "Journey"}${item.dayNumber != null ? ` · Day ${item.dayNumber}` : ""} · ${formatTime(item.completedAt)}`;
             const body = isDay
               ? item.summaryText
-              // Task rows have no markdown body to render in the modal —
-              // fall back to a short description so the modal still feels
-              // meaningful when the user taps one.
-              : `_${item.taskType ?? "Task"} completed at ${formatTime(item.completedAt)}._`;
+              : // Task rows have no markdown body to render in the modal —
+                // fall back to a short description so the modal still feels
+                // meaningful when the user taps one.
+                `_${item.taskType ?? "Task"} completed at ${formatTime(item.completedAt)}._`;
             return (
               <Row
                 key={`${item.kind}-${item.enrollmentId}-${item.dayNumber ?? "?"}-${i}`}

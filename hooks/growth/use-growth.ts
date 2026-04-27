@@ -42,7 +42,7 @@ export interface GrowthWeek {
 
 export interface GrowthJourneyItem {
   /** 'day' = full-day completion with LLM summary; 'task' = individual task (mood/journal/audio/etc.) completed inside a journey. */
-  kind: 'day' | 'task';
+  kind: "day" | "task";
   enrollmentId: string;
   journeyId: string;
   journeyTitle: string | null;
