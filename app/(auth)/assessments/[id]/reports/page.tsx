@@ -144,7 +144,7 @@ function ReportRow({
         </div>
         <div className="flex-1 min-w-0">
           <p className="text-sm font-medium text-foreground leading-snug">
-            {formatDate(report.createdAt)}
+            {formatDate(report.completion?.completedAt ?? report.createdAt)}
           </p>
           <p className="text-xs text-muted-foreground mt-0.5 truncate">
             {excerpt(report.result) || "View full report"}
