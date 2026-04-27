@@ -124,7 +124,7 @@ function DetailsContent({ params }: PageProps) {
         title={name}
         subtitle={journey.isPremium ? "Premium Journey" : undefined}
         fallback="/journeys"
-        className="sticky top-0 z-20 bg-card/70 backdrop-blur-sm border-b border-border px-4 py-3"
+        className="sticky top-0 z-20 bg-card/70 backdrop-blur-sm border-b border-border px-4 pb-3"
         right={
           isSubscribed ? (
             <button className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-muted transition-colors">

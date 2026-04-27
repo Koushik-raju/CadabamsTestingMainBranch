@@ -54,14 +54,15 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         `}</Script>
 
         {/*
-          overflow-x-hidden must NOT sit on <main> — in WebKit (iOS/Capacitor)
-          any overflow value on an ancestor creates a new scroll container, which
-          silently breaks position:sticky on descendant headers. Push it inward.
+          Use overflow-x-clip (not overflow-x-hidden) — in WebKit (iOS/Capacitor)
+          any overflow value other than "clip" creates a new scroll container, which
+          silently breaks position:sticky on descendant headers. "clip" visually
+          prevents horizontal overflow without creating a scroll container.
         */}
         <main>
           <AppProviders>
             <CapacitorInit />
-            <div className="overflow-x-hidden">{children}</div>
+            <div className="overflow-x-clip">{children}</div>
           </AppProviders>
         </main>
       </body>

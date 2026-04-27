@@ -29,7 +29,7 @@
  *   subscribeToJourney      — mutation to enroll user
  *   BlocksRenderer          — @strapi/blocks-react-renderer for rich-text
  *
- * LAST UPDATED: 2026-04-23 — migrated sticky header to PageHeader
+ * LAST UPDATED: 2026-04-27 — fixed header not sticking: outer container changed from min-h-screen to h-screen so the inner overflow-y-auto div is the true scroll container and the header stays pinned above it
  */
 
 "use client";
@@ -174,11 +174,11 @@ function JourneyLandingContent({ params }: PageProps) {
   }
 
   return (
-    <div className="min-h-screen bg-background flex flex-col">
+    <div className="h-screen bg-background flex flex-col">
       <PageHeader
         title=""
         fallback="/journeys"
-        className="sticky top-0 z-20 border-b border-border bg-background/90 backdrop-blur-sm px-4 py-2"
+        className="border-b border-border bg-background/90 backdrop-blur-sm px-4 py-2"
       />
 
       {/* Scrollable content */}

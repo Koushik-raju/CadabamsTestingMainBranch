@@ -41,7 +41,7 @@
  *   globalMutate (swr) — revalidates enrollment key on return
  *   journeyEnrollmentKey — lib/swr-keys
  *
- * LAST UPDATED: 2026-04-24 — fall back to getTaskType(task) when server kind
+ * LAST UPDATED: 2026-04-27 — StatsBar made sticky at top-[60px] so it pins below the 60px PageHeader; fall back to getTaskType(task) when server kind
  *   is OTHER (DB relation not yet connected) so assessment nodes don't render
  *   as "journal". Previously: cooldown banner, auto-scroll polling, id-specific
  *   URL fallback, server-kind sourcing with client fallback for pre-enrolment.
@@ -135,7 +135,7 @@ function StatsBar({ progress }: { progress: JourneyProgress }) {
   const streak = progress.gamification?.streak ?? 0;
   const xp = progress.gamification?.xp ?? 0;
   return (
-    <div className="flex items-center justify-between px-5 py-2.5 bg-card/80 backdrop-blur-sm border-b border-border">
+    <div className="sticky top-[60px] z-30 flex items-center justify-between px-5 py-2.5 bg-card/80 backdrop-blur-sm border-b border-border">
       <div className="flex items-center gap-1.5">
         <Flame className="w-4 h-4 text-orange-500" />
         <span className="text-sm font-extrabold text-foreground">{streak}</span>

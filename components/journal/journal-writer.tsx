@@ -41,9 +41,9 @@
  *   emoji-picker-react          — emoji picker UI
  *   Web Speech API              — browser-native mic transcription
  *
- * LAST UPDATED: 2026-04-27 — free-flow no longer auto-fetches a prompt on mount;
- *   bottom CTA shows a single "Prompt Me" until a prompt or content exists, then
- *   switches to "Go Deeper" + "Finish". Guided (slug) mode keeps auto-prompt.
+ * LAST UPDATED: 2026-04-27 — auto-prompt now also fires for free-flow when
+ *   opened from an active journey task (continuation.active); plain free-flow
+ *   (no slug, no journey task) still starts blank with a single "Prompt Me" CTA.
  */
 "use client";
 
@@ -181,14 +181,22 @@ export function JournalWriter({ slug }: JournalWriterProps) {
   }, [subJournalingId, savedPrompts, content, currentHeading]);
 
   /*
-   * Auto-trigger on mount applies only to guided mode (slug present): we land
-   * the user on the sub-journal's first AI question. Free-flow intentionally
-   * starts blank — the user must tap "Prompt Me" to opt into prompts.
+   * Auto-trigger logic:
+   *   - Guided mode (slug present): wait for sub-journal detail, then auto-prompt.
+   *   - Free-flow opened from a journey task (continuation.active, no slug):
+   *     auto-prompt using FREEFLOW_SUB_ID — the writer is part of a structured
+   *     flow so the user should land on a question, not a blank page.
+   *   - Plain free-flow (no slug, no journey task): start blank; user opts in
+   *     via the "Prompt Me" CTA.
    */
   useEffect(() => {
     if (hasAutoTriggeredRef.current || !user) return;
-    if (!slug) return;
-    if (subsLoading || !sub?.id) return;
+
+    if (slug) {
+      if (subsLoading || !sub?.id) return;
+    } else if (!continuation.active) {
+      return;
+    }
 
     hasAutoTriggeredRef.current = true;
     setIsPrompting(true);
@@ -199,7 +207,7 @@ export function JournalWriter({ slug }: JournalWriterProps) {
       }
       setIsPrompting(false);
     });
-  }, [sub, user, fetchPrompt, subsLoading, slug]);
+  }, [sub, user, fetchPrompt, subsLoading, slug, continuation.active]);
 
   // Clean up speech recognition on unmount
   useEffect(() => {
