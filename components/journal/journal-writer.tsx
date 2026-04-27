@@ -53,7 +53,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { generateJournalPrompt } from "@/hooks/use-journaling";
 import { useSubJournalDetail } from "@/hooks/use-journaling-subscriptions";
 import { journalStreakKey, journalSubEntriesKey, selfJournalingKey } from "@/lib/swr-keys";
-import type { SelfJournalingPromptDto } from "@/sdk/backend-v2";
+import type { JournalPromptDto } from "@/sdk/backend-v2";
 import type { EmojiClickData } from "emoji-picker-react";
 import { Hash, ImageIcon, Loader2, Mic, MicOff, Smile, Sparkles, X } from "lucide-react";
 import dynamic from "next/dynamic";
@@ -127,7 +127,7 @@ export function JournalWriter({ slug }: JournalWriterProps) {
   const recognitionRef = useRef<SpeechRecognitionInstance | null>(null);
 
   const [content, setContent] = useState("");
-  const [savedPrompts, setSavedPrompts] = useState<SelfJournalingPromptDto[]>([]);
+  const [savedPrompts, setSavedPrompts] = useState<JournalPromptDto[]>([]);
   const [currentHeading, setCurrentHeading] = useState("");
   const [isPromptMode, setIsPromptMode] = useState(false);
   const [isPrompting, setIsPrompting] = useState(false);
@@ -195,7 +195,7 @@ export function JournalWriter({ slug }: JournalWriterProps) {
   const handleSave = useCallback(async () => {
     if (!user) return;
 
-    const allPrompts: SelfJournalingPromptDto[] = [...savedPrompts];
+    const allPrompts: JournalPromptDto[] = [...savedPrompts];
     if (content.trim()) {
       allPrompts.push({
         heading: currentHeading || "What's on your mind...",

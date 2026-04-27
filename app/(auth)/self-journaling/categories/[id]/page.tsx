@@ -49,7 +49,7 @@ import {
   useJournalingCategories,
   useSelfJournalingEntries,
 } from "@/hooks/use-journaling";
-import type { SelfJournalingResponseDto } from "@/hooks/use-journaling";
+import type { JournalEntryResponseDto, JournalPromptDto } from "@/hooks/use-journaling";
 import { getJournalVisual } from "@/lib/journal-visual";
 import { cn } from "@/lib/utils";
 import { BookOpen, RotateCcw } from "lucide-react";
@@ -64,10 +64,10 @@ import { useMemo } from "react";
 interface DateGroup {
   label: string;
   dateStr: string;
-  entries: SelfJournalingResponseDto[];
+  entries: JournalEntryResponseDto[];
 }
 
-function groupByDate(entries: SelfJournalingResponseDto[]): DateGroup[] {
+function groupByDate(entries: JournalEntryResponseDto[]): DateGroup[] {
   const today = new Date();
   today.setHours(0, 0, 0, 0);
   const todayStr = today.toISOString().split("T")[0];
@@ -75,7 +75,7 @@ function groupByDate(entries: SelfJournalingResponseDto[]): DateGroup[] {
   yesterday.setDate(yesterday.getDate() - 1);
   const yesterdayStr = yesterday.toISOString().split("T")[0];
 
-  const map = new Map<string, SelfJournalingResponseDto[]>();
+  const map = new Map<string, JournalEntryResponseDto[]>();
   for (const entry of entries) {
     const d = new Date(entry.createdAt ?? "");
     if (isNaN(d.getTime())) continue;
@@ -320,10 +320,11 @@ export default function CategoryDetailPage() {
                             minute: "2-digit",
                             hour12: true,
                           });
+                          const entryPrompts = (entry.prompts ?? []) as unknown as JournalPromptDto[];
                           const preview =
-                            entry.prompts && entry.prompts.length > 0
-                              ? (entry.prompts[0].text ?? entry.prompts[0].heading ?? "")
-                              : extractString(entry.entry);
+                            entryPrompts.length > 0
+                              ? (entryPrompts[0].text ?? entryPrompts[0].heading ?? "")
+                              : extractString(entry.entryText);
 
                           return (
                             <div key={entry.id}>

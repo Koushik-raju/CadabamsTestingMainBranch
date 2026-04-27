@@ -57,18 +57,12 @@ export function useSelfJournaling() {
   return { entries: data ?? [], isLoading, error, mutate };
 }
 
-/*
- * subJournalingId is accepted by the backend but not yet in the SDK's
- * CreateJournalEntryDto — it was added in a backend DTO change that needs a
- * SDK regeneration to surface. The `as CreateJournalEntryDto` cast passes it
- * through at runtime. Remove the cast after running `pnpm run generate:sdk`.
- */
 export async function createEntry(
-  body: CreateJournalEntryDto & { subJournalingId?: string },
+  body: CreateJournalEntryDto,
 ): Promise<JournalEntryResponseDto | null> {
   const res = await journalingControllerCreateEntry({
     path: { campus: "cadabams" },
-    body: body as CreateJournalEntryDto,
+    body,
   });
   if (res.error) return null;
   return (res.data as JournalEntryResponseDto | undefined) ?? null;

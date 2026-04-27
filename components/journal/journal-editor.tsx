@@ -2,7 +2,7 @@
 
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import type { SelfJournalingPromptDto } from "@/sdk/backend-v2";
+import type { JournalPromptDto } from "@/sdk/backend-v2";
 import { Loader2 } from "lucide-react";
 import { useRef } from "react";
 
@@ -33,13 +33,13 @@ import { useRef } from "react";
  *   Textarea, Button, Loader2 — shadcn/ui + lucide-react
  *
  * LAST UPDATED: 2026-04-27 — Replaced local JournalPrompt interface with
- *   SelfJournalingPromptDto from the SDK; no custom type definitions.
+ *   JournalPromptDto from the SDK; no custom type definitions.
  */
 
 interface JournalEditorProps {
   content: string;
   onChange: (value: string) => void;
-  savedPrompts: SelfJournalingPromptDto[];
+  savedPrompts: JournalPromptDto[];
   currentHeading: string;
   isPromptMode: boolean;
   isPrompting: boolean;

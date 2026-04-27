@@ -207,8 +207,8 @@ export async function tickJourney(enrollmentId: string, journeyId: string): Prom
 export type TaskProof =
   | { kind: "ASSESSMENT"; assessmentCompletionId: string }
   | { kind: "WORKSHEET"; worksheetSubmissionId: string }
-  | { kind: "SUB_JOURNAL"; journalEntryId?: string; selfJournalingId?: string }
-  | { kind: "JOURNAL"; journalEntryId?: string; selfJournalingId?: string }
+  | { kind: "SUB_JOURNAL"; journalEntryId?: string }
+  | { kind: "JOURNAL"; journalEntryId?: string }
   | { kind: "AUDIO"; audioId: string }
   | { kind: "VIDEO"; videoId: string }
   | { kind: "MOOD"; moodBefore: number; moodAfter: number }
@@ -224,12 +224,10 @@ function proofToBody(proof: TaskProof): Record<string, unknown> {
     case "SUB_JOURNAL":
       return {
         ...(proof.journalEntryId ? { journalEntryId: proof.journalEntryId } : {}),
-        ...(proof.selfJournalingId ? { selfJournalingId: proof.selfJournalingId } : {}),
       };
     case "JOURNAL":
       return {
         ...(proof.journalEntryId ? { journalEntryId: proof.journalEntryId } : {}),
-        ...(proof.selfJournalingId ? { selfJournalingId: proof.selfJournalingId } : {}),
       };
     case "AUDIO":
       return { audioId: proof.audioId };

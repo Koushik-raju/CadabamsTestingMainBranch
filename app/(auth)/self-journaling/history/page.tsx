@@ -14,7 +14,7 @@
  *   6. Tapping a row opens an EntryDetailModal bottom sheet.
  *
  * KEY VARIABLES / PROPS / EXPORTS:
- *   allEntries      — raw SWR list of SelfJournalingResponseDto[]
+ *   allEntries      — raw SWR list of JournalEntryResponseDto[]
  *   filteredEntries — entries after subJournal + search filters applied
  *   grouped         — GroupedEntries[] bucketed by date for display
  *   selectedEntry   — currently open entry in the detail modal, or null
@@ -35,7 +35,7 @@ import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
 import { extractString, useSelfJournalingEntries } from "@/hooks/use-journaling";
-import type { SelfJournalingResponseDto } from "@/hooks/use-journaling";
+import type { JournalEntryResponseDto, JournalPromptDto } from "@/hooks/use-journaling";
 import { cn } from "@/lib/utils";
 import { BookOpen, Search, X } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -48,10 +48,10 @@ import { Suspense, useMemo, useState } from "react";
 interface GroupedEntries {
   label: string;
   dateStr: string;
-  entries: SelfJournalingResponseDto[];
+  entries: JournalEntryResponseDto[];
 }
 
-function groupByDate(entries: SelfJournalingResponseDto[]): GroupedEntries[] {
+function groupByDate(entries: JournalEntryResponseDto[]): GroupedEntries[] {
   const today = new Date();
   today.setHours(0, 0, 0, 0);
   const todayStr = today.toISOString().split("T")[0];
@@ -59,7 +59,7 @@ function groupByDate(entries: SelfJournalingResponseDto[]): GroupedEntries[] {
   yesterday.setDate(yesterday.getDate() - 1);
   const yesterdayStr = yesterday.toISOString().split("T")[0];
 
-  const map = new Map<string, SelfJournalingResponseDto[]>();
+  const map = new Map<string, JournalEntryResponseDto[]>();
   for (const entry of entries) {
     const d = new Date(entry.createdAt ?? "");
     if (isNaN(d.getTime())) continue;
@@ -86,15 +86,17 @@ function groupByDate(entries: SelfJournalingResponseDto[]): GroupedEntries[] {
     });
 }
 
-function matchesSearch(entry: SelfJournalingResponseDto, query: string): boolean {
+function matchesSearch(entry: JournalEntryResponseDto, query: string): boolean {
   const q = query.toLowerCase();
   if (extractString(entry.title).toLowerCase().includes(q)) return true;
-  if (extractString(entry.entry).toLowerCase().includes(q)) return true;
-  if (
-    entry.prompts?.some(
-      (p) => p.heading?.toLowerCase().includes(q) || p.text?.toLowerCase().includes(q),
-    )
-  )
+  if (extractString(entry.entryText).toLowerCase().includes(q)) return true;
+  /*
+   * JournalEntryResponseDto.prompts is typed as Array<Array<unknown>> (Strapi
+   * generator artifact). The runtime value is JournalPromptDto[] — cast here
+   * so we can access heading/text safely.
+   */
+  const prompts = (entry.prompts ?? []) as unknown as JournalPromptDto[];
+  if (prompts.some((p) => p.heading?.toLowerCase().includes(q) || p.text?.toLowerCase().includes(q)))
     return true;
   return false;
 }
@@ -107,7 +109,7 @@ function EntryDetailModal({
   entry,
   onClose,
 }: {
-  entry: SelfJournalingResponseDto;
+  entry: JournalEntryResponseDto;
   onClose: () => void;
 }) {
   return (
@@ -150,7 +152,7 @@ function EntryDetailModal({
         {/* Content */}
         <div className="px-5 py-5 flex flex-col gap-5">
           {entry.prompts && entry.prompts.length > 0 ? (
-            entry.prompts.map((prompt, idx) => (
+            (entry.prompts as unknown as JournalPromptDto[]).map((prompt, idx) => (
               <div key={idx} className="bg-card border border-border rounded-xl p-4">
                 {prompt.heading && (
                   <div className="flex items-start gap-2 mb-2">
@@ -167,17 +169,20 @@ function EntryDetailModal({
             ))
           ) : (
             <p className="text-sm text-foreground whitespace-pre-wrap leading-relaxed">
-              {extractString(entry.entry)}
+              {extractString(entry.entryText)}
             </p>
           )}
 
           {(entry.emotion || entry.stressLevel) && (
             <div className="flex gap-3 pt-2 border-t border-border">
               {entry.emotion && (
-                <span className="text-xs text-muted-foreground">Mood: {entry.emotion}/5</span>
+                <span className="text-xs text-muted-foreground">
+                  {/* emotion/stressLevel are runtime numbers; SDK types them as objects (Strapi generator artifact) */}
+                  Mood: {String(entry.emotion)}/5
+                </span>
               )}
               {entry.stressLevel && (
-                <span className="text-xs text-muted-foreground">Stress: {entry.stressLevel}/5</span>
+                <span className="text-xs text-muted-foreground">Stress: {String(entry.stressLevel)}/5</span>
               )}
             </div>
           )}
@@ -205,7 +210,7 @@ function HistoryContent() {
 
   const { entries: allEntries, isLoading } = useSelfJournalingEntries(300);
   const [search, setSearch] = useState("");
-  const [selectedEntry, setSelectedEntry] = useState<SelfJournalingResponseDto | null>(null);
+  const [selectedEntry, setSelectedEntry] = useState<JournalEntryResponseDto | null>(null);
 
   const filteredEntries = useMemo(() => {
     let filtered = allEntries;
@@ -314,11 +319,12 @@ function HistoryContent() {
                       minute: "2-digit",
                       hour12: true,
                     });
+                    const entryPrompts = (entry.prompts ?? []) as unknown as JournalPromptDto[];
                     const preview =
-                      entry.prompts && entry.prompts.length > 0
-                        ? (entry.prompts[0].text ?? entry.prompts[0].heading ?? "")
-                        : extractString(entry.entry);
-                    const promptCount = entry.prompts?.length ?? 0;
+                      entryPrompts.length > 0
+                        ? (entryPrompts[0].text ?? entryPrompts[0].heading ?? "")
+                        : extractString(entry.entryText);
+                    const promptCount = entryPrompts.length;
 
                     return (
                       <div key={entry.id}>
