@@ -2709,15 +2709,26 @@ export type UpdateJournalEntryDto = {
     prompts?: Array<JournalPromptDto>;
 };
 
+export type ConversationTurnDto = {
+    /**
+     * Who produced this turn
+     */
+    role: 'user' | 'assistant';
+    /**
+     * The text of this turn
+     */
+    content: string;
+};
+
 export type GenerateJournalPromptDto = {
     /**
      * ID of the CmsSubJournaling record to generate a prompt for
      */
     subJournalingId: string;
     /**
-     * In-progress entry text from this session (savedPrompts + active content, not yet persisted). Used by the aiPrompt template to determine which question to ask next.
+     * Ordered list of turns already shown this session (assistant = AI question, user = patient answer). Omit or send [] to start the sequence from the beginning.
      */
-    currentEntryText?: string;
+    conversationHistory?: Array<ConversationTurnDto>;
 };
 
 export type PromptContextDto = {
@@ -3091,6 +3102,25 @@ export type GrowthJourneyItemDto = {
     completedAt: string;
 };
 
+export type GrowthJournalPromptDto = {
+    /**
+     * Prompt question / heading
+     */
+    heading: {
+        [key: string]: unknown;
+    } | null;
+    /**
+     * User's answer text
+     */
+    text: {
+        [key: string]: unknown;
+    } | null;
+    /**
+     * Position within the prompt list (0-indexed)
+     */
+    order: number;
+};
+
 export type GrowthJournalItemDto = {
     id: string;
     title: {
@@ -3103,6 +3133,10 @@ export type GrowthJournalItemDto = {
         [key: string]: unknown;
     } | null;
     /**
+     * Prompt question/answer pairs, ordered. The Growth modal renders these as a Q&A list. Empty array when the entry was free-form (no prompts).
+     */
+    prompts: Array<GrowthJournalPromptDto>;
+    /**
      * ISO timestamp when the entry was journaled
      */
     journaledAt: string;
@@ -3112,6 +3146,23 @@ export type GrowthJournalItemDto = {
     subJournalingId: {
         [key: string]: unknown;
     } | null;
+};
+
+export type GrowthAssessmentAnswerDto = {
+    /**
+     * Question text — extracted from the answer payload when available, else the raw key
+     */
+    question: string;
+    /**
+     * User's answer(s). Multi-select questions render as comma-separated picks; free-text answers come through verbatim.
+     */
+    answer: {
+        [key: string]: unknown;
+    } | null;
+    /**
+     * Step / order within the assessment (0-indexed)
+     */
+    order: number;
 };
 
 export type GrowthAssessmentItemDto = {
@@ -3126,6 +3177,10 @@ export type GrowthAssessmentItemDto = {
     severity: {
         [key: string]: unknown;
     } | null;
+    /**
+     * Question/answer pairs the user submitted, ordered by step.
+     */
+    answers: Array<GrowthAssessmentAnswerDto>;
     /**
      * Markdown narrative when the LLM analysis is available
      */

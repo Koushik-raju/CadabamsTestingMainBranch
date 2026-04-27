@@ -50,7 +50,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { useJourneyTaskContinuation } from "@/hooks/journeys/use-journey-task-continuation";
 import { createEntry } from "@/hooks/self-journaling/use-self-journaling";
 import { useAuth } from "@/hooks/use-auth";
-import { generateJournalPrompt } from "@/hooks/use-journaling";
+import { type ConversationTurnDto, generateJournalPrompt } from "@/hooks/use-journaling";
 import { useSubJournalDetail } from "@/hooks/use-journaling-subscriptions";
 import { journalStreakKey, journalSubEntriesKey, selfJournalingKey } from "@/lib/swr-keys";
 import type { JournalPromptDto } from "@/sdk/backend-v2";
@@ -150,20 +150,31 @@ export function JournalWriter({ slug }: JournalWriterProps) {
   const subTitle = sub?.title ?? undefined;
 
   /*
-   * Build currentEntryText from the saved prompt+response pairs accumulated this
-   * session plus the active textarea content. This is sent to the backend so the
-   * AI's sequential aiPrompt template (e.g. Evening Reset, CBT Thought Record) can
-   * see which questions have already been answered and ask the next one in order.
-   * Without this, the AI has no knowledge of what was written and repeats Q1 every time.
+   * Build a structured conversation history from savedPrompts + any active in-progress
+   * answer in the textarea. Each completed pair contributes an assistant turn (the AI
+   * question stored in p.heading) and a user turn (the patient's answer in p.text).
+   * If the user has started typing a response to the current question but hasn't saved
+   * yet, append that as a user turn too so the AI can see the partial answer and pick
+   * the right next question. Sending structured turns instead of a flat text blob lets
+   * the LLM distinguish its own questions from patient answers without guessing.
    */
   const fetchPrompt = useCallback((): Promise<string | null> => {
     if (!subJournalingId) return Promise.resolve(null);
-    const parts = [
-      ...savedPrompts.map((p) => `${p.heading}\n${p.text}`),
-      ...(content.trim() ? [`${currentHeading || "What's on your mind"}\n${content.trim()}`] : []),
+
+    const history: ConversationTurnDto[] = [
+      ...savedPrompts.flatMap((p): ConversationTurnDto[] => [
+        { role: "assistant", content: p.heading ?? "" },
+        { role: "user", content: p.text ?? "" },
+      ]),
+      ...(currentHeading && content.trim()
+        ? ([
+            { role: "assistant", content: currentHeading },
+            { role: "user", content: content.trim() },
+          ] as ConversationTurnDto[])
+        : []),
     ];
-    const currentEntryText = parts.length > 0 ? parts.join("\n\n") : undefined;
-    return generateJournalPrompt(subJournalingId, currentEntryText);
+
+    return generateJournalPrompt(subJournalingId, history.length > 0 ? history : undefined);
   }, [subJournalingId, savedPrompts, content, currentHeading]);
 
   // Auto-trigger on mount: for guided mode wait until the sub detail resolves;

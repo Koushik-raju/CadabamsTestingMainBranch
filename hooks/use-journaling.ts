@@ -45,15 +45,14 @@
  *   swr                                         — caching + revalidation
  *   useAuth                                     — provides campus user identity
  *
- * LAST UPDATED: 2026-04-27 — migrated from retired CmsSelfJournaling CMS endpoints
- *   to campus journalingController* endpoints (JournalEntry table); removed
- *   selfJournalingId/leadId from payloads; SelfJournalingPromptDto → JournalPromptDto,
- *   SelfJournalingResponseDto → JournalEntryResponseDto.
+ * LAST UPDATED: 2026-04-27 — generateJournalPrompt now accepts ConversationTurnDto[]
+ *   instead of flat currentEntryText string so the LLM gets a proper multi-turn thread.
  */
 import { useAuth } from "@/hooks/use-auth";
 import { swrConfig } from "@/lib/swr-config";
 import { journalingCategoriesKey, selfJournalingEntryKey, selfJournalingKey } from "@/lib/swr-keys";
 import {
+  type ConversationTurnDto,
   type JournalEntryResponseDto,
   type JournalPromptDto,
   type JournalingResponseDto,
@@ -68,6 +67,7 @@ import {
 import useSWR, { mutate as globalMutate } from "swr";
 
 export type {
+  ConversationTurnDto,
   JournalingResponseDto,
   SubJournalingResponseDto,
   JournalEntryResponseDto,
@@ -225,19 +225,18 @@ export async function deleteSelfJournalingEntry(id: string): Promise<void> {
  * The backend fetches user context (recent entries, baseline assessment) from DB
  * and returns a personalized question. Returns null on any error.
  *
- * currentEntryText — optional in-progress session text built from savedPrompts +
- * active textarea content. Passing it lets the AI's sequential aiPrompt template
- * determine which question to ask next (e.g. Evening Reset Q1→Q2→Q3…) rather than
- * always regenerating from scratch and repeating Q1.
- *
+ * conversationHistory — ordered list of turns already shown this session
+ * (assistant = AI question, user = patient answer). The backend injects these as
+ * real multi-turn LLM messages so the model can distinguish its own questions from
+ * the user's answers and avoid repeating a question already asked.
  */
 export async function generateJournalPrompt(
   subJournalingId: string,
-  currentEntryText?: string,
+  conversationHistory?: ConversationTurnDto[],
 ): Promise<string | null> {
   const res = await journalingControllerPromptMe({
     path: { campus: "cadabams" },
-    body: { subJournalingId, currentEntryText },
+    body: { subJournalingId, conversationHistory },
   });
   if (res.error) return null;
   return res.data?.question ?? null;
