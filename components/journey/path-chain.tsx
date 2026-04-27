@@ -2,13 +2,13 @@
  * FILE: components/journey/path-chain.tsx
  *
  * PURPOSE:
- *   Renders the Duolingo-style zigzag path of task nodes and day-header bars,
- *   connected by an SVG curved dashed line.
+ *   Renders the zigzag path of task nodes and day-header bars in a flowing S-curve.
  *
  * LOGIC OVERVIEW:
  *   PathChain receives a flat ChainItem[] list (alternating 'header' and 'node' items)
- *   and renders them in a column. Nodes alternate left/right at ±68px from center.
- *   An SVG overlay draws cubic Bézier curves connecting consecutive node circles.
+ *   and renders them in a column. Nodes follow a 6-step triangular LR wave
+ *   [-72,-24,24,72,24,-24] (constant 36px step) for a smooth out-and-back S-curve flow.
+ *   No connector line — tiles are large enough to read on their own.
  *   getTaskType() derives the visual node type from task fields using ID arrays and
  *   boolean flags, in a defined priority order.
  *
@@ -21,12 +21,14 @@
  * DEPENDENCIES:
  *   PathNode, UnitHeaderBar
  *
- * LAST UPDATED: 2026-04-22 — add data-node-id attribute for auto-scroll targeting
+ * LAST UPDATED: 2026-04-27 — removed dashed connector; 6-step triangular LR wave
+ *   [-72,-24,24,72,24,-24] keeps every consecutive step a constant 36px so the
+ *   path reads as a smooth S-curve out-and-back instead of an abrupt zigzag.
  */
 "use client";
 
 import type { JourneyTask } from "@/types/journey";
-import { useEffect, useRef, useState } from "react";
+import { useRef } from "react";
 import { type NodeTaskType, type NodeVariant, PathNode } from "./path-node";
 import { UnitHeaderBar } from "./unit-header-bar";
 
@@ -68,86 +70,18 @@ export function getTaskType(task: JourneyTask): NodeTaskType {
   return "journal"; // default fallback
 }
 
-const LR = [-68, 68]; // px from center, alternating
-
-interface SvgState {
-  d: string;
-  w: number;
-  h: number;
-}
+/* Triangular wave: out (-72 → +72) then back, with constant 36px step between
+   consecutive nodes. Wider amplitude + non-zero crossings (±24, never near 0)
+   keep the path from feeling cramped in the middle while staying inside the
+   visual column even with task labels under each tile. */
+const LR = [-72, -24, 24, 72, 24, -24];
 
 export function PathChain({ items, onNodeTap }: PathChainProps) {
   const containerRef = useRef<HTMLDivElement>(null);
-  const [svg, setSvg] = useState<SvgState>({ d: "", w: 0, h: 0 });
-
-  const nodeItems = items.filter(
-    (i): i is Extract<ChainItem, { kind: "node" }> => i.kind === "node",
-  );
-
-  // Re-measure whenever items (or their variants) change
-  const key = nodeItems.map((i) => `${i.node.nodeId}:${i.node.variant}`).join("|");
-
-  useEffect(() => {
-    const container = containerRef.current;
-    if (!container || nodeItems.length < 2) {
-      setSvg({ d: "", w: 0, h: 0 });
-      return;
-    }
-
-    let raf1: number, raf2: number;
-    raf1 = requestAnimationFrame(() => {
-      raf2 = requestAnimationFrame(() => {
-        const cRect = container.getBoundingClientRect();
-        const circles = Array.from(container.querySelectorAll<HTMLElement>('[data-circle="true"]'));
-        if (circles.length < 2 || cRect.width === 0) return;
-
-        const parts: string[] = [];
-        for (let i = 0; i < circles.length - 1; i++) {
-          const r1 = circles[i].getBoundingClientRect();
-          const r2 = circles[i + 1].getBoundingClientRect();
-          const x1 = r1.left - cRect.left + r1.width / 2;
-          const y1 = r1.top - cRect.top + r1.height / 2;
-          const x2 = r2.left - cRect.left + r2.width / 2;
-          const y2 = r2.top - cRect.top + r2.height / 2;
-          const mid = (y1 + y2) / 2;
-          parts.push(
-            `M${x1.toFixed(1)},${y1.toFixed(1)} C${x1.toFixed(1)},${mid.toFixed(1)} ${x2.toFixed(1)},${mid.toFixed(1)} ${x2.toFixed(1)},${y2.toFixed(1)}`,
-          );
-        }
-        if (parts.length)
-          setSvg({ d: parts.join(" "), w: Math.round(cRect.width), h: container.scrollHeight });
-      });
-    });
-    return () => {
-      cancelAnimationFrame(raf1);
-      cancelAnimationFrame(raf2);
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [key]);
-
   let nodeIdx = 0;
 
   return (
     <div ref={containerRef} className="relative flex flex-col items-center py-4">
-      {/* Continuous curved connector across all nodes */}
-      {svg.d && (
-        <svg
-          className="absolute top-0 left-0 pointer-events-none"
-          style={{ zIndex: 0 }}
-          width={svg.w}
-          height={svg.h}
-        >
-          <path
-            d={svg.d}
-            fill="none"
-            stroke="rgba(148,163,184,0.35)"
-            strokeWidth="2.5"
-            strokeDasharray="8 6"
-            strokeLinecap="round"
-          />
-        </svg>
-      )}
-
       {items.map((item, idx) => {
         if (item.kind === "header") {
           return (
@@ -162,7 +96,7 @@ export function PathChain({ items, onNodeTap }: PathChainProps) {
         }
 
         const { node } = item;
-        const xOffset = LR[nodeIdx % 2];
+        const xOffset = LR[nodeIdx % LR.length];
         const isActive = node.variant === "active";
         nodeIdx++;
 
@@ -173,7 +107,7 @@ export function PathChain({ items, onNodeTap }: PathChainProps) {
             style={{ transform: `translateX(${xOffset}px)` }}
             data-node-id={node.task.id}
           >
-            {nodeIdx > 1 && <div className={isActive ? "h-5" : "h-4"} />}
+            {nodeIdx > 1 && <div className={isActive ? "h-4" : "h-3"} />}
             <PathNode
               variant={node.variant}
               taskType={node.taskType}

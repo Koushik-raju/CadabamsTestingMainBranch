@@ -1,3 +1,36 @@
+/**
+ * FILE: components/journey/path-node.tsx
+ *
+ * PURPOSE:
+ *   Renders a single node (circle tile) on the journey path chain.
+ *   Exports TypeColorConfig / TYPE_COLORS / getTypeColor for sheet components.
+ *
+ * LOGIC OVERVIEW:
+ *   PathNode receives a variant (active/completed/locked/default) and taskType.
+ *   All unlocked tiles use the primary theme color (hsl(var(--primary))) so the
+ *   path uses only 2 colors: primary (orange) for unlocked and muted gray for locked.
+ *   TYPE_COLORS.bg is kept as a hex (#E7590F = brand primary) so sheet files can
+ *   still append hex-alpha suffixes (e.g. `${color.bg}18`) without changes.
+ *   Variants:
+ *     active   — large solid primary circle, pulse rings, speech-bubble label
+ *     completed — solid primary circle, checkmark icon
+ *     default  — light primary-tinted ring with primary icon (available but not yet active)
+ *     locked   — muted gray circle, lock badge
+ *
+ * KEY VARIABLES / PROPS / EXPORTS:
+ *   NodeVariant        — "completed" | "active" | "locked" | "default"
+ *   NodeTaskType       — "video" | "book" | "audio" | "journal" | "assessment" | "gift" | "trophy" | "read" | "summary"
+ *   TypeColorConfig    — { bg: string; fg: string; label: string }
+ *   TYPE_COLORS        — map of taskType → TypeColorConfig (all bg = brand primary hex)
+ *   getTypeColor()     — lookup helper used by action/preview/unit sheets
+ *   PathNode           — the renderable circle tile component
+ *
+ * DEPENDENCIES:
+ *   lucide-react icons, cn (lib/utils)
+ *
+ * LAST UPDATED: 2026-04-27 — squircle tiles (rounded-[20/24px]) bumped to 76/88px with
+ *   larger icons (size 7/8); CSS vars use var(--primary) + color-mix() (theme is oklch).
+ */
 "use client";
 
 import { cn } from "@/lib/utils";
@@ -35,28 +68,24 @@ export interface TypeColorConfig {
   label: string;
 }
 
+/* All types share the brand primary hex so sheet files can keep the
+   `${color.bg}18` hex-alpha pattern without modification. */
+const PRIMARY_HEX = "#E7590F";
+
 export const TYPE_COLORS: Record<string, TypeColorConfig> = {
-  video: { bg: "#FF2D2D", fg: "#ffffff", label: "Video" }, // vivid red
-  audio: { bg: "#006EFF", fg: "#ffffff", label: "Audio" }, // electric blue
-  assessment: { bg: "#00897B", fg: "#ffffff", label: "Assessment" }, // teal
-  journal: { bg: "#00C853", fg: "#ffffff", label: "Journal" }, // vivid green
-  book: { bg: "#00BCD4", fg: "#ffffff", label: "Session" }, // vivid cyan
-  gift: { bg: "#FF6D00", fg: "#ffffff", label: "Mood Check" }, // deep orange
-  trophy: { bg: "#FFD600", fg: "#1a1a1a", label: "Trophy" }, // vivid yellow (dark text)
-  read: { bg: "#E91E8C", fg: "#ffffff", label: "Read" }, // hot pink/magenta
-  summary: { bg: "#8B5CF6", fg: "#ffffff", label: "Summary" }, // violet
+  video:      { bg: PRIMARY_HEX, fg: "#ffffff", label: "Video" },
+  audio:      { bg: PRIMARY_HEX, fg: "#ffffff", label: "Audio" },
+  assessment: { bg: PRIMARY_HEX, fg: "#ffffff", label: "Assessment" },
+  journal:    { bg: PRIMARY_HEX, fg: "#ffffff", label: "Journal" },
+  book:       { bg: PRIMARY_HEX, fg: "#ffffff", label: "Session" },
+  gift:       { bg: PRIMARY_HEX, fg: "#ffffff", label: "Mood Check" },
+  trophy:     { bg: PRIMARY_HEX, fg: "#ffffff", label: "Trophy" },
+  read:       { bg: PRIMARY_HEX, fg: "#ffffff", label: "Read" },
+  summary:    { bg: PRIMARY_HEX, fg: "#ffffff", label: "Summary" },
 };
 
 export function getTypeColor(taskType: NodeTaskType): TypeColorConfig {
-  return TYPE_COLORS[taskType] ?? { bg: "#6b7280", fg: "#ffffff", label: "Task" };
-}
-
-function withAlpha(hex: string, alpha: number): string {
-  if (!hex.startsWith("#")) return hex;
-  const r = parseInt(hex.slice(1, 3), 16);
-  const g = parseInt(hex.slice(3, 5), 16);
-  const b = parseInt(hex.slice(5, 7), 16);
-  return `rgba(${r},${g},${b},${alpha})`;
+  return TYPE_COLORS[taskType] ?? { bg: PRIMARY_HEX, fg: "#ffffff", label: "Task" };
 }
 
 function TaskIcon({ taskType, size = 5 }: { taskType: NodeTaskType; size?: number }) {
@@ -107,6 +136,8 @@ export function PathNode({
   const isActive = variant === "active";
   const isCompleted = variant === "completed";
   const isLocked = variant === "locked";
+  // "default" = available/unlocked but not the current active node
+  const isAvailable = !isActive && !isCompleted && !isLocked;
 
   const color = getTypeColor(taskType);
   const bubbleLabel = taskTitle?.trim() || color.label;
@@ -119,9 +150,9 @@ export function PathNode({
           <div
             className="text-[11px] font-extrabold px-4 py-1.5 rounded-full tracking-wide uppercase max-w-[140px] truncate text-center"
             style={{
-              backgroundColor: color.bg,
-              color: color.fg,
-              boxShadow: `0 4px 12px ${withAlpha(color.bg, 0.45)}`,
+              backgroundColor: "var(--primary)",
+              color: "var(--primary-foreground)",
+              boxShadow: "0 4px 12px color-mix(in oklch, var(--primary) 40%, transparent)",
             }}
           >
             {bubbleLabel}
@@ -131,7 +162,7 @@ export function PathNode({
             style={{
               borderLeft: "6px solid transparent",
               borderRight: "6px solid transparent",
-              borderTop: `7px solid ${color.bg}`,
+              borderTop: "7px solid var(--primary)",
             }}
           />
         </div>
@@ -142,22 +173,25 @@ export function PathNode({
         data-circle="true"
         className={cn(
           "relative flex items-center justify-center",
-          isActive ? "w-[72px] h-[72px]" : "w-[58px] h-[58px]",
+          isActive ? "w-[88px] h-[88px]" : "w-[76px] h-[76px]",
           isNew && "animate-in zoom-in-50 duration-300",
         )}
       >
-        {/* Pulse rings — active */}
+        {/* Pulse rings — active only */}
         {isActive && (
           <>
             <span
-              className="absolute inset-0 rounded-full animate-ping"
-              style={{ backgroundColor: withAlpha(color.bg, 0.28), animationDuration: "1.6s" }}
+              className="absolute inset-0 rounded-[24px] animate-ping"
+              style={{
+                backgroundColor: "color-mix(in oklch, var(--primary) 28%, transparent)",
+                animationDuration: "1.6s",
+              }}
             />
             <span
-              className="absolute rounded-full animate-ping"
+              className="absolute rounded-[28px] animate-ping"
               style={{
                 inset: "-9px",
-                backgroundColor: withAlpha(color.bg, 0.12),
+                backgroundColor: "color-mix(in oklch, var(--primary) 12%, transparent)",
                 animationDuration: "2.4s",
                 animationDelay: "0.5s",
               }}
@@ -169,47 +203,45 @@ export function PathNode({
           onClick={!isLocked ? onClick : undefined}
           disabled={isLocked}
           className={cn(
-            "relative w-full h-full rounded-full flex items-center justify-center transition-all duration-200 select-none",
+            "relative w-full h-full flex items-center justify-center transition-all duration-200 select-none",
+            isActive ? "rounded-[24px]" : "rounded-[20px]",
             !isLocked && "active:scale-95",
             isLocked && "cursor-not-allowed",
           )}
           style={
             isActive
               ? {
-                  backgroundColor: color.bg,
-                  color: color.fg,
-                  border: `3px solid rgba(255,255,255,0.22)`,
-                  boxShadow: `0 8px 28px ${withAlpha(color.bg, 0.5)}`,
+                  backgroundColor: "var(--primary)",
+                  color: "var(--primary-foreground)",
+                  border: "3px solid rgba(255,255,255,0.22)",
+                  boxShadow: "0 8px 28px color-mix(in oklch, var(--primary) 50%, transparent)",
                 }
               : isCompleted
                 ? {
-                    // Full solid colour, slightly dimmed — done
-                    backgroundColor: withAlpha(color.bg, 0.72),
-                    color: color.fg,
-                    outline: `3px solid ${withAlpha(color.bg, 0.3)}`,
-                    outlineOffset: "3px",
+                    backgroundColor: "var(--primary)",
+                    color: "var(--primary-foreground)",
                   }
                 : isLocked
                   ? {
-                      // Uniform slate — locked means "not yours yet", type doesn't matter
                       backgroundColor: "#e2e8f0",
                       color: "#94a3b8",
                       border: "2px solid #cbd5e1",
                     }
                   : {
-                      // Default / accessible — high-opacity solid fill so colour reads clearly
-                      backgroundColor: withAlpha(color.bg, 0.82),
-                      color: color.fg,
-                      border: isMandatory
-                        ? `3px solid ${color.bg}`
-                        : `2px solid ${withAlpha(color.bg, 0.6)}`,
+                      /* available/default — solid primary at reduced opacity so the
+                         hierarchy is: active (full) > available (dimmed) > locked (gray).
+                         Subtle shadow reinforces the "tappable" affordance. */
+                      backgroundColor: "color-mix(in oklch, var(--primary) 65%, transparent)",
+                      color: "var(--primary-foreground)",
+                      boxShadow: "0 4px 14px color-mix(in oklch, var(--primary) 30%, transparent)",
+                      border: isMandatory ? `3px solid var(--primary)` : "none",
                     }
           }
         >
           {isCompleted ? (
-            <Check className="w-6 h-6 stroke-[3]" />
+            <Check className="w-8 h-8 stroke-[3]" />
           ) : (
-            <TaskIcon taskType={taskType} size={isActive ? 6 : 5} />
+            <TaskIcon taskType={taskType} size={isActive ? 8 : 7} />
           )}
         </button>
 
@@ -224,7 +256,7 @@ export function PathNode({
       {/* Type label */}
       <span
         className="text-[10px] font-bold mt-1.5 tracking-wide"
-        style={{ color: isLocked ? "#94a3b8" : color.bg, opacity: isCompleted ? 0.75 : 1 }}
+        style={{ color: isLocked ? "#94a3b8" : "var(--primary)", opacity: isCompleted ? 0.75 : 1 }}
       >
         {color.label}
       </span>
