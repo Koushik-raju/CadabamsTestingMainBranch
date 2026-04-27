@@ -53,10 +53,15 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           gtag('config','${siteConfig.gaId}',{page_title:document.title,page_location:window.location.href,send_page_view:true});
         `}</Script>
 
-        <main className="overflow-x-hidden">
+        {/*
+          overflow-x-hidden must NOT sit on <main> — in WebKit (iOS/Capacitor)
+          any overflow value on an ancestor creates a new scroll container, which
+          silently breaks position:sticky on descendant headers. Push it inward.
+        */}
+        <main>
           <AppProviders>
             <CapacitorInit />
-            {children}
+            <div className="overflow-x-hidden">{children}</div>
           </AppProviders>
         </main>
       </body>

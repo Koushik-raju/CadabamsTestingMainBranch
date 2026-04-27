@@ -14,7 +14,7 @@
  *   6. Tapping a row opens an EntryDetailModal bottom sheet.
  *
  * KEY VARIABLES / PROPS / EXPORTS:
- *   allEntries      — raw SWR list of SelfJournalingEntry[]
+ *   allEntries      — raw SWR list of SelfJournalingResponseDto[]
  *   filteredEntries — entries after subJournal + search filters applied
  *   grouped         — GroupedEntries[] bucketed by date for display
  *   selectedEntry   — currently open entry in the detail modal, or null
@@ -34,8 +34,8 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useSelfJournalingEntries } from "@/hooks/use-journaling";
-import type { SelfJournalingEntry } from "@/hooks/use-journaling";
+import { extractString, useSelfJournalingEntries } from "@/hooks/use-journaling";
+import type { SelfJournalingResponseDto } from "@/hooks/use-journaling";
 import { cn } from "@/lib/utils";
 import { BookOpen, Search, X } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -48,10 +48,10 @@ import { Suspense, useMemo, useState } from "react";
 interface GroupedEntries {
   label: string;
   dateStr: string;
-  entries: SelfJournalingEntry[];
+  entries: SelfJournalingResponseDto[];
 }
 
-function groupByDate(entries: SelfJournalingEntry[]): GroupedEntries[] {
+function groupByDate(entries: SelfJournalingResponseDto[]): GroupedEntries[] {
   const today = new Date();
   today.setHours(0, 0, 0, 0);
   const todayStr = today.toISOString().split("T")[0];
@@ -59,9 +59,9 @@ function groupByDate(entries: SelfJournalingEntry[]): GroupedEntries[] {
   yesterday.setDate(yesterday.getDate() - 1);
   const yesterdayStr = yesterday.toISOString().split("T")[0];
 
-  const map = new Map<string, SelfJournalingEntry[]>();
+  const map = new Map<string, SelfJournalingResponseDto[]>();
   for (const entry of entries) {
-    const d = new Date(entry.createdAt);
+    const d = new Date(entry.createdAt ?? "");
     if (isNaN(d.getTime())) continue;
     const dateStr = d.toISOString().split("T")[0];
     const arr = map.get(dateStr) ?? [];
@@ -86,10 +86,10 @@ function groupByDate(entries: SelfJournalingEntry[]): GroupedEntries[] {
     });
 }
 
-function matchesSearch(entry: SelfJournalingEntry, query: string): boolean {
+function matchesSearch(entry: SelfJournalingResponseDto, query: string): boolean {
   const q = query.toLowerCase();
-  if (entry.title?.toLowerCase().includes(q)) return true;
-  if (entry.entry?.toLowerCase().includes(q)) return true;
+  if (extractString(entry.title).toLowerCase().includes(q)) return true;
+  if (extractString(entry.entry).toLowerCase().includes(q)) return true;
   if (
     entry.prompts?.some(
       (p) => p.heading?.toLowerCase().includes(q) || p.text?.toLowerCase().includes(q),
@@ -107,7 +107,7 @@ function EntryDetailModal({
   entry,
   onClose,
 }: {
-  entry: SelfJournalingEntry;
+  entry: SelfJournalingResponseDto;
   onClose: () => void;
 }) {
   return (
@@ -124,17 +124,17 @@ function EntryDetailModal({
           <div className="flex items-start justify-between">
             <div>
               <h2 className="text-lg font-bold text-foreground">
-                {entry.title ?? "Journal Entry"}
+                {extractString(entry.title) || "Journal Entry"}
               </h2>
               <p className="text-xs text-muted-foreground mt-0.5">
-                {new Date(entry.createdAt).toLocaleDateString("en-US", {
+                {new Date(entry.createdAt ?? "").toLocaleDateString("en-US", {
                   weekday: "long",
                   month: "long",
                   day: "numeric",
                   year: "numeric",
                 })}{" "}
                 at{" "}
-                {new Date(entry.createdAt).toLocaleTimeString("en-US", {
+                {new Date(entry.createdAt ?? "").toLocaleTimeString("en-US", {
                   hour: "numeric",
                   minute: "2-digit",
                   hour12: true,
@@ -167,7 +167,7 @@ function EntryDetailModal({
             ))
           ) : (
             <p className="text-sm text-foreground whitespace-pre-wrap leading-relaxed">
-              {entry.entry}
+              {extractString(entry.entry)}
             </p>
           )}
 
@@ -205,12 +205,12 @@ function HistoryContent() {
 
   const { entries: allEntries, isLoading } = useSelfJournalingEntries(300);
   const [search, setSearch] = useState("");
-  const [selectedEntry, setSelectedEntry] = useState<SelfJournalingEntry | null>(null);
+  const [selectedEntry, setSelectedEntry] = useState<SelfJournalingResponseDto | null>(null);
 
   const filteredEntries = useMemo(() => {
     let filtered = allEntries;
     if (subJournalId) {
-      filtered = filtered.filter((e) => e.subJournalingId === subJournalId);
+      filtered = filtered.filter((e) => extractString(e.subJournalingId) === subJournalId);
     }
     if (search.trim()) {
       filtered = filtered.filter((e) => matchesSearch(e, search));
@@ -309,7 +309,7 @@ function HistoryContent() {
               <Card className="p-0">
                 <CardContent className="py-0 px-3">
                   {group.entries.map((entry, i) => {
-                    const time = new Date(entry.createdAt).toLocaleTimeString("en-US", {
+                    const time = new Date(entry.createdAt ?? "").toLocaleTimeString("en-US", {
                       hour: "numeric",
                       minute: "2-digit",
                       hour12: true,
@@ -317,7 +317,7 @@ function HistoryContent() {
                     const preview =
                       entry.prompts && entry.prompts.length > 0
                         ? (entry.prompts[0].text ?? entry.prompts[0].heading ?? "")
-                        : (entry.entry ?? "");
+                        : extractString(entry.entry);
                     const promptCount = entry.prompts?.length ?? 0;
 
                     return (
@@ -338,9 +338,9 @@ function HistoryContent() {
                           </div>
 
                           <div className="flex-1 min-w-0">
-                            {entry.title && (
+                            {extractString(entry.title) && (
                               <p className="text-sm font-medium text-foreground line-clamp-1 mb-0.5">
-                                {entry.title}
+                                {extractString(entry.title)}
                               </p>
                             )}
                             <p className="text-xs text-muted-foreground line-clamp-2 leading-relaxed">

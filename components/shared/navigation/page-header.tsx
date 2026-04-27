@@ -7,14 +7,10 @@
  *   used across all inner pages (self-journaling, assessments, wellness, etc.).
  *
  * LOGIC OVERVIEW:
- *   Renders a horizontal flex row: BackButton | title+subtitle | optional right slot.
- *   Back behaviour priority (highest → lowest):
- *     1. `onBack`    — fully custom handler, called as-is.
- *     2. `hardBack`  — router.replace() to the given path, ignoring browser history.
- *     3. `fallback`  — passed to BackButton / useSafeBack; goes back in history or
- *                      falls back to the path if there is no history entry.
- *   Use `hardBack` when the destination must be deterministic regardless of where
- *   the user navigated from (e.g. always go to /home, never to a modal or deep link).
+ *   Renders a top bar (sticky by default): BackButton | title+subtitle | optional right slot.
+ *   Pass sticky={false} to opt out, or override with className if needed.
+ *   Back behaviour is delegated entirely to BackButton — pass fallback, hardBack,
+ *   or onBack and BackButton resolves the priority internally.
  *
  * KEY VARIABLES / PROPS / EXPORTS:
  *   title       — main heading text (required)
@@ -23,20 +19,19 @@
  *   hardBack    — if set, back button always replaces to this path, ignoring history
  *   onBack      — fully custom handler; takes priority over hardBack and fallback
  *   right       — ReactNode rendered flush-right (optional, e.g. filter button)
- *   className   — extra classes on the outer wrapper (optional)
+ *   sticky      — whether the header sticks to the top on scroll (default: true)
+ *   className   — extra classes on the outer wrapper
  *
  * DEPENDENCIES:
- *   BackButton        — components/shared/navigation/back-button.tsx
- *   useRouter (Next)  — used only when hardBack is provided
+ *   BackButton — components/shared/navigation/back-button.tsx
  *
- * LAST UPDATED: 2026-04-23 — added hardBack prop for deterministic navigation
+ * LAST UPDATED: 2026-04-27 — added sticky prop (default true); fixed WebKit overflow-x ancestor bug
  */
 
 "use client";
 
 import { BackButton } from "@/components/shared/navigation/back-button";
 import { cn } from "@/lib/utils";
-import { useRouter } from "next/navigation";
 import { ReactNode } from "react";
 
 interface PageHeaderProps {
@@ -47,6 +42,8 @@ interface PageHeaderProps {
   hardBack?: string;
   onBack?: () => void;
   right?: ReactNode;
+  /** Stick the header to the top of the scroll container. Defaults to true. */
+  sticky?: boolean;
   className?: string;
 }
 
@@ -57,16 +54,18 @@ export function PageHeader({
   hardBack,
   onBack,
   right,
+  sticky = true,
   className,
 }: PageHeaderProps) {
-  const router = useRouter();
-
-  /* Resolve the effective back handler once so BackButton always gets a simple onClick. */
-  const resolvedOnBack = onBack ?? (hardBack ? () => router.replace(hardBack) : undefined);
-
   return (
-    <div className={cn("flex items-center gap-2 px-4 pt-5 pb-1", className)}>
-      <BackButton fallback={fallback} onClick={resolvedOnBack} />
+    <div
+      className={cn(
+        "flex items-center gap-2 px-4 pt-5 pb-1 bg-background",
+        sticky && "sticky top-0 z-10",
+        className,
+      )}
+    >
+      <BackButton fallback={fallback} hardBack={hardBack} onClick={onBack} />
 
       <div className="flex-1 min-w-0">
         <h1 className="text-lg font-bold text-foreground leading-tight">{title}</h1>

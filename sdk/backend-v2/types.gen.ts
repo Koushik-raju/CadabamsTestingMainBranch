@@ -2670,6 +2670,10 @@ export type CreateJournalEntryDto = {
      * When the journal was written (defaults to now)
      */
     journaledAt?: string;
+    /**
+     * CmsSubJournaling ID this entry belongs to
+     */
+    subJournalingId?: string;
 };
 
 export type UpdateJournalEntryDto = {
@@ -2697,6 +2701,32 @@ export type UpdateJournalEntryDto = {
      * Replace all prompts (full array)
      */
     prompts?: Array<JournalPromptDto>;
+};
+
+export type GenerateJournalPromptDto = {
+    /**
+     * ID of the CmsSubJournaling record to generate a prompt for
+     */
+    subJournalingId: string;
+    /**
+     * In-progress entry text from this session (savedPrompts + active content, not yet persisted). Used by the aiPrompt template to determine which question to ask next.
+     */
+    currentEntryText?: string;
+};
+
+export type PromptContextDto = {
+    subJournalTitle: {
+        [key: string]: unknown;
+    } | null;
+    hasBaselineAssessment: boolean;
+    hasJournalEntries: boolean;
+    journalEntryCount: number;
+};
+
+export type GeneratedJournalPromptResponseDto = {
+    question: string;
+    timestamp: string;
+    context: PromptContextDto;
 };
 
 export type SubscriptionResponseDto = {
@@ -2961,6 +2991,172 @@ export type DaySummaryResponseDto = {
      * UTC ISO-8601; only set on the current day when it is fully done
      */
     nextDayUnlocksAt: string | null;
+};
+
+export type GrowthWeekDayDto = {
+    /**
+     * ISO date (YYYY-MM-DD)
+     */
+    date: string;
+    /**
+     * True if any journey day OR individual journey task was completed on this date.
+     */
+    hasJourney: boolean;
+    /**
+     * True if any journal entry exists on this date
+     */
+    hasJournal: boolean;
+    /**
+     * True if any assessment was completed on this date
+     */
+    hasAssessment: boolean;
+    /**
+     * True if a chat summary exists for this date
+     */
+    hasChatSummary: boolean;
+};
+
+export type GrowthWeekResponseDto = {
+    /**
+     * Monday of the week (ISO date)
+     */
+    weekStart: string;
+    /**
+     * Sunday of the week (ISO date)
+     */
+    weekEnd: string;
+    /**
+     * Seven entries, Monday→Sunday. A day with no activity still appears with all flags false.
+     */
+    days: Array<GrowthWeekDayDto>;
+};
+
+export type GrowthLatestActiveDateResponseDto = {
+    /**
+     * Best default ISO date (YYYY-MM-DD) for the client to open the Growth page on. Picks the date with the highest total activity count across the four sources (journey days + journals + assessments + chat summaries). Ties broken by most recent. `null` when the patient has no data at all.
+     */
+    date: {
+        [key: string]: unknown;
+    } | null;
+};
+
+export type GrowthJourneyItemDto = {
+    /**
+     * `'day'` when the row represents a full-day completion (JourneyDayProgress) with an LLM summary. `'task'` when it represents an individual task completion (JourneyTaskCompletion) — shown so in-progress days (mood check / journal entry / audio etc.) still appear on the Growth feed before the whole day is marked complete.
+     */
+    kind: 'day' | 'task';
+    /**
+     * JourneyEnrollment id
+     */
+    enrollmentId: string;
+    /**
+     * CmsJourney id
+     */
+    journeyId: string;
+    /**
+     * Journey display name
+     */
+    journeyTitle: {
+        [key: string]: unknown;
+    } | null;
+    /**
+     * Day number within the journey
+     */
+    dayNumber: {
+        [key: string]: unknown;
+    } | null;
+    /**
+     * Markdown summary of the day (only for kind=day; may be null if LLM generation pending).
+     */
+    summaryText: {
+        [key: string]: unknown;
+    } | null;
+    /**
+     * Task title (only for kind=task).
+     */
+    taskTitle: {
+        [key: string]: unknown;
+    } | null;
+    /**
+     * Task type from the CMS task-kind enum (only for kind=task): AUDIO, ASSESSMENT, WORKSHEET, VIDEO, JOURNAL, SUB_JOURNAL, MOOD, APPOINTMENT, CONSULT_BOOKING, OTHER.
+     */
+    taskType: {
+        [key: string]: unknown;
+    } | null;
+    /**
+     * ISO timestamp of the completion
+     */
+    completedAt: string;
+};
+
+export type GrowthJournalItemDto = {
+    id: string;
+    title: {
+        [key: string]: unknown;
+    } | null;
+    /**
+     * Free-text entry content (rendered as Markdown by the client).
+     */
+    entryText: {
+        [key: string]: unknown;
+    } | null;
+    /**
+     * ISO timestamp when the entry was journaled
+     */
+    journaledAt: string;
+    /**
+     * Slug of the sub-journal the entry belongs to
+     */
+    subJournalingId: {
+        [key: string]: unknown;
+    } | null;
+};
+
+export type GrowthAssessmentItemDto = {
+    id: string;
+    /**
+     * Stable assessment key (e.g. "PHQ9", "GAD7")
+     */
+    assessmentKey: string;
+    assessmentTitle: {
+        [key: string]: unknown;
+    } | null;
+    severity: {
+        [key: string]: unknown;
+    } | null;
+    /**
+     * Markdown narrative when the LLM analysis is available
+     */
+    analysisMarkdown: {
+        [key: string]: unknown;
+    } | null;
+    /**
+     * ISO timestamp
+     */
+    completedAt: string;
+};
+
+export type GrowthChatSummaryItemDto = {
+    id: string;
+    /**
+     * Markdown chat-session summary
+     */
+    text: string;
+    /**
+     * ISO timestamp when the row was created
+     */
+    createdAt: string;
+};
+
+export type GrowthDayResponseDto = {
+    /**
+     * ISO date this response covers
+     */
+    date: string;
+    journeys: Array<GrowthJourneyItemDto>;
+    journals: Array<GrowthJournalItemDto>;
+    assessments: Array<GrowthAssessmentItemDto>;
+    chatSummaries: Array<GrowthChatSummaryItemDto>;
 };
 
 export type CreateAssessmentLandingPagePointDto = {
@@ -4089,6 +4285,12 @@ export type JourneyStepDto = {
     description?: {
         [key: string]: unknown;
     } | null;
+    /**
+     * Plain-text end-of-day summary
+     */
+    summary?: {
+        [key: string]: unknown;
+    } | null;
     icon?: {
         [key: string]: unknown;
     } | null;
@@ -4190,6 +4392,12 @@ export type JourneyStepResponseDto = {
     orderNo: number;
     title: string;
     description: {
+        [key: string]: unknown;
+    } | null;
+    /**
+     * Plain-text end-of-day summary
+     */
+    summary: {
         [key: string]: unknown;
     } | null;
     icon: {
@@ -9672,6 +9880,27 @@ export type JournalingControllerUpdateEntryResponses = {
 
 export type JournalingControllerUpdateEntryResponse = JournalingControllerUpdateEntryResponses[keyof JournalingControllerUpdateEntryResponses];
 
+export type JournalingControllerPromptMeData = {
+    body: GenerateJournalPromptDto;
+    path: {
+        /**
+         * Campus slug
+         */
+        campus: 'cadabams' | 'whitefield' | 'mysore' | 'mindtalk';
+    };
+    query?: never;
+    url: '/api/v1/{campus}/journaling/prompt-me';
+};
+
+export type JournalingControllerPromptMeResponses = {
+    /**
+     * AI-generated reflective question with context metadata
+     */
+    200: GeneratedJournalPromptResponseDto;
+};
+
+export type JournalingControllerPromptMeResponse = JournalingControllerPromptMeResponses[keyof JournalingControllerPromptMeResponses];
+
 export type JournalingControllerListAllData = {
     body?: never;
     path: {
@@ -10073,6 +10302,55 @@ export type JourneysAdminControllerGetStatsResponses = {
 };
 
 export type JourneysAdminControllerGetStatsResponse = JourneysAdminControllerGetStatsResponses[keyof JourneysAdminControllerGetStatsResponses];
+
+export type GrowthControllerGetWeekData = {
+    body?: never;
+    path?: never;
+    query?: {
+        /**
+         * Any ISO date (YYYY-MM-DD) within the target week. Response covers Monday→Sunday of that week. Defaults to today.
+         */
+        date?: string;
+    };
+    url: '/api/v1/me/growth/week';
+};
+
+export type GrowthControllerGetWeekResponses = {
+    200: GrowthWeekResponseDto;
+};
+
+export type GrowthControllerGetWeekResponse = GrowthControllerGetWeekResponses[keyof GrowthControllerGetWeekResponses];
+
+export type GrowthControllerGetLatestActiveDateData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/api/v1/me/growth/latest-active-date';
+};
+
+export type GrowthControllerGetLatestActiveDateResponses = {
+    200: GrowthLatestActiveDateResponseDto;
+};
+
+export type GrowthControllerGetLatestActiveDateResponse = GrowthControllerGetLatestActiveDateResponses[keyof GrowthControllerGetLatestActiveDateResponses];
+
+export type GrowthControllerGetDayData = {
+    body?: never;
+    path?: never;
+    query?: {
+        /**
+         * ISO date (YYYY-MM-DD) to fetch activity for. Defaults to today.
+         */
+        date?: string;
+    };
+    url: '/api/v1/me/growth/day';
+};
+
+export type GrowthControllerGetDayResponses = {
+    200: GrowthDayResponseDto;
+};
+
+export type GrowthControllerGetDayResponse = GrowthControllerGetDayResponses[keyof GrowthControllerGetDayResponses];
 
 export type CmsAssessmentsControllerFindAllData = {
     body?: never;

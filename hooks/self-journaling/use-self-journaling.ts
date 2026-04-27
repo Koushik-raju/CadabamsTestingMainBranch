@@ -1,93 +1,76 @@
+/**
+ * FILE: hooks/self-journaling/use-self-journaling.ts
+ *
+ * PURPOSE:
+ *   SWR hook and mutation helpers for the NestJS-backed journal entry feature.
+ *   Covers fetching the user's entry list and create/update/delete mutations.
+ *
+ * LOGIC OVERVIEW:
+ *   useSelfJournaling() — fetches all entries via journalingControllerListMine
+ *     sorted newest-first. Returns JournalEntryResponseDto[] directly from the SDK.
+ *   createEntry / updateEntry / deleteEntry — thin mutation wrappers around the
+ *     corresponding SDK functions. Callers are responsible for SWR revalidation.
+ *
+ * KEY VARIABLES / PROPS / EXPORTS:
+ *   JournalEntryResponseDto — re-exported SDK type; single entry shape
+ *   JournalPromptDto        — re-exported SDK type; single prompt response shape
+ *   useSelfJournaling       — { entries, isLoading, error, mutate }
+ *   createEntry             — async; returns JournalEntryResponseDto | null
+ *   updateEntry             — async; returns JournalEntryResponseDto | null
+ *   deleteEntry             — async; void
+ *
+ * DEPENDENCIES:
+ *   journalingControllerListMine / CreateEntry / UpdateEntry / DeleteEntry (sdk)
+ *   SWR (useSWR)
+ *
+ * LAST UPDATED: 2026-04-27 — removed custom JournalEntry/JournalPrompt types;
+ *   returns SDK types directly; removed mapDtoToEntry conversion layer.
+ */
 import { selfJournalingKey } from "@/lib/swr-keys";
 import {
+  type CreateJournalEntryDto,
+  type JournalEntryResponseDto,
+  type JournalPromptDto,
+  type UpdateJournalEntryDto,
   journalingControllerCreateEntry,
   journalingControllerDeleteEntry,
   journalingControllerListMine,
   journalingControllerUpdateEntry,
 } from "@/sdk/backend-v2";
-import type {
-  CreateJournalEntryDto,
-  JournalEntryResponseDto,
-  UpdateJournalEntryDto,
-} from "@/sdk/backend-v2";
 import useSWR from "swr";
 
-export type { JournalEntryResponseDto };
-
-export interface JournalPrompt {
-  heading: string;
-  text: string;
-}
-
-export interface JournalEntry {
-  id: string;
-  entry?: string;
-  prompts?: JournalPrompt[];
-  createdAt: string;
-  journaledAt: string;
-}
-
-function extractString(val: unknown): string {
-  if (typeof val === "string") return val;
-  if (val && typeof val === "object") {
-    const o = val as Record<string, unknown>;
-    for (const k of ["en", "value", "text", "content"]) {
-      if (typeof o[k] === "string") return o[k] as string;
-    }
-  }
-  return "";
-}
-
-function mapPrompts(raw: Array<Array<unknown>>): JournalPrompt[] {
-  return raw
-    .map((item) => {
-      // Each item may be an object { heading, text } or array [heading, text]
-      if (Array.isArray(item)) {
-        return { heading: String(item[0] ?? ""), text: String(item[1] ?? "") };
-      }
-      if (item && typeof item === "object") {
-        const o = item as Record<string, unknown>;
-        return { heading: extractString(o.heading), text: extractString(o.text) };
-      }
-      return null;
-    })
-    .filter((p): p is JournalPrompt => p !== null && (!!p.heading || !!p.text));
-}
-
-export function mapDtoToEntry(dto: JournalEntryResponseDto): JournalEntry {
-  const prompts = mapPrompts(dto.prompts ?? []);
-  const entry =
-    extractString(dto.entryText) ||
-    prompts.map((p) => `${p.heading}\n${p.text}`).join("\n\n") ||
-    undefined;
-  return {
-    id: dto.id,
-    entry,
-    prompts: prompts.length > 0 ? prompts : undefined,
-    createdAt: dto.createdAt,
-    journaledAt: dto.journaledAt,
-  };
-}
+export type { JournalEntryResponseDto, JournalPromptDto };
 
 export function useSelfJournaling() {
-  const { data, error, isLoading, mutate } = useSWR<JournalEntry[]>(
+  const { data, error, isLoading, mutate } = useSWR<JournalEntryResponseDto[]>(
     selfJournalingKey(),
     async () => {
       const res = await journalingControllerListMine({ path: { campus: "cadabams" } });
+      if (res.error) throw new Error(JSON.stringify(res.error));
       const entries = (res.data ?? []) as JournalEntryResponseDto[];
-      return entries
-        .map(mapDtoToEntry)
-        .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+      return entries.sort(
+        (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
+      );
     },
   );
 
   return { entries: data ?? [], isLoading, error, mutate };
 }
 
+/*
+ * subJournalingId is accepted by the backend but not yet in the SDK's
+ * CreateJournalEntryDto — it was added in a backend DTO change that needs a
+ * SDK regeneration to surface. The `as CreateJournalEntryDto` cast passes it
+ * through at runtime. Remove the cast after running `pnpm run generate:sdk`.
+ */
 export async function createEntry(
-  body: CreateJournalEntryDto,
+  body: CreateJournalEntryDto & { subJournalingId?: string },
 ): Promise<JournalEntryResponseDto | null> {
-  const res = await journalingControllerCreateEntry({ path: { campus: "cadabams" }, body });
+  const res = await journalingControllerCreateEntry({
+    path: { campus: "cadabams" },
+    body: body as CreateJournalEntryDto,
+  });
+  if (res.error) return null;
   return (res.data as JournalEntryResponseDto | undefined) ?? null;
 }
 
@@ -96,6 +79,7 @@ export async function updateEntry(
   body: UpdateJournalEntryDto,
 ): Promise<JournalEntryResponseDto | null> {
   const res = await journalingControllerUpdateEntry({ path: { campus: "cadabams", id }, body });
+  if (res.error) return null;
   return (res.data as JournalEntryResponseDto | undefined) ?? null;
 }
 

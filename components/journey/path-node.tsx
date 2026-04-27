@@ -288,7 +288,6 @@ export function PathNode({
             <Lock className="w-2.5 h-2.5 text-white" />
           </div>
         )}
-
       </div>
 
       {/* Type label — Eye corner badge already signals re-tap affordance for completed */}

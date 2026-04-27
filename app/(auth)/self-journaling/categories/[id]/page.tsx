@@ -44,8 +44,8 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { useJournalingCategories, useSelfJournalingEntries } from "@/hooks/use-journaling";
-import type { SelfJournalingEntry } from "@/hooks/use-journaling";
+import { extractString, useJournalingCategories, useSelfJournalingEntries } from "@/hooks/use-journaling";
+import type { SelfJournalingResponseDto } from "@/hooks/use-journaling";
 import { getJournalVisual } from "@/lib/journal-visual";
 import { cn } from "@/lib/utils";
 import { BookOpen, RotateCcw } from "lucide-react";
@@ -60,10 +60,10 @@ import { useMemo } from "react";
 interface DateGroup {
   label: string;
   dateStr: string;
-  entries: SelfJournalingEntry[];
+  entries: SelfJournalingResponseDto[];
 }
 
-function groupByDate(entries: SelfJournalingEntry[]): DateGroup[] {
+function groupByDate(entries: SelfJournalingResponseDto[]): DateGroup[] {
   const today = new Date();
   today.setHours(0, 0, 0, 0);
   const todayStr = today.toISOString().split("T")[0];
@@ -71,9 +71,9 @@ function groupByDate(entries: SelfJournalingEntry[]): DateGroup[] {
   yesterday.setDate(yesterday.getDate() - 1);
   const yesterdayStr = yesterday.toISOString().split("T")[0];
 
-  const map = new Map<string, SelfJournalingEntry[]>();
+  const map = new Map<string, SelfJournalingResponseDto[]>();
   for (const entry of entries) {
-    const d = new Date(entry.createdAt);
+    const d = new Date(entry.createdAt ?? "");
     if (isNaN(d.getTime())) continue;
     const dateStr = d.toISOString().split("T")[0];
     const arr = map.get(dateStr) ?? [];
@@ -121,7 +121,7 @@ export default function CategoryDetailPage() {
 
   // Entries that belong to any sub-journal in this category
   const categoryEntries = useMemo(
-    () => allEntries.filter((e) => publishedSubs.some((s) => s.id === e.subJournalingId)),
+    () => allEntries.filter((e) => publishedSubs.some((s) => s.id === extractString(e.subJournalingId))),
     [allEntries, publishedSubs],
   );
 
@@ -169,7 +169,7 @@ export default function CategoryDetailPage() {
     <div className="flex flex-col min-h-screen bg-background pb-24">
       <PageHeader
         title={category.title}
-        subtitle={category.description ?? undefined}
+        subtitle={extractString(category.description) || undefined}
         hardBack="/self-journaling"
       />
 
@@ -212,10 +212,10 @@ export default function CategoryDetailPage() {
                       className="bg-card border border-border rounded-2xl overflow-hidden text-left shadow-sm hover:shadow-xl transition-all duration-300 hover:-translate-y-1 active:scale-[0.97] group"
                     >
                       {/* Card image area */}
-                      {sub.icon ? (
+                      {extractString(sub.icon) ? (
                         <div className="aspect-[16/10] relative overflow-hidden">
                           <Image
-                            src={sub.icon}
+                            src={extractString(sub.icon)}
                             alt={sub.title}
                             fill
                             className="object-cover"
@@ -240,9 +240,9 @@ export default function CategoryDetailPage() {
                         <h3 className="text-sm font-medium text-foreground line-clamp-2 mb-1">
                           {sub.title}
                         </h3>
-                        {sub.description && (
+                        {extractString(sub.description) && (
                           <p className="text-[11px] text-muted-foreground line-clamp-2">
-                            {sub.description}
+                            {extractString(sub.description)}
                           </p>
                         )}
                       </div>
@@ -306,9 +306,9 @@ export default function CategoryDetailPage() {
                       <CardContent className="py-0 px-3">
                         {group.entries.map((entry, i) => {
                           const matchingSub = publishedSubs.find(
-                            (s) => s.id === entry.subJournalingId,
+                            (s) => s.id === extractString(entry.subJournalingId),
                           );
-                          const time = new Date(entry.createdAt).toLocaleTimeString("en-US", {
+                          const time = new Date(entry.createdAt ?? "").toLocaleTimeString("en-US", {
                             hour: "numeric",
                             minute: "2-digit",
                             hour12: true,
@@ -316,7 +316,7 @@ export default function CategoryDetailPage() {
                           const preview =
                             entry.prompts && entry.prompts.length > 0
                               ? (entry.prompts[0].text ?? entry.prompts[0].heading ?? "")
-                              : (entry.entry ?? "");
+                              : extractString(entry.entry);
 
                           return (
                             <div key={entry.id}>
@@ -335,7 +335,7 @@ export default function CategoryDetailPage() {
                                 {/* Content */}
                                 <div className="flex-1 min-w-0">
                                   <p className="text-sm font-medium text-foreground line-clamp-1 mb-0.5">
-                                    {entry.title ?? matchingSub?.title ?? "Journal Entry"}
+                                    {extractString(entry.title) || matchingSub?.title || "Journal Entry"}
                                   </p>
                                   <p className="text-xs text-muted-foreground line-clamp-1 leading-relaxed">
                                     {preview}

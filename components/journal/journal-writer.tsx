@@ -4,39 +4,42 @@
  * PURPOSE:
  *   Full-screen journal writing component shared by the free-flow route
  *   (/self-journaling/new) and the guided route (/self-journaling/new/[slug]).
- *   Accepts an optional slug; when provided, resolves the sub-journal from
- *   the categories hook and auto-triggers an AI prompt if one exists.
+ *   Accepts an optional slug; when provided, resolves the sub-journal from the
+ *   subscriptions hook. Free-flow uses a hardcoded FreeFlow sub-journal ID so
+ *   both modes receive AI prompts via the same backend endpoint.
  *
  * LOGIC OVERVIEW:
- *   1. If slug is given, finds the matching SubJournalingItem via
- *      useJournalingCategories() — title, aiPrompt, and id come from the
- *      fetched record, never from the URL.
- *   2. If sub.aiPrompt exists and user is ready, auto-fetches an AI question
- *      on mount (fires once via hasAutoTriggered guard).
- *   3. Toolbar: Mic triggers Web Speech API transcription (appended to textarea);
+ *   1. If slug is given, fetches the sub-journal via useSubJournalDetail(slug).
+ *      If no slug (free-flow), resolves to the hardcoded FREEFLOW_SUB_ID.
+ *   2. Once a subJournalingId is available, auto-triggers generateJournalPrompt
+ *      once on mount (hasAutoTriggered guard).
+ *   3. "Prompt Me" / "Go Deeper" buttons call generateJournalPrompt again for
+ *      follow-up questions.
+ *   4. Toolbar: Mic triggers Web Speech API transcription (appended to textarea);
  *      Smile opens an emoji picker popover (selection appended at cursor).
- *   4. "Prompt Me" saves the current response and fetches a follow-up question.
- *      "Finish" saves everything and navigates back to /self-journaling.
- *   5. Closing with unsaved content auto-saves before navigating away.
+ *   5. "Finish" saves everything and navigates back to /self-journaling.
+ *   6. Closing with unsaved content auto-saves before navigating away.
  *
  * KEY VARIABLES / PROPS / EXPORTS:
  *   slug              — optional; identifies the guided sub-journal
- *   sub               — resolved SubJournalingItem (undefined for free-flow)
- *   aiPromptTemplate  — sub.aiPrompt or null
- *   savedPrompts      — completed prompt+response pairs this session
- *   currentHeading    — active AI-generated question
+ *   FREEFLOW_SUB_ID   — hardcoded CmsSubJournaling ID for the free-flow entry
+ *   subJournalingId   — resolved sub-journal ID (from detail hook or hardcoded)
+ *   subTitle          — title for save metadata (from sub-journal or "Journal Entry")
+ *   savedPrompts      — completed prompt+response pairs accumulated this session
+ *   currentHeading    — active AI-generated question shown above the textarea
  *   isRecording       — true while Web Speech API is capturing audio
  *   showEmojiPicker   — controls visibility of the emoji popover
  *
  * DEPENDENCIES:
- *   useJournalingCategories()   — resolves sub by slug
- *   useSelfJournalingEntries()  — recent entries for AI context
+ *   useSubJournalDetail()       — resolves sub-journal by slug (subscriptions hook)
  *   createSelfJournalingEntry() — mutation to persist the entry
+ *   generateJournalPrompt()     — SDK-backed AI prompt
  *   emoji-picker-react          — emoji picker UI
  *   Web Speech API              — browser-native mic transcription
  *
- * LAST UPDATED: 2026-04-24 — After saving, revalidate journalSubEntriesKey and
- *   journalStreakKey so the journal detail page shows the new entry immediately.
+ * LAST UPDATED: 2026-04-27 — hasAutoTriggered changed to useRef (fixes StrictMode double-fetch);
+ *   fetchPrompt passes currentEntryText built from savedPrompts + content so sequential
+ *   aiPrompt templates advance through questions instead of repeating Q1.
  */
 "use client";
 
@@ -46,13 +49,11 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Textarea } from "@/components/ui/textarea";
 import { useJourneyTaskContinuation } from "@/hooks/journeys/use-journey-task-continuation";
 import { useAuth } from "@/hooks/use-auth";
-import {
-  type JournalingPrompt,
-  createSelfJournalingEntry,
-  useJournalingCategories,
-  useSelfJournalingEntries,
-} from "@/hooks/use-journaling";
-import { journalStreakKey, journalSubEntriesKey } from "@/lib/swr-keys";
+import { generateJournalPrompt } from "@/hooks/use-journaling";
+import { useSubJournalDetail } from "@/hooks/use-journaling-subscriptions";
+import { createEntry } from "@/hooks/self-journaling/use-self-journaling";
+import { journalStreakKey, journalSubEntriesKey, selfJournalingKey } from "@/lib/swr-keys";
+import type { SelfJournalingPromptDto } from "@/sdk/backend-v2";
 import type { EmojiClickData } from "emoji-picker-react";
 import { Hash, ImageIcon, Loader2, Mic, MicOff, Smile, Sparkles, X } from "lucide-react";
 import dynamic from "next/dynamic";
@@ -62,7 +63,9 @@ import { mutate as globalMutate } from "swr";
 
 const EmojiPicker = dynamic(() => import("emoji-picker-react"), { ssr: false });
 
-const API_BASE = "https://api-ai-mcp.mindtalkbuddy.com";
+// CmsSubJournaling ID for the free-flow ("FreeFlow") sub-journal.
+// Used when no slug is provided so the free-flow writer also receives AI prompts.
+const FREEFLOW_SUB_ID = "n2qyl73zc8h0tmcos6n93k6v";
 
 // ---------------------------------------------------------------------------
 // Web Speech API type shim (not in default TS lib)
@@ -99,44 +102,6 @@ function formatHeaderDate(): string {
   return `Today, ${day} ${month}`;
 }
 
-function fillPromptTemplate(
-  template: string,
-  memorySummary: string,
-  recentEntries: string,
-  entryText: string,
-): string {
-  return template
-    .replace(/\{\{memory_summary\}\}/g, memorySummary || "No prior summary available.")
-    .replace(/\{\{recent_entries\}\}/g, recentEntries || "No recent entries.")
-    .replace(/\{\{entry_text\}\}/g, entryText || "");
-}
-
-function buildContextFromEntries(
-  entries: Array<{
-    entry?: string | null;
-    prompts?: JournalingPrompt[] | null;
-    createdAt: string;
-  }>,
-): { recentEntriesText: string; memorySummary: string } {
-  const recent = entries.slice(0, 5);
-  const recentEntriesText = recent
-    .map((e) => {
-      const text = e.prompts?.map((p) => `${p.heading}: ${p.text}`).join("\n") ?? e.entry ?? "";
-      return text.slice(0, 500);
-    })
-    .join("\n---\n");
-
-  const memorySummary =
-    recent.length > 0
-      ? `User has ${entries.length} journal entries. Recent themes: ${recent
-          .map((e) => e.prompts?.[0]?.heading ?? e.entry?.slice(0, 50) ?? "")
-          .filter(Boolean)
-          .join(", ")}`
-      : "";
-
-  return { recentEntriesText, memorySummary };
-}
-
 // ---------------------------------------------------------------------------
 // Component
 // ---------------------------------------------------------------------------
@@ -148,8 +113,9 @@ interface JournalWriterProps {
 export function JournalWriter({ slug }: JournalWriterProps) {
   const router = useRouter();
   const { user } = useAuth();
-  const { entries: recentEntries } = useSelfJournalingEntries(10);
-  const { subJournalings, isLoading: subsLoading } = useJournalingCategories();
+  // For guided mode: fetch sub-journal detail by slug (proven working endpoint).
+  // For free-flow: sub is null, we fall back to FREEFLOW_SUB_ID below.
+  const { sub, isLoading: subsLoading } = useSubJournalDetail(slug ?? null);
   // Journey tasks can be typed as either SUB_JOURNAL (sub-journal linked via
   // subJournalingIds) or JOURNAL (free-flow entry). Call both hooks and use
   // whichever one has an active slot — only one can be active at a time.
@@ -161,81 +127,65 @@ export function JournalWriter({ slug }: JournalWriterProps) {
   const recognitionRef = useRef<SpeechRecognitionInstance | null>(null);
 
   const [content, setContent] = useState("");
-  const [savedPrompts, setSavedPrompts] = useState<JournalingPrompt[]>([]);
+  const [savedPrompts, setSavedPrompts] = useState<SelfJournalingPromptDto[]>([]);
   const [currentHeading, setCurrentHeading] = useState("");
   const [isPromptMode, setIsPromptMode] = useState(false);
   const [isPrompting, setIsPrompting] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
-  const [hasAutoTriggered, setHasAutoTriggered] = useState(false);
+  /*
+   * useRef instead of useState so React StrictMode's double-mount in development
+   * does not reset this flag and trigger a second AI call. Refs persist across
+   * the unmount/remount cycle that StrictMode uses to surface side effects.
+   */
+  const hasAutoTriggeredRef = useRef(false);
   const [isRecording, setIsRecording] = useState(false);
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
 
-  const sub = slug ? subJournalings.find((s) => s.slug === slug) : undefined;
-  const aiPromptTemplate = sub?.aiPrompt ?? null;
+  /*
+   * Resolve the sub-journal ID for this session:
+   * - Guided: use the ID returned by useSubJournalDetail(slug)
+   * - Free-flow: fall back to the hardcoded FreeFlow sub-journal ID
+   */
+  const subJournalingId = sub?.id ?? (slug ? undefined : FREEFLOW_SUB_ID);
+  const subTitle = sub?.title ?? undefined;
 
-  const getLeadId = useCallback((): number | null => {
-    if (!user) return null;
-    return user.lead_id ? Number(user.lead_id) : null;
-  }, [user]);
+  /*
+   * Build currentEntryText from the saved prompt+response pairs accumulated this
+   * session plus the active textarea content. This is sent to the backend so the
+   * AI's sequential aiPrompt template (e.g. Evening Reset, CBT Thought Record) can
+   * see which questions have already been answered and ask the next one in order.
+   * Without this, the AI has no knowledge of what was written and repeats Q1 every time.
+   */
+  const fetchPrompt = useCallback((): Promise<string | null> => {
+    if (!subJournalingId) return Promise.resolve(null);
+    const parts = [
+      ...savedPrompts.map((p) => `${p.heading}\n${p.text}`),
+      ...(content.trim()
+        ? [`${currentHeading || "What's on your mind"}\n${content.trim()}`]
+        : []),
+    ];
+    const currentEntryText = parts.length > 0 ? parts.join("\n\n") : undefined;
+    return generateJournalPrompt(subJournalingId, currentEntryText);
+  }, [subJournalingId, savedPrompts, content, currentHeading]);
 
-  const getMobile = useCallback((): string | null => {
-    if (!user) return null;
-    const m =
-      (user.caller_mobile as string | undefined) ?? (user.phone_number as string | undefined);
-    return m ? m.replace(/\D/g, "") : null;
-  }, [user]);
-
-  const fetchPromptWithContext = useCallback(
-    async (template: string | null, conversationContext = ""): Promise<string | null> => {
-      const leadId = getLeadId();
-      const mobile = getMobile();
-      if (!leadId || !mobile) return null;
-
-      try {
-        const { recentEntriesText, memorySummary } = buildContextFromEntries(recentEntries);
-
-        const filledPrompt = template
-          ? fillPromptTemplate(template, memorySummary, recentEntriesText, conversationContext)
-          : undefined;
-
-        const res = await fetch(`${API_BASE}/api/journal/prompt-me`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            userId: leadId,
-            mobile: String(mobile),
-            ...(filledPrompt ? { aiPrompt: filledPrompt } : {}),
-            ...(slug ? { slug } : {}),
-          }),
-        });
-        const data = (await res.json()) as {
-          success?: boolean;
-          data?: { question?: string };
-        };
-        return data?.success && data?.data?.question ? data.data.question : null;
-      } catch {
-        return null;
-      }
-    },
-    [getLeadId, getMobile, recentEntries, slug],
-  );
-
+  // Auto-trigger on mount: for guided mode wait until the sub detail resolves;
+  // for free-flow FREEFLOW_SUB_ID is always available so trigger immediately.
   useEffect(() => {
-    if (hasAutoTriggered || !user) return;
-    // For guided mode wait until the sub's aiPromptTemplate is resolved
-    if (slug && (subsLoading || !aiPromptTemplate)) return;
+    if (hasAutoTriggeredRef.current || !user) return;
+    // For guided mode, wait for the sub detail to load
+    if (slug && (subsLoading || !sub?.id)) return;
 
-    setHasAutoTriggered(true);
+    hasAutoTriggeredRef.current = true;
     setIsPrompting(true);
 
-    fetchPromptWithContext(aiPromptTemplate).then((question) => {
+    fetchPrompt().then((question) => {
       if (question) {
         setCurrentHeading(question);
         setIsPromptMode(true);
       }
       setIsPrompting(false);
     });
-  }, [aiPromptTemplate, user, hasAutoTriggered, fetchPromptWithContext, subsLoading, slug]);
+  }, [sub, user, fetchPrompt, subsLoading, slug]);
 
   // Clean up speech recognition on unmount
   useEffect(() => {
@@ -245,10 +195,9 @@ export function JournalWriter({ slug }: JournalWriterProps) {
   }, []);
 
   const handleSave = useCallback(async () => {
-    const leadId = getLeadId();
-    if (!leadId) return;
+    if (!user) return;
 
-    const allPrompts: JournalingPrompt[] = [...savedPrompts];
+    const allPrompts: SelfJournalingPromptDto[] = [...savedPrompts];
     if (content.trim()) {
       allPrompts.push({
         heading: currentHeading || "What's on your mind...",
@@ -259,29 +208,37 @@ export function JournalWriter({ slug }: JournalWriterProps) {
 
     setIsSaving(true);
     try {
-      const created = await createSelfJournalingEntry({
-        crmLeadId: leadId,
-        title: sub?.title ?? allPrompts[0]?.heading ?? "Journal Entry",
-        entry: allPrompts.map((p) => `${p.heading}\n${p.text}`).join("\n\n"),
+      /*
+       * Write to JournalEntry (NestJS campus route) — the canonical table for
+       * patient-written content. subJournalingId links the entry back to the
+       * CmsSubJournaling template so generatePrompt, getStreak, and
+       * getEntriesForSubJournal can all query by it.
+       */
+      const created = await createEntry({
+        title: subTitle ?? allPrompts[0]?.heading ?? "Journal Entry",
+        entryText: allPrompts.map((p) => `${p.heading}\n${p.text}`).join("\n\n"),
         prompts: allPrompts,
-        subJournalingId: sub?.id,
+        subJournalingId,
       });
-      // Revalidate the detail-page caches so the entries list and streak
-      // reflect the new entry when the user navigates back to the journal.
-      if (slug) {
-        await Promise.all([
-          globalMutate(journalSubEntriesKey(slug)),
-          globalMutate(journalStreakKey(slug)),
-        ]);
-      }
+
+      // Revalidate all caches that read from JournalEntry
+      await Promise.all([
+        globalMutate(selfJournalingKey()),
+        ...(slug ? [globalMutate(journalSubEntriesKey(slug)), globalMutate(journalStreakKey(slug))] : []),
+      ]);
+
       // Report back to the journey when this writer was opened as a task.
-      // On success, navigate directly to journey details instead of the
-      // listing page — the user came from a journey and expects to return there.
       if (continuation.active && created?.id) {
         try {
           await continuation.markCompleted(
-            { kind: journeyProofKind, selfJournalingId: created.id },
-            { proofPreview: sub?.title ?? "Journal entry saved" },
+            /*
+             * Both SUB_JOURNAL and JOURNAL task kinds now accept journalEntryId
+             * (backend assertTaskActionDone updated to check JournalEntry).
+             */
+            journeyProofKind === "SUB_JOURNAL"
+              ? { kind: "SUB_JOURNAL", journalEntryId: created.id }
+              : { kind: "JOURNAL", journalEntryId: created.id },
+            { proofPreview: subTitle ?? "Journal entry saved" },
           );
           continuation.returnToJourney();
           return;
@@ -295,7 +252,7 @@ export function JournalWriter({ slug }: JournalWriterProps) {
     } finally {
       setIsSaving(false);
     }
-  }, [content, currentHeading, savedPrompts, getLeadId, router, sub, continuation]);
+  }, [content, currentHeading, savedPrompts, user, router, subTitle, subJournalingId, continuation, slug, journeyProofKind]);
 
   const handleGoDeeper = useCallback(async () => {
     const previousContent = content.trim();
@@ -308,14 +265,7 @@ export function JournalWriter({ slug }: JournalWriterProps) {
     setCurrentHeading("");
     setIsPrompting(true);
 
-    const conversationCtx = [
-      ...savedPrompts.map((p) => `${p.heading}\n${p.text}`),
-      previousContent ? `${previousHeading}\n${previousContent}` : "",
-    ]
-      .filter(Boolean)
-      .join("\n\n");
-
-    const question = await fetchPromptWithContext(aiPromptTemplate, conversationCtx);
+    const question = await fetchPrompt();
 
     if (!question) {
       if (previousContent) {
@@ -330,17 +280,13 @@ export function JournalWriter({ slug }: JournalWriterProps) {
     setCurrentHeading(question);
     setIsPromptMode(true);
     setIsPrompting(false);
-  }, [content, currentHeading, savedPrompts, fetchPromptWithContext, aiPromptTemplate]);
+  }, [content, currentHeading, savedPrompts, fetchPrompt]);
 
   const handlePromptMe = useCallback(async () => {
     setIsPrompting(true);
     const previousHeading = currentHeading || "What's on your mind...";
 
-    const conversationCtx = [...savedPrompts.map((p) => `${p.heading}\n${p.text}`), content.trim()]
-      .filter(Boolean)
-      .join("\n\n");
-
-    const question = await fetchPromptWithContext(aiPromptTemplate, conversationCtx);
+    const question = await fetchPrompt();
 
     if (!question) {
       setIsPrompting(false);
@@ -354,7 +300,7 @@ export function JournalWriter({ slug }: JournalWriterProps) {
     setCurrentHeading(question);
     setIsPromptMode(true);
     setIsPrompting(false);
-  }, [content, currentHeading, savedPrompts, fetchPromptWithContext, aiPromptTemplate]);
+  }, [content, currentHeading, savedPrompts, fetchPrompt]);
 
   const handleClose = () => {
     if (content.trim() || savedPrompts.length > 0) {
@@ -450,7 +396,8 @@ export function JournalWriter({ slug }: JournalWriterProps) {
   // ---------------------------------------------------------------------------
 
   const hasContent = content.trim().length > 0;
-  const isInitialLoading = subsLoading && !!slug;
+  // For guided mode: wait for sub detail to load before showing content
+  const isInitialLoading = !!slug && subsLoading;
   const isLoadingPrompt = isPrompting && !currentHeading && savedPrompts.length === 0;
 
   return (

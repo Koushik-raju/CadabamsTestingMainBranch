@@ -1,4 +1,51 @@
-import { apiClient } from "@/api/backend-v2";
+/**
+ * FILE: hooks/use-journaling.ts
+ *
+ * PURPOSE:
+ *   SWR hooks and mutation helpers for the CMS self-journaling feature —
+ *   categories, user entries, create/delete actions, and AI prompt generation.
+ *
+ * LOGIC OVERVIEW:
+ *   1. useJournalingCategories — fetches published categories + sub-journalings
+ *      via cmsJournalingControllerGetJournalings SDK function.
+ *   2. useSelfJournalingEntries — fetches the current user's entries via
+ *      cmsJournalingControllerGetSelfJournalings SDK function.
+ *   3. useSelfJournalingEntry — fetches a single entry by ID via
+ *      cmsJournalingControllerGetSelfJournalingById SDK function.
+ *   4. createSelfJournalingEntry — creates an entry via
+ *      cmsJournalingControllerCreateSelfJournaling SDK function, then
+ *      revalidates the entries SWR key.
+ *   5. deleteSelfJournalingEntry — deletes an entry via
+ *      cmsJournalingControllerDeleteSelfJournaling SDK function.
+ *   6. generateJournalPrompt — calls POST /api/v1/{campus}/journaling/prompt-me
+ *      via journalingControllerPromptMe SDK function; the backend fetches user
+ *      context from DB and returns an AI-generated reflective question.
+ *      Returns null on any error so callers can fall back gracefully.
+ *   7. extractString — utility for converting Strapi-style { [key]: unknown }
+ *      response fields to plain strings (used in consuming pages).
+ *
+ * KEY VARIABLES / PROPS / EXPORTS:
+ *   JournalingResponseDto      — re-exported SDK type; journaling category
+ *   SubJournalingResponseDto   — re-exported SDK type; sub-journaling item
+ *   SelfJournalingResponseDto  — re-exported SDK type; user journal entry
+ *   SelfJournalingPromptDto    — re-exported SDK type; single prompt response
+ *   useJournalingCategories    — { categories, subJournalings, isLoading, error }
+ *   useSelfJournalingEntries   — { entries, total, isLoading, error, leadId }
+ *   useSelfJournalingEntry     — { entry, isLoading, error }
+ *   createSelfJournalingEntry  — async; returns SelfJournalingResponseDto
+ *   deleteSelfJournalingEntry  — async; void
+ *   generateJournalPrompt      — async; returns AI question string or null on error
+ *   extractString              — converts { [key]: unknown } Strapi fields to string
+ *
+ * DEPENDENCIES:
+ *   cmsJournalingController* (sdk)       — CMS journaling CRUD SDK functions
+ *   journalingControllerPromptMe (sdk)   — AI prompt generation SDK function
+ *   swr                                  — caching + revalidation
+ *   useAuth                              — provides user.lead_id for leadId
+ *
+ * LAST UPDATED: 2026-04-27 — categories fetch with status ALL (parents may be DRAFT);
+ *   generateJournalPrompt accepts currentEntryText for sequential prompt context.
+ */
 import { useAuth } from "@/hooks/use-auth";
 import { swrConfig } from "@/lib/swr-config";
 import {
@@ -6,154 +53,105 @@ import {
   selfJournalingEntriesKey,
   selfJournalingEntryKey,
 } from "@/lib/swr-keys";
-/**
- * FILE: hooks/use-journaling.ts
- *
- * PURPOSE:
- *   SWR hooks and mutation helpers for the CMS self-journaling feature —
- *   categories, user entries, and create/delete actions.
- *
- * LOGIC OVERVIEW:
- *   1. useJournalingCategories — fetches published categories + sub-journalings
- *      from GET /api/v1/cms/journaling via axios.
- *   2. useSelfJournalingEntries — fetches the current user's entries from
- *      GET /api/v1/cms/journaling/self?crmLeadId=N via axios.
- *   3. useSelfJournalingEntry — fetches a single entry by ID.
- *   4. createSelfJournalingEntry — POSTs to /api/v1/cms/journaling/self with
- *      crmLeadId in the body, then revalidates the entries SWR key.
- *   5. deleteSelfJournalingEntry — DELETEs by ID and revalidates.
- *
- * KEY VARIABLES / PROPS / EXPORTS:
- *   JournalingCategory         — CMS category with sub-journalings
- *   SubJournalingItem          — individual sub-journaling item
- *   SelfJournalingEntry        — user entry shape returned by CMS
- *   CreateSelfJournalingPayload — POST body; uses crmLeadId (number)
- *   useJournalingCategories    — { categories, subJournalings, isLoading, error }
- *   useSelfJournalingEntries   — { entries, total, isLoading, error, leadId }
- *   useSelfJournalingEntry     — { entry, isLoading, error }
- *   createSelfJournalingEntry  — async; returns created SelfJournalingEntry
- *   deleteSelfJournalingEntry  — async; void
- *
- * DEPENDENCIES:
- *   apiClient (api/backend-v2) — shared axios instance with auth + refresh interceptors
- *   swr                        — caching + revalidation
- *   useAuth                    — provides user.lead_id for crmLeadId
- *
- * LAST UPDATED: 2026-04-22 — use shared apiClient (auth interceptor) instead of bare axios.create()
- */
+import {
+  type JournalingResponseDto,
+  type SelfJournalingPromptDto,
+  type SelfJournalingResponseDto,
+  type SubJournalingResponseDto,
+  cmsJournalingControllerCreateSelfJournaling,
+  cmsJournalingControllerDeleteSelfJournaling,
+  cmsJournalingControllerGetJournalings,
+  cmsJournalingControllerGetSelfJournalingById,
+  cmsJournalingControllerGetSelfJournalings,
+  journalingControllerPromptMe,
+} from "@/sdk/backend-v2";
 import useSWR, { mutate as globalMutate } from "swr";
 
-const cmsApi = apiClient;
+export type {
+  JournalingResponseDto,
+  SubJournalingResponseDto,
+  SelfJournalingResponseDto,
+  SelfJournalingPromptDto,
+};
 
 // ---------------------------------------------------------------------------
-// Types
+// Utility
 // ---------------------------------------------------------------------------
 
-export interface JournalingPrompt {
-  heading?: string;
-  text?: string;
-}
-
-export interface SubJournalingItem {
-  id: string;
-  title: string;
-  slug: string;
-  description?: string | null;
-  icon?: string | null;
-  aiPrompt?: string | null;
-  status: string;
-  recommendedCadence?: string | null;
-}
-
-export interface JournalingCategory {
-  id: string;
-  title: string;
-  description?: string | null;
-  icon?: string | null;
-  status: string;
-  subJournalings?: SubJournalingItem[];
-}
-
-export interface SelfJournalingEntry {
-  id: string;
-  title?: string | null;
-  stressLevel?: number | null;
-  leadId?: number | null;
-  entry?: string | null;
-  emotion?: number | null;
-  stressors?: string | null;
-  prompts?: JournalingPrompt[] | null;
-  subJournalingId?: string | null;
-  createdAt: string;
-  updatedAt: string;
-}
-
-// ---------------------------------------------------------------------------
-// Fetchers — use BACKEND_URL + /api/v1/cms/journaling
-// ---------------------------------------------------------------------------
-
-async function fetchJournalingCategories(): Promise<JournalingCategory[]> {
-  const { data } = await cmsApi.get<{ items?: JournalingCategory[]; total?: number }>(
-    "/api/v1/cms/journaling",
-    { params: { limit: 50, status: "PUBLISHED" } },
-  );
-  return data?.items ?? [];
-}
-
-async function fetchSelfJournalingEntries(
-  leadId: number,
-  limit = 100,
-): Promise<{ items: SelfJournalingEntry[]; total: number }> {
-  const { data } = await cmsApi.get<{ items?: SelfJournalingEntry[]; total?: number }>(
-    "/api/v1/cms/journaling/self",
-    { params: { limit, offset: 0, crmLeadId: leadId } },
-  );
-  return {
-    items: data?.items ?? [],
-    total: data?.total ?? 0,
-  };
-}
-
-async function fetchSelfJournalingEntry(id: string): Promise<SelfJournalingEntry | null> {
-  const { data } = await cmsApi.get<SelfJournalingEntry>(`/api/v1/cms/journaling/self/${id}`);
-  return data ?? null;
+/*
+ * CMS (Strapi) API returns certain text fields as { [key: string]: unknown }
+ * objects (e.g. { en: "Hello" }) rather than plain strings. This helper
+ * safely extracts the string value for display. Plain strings pass through
+ * unchanged.
+ */
+export function extractString(val: unknown): string {
+  if (typeof val === "string") return val;
+  if (val && typeof val === "object") {
+    const o = val as Record<string, unknown>;
+    for (const k of ["en", "value", "text", "content"]) {
+      if (typeof o[k] === "string") return o[k] as string;
+    }
+  }
+  return "";
 }
 
 // ---------------------------------------------------------------------------
 // Hooks
 // ---------------------------------------------------------------------------
 
-/** Fetch published journaling categories with sub-journalings */
+/** Fetch journaling categories with sub-journalings. */
 export function useJournalingCategories() {
   const key = journalingCategoriesKey();
-  const { data, isLoading, error } = useSWR(key, () => fetchJournalingCategories(), {
-    ...swrConfig,
-  });
+  const { data, isLoading, error } = useSWR(
+    key,
+    async () => {
+      /*
+       * Fetch ALL parent CmsJournaling records (status: "ALL" = no filter).
+       * Parent records in the DB commonly have status DRAFT even when their
+       * child CmsSubJournaling records are PUBLISHED. Page-level filters
+       * check sub-journaling status instead of parent status.
+       */
+      const res = await cmsJournalingControllerGetJournalings({
+        query: { limit: 50, status: "ALL" },
+      });
+      if (res.error) throw new Error(JSON.stringify(res.error));
+      return res.data?.data ?? [];
+    },
+    { ...swrConfig },
+  );
 
   // Flatten all published sub-journalings across categories
-  const subJournalings: SubJournalingItem[] =
+  const subJournalings: SubJournalingResponseDto[] =
     data?.flatMap((c) => (c.subJournalings ?? []).filter((s) => s.status === "PUBLISHED")) ?? [];
 
   return {
-    categories: data ?? [],
+    categories: data ?? [] as JournalingResponseDto[],
     subJournalings,
     isLoading,
     error,
   };
 }
 
-/** Fetch current user's self-journaling entries */
+/** Fetch current user's self-journaling entries. */
 export function useSelfJournalingEntries(limit?: number) {
   const { user } = useAuth();
   const leadId = user?.lead_id ? Number(user.lead_id) : null;
   const key = leadId ? selfJournalingEntriesKey(leadId) : null;
 
-  const { data, isLoading, error } = useSWR(key, () => fetchSelfJournalingEntries(leadId!, limit), {
-    ...swrConfig,
-  });
+  const { data, isLoading, error } = useSWR(
+    key,
+    async () => {
+      const res = await cmsJournalingControllerGetSelfJournalings({
+        query: { limit: limit ?? 100, offset: 0, leadId: leadId! },
+      });
+      if (res.error) throw new Error(JSON.stringify(res.error));
+      return { entries: res.data?.data ?? [], total: res.data?.total ?? 0 };
+    },
+    { ...swrConfig },
+  );
 
   return {
-    entries: data?.items ?? [],
+    entries: data?.entries ?? [] as SelfJournalingResponseDto[],
     total: data?.total ?? 0,
     isLoading,
     error,
@@ -161,12 +159,18 @@ export function useSelfJournalingEntries(limit?: number) {
   };
 }
 
-/** Fetch a single self-journaling entry by ID */
+/** Fetch a single self-journaling entry by ID. */
 export function useSelfJournalingEntry(id: string | null) {
   const key = id ? selfJournalingEntryKey(id) : null;
-  const { data, isLoading, error } = useSWR(key, () => fetchSelfJournalingEntry(id!), {
-    ...swrConfig,
-  });
+  const { data, isLoading, error } = useSWR(
+    key,
+    async () => {
+      const res = await cmsJournalingControllerGetSelfJournalingById({ path: { id: id! } });
+      if (res.error) throw new Error(JSON.stringify(res.error));
+      return res.data ?? null;
+    },
+    { ...swrConfig },
+  );
 
   return {
     entry: data ?? null,
@@ -176,35 +180,73 @@ export function useSelfJournalingEntry(id: string | null) {
 }
 
 // ---------------------------------------------------------------------------
-// Actions (mutations)
+// Mutations
 // ---------------------------------------------------------------------------
 
-export interface CreateSelfJournalingPayload {
+/**
+ * Create a new self-journaling entry.
+ * Note: The SDK types title/entry/stressors/subJournalingId as
+ * { [key: string]: unknown } due to Strapi's dynamic schema, but the
+ * CMS API accepts plain strings at runtime. The cast below is the minimal
+ * workaround for this SDK generator artifact.
+ */
+export async function createSelfJournalingEntry(payload: {
   title?: string;
   entry?: string;
-  prompts?: JournalingPrompt[];
+  prompts?: Array<SelfJournalingPromptDto>;
   emotion?: number;
   stressLevel?: number;
   stressors?: string;
   crmLeadId: number;
   subJournalingId?: string;
-}
+}): Promise<SelfJournalingResponseDto> {
+  const res = await cmsJournalingControllerCreateSelfJournaling({
+    body: {
+      leadId: payload.crmLeadId,
+      prompts: payload.prompts,
+      stressLevel: payload.stressLevel,
+      emotion: payload.emotion,
+      // The CMS API accepts strings here; the SDK types them as objects (Strapi generator artifact)
+      title: payload.title as never,
+      entry: payload.entry as never,
+      stressors: payload.stressors as never,
+      subJournalingId: payload.subJournalingId as never,
+    },
+  });
+  if (res.error) throw new Error(JSON.stringify(res.error));
 
-/** Create a new self-journaling entry via the CMS API */
-export async function createSelfJournalingEntry(
-  payload: CreateSelfJournalingPayload,
-): Promise<SelfJournalingEntry> {
-  const { data } = await cmsApi.post<SelfJournalingEntry>("/api/v1/cms/journaling/self", payload);
-
-  // Revalidate the entries list
   await globalMutate(selfJournalingEntriesKey(payload.crmLeadId));
 
-  return data;
+  return res.data!;
 }
 
-/** Delete a self-journaling entry */
+/** Delete a self-journaling entry. */
 export async function deleteSelfJournalingEntry(id: string, leadId: number): Promise<void> {
-  await cmsApi.delete(`/api/v1/cms/journaling/self/${id}`);
+  const res = await cmsJournalingControllerDeleteSelfJournaling({ path: { id } });
+  if (res.error) throw new Error(JSON.stringify(res.error));
 
   await globalMutate(selfJournalingEntriesKey(leadId));
+}
+
+/**
+ * Generate an AI reflective question for a specific sub-journal.
+ * The backend fetches user context (recent entries, baseline assessment) from DB
+ * and returns a personalized question. Returns null on any error.
+ *
+ * currentEntryText — optional in-progress session text built from savedPrompts +
+ * active textarea content. Passing it lets the AI's sequential aiPrompt template
+ * determine which question to ask next (e.g. Evening Reset Q1→Q2→Q3…) rather than
+ * always regenerating from scratch and repeating Q1.
+ *
+ */
+export async function generateJournalPrompt(
+  subJournalingId: string,
+  currentEntryText?: string,
+): Promise<string | null> {
+  const res = await journalingControllerPromptMe({
+    path: { campus: "cadabams" },
+    body: { subJournalingId, currentEntryText },
+  });
+  if (res.error) return null;
+  return res.data?.question ?? null;
 }

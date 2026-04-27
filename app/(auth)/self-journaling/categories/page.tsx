@@ -13,20 +13,21 @@
  *   5. Shows skeleton grid while loading, empty state when none are available.
  *
  * KEY VARIABLES / PROPS / EXPORTS:
- *   publishedCategories — PUBLISHED JournalingCategory[]
+ *   publishedCategories — PUBLISHED JournalingResponseDto[]
  *
  * DEPENDENCIES:
  *   useJournalingCategories() — hooks/use-journaling.ts
  *   PageHeader                — components/shared/navigation/page-header.tsx
  *   getJournalVisual()        — lib/journal-visual.ts
  *
- * LAST UPDATED: 2026-04-23 — created
+ * LAST UPDATED: 2026-04-27 — category filter uses sub-journaling status (parent may be DRAFT)
  */
 "use client";
 
 import { PageHeader } from "@/components/shared/navigation/page-header";
 import { Skeleton } from "@/components/ui/skeleton";
-import { type JournalingCategory, useJournalingCategories } from "@/hooks/use-journaling";
+import { extractString, useJournalingCategories } from "@/hooks/use-journaling";
+import type { JournalingResponseDto } from "@/hooks/use-journaling";
 import { getJournalVisual } from "@/lib/journal-visual";
 import { cn } from "@/lib/utils";
 import { BookOpen } from "lucide-react";
@@ -42,7 +43,7 @@ function CategoryGridCard({
   category,
   onClick,
 }: {
-  category: JournalingCategory;
+  category: JournalingResponseDto;
   onClick: () => void;
 }) {
   const { gradient, Icon } = getJournalVisual(category.title);
@@ -53,10 +54,10 @@ function CategoryGridCard({
       onClick={onClick}
       className="bg-card border border-border rounded-2xl overflow-hidden text-left shadow-sm hover:shadow-lg transition-all duration-300 hover:-translate-y-1 active:scale-[0.97] w-full"
     >
-      {category.icon ? (
+      {extractString(category.icon) ? (
         <div className="h-24 relative overflow-hidden">
           <Image
-            src={category.icon}
+            src={extractString(category.icon)}
             alt={category.title}
             fill
             className="object-cover"
@@ -96,8 +97,13 @@ export default function AllCategoriesPage() {
   const router = useRouter();
   const { categories, isLoading } = useJournalingCategories();
 
+  /*
+   * Show categories that have at least one PUBLISHED sub-journaling.
+   * Parent CmsJournaling records in the DB commonly have status DRAFT even when
+   * their children are PUBLISHED, so filter by sub-journaling status.
+   */
   const publishedCategories = useMemo(
-    () => categories.filter((c) => c.status === "PUBLISHED"),
+    () => categories.filter((c) => c.subJournalings?.some((s) => s.status === "PUBLISHED")),
     [categories],
   );
 
