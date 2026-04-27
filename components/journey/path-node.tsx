@@ -12,12 +12,20 @@
  *   primary (orange) for unlocked tiles and muted gray for locked.
  *   TYPE_COLORS.bg is kept as a hex (#E7590F = brand primary) so sheet files can
  *   still append hex-alpha suffixes (e.g. `${color.bg}18`) without changes.
- *   Variants:
- *     active    — large solid primary squircle, pulse rings, speech-bubble label
- *     completed — solid primary squircle + checkmark + corner Eye badge + "Tap to view"
- *                 in label so users know it's still tappable to review
- *     default   — primary-tinted squircle with task icon (available but not yet active)
- *     locked    — muted gray squircle, corner Lock badge
+ *   Variants (all tiles are full circles, all theme-only colors):
+ *     active    — solid primary, pulse rings, speech-bubble label
+ *     completed — white card fill + primary border + primary check (outline stamp).
+ *                 Summary tasks keep their star icon, never get a check.
+ *     default   — primary at 65% with task icon (available but not yet active)
+ *     locked    — muted bg + inset shadow (reads as "pressed-in / disabled")
+ *
+ *   Interaction (Duolingo-style pressable button):
+ *     - default state: 4px solid bottom edge shadow simulates a raised tile
+ *     - on press: tile drops 4px (`active:translate-y-[4px]`) AND the edge
+ *       shadow collapses to 0 — looks like physically pushing into a socket
+ *     - shadow values are passed via CSS vars `--btn-edge` / `--btn-edge-pressed`
+ *       so the same Tailwind active: rule works across all variants
+ *     - pointerdown fires hapticLight() for instant tactile feedback on mobile
  *
  * KEY VARIABLES / PROPS / EXPORTS:
  *   NodeVariant        — "completed" | "active" | "locked" | "default"
@@ -30,18 +38,18 @@
  * DEPENDENCIES:
  *   lucide-react icons, cn (lib/utils)
  *
- * LAST UPDATED: 2026-04-27 — completed tiles now show an Eye corner badge and
- *   "Tap to view" suffix in the label so users discover that completed tasks
- *   remain tappable for review. Mirrors the locked-badge pattern.
+ * LAST UPDATED: 2026-04-27 — completed = theme-pure outline stamp (white + primary);
+ *   Duolingo-style press: 4px raised edge in default, button drops into socket
+ *   on active. CSS vars `--btn-edge` / `--btn-edge-pressed` per variant.
  */
 "use client";
 
+import { hapticLight } from "@/lib/haptics";
 import { cn } from "@/lib/utils";
 import {
   BookOpen,
   Check,
   ClipboardList,
-  Eye,
   FileText,
   Gift,
   Headphones,
@@ -185,14 +193,14 @@ export function PathNode({
         {isActive && (
           <>
             <span
-              className="absolute inset-0 rounded-[24px] animate-ping"
+              className="absolute inset-0 rounded-full animate-ping"
               style={{
                 backgroundColor: "color-mix(in oklch, var(--primary) 28%, transparent)",
                 animationDuration: "1.6s",
               }}
             />
             <span
-              className="absolute rounded-[28px] animate-ping"
+              className="absolute rounded-full animate-ping"
               style={{
                 inset: "-9px",
                 backgroundColor: "color-mix(in oklch, var(--primary) 12%, transparent)",
@@ -205,11 +213,19 @@ export function PathNode({
 
         <button
           onClick={!isLocked ? onClick : undefined}
+          /* PointerDown fires before onClick so haptic feels instant rather than
+             waiting for the click handler. Capacitor's haptic plugin no-ops on web. */
+          onPointerDown={!isLocked ? () => hapticLight() : undefined}
           disabled={isLocked}
           className={cn(
-            "relative w-full h-full flex items-center justify-center transition-all duration-200 select-none",
-            isActive ? "rounded-[24px]" : "rounded-[20px]",
-            !isLocked && "active:scale-95",
+            "relative w-full h-full rounded-full flex items-center justify-center select-none",
+            "transition-[transform,box-shadow] duration-100 ease-out",
+            /* Duolingo-style press: a 4px solid bottom shadow simulates the
+               raised "edge" of the tile. On press, the tile drops down 4px
+               and the edge shadow collapses to zero — looks like the button
+               physically pushes into its socket. */
+            !isLocked &&
+              "shadow-[var(--btn-edge)] active:translate-y-[4px] active:shadow-[var(--btn-edge-pressed)]",
             isLocked && "cursor-not-allowed",
           )}
           style={
@@ -218,31 +234,48 @@ export function PathNode({
                   backgroundColor: "var(--primary)",
                   color: "var(--primary-foreground)",
                   border: "3px solid rgba(255,255,255,0.22)",
-                  boxShadow: "0 8px 28px color-mix(in oklch, var(--primary) 50%, transparent)",
+                  ["--btn-edge" as string]:
+                    "0 4px 0 0 color-mix(in oklch, var(--primary) 65%, black), 0 10px 22px -6px color-mix(in oklch, var(--primary) 50%, transparent)",
+                  ["--btn-edge-pressed" as string]:
+                    "0 0 0 0 color-mix(in oklch, var(--primary) 65%, black)",
                 }
               : isCompleted
                 ? {
-                    backgroundColor: "var(--primary)",
-                    color: "var(--primary-foreground)",
+                    /* Theme-only "completed stamp": white card fill + primary
+                       ring + primary check. Visually distinct from solid active
+                       and translucent available, while staying 100% on-brand. */
+                    backgroundColor: "#F7D572",
+                    color: "var(--primary)",
+                    border: "2.5px solid var(--primary)",
+                    ["--btn-edge" as string]:
+                      "0 4px 0 0 color-mix(in oklch, var(--primary) 70%, black), 0 8px 18px -6px color-mix(in oklch, var(--primary) 30%, transparent)",
+                    ["--btn-edge-pressed" as string]:
+                      "0 0 0 0 color-mix(in oklch, var(--primary) 70%, black)",
                   }
                 : isLocked
                   ? {
-                      backgroundColor: "#e2e8f0",
-                      color: "#94a3b8",
-                      border: "2px solid #cbd5e1",
+                      backgroundColor: "var(--muted)",
+                      color: "var(--muted-foreground)",
+                      border: "2px solid var(--border)",
+                      /* Inset shadow → tile reads as "pressed in / disabled",
+                         the visual opposite of the elevated unlocked tiles. */
+                      boxShadow: "inset 0 2px 4px rgba(0, 0, 0, 0.08)",
                     }
                   : {
-                      /* available/default — solid primary at reduced opacity so the
-                         hierarchy is: active (full) > available (dimmed) > locked (gray).
-                         Subtle shadow reinforces the "tappable" affordance. */
                       backgroundColor: "color-mix(in oklch, var(--primary) 65%, transparent)",
                       color: "var(--primary-foreground)",
-                      boxShadow: "0 4px 14px color-mix(in oklch, var(--primary) 30%, transparent)",
-                      border: isMandatory ? `3px solid var(--primary)` : "none",
+                      border: isMandatory ? "3px solid var(--primary)" : "none",
+                      ["--btn-edge" as string]:
+                        "0 4px 0 0 color-mix(in oklch, var(--primary) 55%, black), 0 6px 14px -4px color-mix(in oklch, var(--primary) 30%, transparent)",
+                      ["--btn-edge-pressed" as string]:
+                        "0 0 0 0 color-mix(in oklch, var(--primary) 55%, black)",
                     }
           }
         >
-          {isCompleted ? (
+          {/* Summary is always represented by its star/sparkles icon, even when
+              the day's summary has been generated — the icon itself is the symbol
+              of the day's reward. Other task types swap to a checkmark on completion. */}
+          {isCompleted && taskType !== "summary" ? (
             <Check className="w-8 h-8 stroke-[3]" />
           ) : (
             <TaskIcon taskType={taskType} size={isActive ? 8 : 7} />
@@ -256,24 +289,14 @@ export function PathNode({
           </div>
         )}
 
-        {/* View badge — signals that completed tiles are still tappable to review.
-            Mirrors the lock-badge pattern (corner pip) so users read "this has a state
-            you can still interact with" without adding extra UI clutter. */}
-        {isCompleted && (
-          <div className="absolute -top-0.5 -right-0.5 w-5 h-5 rounded-full flex items-center justify-center border-2 border-background bg-background">
-            <Eye className="w-2.5 h-2.5" style={{ color: "var(--primary)" }} />
-          </div>
-        )}
       </div>
 
-      {/* Type label — completed shows "Type · View" so the tap-to-review affordance
-          is obvious even without the corner badge in view */}
+      {/* Type label — Eye corner badge already signals re-tap affordance for completed */}
       <span
         className="text-[10px] font-bold mt-1.5 tracking-wide"
         style={{ color: isLocked ? "#94a3b8" : "var(--primary)" }}
       >
         {color.label}
-        {isCompleted && <span className="font-semibold opacity-80"> · Tap to view</span>}
       </span>
     </div>
   );
