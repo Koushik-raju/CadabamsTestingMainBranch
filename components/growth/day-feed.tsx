@@ -203,11 +203,17 @@ export function DayFeed({ day, isLoading, onOpenItem }: Props) {
       {day.journals.length > 0 && (
         <Section title="Journals" icon={BookOpen} accent="bg-emerald-500">
           {day.journals.map((item, i) => {
-            // Build Q&A pairs from prompts when present. Standalone
-            // free-text journals fall through to the markdown body.
+            // Build Q&A pairs from prompts when present. The legacy
+            // /self-journalings shape stores `entryText` as the prompt
+            // question + answer flattened together — so when prompts
+            // exist we ONLY render Q&A and skip entryText, otherwise
+            // the modal shows the same content twice (once as Q&A,
+            // once as "Analysis"). Standalone free-text journals (no
+            // prompts) fall through to entryText as the modal body.
             const qa = (item.prompts ?? [])
               .filter((p) => p.heading || p.text)
               .map((p) => ({ question: p.heading ?? "", answer: p.text }));
+            const body = qa.length > 0 ? null : item.entryText;
             return (
               <Row
                 key={item.id}
@@ -215,7 +221,7 @@ export function DayFeed({ day, isLoading, onOpenItem }: Props) {
                   onOpenItem({
                     title: item.title?.trim() || "Journal entry",
                     subtitle: formatTime(item.journaledAt),
-                    body: item.entryText,
+                    body,
                     qa: qa.length ? qa : undefined,
                   })
                 }
