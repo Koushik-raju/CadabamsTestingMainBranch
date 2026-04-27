@@ -2630,6 +2630,12 @@ export type JournalEntryResponseDto = {
      */
     updatedAt: string;
     /**
+     * ID of the CmsSubJournaling template this entry belongs to (null for legacy/free-flow entries)
+     */
+    subJournalingId?: {
+        [key: string]: unknown;
+    } | null;
+    /**
      * Associated prompt responses
      */
     prompts: Array<Array<unknown>>;
@@ -2918,11 +2924,7 @@ export type CompleteTaskDto = {
      */
     worksheetSubmissionId?: string;
     /**
-     * CmsSelfJournaling.id — required when task kind is SUB_JOURNAL
-     */
-    selfJournalingId?: string;
-    /**
-     * JournalEntry.id — required when task kind is JOURNAL (or send selfJournalingId)
+     * JournalEntry.id — required when task kind is JOURNAL or SUB_JOURNAL
      */
     journalEntryId?: string;
     /**
@@ -3896,180 +3898,6 @@ export type UpdateMindfulMinuteDto = {
     audioIds?: Array<string>;
 };
 
-export type SelfJournalingPromptDto = {
-    /**
-     * Prompt heading / question
-     */
-    heading?: string;
-    /**
-     * User response text
-     */
-    text?: string;
-};
-
-export type CreateSelfJournalingDto = {
-    /**
-     * Journal title
-     */
-    title?: {
-        [key: string]: unknown;
-    };
-    /**
-     * Stress level (1-5)
-     */
-    stressLevel?: number;
-    /**
-     * CRM lead ID
-     */
-    leadId?: number;
-    /**
-     * Combined journal entry text
-     */
-    entry?: {
-        [key: string]: unknown;
-    };
-    /**
-     * Emotion score (1-5)
-     */
-    emotion?: number;
-    /**
-     * Stressor categories
-     */
-    stressors?: {
-        [key: string]: unknown;
-    };
-    /**
-     * Structured prompt responses
-     */
-    prompts?: Array<SelfJournalingPromptDto>;
-    /**
-     * Sub-journaling template ID used
-     */
-    subJournalingId?: {
-        [key: string]: unknown;
-    };
-};
-
-export type SelfJournalingResponseDto = {
-    /**
-     * Unique identifier
-     */
-    id: string;
-    /**
-     * Journal title
-     */
-    title?: {
-        [key: string]: unknown;
-    };
-    /**
-     * Stress level (1-5)
-     */
-    stressLevel?: number;
-    /**
-     * Lead ID
-     */
-    leadId?: number;
-    /**
-     * Journal entry text
-     */
-    entry?: {
-        [key: string]: unknown;
-    };
-    /**
-     * Emotion score (1-5)
-     */
-    emotion?: number;
-    /**
-     * Stressors
-     */
-    stressors?: {
-        [key: string]: unknown;
-    };
-    /**
-     * Structured prompt responses
-     */
-    prompts?: Array<{
-        heading?: string;
-        text?: string;
-    }>;
-    /**
-     * Sub-journaling template ID used
-     */
-    subJournalingId?: {
-        [key: string]: unknown;
-    };
-    /**
-     * Record creation timestamp
-     */
-    createdAt?: string;
-    /**
-     * Record last update timestamp
-     */
-    updatedAt?: string;
-};
-
-export type SelfJournalingListResponseDto = {
-    /**
-     * List of SelfJournaling records
-     */
-    data: Array<SelfJournalingResponseDto>;
-    /**
-     * Total count
-     */
-    total?: number;
-    /**
-     * Current limit
-     */
-    limit?: number;
-    /**
-     * Current offset
-     */
-    offset?: number;
-};
-
-export type UpdateSelfJournalingDto = {
-    /**
-     * Journal title
-     */
-    title?: {
-        [key: string]: unknown;
-    };
-    /**
-     * Stress level (1-5)
-     */
-    stressLevel?: number;
-    /**
-     * CRM lead ID
-     */
-    leadId?: number;
-    /**
-     * Combined journal entry text
-     */
-    entry?: {
-        [key: string]: unknown;
-    };
-    /**
-     * Emotion score (1-5)
-     */
-    emotion?: number;
-    /**
-     * Stressor categories
-     */
-    stressors?: {
-        [key: string]: unknown;
-    };
-    /**
-     * Structured prompt responses
-     */
-    prompts?: Array<SelfJournalingPromptDto>;
-    /**
-     * Sub-journaling template ID used
-     */
-    subJournalingId?: {
-        [key: string]: unknown;
-    };
-};
-
 export type SubJournalingResponseDto = {
     /**
      * Unique identifier
@@ -4547,9 +4375,9 @@ export type ContentBreakdownDto = {
     published: number;
 };
 
-export type SelfJournalingsDto = {
+export type JournalEntriesDto = {
     /**
-     * Total count of self journalings
+     * Total count of journal entries
      */
     total: number;
 };
@@ -4591,9 +4419,9 @@ export type CmsContentModulesDto = {
      */
     subJournalings: ContentBreakdownDto;
     /**
-     * Self-journaling content breakdown
+     * Patient journal entries count
      */
-    selfJournalings: SelfJournalingsDto;
+    journalEntries: JournalEntriesDto;
     /**
      * Media content breakdown
      */
@@ -10308,7 +10136,11 @@ export type GrowthControllerGetWeekData = {
     path?: never;
     query?: {
         /**
-         * Any ISO date (YYYY-MM-DD) within the target week. Response covers Monday→Sunday of that week. Defaults to today.
+         * IANA timezone (e.g. Asia/Kolkata, America/Los_Angeles). Postgres buckets every timestamp `AT TIME ZONE :tz` so a row written at 02:00 IST lands in the IST calendar day, not the previous UTC day. Defaults to Asia/Kolkata.
+         */
+        tz?: string;
+        /**
+         * Any ISO date (YYYY-MM-DD) within the target week. Response covers Monday→Sunday of that week, anchored in the caller's tz. Defaults to today in tz.
          */
         date?: string;
     };
@@ -10324,7 +10156,12 @@ export type GrowthControllerGetWeekResponse = GrowthControllerGetWeekResponses[k
 export type GrowthControllerGetLatestActiveDateData = {
     body?: never;
     path?: never;
-    query?: never;
+    query?: {
+        /**
+         * IANA timezone (e.g. Asia/Kolkata, America/Los_Angeles). Postgres buckets every timestamp `AT TIME ZONE :tz` so a row written at 02:00 IST lands in the IST calendar day, not the previous UTC day. Defaults to Asia/Kolkata.
+         */
+        tz?: string;
+    };
     url: '/api/v1/me/growth/latest-active-date';
 };
 
@@ -10339,7 +10176,11 @@ export type GrowthControllerGetDayData = {
     path?: never;
     query?: {
         /**
-         * ISO date (YYYY-MM-DD) to fetch activity for. Defaults to today.
+         * IANA timezone (e.g. Asia/Kolkata, America/Los_Angeles). Postgres buckets every timestamp `AT TIME ZONE :tz` so a row written at 02:00 IST lands in the IST calendar day, not the previous UTC day. Defaults to Asia/Kolkata.
+         */
+        tz?: string;
+        /**
+         * ISO date (YYYY-MM-DD) to fetch activity for, interpreted in the caller's tz. Defaults to today in tz.
          */
         date?: string;
     };
@@ -10744,90 +10585,6 @@ export type CmsMindfulMinutesControllerUnpublishResponses = {
 };
 
 export type CmsMindfulMinutesControllerUnpublishResponse = CmsMindfulMinutesControllerUnpublishResponses[keyof CmsMindfulMinutesControllerUnpublishResponses];
-
-export type CmsJournalingControllerGetSelfJournalingsData = {
-    body?: never;
-    path?: never;
-    query?: {
-        /**
-         * Page size
-         */
-        limit?: number;
-        /**
-         * Offset
-         */
-        offset?: number;
-        /**
-         * Filter by CRM lead ID
-         */
-        leadId?: number;
-    };
-    url: '/api/v1/cms/journaling/self';
-};
-
-export type CmsJournalingControllerGetSelfJournalingsResponses = {
-    200: SelfJournalingListResponseDto;
-};
-
-export type CmsJournalingControllerGetSelfJournalingsResponse = CmsJournalingControllerGetSelfJournalingsResponses[keyof CmsJournalingControllerGetSelfJournalingsResponses];
-
-export type CmsJournalingControllerCreateSelfJournalingData = {
-    body: CreateSelfJournalingDto;
-    path?: never;
-    query?: never;
-    url: '/api/v1/cms/journaling/self';
-};
-
-export type CmsJournalingControllerCreateSelfJournalingResponses = {
-    201: SelfJournalingResponseDto;
-};
-
-export type CmsJournalingControllerCreateSelfJournalingResponse = CmsJournalingControllerCreateSelfJournalingResponses[keyof CmsJournalingControllerCreateSelfJournalingResponses];
-
-export type CmsJournalingControllerDeleteSelfJournalingData = {
-    body?: never;
-    path: {
-        id: string;
-    };
-    query?: never;
-    url: '/api/v1/cms/journaling/self/{id}';
-};
-
-export type CmsJournalingControllerDeleteSelfJournalingResponses = {
-    200: SelfJournalingResponseDto;
-};
-
-export type CmsJournalingControllerDeleteSelfJournalingResponse = CmsJournalingControllerDeleteSelfJournalingResponses[keyof CmsJournalingControllerDeleteSelfJournalingResponses];
-
-export type CmsJournalingControllerGetSelfJournalingByIdData = {
-    body?: never;
-    path: {
-        id: string;
-    };
-    query?: never;
-    url: '/api/v1/cms/journaling/self/{id}';
-};
-
-export type CmsJournalingControllerGetSelfJournalingByIdResponses = {
-    200: SelfJournalingResponseDto;
-};
-
-export type CmsJournalingControllerGetSelfJournalingByIdResponse = CmsJournalingControllerGetSelfJournalingByIdResponses[keyof CmsJournalingControllerGetSelfJournalingByIdResponses];
-
-export type CmsJournalingControllerUpdateSelfJournalingData = {
-    body: UpdateSelfJournalingDto;
-    path: {
-        id: string;
-    };
-    query?: never;
-    url: '/api/v1/cms/journaling/self/{id}';
-};
-
-export type CmsJournalingControllerUpdateSelfJournalingResponses = {
-    200: SelfJournalingResponseDto;
-};
-
-export type CmsJournalingControllerUpdateSelfJournalingResponse = CmsJournalingControllerUpdateSelfJournalingResponses[keyof CmsJournalingControllerUpdateSelfJournalingResponses];
 
 export type CmsJournalingControllerGetSubJournalingsData = {
     body?: never;
