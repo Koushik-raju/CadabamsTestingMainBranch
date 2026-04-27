@@ -25,7 +25,7 @@
  *   useBooking — BookingContext for saving selection before checkout
  *   PageHeader — shared navigation header
  *
- * LAST UPDATED: 2026-04-24 — filter out past and in-progress slots so only future slots are shown
+ * LAST UPDATED: 2026-04-27 — add discard-slot confirmation dialog when user switches date with a slot already selected
  */
 "use client";
 
@@ -33,6 +33,16 @@ import { CampusSheet } from "@/components/booking/campus-sheet";
 import { DateStrip, toDateKey } from "@/components/booking/date-strip";
 import { SlotSection } from "@/components/booking/slot-section";
 import { PageHeader } from "@/components/shared/navigation/page-header";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { useBooking } from "@/contexts/booking-context";
@@ -121,6 +131,10 @@ function BookingContent() {
   const [slotPrice, setSlotPrice] = useState<number | null>(null);
   const [loadingSlots, setLoadingSlots] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // ── discard-slot confirmation dialog ────────────────────────────────────────
+  const [discardDialogOpen, setDiscardDialogOpen] = useState(false);
+  const [pendingDateChange, setPendingDateChange] = useState<Date | null>(null);
 
   // ── campus sheet ─────────────────────────────────────────────────────────────
   const [sheetOpen, setSheetOpen] = useState(false);
@@ -220,6 +234,33 @@ function BookingContent() {
     fetchSlots(online ? 2 : 1);
   };
 
+  // When the user taps a date in the strip while a slot is already selected on a
+  // different date, ask for confirmation before discarding the current selection.
+  const handleDateSelect = (date: Date) => {
+    if (newSlotId === null || toDateKey(date) === toDateKey(selectedDate)) {
+      setSelectedDate(date);
+      return;
+    }
+    setPendingDateChange(date);
+    setDiscardDialogOpen(true);
+  };
+
+  const handleDiscardConfirm = () => {
+    if (pendingDateChange) {
+      setSelectedDate(pendingDateChange);
+      setNewSlotId(null);
+      setConfirmedCampusId(null);
+      setConfirmedSubId(null);
+    }
+    setPendingDateChange(null);
+    setDiscardDialogOpen(false);
+  };
+
+  const handleDiscardCancel = () => {
+    setPendingDateChange(null);
+    setDiscardDialogOpen(false);
+  };
+
   // ── derived sub-campus options (from campus master data) ─────────────────────
   const getSubCampusOptions = useCallback(
     (campusId: number) => {
@@ -242,9 +283,14 @@ function BookingContent() {
   }, [campuses, doctor]);
 
   // ── derived display values ───────────────────────────────────────────────────
+  // Filter past/in-progress slots here so both the DateStrip dot indicators and
+  // the slot grid work from the same future-only dataset. Without this, the date
+  // strip counts stale slots and shows "few left" on dates that are actually empty.
   const slotsByDate = useMemo(() => {
+    const now = new Date();
     const map: Record<string, SlotResponseDto[]> = {};
     for (const s of slots) {
+      if (new Date(s.start_datetime) <= now) continue;
       const key = s.start_datetime.slice(0, 10);
       (map[key] ??= []).push(s);
     }
@@ -254,10 +300,7 @@ function BookingContent() {
   const maxPage = Math.ceil(dates.length / 10) - 1;
 
   const selectedKey = toDateKey(selectedDate);
-  // Only show slots that haven't started yet. Slots with start_datetime <= now are
-  // either already past or currently in progress — both must be hidden.
-  const now = new Date();
-  const daySlots = (slotsByDate[selectedKey] ?? []).filter((s) => new Date(s.start_datetime) > now);
+  const daySlots = slotsByDate[selectedKey] ?? [];
   const morningSlots = daySlots.filter((s) => new Date(s.start_datetime).getHours() < 12);
   const afternoonSlots = daySlots.filter((s) => {
     const h = new Date(s.start_datetime).getHours();
@@ -454,7 +497,7 @@ function BookingContent() {
           datePage={datePage}
           maxPage={maxPage}
           loadingSlots={loadingSlots}
-          onDateSelect={setSelectedDate}
+          onDateSelect={handleDateSelect}
           onPageChange={setDatePage}
         />
 
@@ -584,6 +627,23 @@ function BookingContent() {
         isOnline={isOnline}
         loading={loadingMeta}
       />
+
+      {/* ── Discard slot confirmation ── */}
+      <AlertDialog open={discardDialogOpen} onOpenChange={setDiscardDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Discard selected slot?</AlertDialogTitle>
+            <AlertDialogDescription>
+              You have already selected a slot. Switching to a different date will discard your
+              current selection. Do you want to continue?
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={handleDiscardCancel}>Keep current slot</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDiscardConfirm}>Discard and switch</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
