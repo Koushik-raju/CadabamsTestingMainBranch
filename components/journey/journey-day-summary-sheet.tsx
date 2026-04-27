@@ -29,7 +29,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { completeJourneyDay } from "@/hooks/journeys/use-journey-detail";
 import { type DaySummaryResponseDto, journeysControllerGetDaySummary } from "@/sdk/backend-v2";
 import { CheckCircle2, Flame, Trophy } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import ReactMarkdown from "react-markdown";
 import { toast } from "react-toastify";
 import remarkGfm from "remark-gfm";
@@ -59,8 +59,21 @@ export function JourneyDaySummarySheet({
 
   const isLastDay = dayNumber === totalDays;
 
+  // Gate against double-firing in React 18 dev strict mode (useEffect
+  // runs twice — both fetches hit the server before any cleanup cancels
+  // the first one's promise handler). Skip the second invocation when
+  // the sheet has already fired for this exact (enrollmentId, dayNumber)
+  // combination. Resets when the sheet closes.
+  const lastFetchedKey = useRef<string | null>(null);
+
   useEffect(() => {
-    if (!open) return;
+    if (!open) {
+      lastFetchedKey.current = null;
+      return;
+    }
+    const key = `${enrollmentId}:${dayNumber}`;
+    if (lastFetchedKey.current === key) return;
+    lastFetchedKey.current = key;
 
     let cancelled = false;
     setIsLoading(true);
