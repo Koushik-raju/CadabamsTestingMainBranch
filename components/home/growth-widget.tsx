@@ -89,7 +89,12 @@ export function GrowthWidget() {
             )}
           </h3>
         </div>
-        <Link href="/growth" className="text-sm font-semibold text-primary flex-shrink-0">
+        {/* Pin to today via ?date= so the Growth page skips the
+            best-default-date auto-jump and opens on today's cell. */}
+        <Link
+          href={`/growth?date=${today}`}
+          className="text-sm font-semibold text-primary flex-shrink-0"
+        >
           View All
         </Link>
       </div>
