@@ -7,15 +7,17 @@
  *
  * LOGIC OVERVIEW:
  *   PathNode receives a variant (active/completed/locked/default) and taskType.
- *   All unlocked tiles use the primary theme color (hsl(var(--primary))) so the
- *   path uses only 2 colors: primary (orange) for unlocked and muted gray for locked.
+ *   All unlocked tiles use the primary theme color via var(--primary) (theme is
+ *   oklch, not HSL channels — opacity uses color-mix). Path uses only 2 colors:
+ *   primary (orange) for unlocked tiles and muted gray for locked.
  *   TYPE_COLORS.bg is kept as a hex (#E7590F = brand primary) so sheet files can
  *   still append hex-alpha suffixes (e.g. `${color.bg}18`) without changes.
  *   Variants:
- *     active   — large solid primary circle, pulse rings, speech-bubble label
- *     completed — solid primary circle, checkmark icon
- *     default  — light primary-tinted ring with primary icon (available but not yet active)
- *     locked   — muted gray circle, lock badge
+ *     active    — large solid primary squircle, pulse rings, speech-bubble label
+ *     completed — solid primary squircle + checkmark + corner Eye badge + "Tap to view"
+ *                 in label so users know it's still tappable to review
+ *     default   — primary-tinted squircle with task icon (available but not yet active)
+ *     locked    — muted gray squircle, corner Lock badge
  *
  * KEY VARIABLES / PROPS / EXPORTS:
  *   NodeVariant        — "completed" | "active" | "locked" | "default"
@@ -28,8 +30,9 @@
  * DEPENDENCIES:
  *   lucide-react icons, cn (lib/utils)
  *
- * LAST UPDATED: 2026-04-27 — squircle tiles (rounded-[20/24px]) bumped to 76/88px with
- *   larger icons (size 7/8); CSS vars use var(--primary) + color-mix() (theme is oklch).
+ * LAST UPDATED: 2026-04-27 — completed tiles now show an Eye corner badge and
+ *   "Tap to view" suffix in the label so users discover that completed tasks
+ *   remain tappable for review. Mirrors the locked-badge pattern.
  */
 "use client";
 
@@ -38,6 +41,7 @@ import {
   BookOpen,
   Check,
   ClipboardList,
+  Eye,
   FileText,
   Gift,
   Headphones,
@@ -73,15 +77,15 @@ export interface TypeColorConfig {
 const PRIMARY_HEX = "#E7590F";
 
 export const TYPE_COLORS: Record<string, TypeColorConfig> = {
-  video:      { bg: PRIMARY_HEX, fg: "#ffffff", label: "Video" },
-  audio:      { bg: PRIMARY_HEX, fg: "#ffffff", label: "Audio" },
+  video: { bg: PRIMARY_HEX, fg: "#ffffff", label: "Video" },
+  audio: { bg: PRIMARY_HEX, fg: "#ffffff", label: "Audio" },
   assessment: { bg: PRIMARY_HEX, fg: "#ffffff", label: "Assessment" },
-  journal:    { bg: PRIMARY_HEX, fg: "#ffffff", label: "Journal" },
-  book:       { bg: PRIMARY_HEX, fg: "#ffffff", label: "Session" },
-  gift:       { bg: PRIMARY_HEX, fg: "#ffffff", label: "Mood Check" },
-  trophy:     { bg: PRIMARY_HEX, fg: "#ffffff", label: "Trophy" },
-  read:       { bg: PRIMARY_HEX, fg: "#ffffff", label: "Read" },
-  summary:    { bg: PRIMARY_HEX, fg: "#ffffff", label: "Summary" },
+  journal: { bg: PRIMARY_HEX, fg: "#ffffff", label: "Journal" },
+  book: { bg: PRIMARY_HEX, fg: "#ffffff", label: "Session" },
+  gift: { bg: PRIMARY_HEX, fg: "#ffffff", label: "Mood Check" },
+  trophy: { bg: PRIMARY_HEX, fg: "#ffffff", label: "Trophy" },
+  read: { bg: PRIMARY_HEX, fg: "#ffffff", label: "Read" },
+  summary: { bg: PRIMARY_HEX, fg: "#ffffff", label: "Summary" },
 };
 
 export function getTypeColor(taskType: NodeTaskType): TypeColorConfig {
@@ -251,14 +255,25 @@ export function PathNode({
             <Lock className="w-2.5 h-2.5 text-white" />
           </div>
         )}
+
+        {/* View badge — signals that completed tiles are still tappable to review.
+            Mirrors the lock-badge pattern (corner pip) so users read "this has a state
+            you can still interact with" without adding extra UI clutter. */}
+        {isCompleted && (
+          <div className="absolute -top-0.5 -right-0.5 w-5 h-5 rounded-full flex items-center justify-center border-2 border-background bg-background">
+            <Eye className="w-2.5 h-2.5" style={{ color: "var(--primary)" }} />
+          </div>
+        )}
       </div>
 
-      {/* Type label */}
+      {/* Type label — completed shows "Type · View" so the tap-to-review affordance
+          is obvious even without the corner badge in view */}
       <span
         className="text-[10px] font-bold mt-1.5 tracking-wide"
-        style={{ color: isLocked ? "#94a3b8" : "var(--primary)", opacity: isCompleted ? 0.75 : 1 }}
+        style={{ color: isLocked ? "#94a3b8" : "var(--primary)" }}
       >
         {color.label}
+        {isCompleted && <span className="font-semibold opacity-80"> · Tap to view</span>}
       </span>
     </div>
   );
