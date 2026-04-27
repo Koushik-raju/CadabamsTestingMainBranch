@@ -88,16 +88,16 @@ export function MarkdownModal({ open, onOpenChange, title, subtitle, body, qa }:
           {!hasContent && <p className="text-muted-foreground text-sm">No details recorded.</p>}
 
           {qaPairs.length > 0 && (
-            <ul className="flex flex-col gap-3">
+            <ul className="flex flex-col gap-4">
               {qaPairs.map((p, i) => (
-                <li key={i} className="flex flex-col gap-1 border-l-2 border-primary/40 pl-3">
+                <li key={i} className="flex flex-col gap-1.5 border-l-2 border-primary/40 pl-3">
                   {p.question && (
-                    <p className="text-xs font-semibold text-foreground/80 leading-snug">
+                    <p className="text-base font-semibold text-foreground leading-snug">
                       {p.question}
                     </p>
                   )}
                   {p.answer ? (
-                    <p className="text-sm text-foreground leading-relaxed whitespace-pre-wrap">
+                    <p className="text-sm text-foreground/80 leading-relaxed whitespace-pre-wrap">
                       {p.answer}
                     </p>
                   ) : (
@@ -114,17 +114,14 @@ export function MarkdownModal({ open, onOpenChange, title, subtitle, body, qa }:
             </div>
           )}
 
-          {/* Q&A + analysis combined view (e.g. an assessment with both
-              structured answers and an LLM analysis). Renders the analysis
-              under the Q&A list. */}
+          {/* Q&A + body combined: the body renders directly below without
+              an "Analysis" label/divider — most callers (journals) already
+              have this case suppressed at the source by passing body=null
+              when prompts exist; but kept here for any future caller that
+              wants both visible without the noise of a separate header. */}
           {hasBody && qaPairs.length > 0 && (
-            <div className="mt-5 pt-4 border-t border-border/60">
-              <p className="text-[10px] font-bold uppercase tracking-wider text-primary mb-2">
-                Analysis
-              </p>
-              <div className="prose prose-sm dark:prose-invert max-w-none">
-                <ReactMarkdown remarkPlugins={[remarkGfm]}>{body!}</ReactMarkdown>
-              </div>
+            <div className="mt-5 prose prose-sm dark:prose-invert max-w-none">
+              <ReactMarkdown remarkPlugins={[remarkGfm]}>{body!}</ReactMarkdown>
             </div>
           )}
         </div>

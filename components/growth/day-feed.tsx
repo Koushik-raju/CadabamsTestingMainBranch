@@ -203,23 +203,39 @@ export function DayFeed({ day, isLoading, onOpenItem }: Props) {
       {day.journals.length > 0 && (
         <Section title="Journals" icon={BookOpen} accent="bg-emerald-500">
           {day.journals.map((item, i) => {
-            // Build Q&A pairs from prompts when present. Standalone
-            // free-text journals fall through to the markdown body.
+            // Build Q&A pairs from prompts when present. The legacy
+            // /self-journalings shape stores `entryText` as the prompt
+            // question + answer flattened — so when prompts exist we
+            // ONLY render Q&A and skip entryText, otherwise the modal
+            // shows the same content twice. Standalone free-text
+            // journals (no prompts) fall through to entryText as the
+            // markdown body.
+            //
+            // Many journals also store the prompt question as both the
+            // entry title AND the prompt heading. Modal already renders
+            // the title — drop a Q&A heading that just repeats it so
+            // the user doesn't see the question twice.
+            const modalTitle = item.title?.trim() || "Journal entry";
+            const norm = (s: string | null | undefined) => (s ?? "").trim().toLowerCase();
             const qa = (item.prompts ?? [])
               .filter((p) => p.heading || p.text)
-              .map((p) => ({ question: p.heading ?? "", answer: p.text }));
+              .map((p) => ({
+                question: norm(p.heading) === norm(modalTitle) ? "" : (p.heading ?? ""),
+                answer: p.text,
+              }));
+            const body = qa.length > 0 ? null : item.entryText;
             return (
               <Row
                 key={item.id}
                 onClick={() =>
                   onOpenItem({
-                    title: item.title?.trim() || "Journal entry",
+                    title: modalTitle,
                     subtitle: formatTime(item.journaledAt),
-                    body: item.entryText,
+                    body,
                     qa: qa.length ? qa : undefined,
                   })
                 }
-                title={item.title?.trim() || "Journal entry"}
+                title={modalTitle}
                 meta={formatTime(item.journaledAt)}
                 preview={null}
                 isLast={i === day.journals.length - 1}

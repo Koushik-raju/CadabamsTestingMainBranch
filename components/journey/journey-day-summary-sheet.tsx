@@ -29,8 +29,9 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { completeJourneyDay } from "@/hooks/journeys/use-journey-detail";
 import { type DaySummaryResponseDto, journeysControllerGetDaySummary } from "@/sdk/backend-v2";
 import { CheckCircle2, Flame, Trophy } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import ReactMarkdown from "react-markdown";
+import { toast } from "react-toastify";
 import remarkGfm from "remark-gfm";
 
 interface JourneyDaySummarySheetProps {
@@ -58,8 +59,21 @@ export function JourneyDaySummarySheet({
 
   const isLastDay = dayNumber === totalDays;
 
+  // Gate against double-firing in React 18 dev strict mode (useEffect
+  // runs twice — both fetches hit the server before any cleanup cancels
+  // the first one's promise handler). Skip the second invocation when
+  // the sheet has already fired for this exact (enrollmentId, dayNumber)
+  // combination. Resets when the sheet closes.
+  const lastFetchedKey = useRef<string | null>(null);
+
   useEffect(() => {
-    if (!open) return;
+    if (!open) {
+      lastFetchedKey.current = null;
+      return;
+    }
+    const key = `${enrollmentId}:${dayNumber}`;
+    if (lastFetchedKey.current === key) return;
+    lastFetchedKey.current = key;
 
     let cancelled = false;
     setIsLoading(true);
@@ -93,12 +107,31 @@ export function JourneyDaySummarySheet({
   async function handleContinue() {
     // Persist day completion so the server sets JourneyDayProgress.completed
     // and (for non-terminal days) seeds nextDayUnlocksAt. The call is
-    // idempotent server-side — safe to retry. Swallow failures so the user
-    // can still progress the UI if the call transiently fails.
+    // idempotent server-side — safe to retry.
+    //
+    // Surface failures via a toast: previously the catch silently
+    // swallowed everything, which left the user thinking the day was
+    // marked complete when in fact /me/journeys/.../complete-day had
+    // returned 409 (e.g. unfinished tasks) — Growth would then look
+    // empty even though they "did everything".
     try {
       await completeJourneyDay(enrollmentId, journeyId, dayNumber);
     } catch (e) {
       console.error("[JourneyDaySummarySheet] completeDay failed", e);
+      const msg = (e as Error).message || "Could not complete the day. Please try again.";
+      // Try to pull a human-readable line out of the JSON-stringified
+      // backend error envelope so the toast isn't the raw payload.
+      let friendly = msg;
+      try {
+        const parsed = JSON.parse(msg) as { message?: string | string[] };
+        if (parsed?.message) {
+          friendly = Array.isArray(parsed.message) ? parsed.message.join(", ") : parsed.message;
+        }
+      } catch {
+        // not JSON — keep msg as-is
+      }
+      toast.error(friendly);
+      return; // do NOT advance the UI when the persist failed
     }
     onContinue();
     onClose();
