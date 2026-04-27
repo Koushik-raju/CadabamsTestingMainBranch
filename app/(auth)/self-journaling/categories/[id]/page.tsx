@@ -320,7 +320,8 @@ export default function CategoryDetailPage() {
                             minute: "2-digit",
                             hour12: true,
                           });
-                          const entryPrompts = (entry.prompts ?? []) as unknown as JournalPromptDto[];
+                          const entryPrompts = (entry.prompts ??
+                            []) as unknown as JournalPromptDto[];
                           const preview =
                             entryPrompts.length > 0
                               ? (entryPrompts[0].text ?? entryPrompts[0].heading ?? "")

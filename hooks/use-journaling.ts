@@ -52,11 +52,7 @@
  */
 import { useAuth } from "@/hooks/use-auth";
 import { swrConfig } from "@/lib/swr-config";
-import {
-  journalingCategoriesKey,
-  selfJournalingKey,
-  selfJournalingEntryKey,
-} from "@/lib/swr-keys";
+import { journalingCategoriesKey, selfJournalingEntryKey, selfJournalingKey } from "@/lib/swr-keys";
 import {
   type JournalEntryResponseDto,
   type JournalPromptDto,

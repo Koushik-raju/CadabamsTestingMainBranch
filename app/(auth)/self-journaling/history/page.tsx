@@ -96,7 +96,9 @@ function matchesSearch(entry: JournalEntryResponseDto, query: string): boolean {
    * so we can access heading/text safely.
    */
   const prompts = (entry.prompts ?? []) as unknown as JournalPromptDto[];
-  if (prompts.some((p) => p.heading?.toLowerCase().includes(q) || p.text?.toLowerCase().includes(q)))
+  if (
+    prompts.some((p) => p.heading?.toLowerCase().includes(q) || p.text?.toLowerCase().includes(q))
+  )
     return true;
   return false;
 }
@@ -182,7 +184,9 @@ function EntryDetailModal({
                 </span>
               )}
               {entry.stressLevel && (
-                <span className="text-xs text-muted-foreground">Stress: {String(entry.stressLevel)}/5</span>
+                <span className="text-xs text-muted-foreground">
+                  Stress: {String(entry.stressLevel)}/5
+                </span>
               )}
             </div>
           )}
