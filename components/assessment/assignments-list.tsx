@@ -2,86 +2,43 @@
  * FILE: components/assessment/assignments-list.tsx
  *
  * PURPOSE:
- *   Renders a grouped list card of the patient's completed assessment
- *   completions. Each row shows a gradient icon tile, assessment title,
- *   completion date, severity badge, and score percentage.
+ *   Renders a grouped list card of the patient's doctor-assigned assessments.
+ *   Each row shows a gradient icon tile, assessment title, the date the doctor
+ *   assigned it, and an optional category pill.
  *
  * LOGIC OVERVIEW:
- *   - Receives items (CompletionResponseDto[]) and onItemClick callback.
- *   - Derives a severity config (gradient + label color) from item.severity.
- *   - Uses item.scorePercentage directly from the DTO (computed server-side).
- *   - Formats completedAt into a short human-readable date.
+ *   - Receives items (AssignedAssessmentItem[]) and onItemClick callback.
+ *   - Formats assignedAt into a short human-readable date.
  *   - Renders rows inside a single grouped Card with Separator dividers.
- *   - Uses item.id (unique completion UUID) as the React key.
+ *   - Uses item.documentId as the React key (Strapi documentId is unique per
+ *     assigned assessment).
  *
  * KEY VARIABLES / PROPS / EXPORTS:
- *   items        — CompletionResponseDto[] to render
+ *   items        — AssignedAssessmentItem[] to render
  *   onItemClick  — called with the clicked item; parent handles navigation
  *
  * DEPENDENCIES:
- *   CompletionResponseDto — from @/sdk/backend-v2
+ *   AssignedAssessmentItem — from @/hooks/assessments/use-assessments-page
  *
- * LAST UPDATED: 2026-04-21 — replace AssignedAssessmentItem with CompletionResponseDto;
- *   use scorePercentage from DTO; use assessmentTitle field for display
+ * LAST UPDATED: 2026-04-28 — switch from CompletionResponseDto (completed
+ *   assessments) to AssignedAssessmentItem (doctor-assigned assessments) so
+ *   the My Assessments tab matches the reference frontned data source.
  */
 "use client";
 
 import { Card, CardContent } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
+import type { AssignedAssessmentItem } from "@/hooks/assessments/use-assessments-page";
 import { cn } from "@/lib/utils";
-import type { CompletionResponseDto } from "@/sdk/backend-v2";
 import { ChevronRight, ClipboardList } from "lucide-react";
 
 interface AssignmentsListProps {
-  items: CompletionResponseDto[];
-  onItemClick: (item: CompletionResponseDto) => void;
+  items: AssignedAssessmentItem[];
+  onItemClick: (item: AssignedAssessmentItem) => void;
 }
 
-type SeverityConfig = {
-  gradient: string;
-  badgeBg: string;
-  badgeText: string;
-  label: string;
-};
-
-function getSeverityConfig(severity: CompletionResponseDto["severity"]): SeverityConfig {
-  if (severity === "minimal")
-    return {
-      gradient: "from-emerald-500 to-teal-600",
-      badgeBg: "bg-emerald-100",
-      badgeText: "text-emerald-700",
-      label: "Minimal",
-    };
-  if (severity === "mild")
-    return {
-      gradient: "from-sky-500 to-blue-600",
-      badgeBg: "bg-sky-100",
-      badgeText: "text-sky-700",
-      label: "Mild",
-    };
-  if (severity === "moderate")
-    return {
-      gradient: "from-amber-400 to-orange-500",
-      badgeBg: "bg-amber-100",
-      badgeText: "text-amber-700",
-      label: "Moderate",
-    };
-  if (severity === "severe")
-    return {
-      gradient: "from-red-500 to-rose-600",
-      badgeBg: "bg-red-100",
-      badgeText: "text-red-700",
-      label: "Severe",
-    };
-  return {
-    gradient: "from-violet-500 to-purple-600",
-    badgeBg: "bg-muted",
-    badgeText: "text-muted-foreground",
-    label: "Completed",
-  };
-}
-
-function formatDate(iso: string): string {
+function formatDate(iso: string | null): string {
+  if (!iso) return "";
   try {
     return new Date(iso).toLocaleDateString(undefined, {
       day: "numeric",
@@ -98,13 +55,12 @@ export function AssignmentsList({ items, onItemClick }: AssignmentsListProps) {
     <Card>
       <CardContent className="py-0 px-3">
         {items.map((item, i) => {
-          const config = getSeverityConfig(item.severity);
-          const pct = item.scorePercentage ?? null;
-          const date = formatDate(item.completedAt);
-          const title = item.assessmentTitle ?? item.assessmentKey;
+          const date = formatDate(item.assignedAt);
+          const title = item.title;
+          const primaryCategory = item.category?.[0] ?? null;
 
           return (
-            <div key={item.id}>
+            <div key={item.documentId}>
               <div
                 className="flex items-start gap-3 py-3 transition-colors hover:bg-muted/50 active:bg-muted rounded-lg cursor-pointer"
                 onClick={() => onItemClick(item)}
@@ -113,40 +69,31 @@ export function AssignmentsList({ items, onItemClick }: AssignmentsListProps) {
                 aria-label={title}
                 onKeyDown={(e) => e.key === "Enter" && onItemClick(item)}
               >
-                {/* Gradient icon tile */}
                 <div
                   className={cn(
                     "relative w-11 h-11 rounded-2xl bg-gradient-to-br flex-shrink-0",
                     "flex items-center justify-center overflow-hidden shadow-sm",
-                    config.gradient,
+                    "from-violet-500 to-purple-600",
                   )}
                 >
                   <div className="absolute -top-2 -right-2 w-7 h-7 rounded-full bg-white/10" />
                   <ClipboardList className="w-5 h-5 text-white" />
                 </div>
 
-                {/* Text block */}
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-medium text-foreground leading-snug truncate">
                     {title}
                   </p>
 
-                  {date && <p className="text-xs text-muted-foreground mt-0.5">{date}</p>}
+                  {date && <p className="text-xs text-muted-foreground mt-0.5">Assigned {date}</p>}
 
-                  {/* Severity + score pills */}
                   <div className="flex items-center gap-1.5 mt-1.5 flex-wrap">
-                    <span
-                      className={cn(
-                        "text-[10px] font-semibold px-2 py-0.5 rounded-full capitalize",
-                        config.badgeBg,
-                        config.badgeText,
-                      )}
-                    >
-                      {config.label}
+                    <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-violet-100 text-violet-700">
+                      Assigned
                     </span>
-                    {pct !== null && (
-                      <span className="text-[10px] font-semibold text-muted-foreground bg-muted px-2 py-0.5 rounded-full">
-                        Score {pct}%
+                    {primaryCategory && (
+                      <span className="text-[10px] font-semibold text-muted-foreground bg-muted px-2 py-0.5 rounded-full capitalize">
+                        {primaryCategory}
                       </span>
                     )}
                   </div>

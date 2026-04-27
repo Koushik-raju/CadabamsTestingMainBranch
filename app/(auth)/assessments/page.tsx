@@ -13,13 +13,13 @@
  *      When category ≠ "All" or search is active, delegates to useFilteredAssessments
  *      which passes search and category to the backend. First item in the unfiltered
  *      list is rendered as a RecommendedAssessmentCard; the rest as AssessmentGridCards.
- *   3. My Assessments tab: fetches the patient's completed assessments via
- *      useAssignedAssessments(leadId), derived from the authenticated user's
- *      lead_id. assessmentTitle is populated server-side — no catalog enrichment.
- *      Shows a count badge on the tab trigger. Delegates rendering to AssignmentsList;
- *      shows AssignmentsSkeleton while loading and AssessmentEmptyState on empty results.
- *   4. Navigation: tapping a browse card routes to /assessments/:id/details;
- *      tapping a completed assessment routes to /assessments/completed/:id.
+ *   3. My Assessments tab: fetches the patient's doctor-assigned assessments via
+ *      useAssignedAssessments(leadId), which reads the LeadContentAssignment row
+ *      via /patient/assigned-content. Shows a count badge on the tab trigger.
+ *      Delegates rendering to AssignmentsList; shows AssignmentsSkeleton while
+ *      loading and AssessmentEmptyState on empty results.
+ *   4. Navigation: tapping a browse card or an assigned assessment routes to
+ *      /assessments/:documentId/details (the assessment landing page).
  *
  * KEY VARIABLES / PROPS / EXPORTS:
  *   activeTab            — controlled Tabs value ('browse' | 'assessments')
@@ -29,7 +29,7 @@
  *   allAssessments       — flattened SWR pages from useAssessments()
  *   browseItems          — allAssessments[1..] (unfiltered infinite-scroll list)
  *   filteredItems        — server-filtered results (search/category via API)
- *   assignedAssessments  — completions from useAssignedAssessments (assessmentTitle populated server-side)
+ *   assignedAssessments  — doctor-assigned assessments from useAssignedAssessments (AssignedAssessmentItem[])
  *   dynamicCategories    — category pill list derived from loaded assessments
  *   AssessmentsPage      — default export, the full page component
  *
@@ -46,8 +46,9 @@
  *   AssessmentEmptyState        — empty-state display
  *   categoryMap                 — maps category string to icon + metadata
  *
- * LAST UPDATED: 2026-04-24 — remove sort/duration filters; replace filter sheet with
- *   horizontal-scrollable category pill row below search bar
+ * LAST UPDATED: 2026-04-28 — My Assessments tab now shows doctor-assigned
+ *   assessments (LeadContentAssignment) instead of completions, matching the
+ *   reference frontned "Assigned Assessments" tab.
  */
 "use client";
 
@@ -65,13 +66,13 @@ import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   type AssessmentItem,
+  type AssignedAssessmentItem,
   getDynamicCategories,
   useAssessments,
   useAssignedAssessments,
   useFilteredAssessments,
 } from "@/hooks/assessments/use-assessments-page";
 import { useAuth } from "@/hooks/shared/auth/use-auth";
-import type { CompletionResponseDto } from "@/sdk/backend-v2";
 import { LayoutGrid, Search, X } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useState } from "react";
@@ -153,8 +154,12 @@ export default function AssessmentsPage() {
     };
   }, [activeTab, isLoadingBrowse, hasMore, setSize]);
 
-  const handleOpenAssessment = (item: CompletionResponseDto) =>
-    router.push(`/assessments/completed/${item.id}`);
+  // Tapping an assigned assessment takes the patient to the assessment landing
+  // page (where they can start it), matching the reference frontned flow which
+  // routes to /assessment/form?id={documentId}. Here the equivalent landing
+  // page is /assessments/{documentId}/details.
+  const handleOpenAssessment = (item: AssignedAssessmentItem) =>
+    router.push(`/assessments/${item.documentId}/details`);
 
   const handleBrowseAssessment = (assessment: AssessmentItem) =>
     router.push(`/assessments/${assessment.id}/details`);
@@ -291,7 +296,7 @@ export default function AssessmentsPage() {
 
         {/* ── My Assessments tab ──────────────────────────────────────────── */}
         <TabsContent value="assessments" className="mt-0">
-          <p className="text-sm text-muted-foreground my-4">Your completed assessments.</p>
+          <p className="text-sm text-muted-foreground my-4">Assessments assigned to you.</p>
           {isLoadingAssignments ? (
             <AssignmentsSkeleton />
           ) : (assignedAssessments?.length ?? 0) > 0 ? (
