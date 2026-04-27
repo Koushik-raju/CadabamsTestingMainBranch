@@ -101,7 +101,7 @@ export function FeaturedJourneyCarousel({
 
   return (
     <div>
-      <div className="overflow-hidden -mx-4 px-4" ref={emblaRef}>
+      <div className="overflow-hidden -mx-4 px-4 gap-x-4" ref={emblaRef}>
         <div className="flex gap-3 touch-pan-y">
           {slides.map((s) => (
             <div key={s.key} className="min-w-0 flex-[0_0_100%]">
@@ -120,7 +120,7 @@ export function FeaturedJourneyCarousel({
         </div>
       </div>
       {slides.length > 1 && (
-        <div className="flex justify-center gap-1.5 mt-3">
+        <div className="flex justify-center gap-1.5 mt-3 gap-x-4">
           {slides.map((_, i) => (
             <button
               key={i}
