@@ -17,19 +17,23 @@
  *   4. `modal` holds the current row's { title, subtitle, body }; a single
  *      MarkdownModal is shared across all four sections to keep the state
  *      surface small.
+ *   5. GrowthPageInner uses useSearchParams() and must sit inside a Suspense
+ *      boundary. GrowthPage is the thin shell that provides that boundary.
  *
  * KEY VARIABLES / PROPS / EXPORTS:
- *   Default-export GrowthPage — Next.js App Router page component.
+ *   Default-export GrowthPage — Next.js App Router page component (Suspense shell).
+ *   GrowthPageInner — client component that owns all state and useSearchParams.
  *
  * DEPENDENCIES:
  *   useGrowthWeek, useGrowthDay (hooks/growth/use-growth)
  *   WeeklyCalendar, DayFeed, MarkdownModal (components/growth/*)
  *   PageHeader (components/shared/navigation/page-header)
  *
- * LAST UPDATED: 2026-04-23 — initial implementation
+ * LAST UPDATED: 2026-04-27 — wrap useSearchParams in Suspense to fix build error
  */
 "use client";
 
+import { Suspense, useEffect, useRef, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { DayFeed, type ModalPayload } from "@/components/growth/day-feed";
 import { MarkdownModal } from "@/components/growth/markdown-modal";
@@ -41,7 +45,6 @@ import {
   useGrowthLatestActiveDate,
   useGrowthWeek,
 } from "@/hooks/growth/use-growth";
-import { useEffect, useRef, useState } from "react";
 
 function shiftIso(iso: string, days: number): string {
   const d = new Date(`${iso}T00:00:00.000Z`);
@@ -51,7 +54,9 @@ function shiftIso(iso: string, days: number): string {
 
 const ISO_DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
 
-export default function GrowthPage() {
+/* useSearchParams() requires a Suspense boundary — this inner component
+   owns all state so the boundary wraps the entire interactive surface. */
+function GrowthPageInner() {
   const today = todayIso();
   const searchParams = useSearchParams();
   // `?date=YYYY-MM-DD` lets external callers (the home widget, deep links)
@@ -126,5 +131,13 @@ export default function GrowthPage() {
         body={modal?.body ?? null}
       />
     </div>
+  );
+}
+
+export default function GrowthPage() {
+  return (
+    <Suspense>
+      <GrowthPageInner />
+    </Suspense>
   );
 }
