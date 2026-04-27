@@ -166,6 +166,19 @@ async function replaceCache(journeyId: string, enrollment: PatientJourneyRespons
   // Enrollment list and gamification may have changed — refresh in background.
   globalMutate(enrolledJourneysKey());
   globalMutate(gamificationKey());
+  // Growth page reads JourneyDayProgress + JourneyTaskCompletion. A day or
+  // task completion mutates those, so every cached growth-week / growth-day
+  // / growth-latest-active-date entry must refetch — otherwise the user
+  // sees a stale Growth feed after just finishing a journey day.
+  globalMutate(
+    (key) =>
+      Array.isArray(key) &&
+      typeof key[0] === "string" &&
+      (key[0] === "growth-week" || key[0] === "growth-day"),
+    undefined,
+    { revalidate: true },
+  );
+  globalMutate("growth-latest-active-date");
 }
 
 /**
