@@ -27,17 +27,17 @@
  * LAST UPDATED: 2026-04-27 — added date-range header + activity dots
  *   sized for visibility + footer summary line.
  */
-'use client';
+"use client";
 
-import Link from 'next/link';
-import { Sparkles } from 'lucide-react';
-import { Card, CardContent } from '@/components/ui/card';
-import { Skeleton } from '@/components/ui/skeleton';
-import { cn } from '@/lib/utils';
-import { useAuth } from '@/hooks/use-auth';
-import { todayIso, useGrowthWeek } from '@/hooks/growth/use-growth';
+import { Card, CardContent } from "@/components/ui/card";
+import { Skeleton } from "@/components/ui/skeleton";
+import { todayIso, useGrowthWeek } from "@/hooks/growth/use-growth";
+import { useAuth } from "@/hooks/use-auth";
+import { cn } from "@/lib/utils";
+import { Sparkles } from "lucide-react";
+import Link from "next/link";
 
-const DOW_LABELS = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
+const DOW_LABELS = ["M", "T", "W", "T", "F", "S", "S"];
 
 /** Format the week range as "Apr 27 – May 3". The ISO strings from the
  *  backend are already user-tz local dates so we render them in UTC to
@@ -54,7 +54,7 @@ function formatRange(start?: string, end?: string): string {
 export function GrowthWidget() {
   const today = todayIso();
   const { user } = useAuth();
-  const firstName = ((user?.name as string | undefined) ?? '').split(' ')[0];
+  const firstName = ((user?.name as string | undefined) ?? "").split(" ")[0];
   const { week, isLoading } = useGrowthWeek(today);
 
   const activeDays = week?.days.filter(
@@ -80,12 +80,10 @@ export function GrowthWidget() {
             {firstName ? (
               <>
                 {firstName}
-                <span className="text-muted-foreground font-semibold">
-                  &apos;s growth
-                </span>
+                <span className="text-muted-foreground font-semibold">&apos;s growth</span>
               </>
             ) : (
-              'Your Growth'
+              "Your Growth"
             )}
           </h3>
         </div>
@@ -118,68 +116,60 @@ export function GrowthWidget() {
           </div>
 
           <div className="grid grid-cols-7 gap-1">
-            {(isLoading || !week
-              ? (Array.from({ length: 7 }) as undefined[])
-              : week.days
-            ).map((d, i) => {
-              const iso = d?.date;
-              const isToday = iso === today;
-              const active =
-                d &&
-                (d.hasJourney || d.hasJournal || d.hasAssessment || d.hasChatSummary);
-              const cell = (
-                <div className="flex flex-col items-center gap-1 py-1">
-                  <span
-                    className={cn(
-                      'text-[10px] font-semibold uppercase tracking-wider',
-                      isToday ? 'text-primary' : 'text-muted-foreground',
-                    )}
-                  >
-                    {DOW_LABELS[i]}
-                  </span>
-                  {iso ? (
+            {(isLoading || !week ? (Array.from({ length: 7 }) as undefined[]) : week.days).map(
+              (d, i) => {
+                const iso = d?.date;
+                const isToday = iso === today;
+                const active =
+                  d && (d.hasJourney || d.hasJournal || d.hasAssessment || d.hasChatSummary);
+                const cell = (
+                  <div className="flex flex-col items-center gap-1 py-1">
                     <span
                       className={cn(
-                        'w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold',
-                        isToday
-                          ? 'bg-primary text-primary-foreground'
-                          : active
-                          ? 'bg-primary/10 text-primary'
-                          : 'text-foreground',
+                        "text-[10px] font-semibold uppercase tracking-wider",
+                        isToday ? "text-primary" : "text-muted-foreground",
                       )}
                     >
-                      {Number(iso.slice(8, 10))}
+                      {DOW_LABELS[i]}
                     </span>
-                  ) : (
-                    <Skeleton className="h-8 w-8 rounded-full" />
-                  )}
-                  {/* 6px dot under active days. The previous 4px dot was
-                      almost invisible against the surrounding paddings. */}
-                  <span
-                    className={cn(
-                      'w-1.5 h-1.5 rounded-full',
-                      active && !isToday
-                        ? 'bg-primary'
-                        : isToday && active
-                        ? 'bg-primary'
-                        : 'bg-transparent',
+                    {iso ? (
+                      <span
+                        className={cn(
+                          "w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold",
+                          isToday
+                            ? "bg-primary text-primary-foreground"
+                            : active
+                              ? "bg-primary/10 text-primary"
+                              : "text-foreground",
+                        )}
+                      >
+                        {Number(iso.slice(8, 10))}
+                      </span>
+                    ) : (
+                      <Skeleton className="h-8 w-8 rounded-full" />
                     )}
-                  />
-                </div>
-              );
+                    <span
+                      className={cn(
+                        "w-1 h-1 rounded-full",
+                        active && !isToday ? "bg-primary" : "bg-transparent",
+                      )}
+                    />
+                  </div>
+                );
 
-              return iso ? (
-                <Link
-                  key={iso}
-                  href={`/growth?date=${iso}`}
-                  className="rounded-lg transition-colors hover:bg-muted/50 active:bg-muted"
-                >
-                  {cell}
-                </Link>
-              ) : (
-                <div key={i}>{cell}</div>
-              );
-            })}
+                return iso ? (
+                  <Link
+                    key={iso}
+                    href={`/growth?date=${iso}`}
+                    className="rounded-lg transition-colors hover:bg-muted/50 active:bg-muted"
+                  >
+                    {cell}
+                  </Link>
+                ) : (
+                  <div key={i}>{cell}</div>
+                );
+              },
+            )}
           </div>
 
           {/* Footer summary — reassures that data exists even when no dot

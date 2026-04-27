@@ -112,21 +112,21 @@ export interface GrowthLatestActiveDate {
  */
 function browserTz(): string {
   try {
-    return Intl.DateTimeFormat().resolvedOptions().timeZone || 'Asia/Kolkata';
+    return Intl.DateTimeFormat().resolvedOptions().timeZone || "Asia/Kolkata";
   } catch {
-    return 'Asia/Kolkata';
+    return "Asia/Kolkata";
   }
 }
 
 /** Today as a YYYY-MM-DD string in the browser's local timezone. */
 export function todayIso(): string {
-  const parts = new Intl.DateTimeFormat('en-CA', {
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit',
+  const parts = new Intl.DateTimeFormat("en-CA", {
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
   }).formatToParts(new Date());
   const p: Record<string, string> = {};
-  for (const x of parts) if (x.type !== 'literal') p[x.type] = x.value;
+  for (const x of parts) if (x.type !== "literal") p[x.type] = x.value;
   return `${p.year}-${p.month}-${p.day}`;
 }
 

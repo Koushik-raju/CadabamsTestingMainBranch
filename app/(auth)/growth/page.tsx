@@ -33,8 +33,6 @@
  */
 "use client";
 
-import { Suspense, useEffect, useRef, useState } from "react";
-import { useSearchParams } from "next/navigation";
 import { DayFeed, type ModalPayload } from "@/components/growth/day-feed";
 import { MarkdownModal } from "@/components/growth/markdown-modal";
 import { WeeklyCalendar } from "@/components/growth/weekly-calendar";
@@ -45,6 +43,8 @@ import {
   useGrowthLatestActiveDate,
   useGrowthWeek,
 } from "@/hooks/growth/use-growth";
+import { useSearchParams } from "next/navigation";
+import { Suspense, useEffect, useRef, useState } from "react";
 
 function shiftIso(iso: string, days: number): string {
   const d = new Date(`${iso}T00:00:00.000Z`);
@@ -62,7 +62,7 @@ function GrowthPageInner() {
   // `?date=YYYY-MM-DD` lets external callers (the home widget, deep links)
   // hand off a specific day and skip the auto-jump. Invalid values are
   // silently ignored so arbitrary query strings never break navigation.
-  const dateParam = searchParams?.get('date') ?? null;
+  const dateParam = searchParams?.get("date") ?? null;
   const initialDate = dateParam && ISO_DATE_RE.test(dateParam) ? dateParam : today;
 
   const [selectedDate, setSelectedDate] = useState<string>(initialDate);
