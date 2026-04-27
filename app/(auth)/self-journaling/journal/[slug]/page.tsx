@@ -38,6 +38,7 @@
 
 import { DateEntriesCard } from "@/components/journal/date-entries-card";
 import type { DisplayEntry } from "@/components/journal/date-entries-card";
+import { JournalEntrySheet } from "@/components/journal/journal-entry-sheet";
 import { WeekDateStrip } from "@/components/journal/week-date-strip";
 import { PageHeader } from "@/components/shared/navigation/page-header";
 import { Badge } from "@/components/ui/badge";
@@ -58,7 +59,7 @@ import { cn } from "@/lib/utils";
 import { BookOpen, CalendarDays, Clock, Flame, Pencil } from "lucide-react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { use, useMemo, useState } from "react";
+import { use, useCallback, useMemo, useState } from "react";
 
 // ---------------------------------------------------------------------------
 // Adapter: SubJournalEntryDto → DisplayEntry
@@ -70,7 +71,11 @@ function toDisplayEntry(entry: SubJournalEntryDto): DisplayEntry {
     id: entry.id,
     title: entry.title ?? null,
     preview: firstPrompt?.text ?? firstPrompt?.heading ?? entry.entry ?? null,
-    time: new Date(entry.createdAt).toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit", hour12: true }),
+    time: new Date(entry.createdAt).toLocaleTimeString("en-US", {
+      hour: "numeric",
+      minute: "2-digit",
+      hour12: true,
+    }),
   };
 }
 
@@ -90,13 +95,16 @@ export default function JournalDetailPage({ params }: { params: Promise<{ slug: 
   const { entries, isLoading: entriesLoading } = useSubJournalEntries(slug, subscribed);
 
   const [isSubscribing, setIsSubscribing] = useState(false);
+  const [sheetEntry, setSheetEntry] = useState<SubJournalEntryDto | null>(null);
 
   const TODAY_STR = toLocalDateStr(new Date());
   const [selectedDate, setSelectedDate] = useState(TODAY_STR);
   const [weekOffset, setWeekOffset] = useState(0);
 
   const isLoading = subLoading || subListLoading;
-  const { gradient, Icon } = sub ? getJournalVisual(sub.title) : { gradient: "from-violet-500 to-purple-600", Icon: BookOpen };
+  const { gradient, Icon } = sub
+    ? getJournalVisual(sub.title)
+    : { gradient: "from-violet-500 to-purple-600", Icon: BookOpen };
 
   /*
    * Build date strip. SubJournalEntryDto has createdAt (not journaledAt); using
@@ -108,7 +116,8 @@ export default function JournalDetailPage({ params }: { params: Promise<{ slug: 
   );
 
   const weekDays = useMemo(
-    () => buildWeekBaseDays(weekOffset).map((d) => ({ ...d, hasEntries: entryDateSet.has(d.dateStr) })),
+    () =>
+      buildWeekBaseDays(weekOffset).map((d) => ({ ...d, hasEntries: entryDateSet.has(d.dateStr) })),
     [weekOffset, entryDateSet],
   );
 
@@ -126,17 +135,35 @@ export default function JournalDetailPage({ params }: { params: Promise<{ slug: 
     selectedDate === TODAY_STR
       ? "Today"
       : new Date(selectedDate + "T00:00:00").toLocaleDateString("en-US", {
-          weekday: "long", month: "long", day: "numeric",
+          weekday: "long",
+          month: "long",
+          day: "numeric",
         });
+
+  const handleEntryClick = useCallback(
+    (display: DisplayEntry) => {
+      const full = selectedEntries.find((e) => e.id === display.id) ?? null;
+      setSheetEntry(full);
+    },
+    [selectedEntries],
+  );
 
   const handleSubscribe = async () => {
     setIsSubscribing(true);
-    try { await subscribeToJournal(slug); } finally { setIsSubscribing(false); }
+    try {
+      await subscribeToJournal(slug);
+    } finally {
+      setIsSubscribing(false);
+    }
   };
 
   const handleUnsubscribe = async () => {
     setIsSubscribing(true);
-    try { await unsubscribeFromJournal(slug); } finally { setIsSubscribing(false); }
+    try {
+      await unsubscribeFromJournal(slug);
+    } finally {
+      setIsSubscribing(false);
+    }
   };
 
   // ── Loading ──
@@ -170,9 +197,13 @@ export default function JournalDetailPage({ params }: { params: Promise<{ slug: 
           </div>
           <div>
             <p className="font-semibold text-foreground">Journal not found</p>
-            <p className="text-sm text-muted-foreground mt-1">This journal may have been removed.</p>
+            <p className="text-sm text-muted-foreground mt-1">
+              This journal may have been removed.
+            </p>
           </div>
-          <Button variant="outline" onClick={() => router.push("/self-journaling")}>Back to journals</Button>
+          <Button variant="outline" onClick={() => router.push("/self-journaling")}>
+            Back to journals
+          </Button>
         </div>
       </div>
     );
@@ -203,7 +234,12 @@ export default function JournalDetailPage({ params }: { params: Promise<{ slug: 
               <Image src={sub.icon} alt={sub.title} fill className="object-cover" sizes="100vw" />
             </div>
           ) : (
-            <div className={cn("relative w-full h-36 rounded-2xl bg-gradient-to-br overflow-hidden shadow-sm", gradient)}>
+            <div
+              className={cn(
+                "relative w-full h-36 rounded-2xl bg-gradient-to-br overflow-hidden shadow-sm",
+                gradient,
+              )}
+            >
               <div className="absolute -top-8 -right-8 w-40 h-40 rounded-full bg-white/10" />
               <div className="absolute -bottom-12 -left-6 w-52 h-52 rounded-full bg-white/5" />
               <div className="absolute inset-0 flex items-center justify-center">
@@ -227,7 +263,9 @@ export default function JournalDetailPage({ params }: { params: Promise<{ slug: 
               </div>
             )}
             {sub.tags.map((tag) => (
-              <Badge key={tag} variant="secondary" className="rounded-full text-xs">{tag}</Badge>
+              <Badge key={tag} variant="secondary" className="rounded-full text-xs">
+                {tag}
+              </Badge>
             ))}
           </div>
 
@@ -250,9 +288,23 @@ export default function JournalDetailPage({ params }: { params: Promise<{ slug: 
               isLoading={entriesLoading}
               isToday={selectedDate === TODAY_STR}
               onWriteNew={() => router.push(`/self-journaling/new/${encodeURIComponent(slug)}`)}
+              onEntryClick={handleEntryClick}
             />
           </section>
         </div>
+
+        {/* Entry detail sheet */}
+        <JournalEntrySheet
+          open={!!sheetEntry}
+          onClose={() => setSheetEntry(null)}
+          journalName={sub.title}
+          journalIcon={sub.icon ?? null}
+          title={sheetEntry?.title ?? null}
+          prompts={sheetEntry?.prompts ?? undefined}
+          plainText={sheetEntry?.entry ?? null}
+          dateLabel={selectedLabel}
+          onJournal={() => router.push(`/self-journaling/new/${encodeURIComponent(slug)}`)}
+        />
 
         {/* Fixed CTA */}
         <div className="fixed bottom-0 left-0 right-0 px-4 pb-10 pt-3 bg-background/95 backdrop-blur-sm">
@@ -281,7 +333,12 @@ export default function JournalDetailPage({ params }: { params: Promise<{ slug: 
             <Image src={sub.icon} alt={sub.title} fill className="object-cover" sizes="100vw" />
           </div>
         ) : (
-          <div className={cn("relative w-full h-48 rounded-2xl bg-gradient-to-br overflow-hidden shadow-sm", gradient)}>
+          <div
+            className={cn(
+              "relative w-full h-48 rounded-2xl bg-gradient-to-br overflow-hidden shadow-sm",
+              gradient,
+            )}
+          >
             <div className="absolute -top-8 -right-8 w-40 h-40 rounded-full bg-white/10" />
             <div className="absolute -bottom-12 -left-6 w-52 h-52 rounded-full bg-white/5" />
             <div className="absolute inset-0 flex items-center justify-center">
@@ -305,14 +362,18 @@ export default function JournalDetailPage({ params }: { params: Promise<{ slug: 
             </div>
           )}
           {sub.tags.map((tag) => (
-            <Badge key={tag} variant="secondary" className="rounded-full text-xs">{tag}</Badge>
+            <Badge key={tag} variant="secondary" className="rounded-full text-xs">
+              {tag}
+            </Badge>
           ))}
         </div>
 
         <div>
           <h2 className="text-xl font-bold text-foreground leading-snug mb-3">{sub.title}</h2>
           {sub.description && (
-            <p className="text-sm text-muted-foreground whitespace-pre-wrap leading-relaxed">{sub.description}</p>
+            <p className="text-sm text-muted-foreground whitespace-pre-wrap leading-relaxed">
+              {sub.description}
+            </p>
           )}
         </div>
       </div>

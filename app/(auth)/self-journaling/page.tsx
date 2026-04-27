@@ -33,9 +33,12 @@
 
 import { DateEntriesCard } from "@/components/journal/date-entries-card";
 import type { DisplayEntry } from "@/components/journal/date-entries-card";
+import { JournalEntrySheet } from "@/components/journal/journal-entry-sheet";
 import { WeekDateStrip } from "@/components/journal/week-date-strip";
 import { PageHeader } from "@/components/shared/navigation/page-header";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useSelfJournaling } from "@/hooks/self-journaling/use-self-journaling";
+import type { JournalEntryResponseDto } from "@/hooks/self-journaling/use-self-journaling";
 import { extractString, useJournalingCategories } from "@/hooks/use-journaling";
 import type { JournalingResponseDto } from "@/hooks/use-journaling";
 import {
@@ -43,12 +46,11 @@ import {
   useJournalingSubscriptions,
   useSubJournalDetail,
 } from "@/hooks/use-journaling-subscriptions";
-import { useSelfJournaling } from "@/hooks/self-journaling/use-self-journaling";
-import type { JournalEntryResponseDto } from "@/hooks/self-journaling/use-self-journaling";
 import { buildWeekBaseDays, toLocalDateStr } from "@/lib/journal-utils";
 import { getJournalVisual } from "@/lib/journal-visual";
 import { cn } from "@/lib/utils";
-import { BookOpen, Pencil } from "lucide-react";
+import { Pencil } from "lucide-react";
+import { useCallback } from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
@@ -74,19 +76,32 @@ function JourneyCard({
     >
       {sub?.icon ? (
         <div className="h-20 relative overflow-hidden">
-          <Image src={sub.icon} alt={subscription.title} fill className="object-cover" sizes="144px" />
+          <Image
+            src={sub.icon}
+            alt={subscription.title}
+            fill
+            className="object-cover"
+            sizes="144px"
+          />
         </div>
       ) : detailLoading ? (
         <Skeleton className="h-20 w-full rounded-none" />
       ) : (
-        <div className={cn("h-20 bg-gradient-to-br flex items-center justify-center relative overflow-hidden", gradient)}>
+        <div
+          className={cn(
+            "h-20 bg-gradient-to-br flex items-center justify-center relative overflow-hidden",
+            gradient,
+          )}
+        >
           <div className="absolute -top-4 -right-4 w-16 h-16 rounded-full bg-white/10" />
           <div className="absolute -bottom-5 -left-3 w-20 h-20 rounded-full bg-white/5" />
           <Icon className="w-8 h-8 text-white/90 relative z-10" />
         </div>
       )}
       <div className="p-3">
-        <p className="text-sm font-medium text-foreground line-clamp-2 leading-snug mb-1">{subscription.title}</p>
+        <p className="text-sm font-medium text-foreground line-clamp-2 leading-snug mb-1">
+          {subscription.title}
+        </p>
         <p className="text-[10px] text-muted-foreground">Continue →</p>
       </div>
     </button>
@@ -97,7 +112,10 @@ function JourneyCard({
 // Category Card
 // ---------------------------------------------------------------------------
 
-function CategoryCard({ category, onClick }: { category: JournalingResponseDto; onClick: () => void }) {
+function CategoryCard({
+  category,
+  onClick,
+}: { category: JournalingResponseDto; onClick: () => void }) {
   const { gradient, Icon } = getJournalVisual(category.title);
   const subCount = category.subJournalings?.filter((s) => s.status === "PUBLISHED").length ?? 0;
 
@@ -108,18 +126,33 @@ function CategoryCard({ category, onClick }: { category: JournalingResponseDto; 
     >
       {extractString(category.icon) ? (
         <div className="h-20 relative overflow-hidden">
-          <Image src={extractString(category.icon)} alt={category.title} fill className="object-cover" sizes="144px" />
+          <Image
+            src={extractString(category.icon)}
+            alt={category.title}
+            fill
+            className="object-cover"
+            sizes="144px"
+          />
         </div>
       ) : (
-        <div className={cn("h-20 bg-gradient-to-br flex items-center justify-center relative overflow-hidden", gradient)}>
+        <div
+          className={cn(
+            "h-20 bg-gradient-to-br flex items-center justify-center relative overflow-hidden",
+            gradient,
+          )}
+        >
           <div className="absolute -top-4 -right-4 w-16 h-16 rounded-full bg-white/10" />
           <div className="absolute -bottom-5 -left-3 w-20 h-20 rounded-full bg-white/5" />
           <Icon className="w-8 h-8 text-white/90 relative z-10" />
         </div>
       )}
       <div className="p-3">
-        <p className="text-sm font-medium text-foreground line-clamp-2 leading-snug mb-1">{category.title}</p>
-        <p className="text-[10px] text-muted-foreground">{subCount} {subCount === 1 ? "journal" : "journals"}</p>
+        <p className="text-sm font-medium text-foreground line-clamp-2 leading-snug mb-1">
+          {category.title}
+        </p>
+        <p className="text-[10px] text-muted-foreground">
+          {subCount} {subCount === 1 ? "journal" : "journals"}
+        </p>
       </div>
     </button>
   );
@@ -153,7 +186,11 @@ function toDisplayEntry(entry: JournalEntryResponseDto): DisplayEntry {
     id: entry.id,
     title: extractString(entry.title) || null,
     preview: (firstPrompt?.text ?? firstPrompt?.heading ?? extractString(entry.entryText)) || null,
-    time: new Date(entry.createdAt).toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit", hour12: true }),
+    time: new Date(entry.createdAt).toLocaleTimeString("en-US", {
+      hour: "numeric",
+      minute: "2-digit",
+      hour12: true,
+    }),
     promptCount: prompts?.length ?? 0,
   };
 }
@@ -164,13 +201,14 @@ function toDisplayEntry(entry: JournalEntryResponseDto): DisplayEntry {
 
 export default function JournalHomePage() {
   const router = useRouter();
-  const { categories, isLoading: categoriesLoading } = useJournalingCategories();
+  const { categories, subJournalings, isLoading: categoriesLoading } = useJournalingCategories();
   const { entries, isLoading: entriesLoading } = useSelfJournaling();
   const { subscriptions, isLoading: subscriptionsLoading } = useJournalingSubscriptions();
 
   const TODAY_STR = toLocalDateStr(new Date());
   const [selectedDate, setSelectedDate] = useState(TODAY_STR);
   const [weekOffset, setWeekOffset] = useState(0);
+  const [sheetEntry, setSheetEntry] = useState<JournalEntryResponseDto | null>(null);
 
   /*
    * Show categories that have at least one PUBLISHED sub-journaling.
@@ -191,7 +229,8 @@ export default function JournalHomePage() {
   );
 
   const weekDays = useMemo(
-    () => buildWeekBaseDays(weekOffset).map((d) => ({ ...d, hasEntries: entryDateSet.has(d.dateStr) })),
+    () =>
+      buildWeekBaseDays(weekOffset).map((d) => ({ ...d, hasEntries: entryDateSet.has(d.dateStr) })),
     [weekOffset, entryDateSet],
   );
 
@@ -205,16 +244,51 @@ export default function JournalHomePage() {
 
   const displayEntries = useMemo(() => selectedEntries.map(toDisplayEntry), [selectedEntries]);
 
+  /*
+   * When an entry row is tapped, find the full JournalEntryResponseDto by id and
+   * open the detail sheet. The sheet shows the journal name (resolved from
+   * subJournalings fetched alongside categories) + full prompts/text.
+   */
+  const handleEntryClick = useCallback(
+    (display: DisplayEntry) => {
+      const full = selectedEntries.find((e) => e.id === display.id) ?? null;
+      setSheetEntry(full);
+    },
+    [selectedEntries],
+  );
+
+  /*
+   * subJournalingId is not yet in the SDK's JournalEntryResponseDto type — it
+   * exists in the DB response but was omitted from the response DTO Swagger
+   * decorator. Cast to unknown to access it until the DTO is updated + SDK regen.
+   */
+  const sheetSubId = sheetEntry
+    ? extractString((sheetEntry as Record<string, unknown>).subJournalingId)
+    : "";
+  const sheetSub = sheetSubId ? subJournalings.find((s) => s.id === sheetSubId) : null;
+  const sheetJournalName = sheetSub?.title ?? (sheetSubId ? "Journal Entry" : "Free Flow");
+  const sheetJournalSlug = sheetSub?.slug ?? undefined;
+
+  const sheetPrompts = sheetEntry
+    ? (sheetEntry.prompts as Array<{ heading?: string; text?: string }> | undefined)
+    : undefined;
+
   const selectedLabel =
     selectedDate === TODAY_STR
       ? "Today"
       : new Date(selectedDate + "T00:00:00").toLocaleDateString("en-US", {
-          weekday: "long", month: "long", day: "numeric",
+          weekday: "long",
+          month: "long",
+          day: "numeric",
         });
 
   return (
     <div className="flex flex-col min-h-screen bg-background pb-24">
-      <PageHeader title="Journal" subtitle="Your safe space for thoughts and feelings." hardBack="/home" />
+      <PageHeader
+        title="Journal"
+        subtitle="Your safe space for thoughts and feelings."
+        hardBack="/home"
+      />
 
       <div className="flex flex-col gap-6 mt-4">
         {/* ── Free Flow hero ── */}
@@ -233,7 +307,10 @@ export default function JournalHomePage() {
               <div className="w-12 h-12 bg-white rounded-full flex items-center justify-center flex-shrink-0 z-10 shadow-md">
                 <Pencil className="w-5 h-5 text-primary" />
               </div>
-              <Pencil className="absolute right-[-20px] bottom-[-20px] text-white/5 rotate-12 pointer-events-none" size={120} />
+              <Pencil
+                className="absolute right-[-20px] bottom-[-20px] text-white/5 rotate-12 pointer-events-none"
+                size={120}
+              />
             </div>
           </button>
         </div>
@@ -243,13 +320,23 @@ export default function JournalHomePage() {
           <section>
             <SectionHeader
               title="Continue Journey"
-              onViewAll={subscriptions.length > 0 ? () => router.push("/self-journaling/subscriptions") : undefined}
+              onViewAll={
+                subscriptions.length > 0
+                  ? () => router.push("/self-journaling/subscriptions")
+                  : undefined
+              }
             />
             <div className="flex gap-3 overflow-x-auto px-4 pb-1 scrollbar-none">
               {subscriptionsLoading
-                ? [...Array(3)].map((_, i) => <Skeleton key={i} className="flex-shrink-0 w-36 h-36 rounded-2xl" />)
+                ? [...Array(3)].map((_, i) => (
+                    <Skeleton key={i} className="flex-shrink-0 w-36 h-36 rounded-2xl" />
+                  ))
                 : subscriptions.map((sub) => (
-                    <JourneyCard key={sub.id} subscription={sub} onClick={() => router.push(`/self-journaling/journal/${sub.slug}`)} />
+                    <JourneyCard
+                      key={sub.id}
+                      subscription={sub}
+                      onClick={() => router.push(`/self-journaling/journal/${sub.slug}`)}
+                    />
                   ))}
             </div>
           </section>
@@ -257,12 +344,21 @@ export default function JournalHomePage() {
 
         {/* ── Guided Reflection ── */}
         <section>
-          <SectionHeader title="Guided Reflection" onViewAll={() => router.push("/self-journaling/categories")} />
+          <SectionHeader
+            title="Guided Reflection"
+            onViewAll={() => router.push("/self-journaling/categories")}
+          />
           <div className="flex gap-3 overflow-x-auto px-4 pb-1 scrollbar-none">
             {categoriesLoading
-              ? [...Array(3)].map((_, i) => <Skeleton key={i} className="flex-shrink-0 w-36 h-36 rounded-2xl" />)
+              ? [...Array(3)].map((_, i) => (
+                  <Skeleton key={i} className="flex-shrink-0 w-36 h-36 rounded-2xl" />
+                ))
               : publishedCategories.map((cat) => (
-                  <CategoryCard key={cat.id} category={cat} onClick={() => router.push(`/self-journaling/categories/${cat.id}`)} />
+                  <CategoryCard
+                    key={cat.id}
+                    category={cat}
+                    onClick={() => router.push(`/self-journaling/categories/${cat.id}`)}
+                  />
                 ))}
           </div>
         </section>
@@ -284,10 +380,29 @@ export default function JournalHomePage() {
             isLoading={entriesLoading}
             isToday={selectedDate === TODAY_STR}
             onWriteNew={() => router.push("/self-journaling/new")}
-            onEntryClick={() => router.push(`/self-journaling/${selectedDate}`)}
+            onEntryClick={handleEntryClick}
           />
         </section>
       </div>
+
+      {/* ── Entry detail sheet ── */}
+      <JournalEntrySheet
+        open={!!sheetEntry}
+        onClose={() => setSheetEntry(null)}
+        journalName={sheetJournalName}
+        journalIcon={null}
+        title={sheetEntry ? (extractString(sheetEntry.title) || null) : null}
+        prompts={sheetPrompts}
+        plainText={sheetEntry ? (extractString(sheetEntry.entryText) || null) : null}
+        dateLabel={selectedLabel}
+        onJournal={() =>
+          router.push(
+            sheetJournalSlug
+              ? `/self-journaling/new/${encodeURIComponent(sheetJournalSlug)}`
+              : "/self-journaling/new",
+          )
+        }
+      />
     </div>
   );
 }
