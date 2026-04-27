@@ -77,22 +77,25 @@ If you open or create a file without a header: STOP — add the header first, re
 
 ---
 
-## MCP Tools: code-review-graph (USE FIRST)
+## Context Discipline — Read Sparingly
 
-This project has a knowledge graph. **Always use the graph MCP tools BEFORE Grep/Glob/Read.** Faster, cheaper, gives structural context (callers, dependents, test coverage) that file scanning cannot.
+**Context window is the scarcest resource.** Default to reading less.
 
-| Tool | Use when |
-|---|---|
-| `semantic_search_nodes` | Finding functions/classes by name or keyword |
-| `query_graph` | Tracing callers, callees, imports, tests, dependencies |
-| `get_impact_radius` | Understanding blast radius of a change |
-| `detect_changes` | Reviewing code changes — risk-scored analysis |
-| `get_review_context` | Source snippets for review — token-efficient |
-| `get_affected_flows` | Execution paths impacted |
-| `get_architecture_overview` | High-level codebase structure |
-| `refactor_tool` | Planning renames, finding dead code |
+**⛔ DO NOT START exploring without a user-provided starting point.** On any new task, first ask the user: "Where should I start? — file path, route, component, hook, or error." Then expand **one pointer at a time**: read at the pointer → identify the single next concrete reference → follow that one → stop and re-evaluate. Never fan out into "related" files. If unsure where to go next, ask.
 
-Graph auto-updates on file changes. Fall back to Grep/Glob/Read only when the graph doesn't cover what you need.
+**Search priority (token-efficient first):**
+1. `code-review-graph` MCP — `semantic_search_nodes_tool`, `query_graph_tool`, `get_impact_radius_tool`, `get_minimal_context_tool`, `get_review_context_tool`. Use first for "where is X / who calls Y / impact of change Z." Graph auto-updates on file changes.
+2. `ast-grep` (`/ast-grep` skill) — structural pattern match without reading bodies.
+3. `grep -rn` / `rg` — plain text, line numbers only.
+4. `Read` with `offset`/`limit` (≤80 lines) — only after the above located the line.
+
+**Hard rules:**
+- **Never** read a file >100 lines in full. Never read for a "feel" — have a specific question.
+- **Never** re-read a file already shown this session. Scroll back.
+- **Skip by default**: `package.json`, `tsconfig.json`, `next.config.*`, lockfiles, `sdk/backend-v2/**` (generated). Only read when the task is about them.
+- **Speculative reads are forbidden** — don't open sibling files because they "might be related". Wait for a concrete pointer.
+- **Subagents are expensive** — each runs its own requests and burns the overall budget. Only spawn `Explore` when investigation spans ≥5 unknown files and the graph MCP can't answer it.
+- **Use Haiku subagents for big mechanical tasks.** When you do spawn a subagent, pass `model: "haiku"` for file location, grepping, listing, summarizing known files, repetitive refactors, or test running. Reserve Sonnet/Opus subagents for genuine reasoning. Default = Haiku.
 
 ---
 
