@@ -233,36 +233,34 @@ export function DayFeed({ day, isLoading, onOpenItem }: Props) {
 
       {day.assessments.length > 0 && (
         <Section title="Assessments & mood" icon={ClipboardCheck} accent="bg-amber-500">
-          {day.assessments.map((item, i) => {
-            // Q&A pairs come from the parsed AssessmentAnswer rows. The
-            // analysis markdown still renders below as a separate block.
-            const qa = (item.answers ?? [])
-              .filter((a) => a.question || a.answer)
-              .map((a) => ({ question: a.question, answer: a.answer }));
-            return (
-              <Row
-                key={item.id}
-                onClick={() =>
-                  onOpenItem({
-                    title: item.assessmentTitle ?? item.assessmentKey,
-                    subtitle: [
-                      item.severity ? `Severity: ${item.severity}` : null,
-                      formatTime(item.completedAt),
-                    ]
-                      .filter(Boolean)
-                      .join(" · "),
-                    body: item.analysisMarkdown,
-                    qa: qa.length ? qa : undefined,
-                  })
-                }
-                title={item.assessmentTitle ?? item.assessmentKey}
-                subtitle={item.severity ? `Severity: ${item.severity}` : undefined}
-                meta={formatTime(item.completedAt)}
-                preview={null}
-                isLast={i === day.assessments.length - 1}
-              />
-            );
-          })}
+          {day.assessments.map((item, i) => (
+            // Match legacy /growth — assessment modal renders only the LLM
+            // analysis markdown. Raw Q&A pairs aren't useful here because
+            // many SOCRATES-style assessments store all sub-question
+            // answers under one umbrella `questionText`, producing redundant
+            // "Rate your agreement…" rows. The markdown analysis already
+            // captures the user-facing summary.
+            <Row
+              key={item.id}
+              onClick={() =>
+                onOpenItem({
+                  title: item.assessmentTitle ?? item.assessmentKey,
+                  subtitle: [
+                    item.severity ? `Severity: ${item.severity}` : null,
+                    formatTime(item.completedAt),
+                  ]
+                    .filter(Boolean)
+                    .join(" · "),
+                  body: item.analysisMarkdown,
+                })
+              }
+              title={item.assessmentTitle ?? item.assessmentKey}
+              subtitle={item.severity ? `Severity: ${item.severity}` : undefined}
+              meta={formatTime(item.completedAt)}
+              preview={null}
+              isLast={i === day.assessments.length - 1}
+            />
+          ))}
         </Section>
       )}
 
