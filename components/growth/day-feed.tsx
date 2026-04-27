@@ -131,9 +131,7 @@ function Row({
           <p className="text-sm font-medium text-foreground truncate">{title}</p>
           <span className="text-[10px] text-muted-foreground flex-shrink-0">{meta}</span>
         </div>
-        {subtitle && (
-          <p className="text-xs text-muted-foreground mt-0.5 truncate">{subtitle}</p>
-        )}
+        {subtitle && <p className="text-xs text-muted-foreground mt-0.5 truncate">{subtitle}</p>}
         {preview && (
           <div className="text-xs text-muted-foreground line-clamp-2 mt-0.5 [&_strong]:font-semibold [&_em]:italic">
             <ReactMarkdown components={PREVIEW_COMPONENTS}>{preview}</ReactMarkdown>

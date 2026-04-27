@@ -62,17 +62,12 @@ export function MarkdownModal({ open, onOpenChange, title, subtitle, body, qa }:
           {subtitle && <DialogDescription>{subtitle}</DialogDescription>}
         </DialogHeader>
 
-        {!hasContent && (
-          <p className="text-muted-foreground text-sm">No details recorded.</p>
-        )}
+        {!hasContent && <p className="text-muted-foreground text-sm">No details recorded.</p>}
 
         {qaPairs.length > 0 && (
           <ul className="flex flex-col gap-3 mt-1">
             {qaPairs.map((p, i) => (
-              <li
-                key={i}
-                className="flex flex-col gap-1 border-l-2 border-primary/40 pl-3"
-              >
+              <li key={i} className="flex flex-col gap-1 border-l-2 border-primary/40 pl-3">
                 {p.question && (
                   <p className="text-xs font-semibold text-foreground/80 leading-snug">
                     {p.question}

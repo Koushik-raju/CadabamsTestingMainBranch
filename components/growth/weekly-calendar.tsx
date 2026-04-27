@@ -27,7 +27,7 @@
 
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { todayIso, type GrowthWeek, type GrowthWeekDay } from "@/hooks/growth/use-growth";
+import { type GrowthWeek, type GrowthWeekDay, todayIso } from "@/hooks/growth/use-growth";
 import { cn } from "@/lib/utils";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 

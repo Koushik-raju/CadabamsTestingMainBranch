@@ -43,11 +43,11 @@ const DOW_LABELS = ["M", "T", "W", "T", "F", "S", "S"];
  *  backend are already user-tz local dates so we render them in UTC to
  *  avoid double-shifting. */
 function formatRange(start?: string, end?: string): string {
-  if (!start || !end) return '';
+  if (!start || !end) return "";
   const s = new Date(`${start}T00:00:00Z`);
   const e = new Date(`${end}T00:00:00Z`);
   const fmt = (d: Date) =>
-    d.toLocaleDateString(undefined, { month: 'short', day: 'numeric', timeZone: 'UTC' });
+    d.toLocaleDateString(undefined, { month: "short", day: "numeric", timeZone: "UTC" });
   return `${fmt(s)} – ${fmt(e)}`;
 }
 
@@ -57,9 +57,9 @@ export function GrowthWidget() {
   const firstName = ((user?.name as string | undefined) ?? "").split(" ")[0];
   const { week, isLoading } = useGrowthWeek(today);
 
-  const activeDays = week?.days.filter(
-    (d) => d.hasJourney || d.hasJournal || d.hasAssessment || d.hasChatSummary,
-  ) ?? [];
+  const activeDays =
+    week?.days.filter((d) => d.hasJourney || d.hasJournal || d.hasAssessment || d.hasChatSummary) ??
+    [];
   const sourceFlags = week?.days.reduce(
     (acc, d) => ({
       j: acc.j || d.hasJourney,
@@ -110,7 +110,7 @@ export function GrowthWidget() {
             )}
             {!isLoading && week && (
               <span className="text-[10px] font-bold uppercase tracking-wider text-primary">
-                {activeDays.length} {activeDays.length === 1 ? 'day' : 'days'} active
+                {activeDays.length} {activeDays.length === 1 ? "day" : "days"} active
               </span>
             )}
           </div>
@@ -181,7 +181,7 @@ export function GrowthWidget() {
                 Tap any day to see the details
               </span>
               <span className="text-[11px] font-semibold text-foreground">
-                {sourceCount} {sourceCount === 1 ? 'source' : 'sources'}
+                {sourceCount} {sourceCount === 1 ? "source" : "sources"}
               </span>
             </div>
           )}
