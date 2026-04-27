@@ -61,7 +61,10 @@ const PREVIEW_COMPONENTS: Components = {
 export interface ModalPayload {
   title: string;
   subtitle?: string;
-  body: string | null;
+  body?: string | null;
+  /** Optional question/answer pairs. When present, modal renders a Q&A list
+   *  alongside (or instead of) the markdown body. */
+  qa?: { question: string; answer: string | null }[];
 }
 
 interface Props {
@@ -201,28 +204,42 @@ export function DayFeed({ day, isLoading, onOpenItem }: Props) {
 
       {day.journals.length > 0 && (
         <Section title="Journals" icon={BookOpen} accent="bg-emerald-500">
-          {day.journals.map((item, i) => (
-            <Row
-              key={item.id}
-              onClick={() =>
-                onOpenItem({
-                  title: item.title?.trim() || "Journal entry",
-                  subtitle: formatTime(item.journaledAt),
-                  body: item.entryText,
-                })
-              }
-              title={item.title?.trim() || "Journal entry"}
-              meta={formatTime(item.journaledAt)}
-              preview={item.entryText}
-              isLast={i === day.journals.length - 1}
-            />
-          ))}
+          {day.journals.map((item, i) => {
+            // Build Q&A pairs from prompts when present. Standalone
+            // free-text journals fall through to the markdown body.
+            const qa = (item.prompts ?? [])
+              .filter((p) => p.heading || p.text)
+              .map((p) => ({ question: p.heading ?? "", answer: p.text }));
+            return (
+              <Row
+                key={item.id}
+                onClick={() =>
+                  onOpenItem({
+                    title: item.title?.trim() || "Journal entry",
+                    subtitle: formatTime(item.journaledAt),
+                    body: item.entryText,
+                    qa: qa.length ? qa : undefined,
+                  })
+                }
+                title={item.title?.trim() || "Journal entry"}
+                meta={formatTime(item.journaledAt)}
+                preview={null}
+                isLast={i === day.journals.length - 1}
+              />
+            );
+          })}
         </Section>
       )}
 
       {day.assessments.length > 0 && (
         <Section title="Assessments & mood" icon={ClipboardCheck} accent="bg-amber-500">
           {day.assessments.map((item, i) => (
+            // Match legacy /growth — assessment modal renders only the LLM
+            // analysis markdown. Raw Q&A pairs aren't useful here because
+            // many SOCRATES-style assessments store all sub-question
+            // answers under one umbrella `questionText`, producing redundant
+            // "Rate your agreement…" rows. The markdown analysis already
+            // captures the user-facing summary.
             <Row
               key={item.id}
               onClick={() =>
@@ -238,8 +255,9 @@ export function DayFeed({ day, isLoading, onOpenItem }: Props) {
                 })
               }
               title={item.assessmentTitle ?? item.assessmentKey}
+              subtitle={item.severity ? `Severity: ${item.severity}` : undefined}
               meta={formatTime(item.completedAt)}
-              preview={item.severity ? `Severity: ${item.severity}` : null}
+              preview={null}
               isLast={i === day.assessments.length - 1}
             />
           ))}

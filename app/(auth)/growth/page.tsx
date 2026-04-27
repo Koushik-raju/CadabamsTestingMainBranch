@@ -129,6 +129,7 @@ function GrowthPageInner() {
         title={modal?.title ?? ""}
         subtitle={modal?.subtitle}
         body={modal?.body ?? null}
+        qa={modal?.qa}
       />
     </div>
   );
