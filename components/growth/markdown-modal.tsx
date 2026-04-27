@@ -58,7 +58,9 @@ export function MarkdownModal({ open, onOpenChange, title, subtitle, body, qa }:
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-lg max-h-[80vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>{title}</DialogTitle>
+          {/* Right-pad the title so the absolute-positioned close (X) at
+              top-2 right-2 doesn't overlap long titles. */}
+          <DialogTitle className="pr-8">{title}</DialogTitle>
           {subtitle && <DialogDescription>{subtitle}</DialogDescription>}
         </DialogHeader>
 
