@@ -134,7 +134,7 @@ export function DoctorCard({ doctor, onBook }: DoctorCardProps) {
         <p className="text-xs text-muted-foreground">Click to see availability</p>
         <Button
           size="default"
-          className="bg-foreground text-background hover:bg-foreground/90 rounded-full px-6"
+          className="bg-foreground text-background hover:bg-foreground/90 rounded-full px-10 py-4"
           onClick={() => onBook(doctor)}
         >
           Book Now
