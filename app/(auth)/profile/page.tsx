@@ -58,7 +58,7 @@ import { useAuthMe } from "@/hooks/shared/auth/use-auth";
 import { useAuth } from "@/hooks/use-auth";
 import { cn } from "@/lib/utils";
 import { crmControllerGetAppointmentDashboard } from "@/sdk/backend-v2";
-import type { AppointmentDashboardResponseDto } from "@/sdk/backend-v2";
+import type { AppointmentDashboardResponseDto, LeadResponseDto } from "@/sdk/backend-v2";
 import type { BookedPackageDto } from "@/sdk/backend-v2";
 import {
   CalendarCheck2,
@@ -148,9 +148,9 @@ export default function ProfilePage() {
   const { logout } = useAuth();
 
   const { profile: rawProfile, isLoading: profileLoading } = useAuthMe();
-  const profile = rawProfile as Record<string, unknown> | null;
+  const profile = rawProfile as LeadResponseDto;
 
-  const phoneNumber = profile?.caller_mobile as string | undefined;
+  const phoneNumber = profile.caller_mobile as string | undefined;
   const { data: dashboard, isLoading: dashLoading } = useSWR(
     phoneNumber ? ["appointments/dashboard", phoneNumber] : null,
     async ([, phone]: [string, string]) => {
@@ -169,7 +169,7 @@ export default function ProfilePage() {
     router.replace("/auth/login");
   };
 
-  const displayName = (profile?.contact_name as string) || (profile?.partner_name as string) || "—";
+  const displayName = (profile.contact_name as string) || (profile.partner_name as string) || "—";
   const initials = displayName
     .split(" ")
     .slice(0, 2)
@@ -218,7 +218,7 @@ export default function ProfilePage() {
               <h2 className="text-lg font-bold text-foreground text-center leading-tight">
                 {displayName}
               </h2>
-              {profile?.id && (
+              {profile.id && (
                 <span className="text-xs text-muted-foreground">
                   Patient ID #{String(profile.id)}
                 </span>
@@ -244,21 +244,21 @@ export default function ProfilePage() {
                     gradient="from-sky-500 to-blue-600"
                     icon={<Phone className="w-5 h-5 text-white" />}
                     label="Mobile"
-                    value={(profile?.caller_mobile as string) ?? "—"}
+                    value={(profile.caller_mobile as string) ?? "—"}
                   />
                   <Separator />
                   <InfoRow
                     gradient="from-violet-500 to-purple-600"
                     icon={<Mail className="w-5 h-5 text-white" />}
                     label="Email"
-                    value={(profile?.caller_email as string) || "Not provided"}
+                    value={(profile.email as string) || "Not provided"}
                   />
                   <Separator />
                   <InfoRow
                     gradient="from-teal-500 to-emerald-600"
                     icon={<Hash className="w-5 h-5 text-white" />}
                     label="Patient ID"
-                    value={profile?.id ? `#${String(profile.id)}` : "—"}
+                    value={profile.id ? `#${String(profile.id)}` : "—"}
                   />
                 </>
               )}
