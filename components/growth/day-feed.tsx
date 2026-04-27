@@ -61,7 +61,10 @@ const PREVIEW_COMPONENTS: Components = {
 export interface ModalPayload {
   title: string;
   subtitle?: string;
-  body: string | null;
+  body?: string | null;
+  /** Optional question/answer pairs. When present, modal renders a Q&A list
+   *  alongside (or instead of) the markdown body. */
+  qa?: { question: string; answer: string | null }[];
 }
 
 interface Props {
@@ -201,48 +204,65 @@ export function DayFeed({ day, isLoading, onOpenItem }: Props) {
 
       {day.journals.length > 0 && (
         <Section title="Journals" icon={BookOpen} accent="bg-emerald-500">
-          {day.journals.map((item, i) => (
-            <Row
-              key={item.id}
-              onClick={() =>
-                onOpenItem({
-                  title: item.title?.trim() || "Journal entry",
-                  subtitle: formatTime(item.journaledAt),
-                  body: item.entryText,
-                })
-              }
-              title={item.title?.trim() || "Journal entry"}
-              meta={formatTime(item.journaledAt)}
-              preview={item.entryText}
-              isLast={i === day.journals.length - 1}
-            />
-          ))}
+          {day.journals.map((item, i) => {
+            // Build Q&A pairs from prompts when present. Standalone
+            // free-text journals fall through to the markdown body.
+            const qa = (item.prompts ?? [])
+              .filter((p) => p.heading || p.text)
+              .map((p) => ({ question: p.heading ?? "", answer: p.text }));
+            return (
+              <Row
+                key={item.id}
+                onClick={() =>
+                  onOpenItem({
+                    title: item.title?.trim() || "Journal entry",
+                    subtitle: formatTime(item.journaledAt),
+                    body: item.entryText,
+                    qa: qa.length ? qa : undefined,
+                  })
+                }
+                title={item.title?.trim() || "Journal entry"}
+                meta={formatTime(item.journaledAt)}
+                preview={null}
+                isLast={i === day.journals.length - 1}
+              />
+            );
+          })}
         </Section>
       )}
 
       {day.assessments.length > 0 && (
         <Section title="Assessments & mood" icon={ClipboardCheck} accent="bg-amber-500">
-          {day.assessments.map((item, i) => (
-            <Row
-              key={item.id}
-              onClick={() =>
-                onOpenItem({
-                  title: item.assessmentTitle ?? item.assessmentKey,
-                  subtitle: [
-                    item.severity ? `Severity: ${item.severity}` : null,
-                    formatTime(item.completedAt),
-                  ]
-                    .filter(Boolean)
-                    .join(" · "),
-                  body: item.analysisMarkdown,
-                })
-              }
-              title={item.assessmentTitle ?? item.assessmentKey}
-              meta={formatTime(item.completedAt)}
-              preview={item.severity ? `Severity: ${item.severity}` : null}
-              isLast={i === day.assessments.length - 1}
-            />
-          ))}
+          {day.assessments.map((item, i) => {
+            // Q&A pairs come from the parsed AssessmentAnswer rows. The
+            // analysis markdown still renders below as a separate block.
+            const qa = (item.answers ?? [])
+              .filter((a) => a.question || a.answer)
+              .map((a) => ({ question: a.question, answer: a.answer }));
+            return (
+              <Row
+                key={item.id}
+                onClick={() =>
+                  onOpenItem({
+                    title: item.assessmentTitle ?? item.assessmentKey,
+                    subtitle: [
+                      item.severity ? `Severity: ${item.severity}` : null,
+                      formatTime(item.completedAt),
+                    ]
+                      .filter(Boolean)
+                      .join(" · "),
+                    body: item.analysisMarkdown,
+                    qa: qa.length ? qa : undefined,
+                  })
+                }
+                title={item.assessmentTitle ?? item.assessmentKey}
+                subtitle={item.severity ? `Severity: ${item.severity}` : undefined}
+                meta={formatTime(item.completedAt)}
+                preview={null}
+                isLast={i === day.assessments.length - 1}
+              />
+            );
+          })}
         </Section>
       )}
 

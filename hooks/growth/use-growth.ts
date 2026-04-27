@@ -56,12 +56,25 @@ export interface GrowthJourneyItem {
   completedAt: string;
 }
 
+export interface GrowthJournalPrompt {
+  heading: string | null;
+  text: string | null;
+  order: number;
+}
+
 export interface GrowthJournalItem {
   id: string;
   title: string | null;
   entryText: string | null;
+  prompts: GrowthJournalPrompt[];
   journaledAt: string;
   subJournalingId: string | null;
+}
+
+export interface GrowthAssessmentAnswer {
+  question: string;
+  answer: string | null;
+  order: number;
 }
 
 export interface GrowthAssessmentItem {
@@ -70,6 +83,7 @@ export interface GrowthAssessmentItem {
   assessmentTitle: string | null;
   severity: string | null;
   analysisMarkdown: string | null;
+  answers: GrowthAssessmentAnswer[];
   completedAt: string;
 }
 
