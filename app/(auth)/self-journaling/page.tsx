@@ -50,9 +50,9 @@ import { buildWeekBaseDays, toLocalDateStr } from "@/lib/journal-utils";
 import { getJournalVisual } from "@/lib/journal-visual";
 import { cn } from "@/lib/utils";
 import { Pencil } from "lucide-react";
-import { useCallback } from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
+import { useCallback } from "react";
 import { useMemo, useState } from "react";
 
 // ---------------------------------------------------------------------------
@@ -391,9 +391,9 @@ export default function JournalHomePage() {
         onClose={() => setSheetEntry(null)}
         journalName={sheetJournalName}
         journalIcon={null}
-        title={sheetEntry ? (extractString(sheetEntry.title) || null) : null}
+        title={sheetEntry ? extractString(sheetEntry.title) || null : null}
         prompts={sheetPrompts}
-        plainText={sheetEntry ? (extractString(sheetEntry.entryText) || null) : null}
+        plainText={sheetEntry ? extractString(sheetEntry.entryText) || null : null}
         dateLabel={selectedLabel}
         onJournal={() =>
           router.push(

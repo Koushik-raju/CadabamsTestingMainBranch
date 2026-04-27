@@ -125,7 +125,7 @@ export function useJournalingCategories() {
     data?.flatMap((c) => (c.subJournalings ?? []).filter((s) => s.status === "PUBLISHED")) ?? [];
 
   return {
-    categories: data ?? [] as JournalingResponseDto[],
+    categories: data ?? ([] as JournalingResponseDto[]),
     subJournalings,
     isLoading,
     error,
@@ -151,7 +151,7 @@ export function useSelfJournalingEntries(limit?: number) {
   );
 
   return {
-    entries: data?.entries ?? [] as SelfJournalingResponseDto[],
+    entries: data?.entries ?? ([] as SelfJournalingResponseDto[]),
     total: data?.total ?? 0,
     isLoading,
     error,

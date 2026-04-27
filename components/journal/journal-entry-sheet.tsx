@@ -24,12 +24,7 @@
  */
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
-import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-} from "@/components/ui/sheet";
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { getJournalVisual } from "@/lib/journal-visual";
 import { cn } from "@/lib/utils";
 import { BookOpen, Pencil } from "lucide-react";
@@ -69,13 +64,27 @@ export function JournalEntrySheet({
   const hasPrompts = Array.isArray(prompts) && prompts.length > 0;
 
   return (
-    <Sheet open={open} onOpenChange={(v) => { if (!v) onClose(); }}>
-      <SheetContent side="bottom" className="p-0 rounded-t-3xl max-h-[85vh] flex flex-col overflow-hidden">
+    <Sheet
+      open={open}
+      onOpenChange={(v) => {
+        if (!v) onClose();
+      }}
+    >
+      <SheetContent
+        side="bottom"
+        className="p-0 rounded-t-3xl max-h-[85vh] flex flex-col overflow-hidden"
+      >
         {/* ── Journal identity card ── */}
         <div className="relative overflow-hidden flex-shrink-0">
           {journalIcon ? (
             <div className="relative h-28 w-full">
-              <Image src={journalIcon} alt={journalName} fill className="object-cover" sizes="100vw" />
+              <Image
+                src={journalIcon}
+                alt={journalName}
+                fill
+                className="object-cover"
+                sizes="100vw"
+              />
               {/* gradient overlay for legibility */}
               <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
             </div>
@@ -90,10 +99,12 @@ export function JournalEntrySheet({
           )}
 
           {/* Journal name + date overlaid on the image */}
-          <div className={cn(
-            "absolute bottom-0 left-0 right-0 px-5 pb-4 pt-2",
-            journalIcon ? "" : "bg-gradient-to-t from-black/40 to-transparent",
-          )}>
+          <div
+            className={cn(
+              "absolute bottom-0 left-0 right-0 px-5 pb-4 pt-2",
+              journalIcon ? "" : "bg-gradient-to-t from-black/40 to-transparent",
+            )}
+          >
             <p className="text-[11px] font-bold uppercase tracking-widest text-white/70 mb-0.5">
               {dateLabel}
             </p>
@@ -141,7 +152,9 @@ export function JournalEntrySheet({
           )}
 
           {!hasPrompts && !plainText && !title && (
-            <p className="text-sm text-muted-foreground text-center py-8">No content in this entry.</p>
+            <p className="text-sm text-muted-foreground text-center py-8">
+              No content in this entry.
+            </p>
           )}
         </div>
 
@@ -149,7 +162,10 @@ export function JournalEntrySheet({
         <div className="absolute bottom-0 left-0 right-0 px-5 pb-10 pt-3 bg-background/95 backdrop-blur-sm border-t border-border/50">
           <Button
             className="w-full rounded-full h-14 text-base font-semibold gap-2"
-            onClick={() => { onClose(); onJournal(); }}
+            onClick={() => {
+              onClose();
+              onJournal();
+            }}
           >
             <Pencil className="w-4 h-4" />
             Journal

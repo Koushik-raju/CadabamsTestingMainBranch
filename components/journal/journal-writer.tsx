@@ -48,10 +48,10 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Skeleton } from "@/components/ui/skeleton";
 import { Textarea } from "@/components/ui/textarea";
 import { useJourneyTaskContinuation } from "@/hooks/journeys/use-journey-task-continuation";
+import { createEntry } from "@/hooks/self-journaling/use-self-journaling";
 import { useAuth } from "@/hooks/use-auth";
 import { generateJournalPrompt } from "@/hooks/use-journaling";
 import { useSubJournalDetail } from "@/hooks/use-journaling-subscriptions";
-import { createEntry } from "@/hooks/self-journaling/use-self-journaling";
 import { journalStreakKey, journalSubEntriesKey, selfJournalingKey } from "@/lib/swr-keys";
 import type { SelfJournalingPromptDto } from "@/sdk/backend-v2";
 import type { EmojiClickData } from "emoji-picker-react";
@@ -160,9 +160,7 @@ export function JournalWriter({ slug }: JournalWriterProps) {
     if (!subJournalingId) return Promise.resolve(null);
     const parts = [
       ...savedPrompts.map((p) => `${p.heading}\n${p.text}`),
-      ...(content.trim()
-        ? [`${currentHeading || "What's on your mind"}\n${content.trim()}`]
-        : []),
+      ...(content.trim() ? [`${currentHeading || "What's on your mind"}\n${content.trim()}`] : []),
     ];
     const currentEntryText = parts.length > 0 ? parts.join("\n\n") : undefined;
     return generateJournalPrompt(subJournalingId, currentEntryText);
@@ -224,7 +222,9 @@ export function JournalWriter({ slug }: JournalWriterProps) {
       // Revalidate all caches that read from JournalEntry
       await Promise.all([
         globalMutate(selfJournalingKey()),
-        ...(slug ? [globalMutate(journalSubEntriesKey(slug)), globalMutate(journalStreakKey(slug))] : []),
+        ...(slug
+          ? [globalMutate(journalSubEntriesKey(slug)), globalMutate(journalStreakKey(slug))]
+          : []),
       ]);
 
       // Report back to the journey when this writer was opened as a task.
@@ -252,7 +252,18 @@ export function JournalWriter({ slug }: JournalWriterProps) {
     } finally {
       setIsSaving(false);
     }
-  }, [content, currentHeading, savedPrompts, user, router, subTitle, subJournalingId, continuation, slug, journeyProofKind]);
+  }, [
+    content,
+    currentHeading,
+    savedPrompts,
+    user,
+    router,
+    subTitle,
+    subJournalingId,
+    continuation,
+    slug,
+    journeyProofKind,
+  ]);
 
   const handleGoDeeper = useCallback(async () => {
     const previousContent = content.trim();

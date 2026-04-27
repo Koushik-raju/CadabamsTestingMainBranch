@@ -44,7 +44,11 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { extractString, useJournalingCategories, useSelfJournalingEntries } from "@/hooks/use-journaling";
+import {
+  extractString,
+  useJournalingCategories,
+  useSelfJournalingEntries,
+} from "@/hooks/use-journaling";
 import type { SelfJournalingResponseDto } from "@/hooks/use-journaling";
 import { getJournalVisual } from "@/lib/journal-visual";
 import { cn } from "@/lib/utils";
@@ -121,7 +125,10 @@ export default function CategoryDetailPage() {
 
   // Entries that belong to any sub-journal in this category
   const categoryEntries = useMemo(
-    () => allEntries.filter((e) => publishedSubs.some((s) => s.id === extractString(e.subJournalingId))),
+    () =>
+      allEntries.filter((e) =>
+        publishedSubs.some((s) => s.id === extractString(e.subJournalingId)),
+      ),
     [allEntries, publishedSubs],
   );
 
@@ -335,7 +342,9 @@ export default function CategoryDetailPage() {
                                 {/* Content */}
                                 <div className="flex-1 min-w-0">
                                   <p className="text-sm font-medium text-foreground line-clamp-1 mb-0.5">
-                                    {extractString(entry.title) || matchingSub?.title || "Journal Entry"}
+                                    {extractString(entry.title) ||
+                                      matchingSub?.title ||
+                                      "Journal Entry"}
                                   </p>
                                   <p className="text-xs text-muted-foreground line-clamp-1 leading-relaxed">
                                     {preview}
