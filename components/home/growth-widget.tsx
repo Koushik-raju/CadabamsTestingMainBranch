@@ -2,17 +2,20 @@
  * FILE: components/home/growth-widget.tsx
  *
  * PURPOSE:
- *   Minimal home-page teaser for Growth. Shows the 7-day Mon→Sun strip
- *   with a dot under each day that has any activity. Every cell is its
- *   own link so tapping a date opens /growth?date=YYYY-MM-DD and lands
- *   on that exact day — no state round-tripping.
+ *   Home-page teaser for Growth. Header shows the user's first name and
+ *   the visible date range (e.g. "Apr 27 – May 3"). Below it a 7-day
+ *   Mon→Sun strip with a coloured dot under each day that has activity,
+ *   plus a small footer summary line showing the count of active days
+ *   in this week. Every cell deep-links to /growth?date=YYYY-MM-DD.
  *
  * LOGIC OVERVIEW:
- *   1. Fetch useGrowthWeek(today) for the 7-day activity flags.
- *   2. Each day cell is a <Link> to /growth?date=<iso>.
- *   3. The header "View all →" link hands off without a date, so /growth
- *      falls back to its best-default-date auto-jump.
- *   4. While loading, renders skeleton cells so the card height is stable.
+ *   1. Fetch useGrowthWeek(today) for the 7-day activity flags + range.
+ *   2. Date range derives from week.weekStart/weekEnd — formatted via
+ *      Intl.DateTimeFormat with timeZone: UTC because the strings are
+ *      already user-tz local dates from the backend.
+ *   3. Footer line summarises "{N} active days · {totalSources} sources"
+ *      so the user knows there is content to explore even when none of
+ *      the dots fall on today.
  *
  * KEY VARIABLES / PROPS / EXPORTS:
  *   GrowthWidget (default export) — no props.
@@ -21,8 +24,8 @@
  *   useGrowthWeek, todayIso (hooks/growth/use-growth)
  *   shadcn Card + Skeleton, lucide icons, next/link
  *
- * LAST UPDATED: 2026-04-23 — strip widget back to week-strip only;
- *   each cell hands off its date via ?date= so clicks land on the tapped day.
+ * LAST UPDATED: 2026-04-27 — added date-range header + activity dots
+ *   sized for visibility + footer summary line.
  */
 'use client';
 
@@ -36,18 +39,44 @@ import { todayIso, useGrowthWeek } from '@/hooks/growth/use-growth';
 
 const DOW_LABELS = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
 
+/** Format the week range as "Apr 27 – May 3". The ISO strings from the
+ *  backend are already user-tz local dates so we render them in UTC to
+ *  avoid double-shifting. */
+function formatRange(start?: string, end?: string): string {
+  if (!start || !end) return '';
+  const s = new Date(`${start}T00:00:00Z`);
+  const e = new Date(`${end}T00:00:00Z`);
+  const fmt = (d: Date) =>
+    d.toLocaleDateString(undefined, { month: 'short', day: 'numeric', timeZone: 'UTC' });
+  return `${fmt(s)} – ${fmt(e)}`;
+}
+
 export function GrowthWidget() {
   const today = todayIso();
   const { user } = useAuth();
   const firstName = ((user?.name as string | undefined) ?? '').split(' ')[0];
   const { week, isLoading } = useGrowthWeek(today);
 
+  const activeDays = week?.days.filter(
+    (d) => d.hasJourney || d.hasJournal || d.hasAssessment || d.hasChatSummary,
+  ) ?? [];
+  const sourceFlags = week?.days.reduce(
+    (acc, d) => ({
+      j: acc.j || d.hasJourney,
+      n: acc.n || d.hasJournal,
+      a: acc.a || d.hasAssessment,
+      c: acc.c || d.hasChatSummary,
+    }),
+    { j: false, n: false, a: false, c: false },
+  ) ?? { j: false, n: false, a: false, c: false };
+  const sourceCount = Object.values(sourceFlags).filter(Boolean).length;
+
   return (
     <div className="px-4 mb-8">
       <div className="flex items-center justify-between mb-3">
-        <div className="flex items-center gap-2">
-          <Sparkles className="w-4 h-4 text-primary" />
-          <h3 className="text-lg font-bold">
+        <div className="flex items-center gap-2 min-w-0">
+          <Sparkles className="w-4 h-4 text-primary flex-shrink-0" />
+          <h3 className="text-lg font-bold truncate">
             {firstName ? (
               <>
                 {firstName}
@@ -60,13 +89,29 @@ export function GrowthWidget() {
             )}
           </h3>
         </div>
-        <Link href="/growth" className="text-sm font-semibold text-primary">
+        <Link href="/growth" className="text-sm font-semibold text-primary flex-shrink-0">
           View All
         </Link>
       </div>
 
       <Card>
         <CardContent className="py-3 px-3">
+          {/* Date range — derived from the backend's tz-bucketed week */}
+          <div className="flex items-center justify-between mb-3 px-1">
+            {isLoading || !week ? (
+              <Skeleton className="h-3 w-28 rounded" />
+            ) : (
+              <span className="text-xs font-semibold text-muted-foreground">
+                {formatRange(week.weekStart, week.weekEnd)}
+              </span>
+            )}
+            {!isLoading && week && (
+              <span className="text-[10px] font-bold uppercase tracking-wider text-primary">
+                {activeDays.length} {activeDays.length === 1 ? 'day' : 'days'} active
+              </span>
+            )}
+          </div>
+
           <div className="grid grid-cols-7 gap-1">
             {(isLoading || !week
               ? (Array.from({ length: 7 }) as undefined[])
@@ -103,10 +148,16 @@ export function GrowthWidget() {
                   ) : (
                     <Skeleton className="h-8 w-8 rounded-full" />
                   )}
+                  {/* 6px dot under active days. The previous 4px dot was
+                      almost invisible against the surrounding paddings. */}
                   <span
                     className={cn(
-                      'w-1 h-1 rounded-full',
-                      active && !isToday ? 'bg-primary' : 'bg-transparent',
+                      'w-1.5 h-1.5 rounded-full',
+                      active && !isToday
+                        ? 'bg-primary'
+                        : isToday && active
+                        ? 'bg-primary'
+                        : 'bg-transparent',
                     )}
                   />
                 </div>
@@ -125,6 +176,20 @@ export function GrowthWidget() {
               );
             })}
           </div>
+
+          {/* Footer summary — reassures that data exists even when no dot
+              sits on today's cell. Hidden while loading + when nothing has
+              been logged this week (saves vertical space). */}
+          {!isLoading && week && activeDays.length > 0 && (
+            <div className="mt-3 pt-3 border-t border-border/50 flex items-center justify-between gap-2">
+              <span className="text-[11px] text-muted-foreground">
+                Tap any day to see the details
+              </span>
+              <span className="text-[11px] font-semibold text-foreground">
+                {sourceCount} {sourceCount === 1 ? 'source' : 'sources'}
+              </span>
+            </div>
+          )}
         </CardContent>
       </Card>
     </div>
