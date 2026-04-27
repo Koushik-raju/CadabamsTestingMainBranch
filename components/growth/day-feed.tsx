@@ -105,12 +105,14 @@ function Section({
 function Row({
   onClick,
   title,
+  subtitle,
   meta,
   preview,
   isLast,
 }: {
   onClick: () => void;
   title: string;
+  subtitle?: string | null;
   meta: string;
   preview: string | null;
   isLast: boolean;
@@ -126,6 +128,9 @@ function Row({
           <p className="text-sm font-medium text-foreground truncate">{title}</p>
           <span className="text-[10px] text-muted-foreground flex-shrink-0">{meta}</span>
         </div>
+        {subtitle && (
+          <p className="text-xs text-muted-foreground mt-0.5 truncate">{subtitle}</p>
+        )}
         {preview && (
           <div className="text-xs text-muted-foreground line-clamp-2 mt-0.5 [&_strong]:font-semibold [&_em]:italic">
             <ReactMarkdown components={PREVIEW_COMPONENTS}>{preview}</ReactMarkdown>
@@ -164,29 +169,29 @@ export function DayFeed({ day, isLoading, onOpenItem }: Props) {
       {day.journeys.length > 0 && (
         <Section title="Journey activity" icon={Route} accent="bg-violet-500">
           {day.journeys.map((item, i) => {
-            const isDay = item.kind === "day";
-            const rowTitle = isDay
-              ? `Day ${item.dayNumber ?? "?"} · ${item.journeyTitle ?? "Journey"}`
-              : `${item.taskTitle ?? item.taskType ?? "Task"} · ${item.journeyTitle ?? "Journey"}`;
-            const modalTitle = isDay
-              ? (item.journeyTitle ?? "Journey")
-              : (item.taskTitle ?? item.taskType ?? "Task");
-            const modalSubtitle = isDay
-              ? `Day ${item.dayNumber ?? "?"} · ${formatTime(item.completedAt)}`
-              : `${item.journeyTitle ?? "Journey"}${item.dayNumber != null ? ` · Day ${item.dayNumber}` : ""} · ${formatTime(item.completedAt)}`;
-            const body = isDay
-              ? item.summaryText
-              : // Task rows have no markdown body to render in the modal —
-                // fall back to a short description so the modal still feels
-                // meaningful when the user taps one.
-                `_${item.taskType ?? "Task"} completed at ${formatTime(item.completedAt)}._`;
+            // Journey day rows render like the legacy app: journey name as
+            // the title, "Self-Reflection (Day N)" as a small subtitle, no
+            // summary preview under the row. Tapping opens the modal with
+            // the full LLM markdown summary.
+            const rowTitle = item.journeyTitle ?? "Journey";
+            const subtitle =
+              item.kind === "day"
+                ? `Self-Reflection (Day ${item.dayNumber ?? "?"})`
+                : (item.taskTitle ?? item.taskType ?? "Task");
             return (
               <Row
                 key={`${item.kind}-${item.enrollmentId}-${item.dayNumber ?? "?"}-${i}`}
-                onClick={() => onOpenItem({ title: modalTitle, subtitle: modalSubtitle, body })}
+                onClick={() =>
+                  onOpenItem({
+                    title: rowTitle,
+                    subtitle: `${subtitle} · ${formatTime(item.completedAt)}`,
+                    body: item.summaryText,
+                  })
+                }
                 title={rowTitle}
+                subtitle={subtitle}
                 meta={formatTime(item.completedAt)}
-                preview={isDay ? item.summaryText : item.taskType}
+                preview={null}
                 isLast={i === day.journeys.length - 1}
               />
             );
