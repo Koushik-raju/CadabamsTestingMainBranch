@@ -27,9 +27,9 @@
  * LAST UPDATED: 2026-04-27 — use user.sub as distinctId; expand identify traits
  */
 
-import { useEffect } from 'react';
-import posthog from 'posthog-js';
-import type { User } from '@/types';
+import type { User } from "@/types";
+import posthog from "posthog-js";
+import { useEffect } from "react";
 
 export function usePostHogIdentify(user: User | null | undefined) {
   useEffect(() => {
@@ -42,7 +42,7 @@ export function usePostHogIdentify(user: User | null | undefined) {
       name: user.name ?? null,
       email: user.email ?? null,
       phone_number: user.phone_number ?? null,
-      role: 'patient',
+      role: "patient",
       crmLeadId: user.lead_id,
       dob: user.date_of_birth,
       gender: user.gender,
