@@ -27,7 +27,7 @@
 
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import type { GrowthWeek, GrowthWeekDay } from "@/hooks/growth/use-growth";
+import { todayIso, type GrowthWeek, type GrowthWeekDay } from "@/hooks/growth/use-growth";
 import { cn } from "@/lib/utils";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 
@@ -59,7 +59,11 @@ interface Props {
 }
 
 export function WeeklyCalendar({ week, selectedDate, isLoading, onSelect, onNavigateWeek }: Props) {
-  const todayIso = new Date().toISOString().slice(0, 10);
+  // Use the local-tz `todayIso` from the hooks file — the bare
+  // `new Date().toISOString()` returns UTC, which mis-highlights "today"
+  // for IST users between 18:30 IST and midnight IST (after which UTC
+  // already rolled to the next day).
+  const today = todayIso();
 
   return (
     <div className="px-4 pt-2 pb-4">
@@ -90,7 +94,7 @@ export function WeeklyCalendar({ week, selectedDate, isLoading, onSelect, onNavi
           (day, i) => {
             const iso = day?.date;
             const isSelected = iso === selectedDate;
-            const isToday = iso === todayIso;
+            const isToday = iso === today;
             return (
               <button
                 key={iso ?? i}
