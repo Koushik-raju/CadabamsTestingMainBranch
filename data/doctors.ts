@@ -1908,10 +1908,6 @@ export const DOCTORS: DoctorListing[] = ([
       [
         "Kannada",
         78
-      ],
-      [
-        "Tamil",
-        114
       ]
     ],
     "city": [
@@ -5808,7 +5804,7 @@ export const DOCTORS: DoctorListing[] = ([
       ]
     ],
     "name": "Ms Tejal",
-    "book_package": false,
+    "book_package": true,
     "area": [
       [
         "Kanakapura Road - Bengaluru",
@@ -5816,7 +5812,20 @@ export const DOCTORS: DoctorListing[] = ([
       ]
     ],
     "cns_preference": null,
-    "book_package_id": null,
+    "book_package_id": [
+      [
+        12,
+        "90 Day Stress and Anxiety Relief "
+      ],
+      [
+        13,
+        "90 Day Emotional Reset "
+      ],
+      [
+        15,
+        "90 Day Workplace Wellbeing"
+      ]
+    ],
     "age_preference": [
       [
         "Adult Cases",
@@ -6775,7 +6784,7 @@ export const DOCTORS: DoctorListing[] = ([
       ]
     ],
     "name": "Ms Sakshi Chadha",
-    "book_package": false,
+    "book_package": true,
     "area": [
       [
         "Kanakapura Road - Bengaluru",
@@ -6788,7 +6797,24 @@ export const DOCTORS: DoctorListing[] = ([
         9
       ]
     ],
-    "book_package_id": null,
+    "book_package_id": [
+      [
+        12,
+        "90 Day Stress and Anxiety Relief "
+      ],
+      [
+        13,
+        "90 Day Emotional Reset "
+      ],
+      [
+        14,
+        "90 Day Relationship and Family "
+      ],
+      [
+        15,
+        "90 Day Workplace Wellbeing"
+      ]
+    ],
     "age_preference": [
       [
         "Adult Cases",
