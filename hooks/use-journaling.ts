@@ -1,13 +1,13 @@
-import useSWR, { mutate as globalMutate } from 'swr';
-import axios from 'axios';
-import { BACKEND_URL } from '@/config/env';
-import { swrConfig } from '@/lib/swr-config';
+import { BACKEND_URL } from "@/config/env";
+import { useAuth } from "@/hooks/use-auth";
+import { swrConfig } from "@/lib/swr-config";
 import {
   journalingCategoriesKey,
   selfJournalingEntriesKey,
   selfJournalingEntryKey,
-} from '@/lib/swr-keys';
-import { useAuth } from '@/hooks/use-auth';
+} from "@/lib/swr-keys";
+import axios from "axios";
+import useSWR, { mutate as globalMutate } from "swr";
 
 const cmsApi = axios.create({ baseURL: BACKEND_URL });
 
@@ -60,8 +60,8 @@ export interface SelfJournalingEntry {
 
 async function fetchJournalingCategories(): Promise<JournalingCategory[]> {
   const { data } = await cmsApi.get<{ items?: JournalingCategory[]; total?: number }>(
-    '/api/v1/cms/journaling',
-    { params: { limit: 50, status: 'PUBLISHED' } },
+    "/api/v1/cms/journaling",
+    { params: { limit: 50, status: "PUBLISHED" } },
   );
   return data?.items ?? [];
 }
@@ -71,7 +71,7 @@ async function fetchSelfJournalingEntries(
   limit = 100,
 ): Promise<{ items: SelfJournalingEntry[]; total: number }> {
   const { data } = await cmsApi.get<{ items?: SelfJournalingEntry[]; total?: number }>(
-    '/api/v1/cms/journaling/self',
+    "/api/v1/cms/journaling/self",
     { params: { limit, offset: 0, leadId } },
   );
   return {
@@ -80,12 +80,8 @@ async function fetchSelfJournalingEntries(
   };
 }
 
-async function fetchSelfJournalingEntry(
-  id: string,
-): Promise<SelfJournalingEntry | null> {
-  const { data } = await cmsApi.get<SelfJournalingEntry>(
-    `/api/v1/cms/journaling/self/${id}`,
-  );
+async function fetchSelfJournalingEntry(id: string): Promise<SelfJournalingEntry | null> {
+  const { data } = await cmsApi.get<SelfJournalingEntry>(`/api/v1/cms/journaling/self/${id}`);
   return data ?? null;
 }
 
@@ -96,17 +92,13 @@ async function fetchSelfJournalingEntry(
 /** Fetch published journaling categories with sub-journalings */
 export function useJournalingCategories() {
   const key = journalingCategoriesKey();
-  const { data, isLoading, error } = useSWR(
-    key,
-    () => fetchJournalingCategories(),
-    { ...swrConfig },
-  );
+  const { data, isLoading, error } = useSWR(key, () => fetchJournalingCategories(), {
+    ...swrConfig,
+  });
 
   // Flatten all published sub-journalings across categories
   const subJournalings: SubJournalingItem[] =
-    data?.flatMap((c) =>
-      (c.subJournalings ?? []).filter((s) => s.status === 'PUBLISHED'),
-    ) ?? [];
+    data?.flatMap((c) => (c.subJournalings ?? []).filter((s) => s.status === "PUBLISHED")) ?? [];
 
   return {
     categories: data ?? [],
@@ -122,11 +114,9 @@ export function useSelfJournalingEntries(limit?: number) {
   const leadId = user?.lead_id ? Number(user.lead_id) : null;
   const key = leadId ? selfJournalingEntriesKey(leadId) : null;
 
-  const { data, isLoading, error } = useSWR(
-    key,
-    () => fetchSelfJournalingEntries(leadId!, limit),
-    { ...swrConfig },
-  );
+  const { data, isLoading, error } = useSWR(key, () => fetchSelfJournalingEntries(leadId!, limit), {
+    ...swrConfig,
+  });
 
   return {
     entries: data?.items ?? [],
@@ -140,11 +130,9 @@ export function useSelfJournalingEntries(limit?: number) {
 /** Fetch a single self-journaling entry by ID */
 export function useSelfJournalingEntry(id: string | null) {
   const key = id ? selfJournalingEntryKey(id) : null;
-  const { data, isLoading, error } = useSWR(
-    key,
-    () => fetchSelfJournalingEntry(id!),
-    { ...swrConfig },
-  );
+  const { data, isLoading, error } = useSWR(key, () => fetchSelfJournalingEntry(id!), {
+    ...swrConfig,
+  });
 
   return {
     entry: data ?? null,
@@ -172,10 +160,7 @@ export interface CreateSelfJournalingPayload {
 export async function createSelfJournalingEntry(
   payload: CreateSelfJournalingPayload,
 ): Promise<SelfJournalingEntry> {
-  const { data } = await cmsApi.post<SelfJournalingEntry>(
-    '/api/v1/cms/journaling/self',
-    payload,
-  );
+  const { data } = await cmsApi.post<SelfJournalingEntry>("/api/v1/cms/journaling/self", payload);
 
   // Revalidate the entries list
   await globalMutate(selfJournalingEntriesKey(payload.leadId));
@@ -184,10 +169,7 @@ export async function createSelfJournalingEntry(
 }
 
 /** Delete a self-journaling entry */
-export async function deleteSelfJournalingEntry(
-  id: string,
-  leadId: number,
-): Promise<void> {
+export async function deleteSelfJournalingEntry(id: string, leadId: number): Promise<void> {
   await cmsApi.delete(`/api/v1/cms/journaling/self/${id}`);
 
   await globalMutate(selfJournalingEntriesKey(leadId));

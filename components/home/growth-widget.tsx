@@ -32,11 +32,11 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
+  type GrowthDay,
   todayIso,
   useGrowthDay,
   useGrowthLatestActiveDate,
   useGrowthWeek,
-  type GrowthDay,
 } from "@/hooks/growth/use-growth";
 import { useAuth } from "@/hooks/use-auth";
 import { cn } from "@/lib/utils";
@@ -266,9 +266,15 @@ export function GrowthWidget() {
                      *  up. */}
                     <div className="flex items-center justify-center gap-0.5 h-3">
                       {d
-                        ? activeSources(d).slice(0, 3).map(({ key, Icon, tint }) => (
-                            <Icon key={key} className={cn("w-2.5 h-2.5", tint)} strokeWidth={2.5} />
-                          ))
+                        ? activeSources(d)
+                            .slice(0, 3)
+                            .map(({ key, Icon, tint }) => (
+                              <Icon
+                                key={key}
+                                className={cn("w-2.5 h-2.5", tint)}
+                                strokeWidth={2.5}
+                              />
+                            ))
                         : null}
                       {d && activeSources(d).length > 3 && (
                         <span className="text-[8px] font-bold text-primary leading-none">

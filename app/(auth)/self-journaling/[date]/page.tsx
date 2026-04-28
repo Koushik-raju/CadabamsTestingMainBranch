@@ -1,11 +1,11 @@
-'use client';
+"use client";
 
-import { useMemo } from 'react';
-import { useRouter, useParams } from 'next/navigation';
-import { ChevronLeft, Calendar } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Skeleton } from '@/components/ui/skeleton';
-import { useSelfJournalingEntries } from '@/hooks/use-journaling';
+import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
+import { useSelfJournalingEntries } from "@/hooks/use-journaling";
+import { Calendar, ChevronLeft } from "lucide-react";
+import { useParams, useRouter } from "next/navigation";
+import { useMemo } from "react";
 
 export default function JournalDatePage() {
   const router = useRouter();
@@ -17,18 +17,18 @@ export default function JournalDatePage() {
     () =>
       allEntries.filter((e) => {
         const d = new Date(e.createdAt);
-        return !isNaN(d.getTime()) && d.toISOString().split('T')[0] === date;
+        return !isNaN(d.getTime()) && d.toISOString().split("T")[0] === date;
       }),
     [allEntries, date],
   );
 
   const formattedDate = (() => {
     try {
-      return new Date(date + 'T00:00:00').toLocaleDateString('en-US', {
-        weekday: 'long',
-        month: 'long',
-        day: 'numeric',
-        year: 'numeric',
+      return new Date(date + "T00:00:00").toLocaleDateString("en-US", {
+        weekday: "long",
+        month: "long",
+        day: "numeric",
+        year: "numeric",
       });
     } catch {
       return date;
@@ -45,9 +45,7 @@ export default function JournalDatePage() {
         <div className="flex-1">
           <div className="flex items-center gap-1.5">
             <Calendar className="w-4 h-4 text-muted-foreground" />
-            <h1 className="text-base font-semibold text-foreground">
-              {formattedDate}
-            </h1>
+            <h1 className="text-base font-semibold text-foreground">{formattedDate}</h1>
           </div>
         </div>
       </div>
@@ -64,13 +62,8 @@ export default function JournalDatePage() {
           </div>
         ) : entries.length === 0 ? (
           <div className="flex-1 flex flex-col items-center justify-center gap-4 text-center py-20">
-            <p className="text-muted-foreground">
-              No journal entries for this date.
-            </p>
-            <Button
-              className="rounded-full"
-              onClick={() => router.push('/self-journaling/new')}
-            >
+            <p className="text-muted-foreground">No journal entries for this date.</p>
+            <Button className="rounded-full" onClick={() => router.push("/self-journaling/new")}>
               Write now
             </Button>
           </div>
@@ -85,9 +78,9 @@ export default function JournalDatePage() {
                   Entry {i + 1}
                 </span>
                 <span className="text-xs text-muted-foreground">
-                  {new Date(entry.createdAt).toLocaleTimeString('en-US', {
-                    hour: '2-digit',
-                    minute: '2-digit',
+                  {new Date(entry.createdAt).toLocaleTimeString("en-US", {
+                    hour: "2-digit",
+                    minute: "2-digit",
                   })}
                 </span>
               </div>
@@ -98,9 +91,7 @@ export default function JournalDatePage() {
                     <div key={idx} className="flex flex-col gap-2">
                       {prompt.heading && (
                         <div className="border-l-4 border-primary pl-3 py-1.5 bg-primary/5 rounded-r-md">
-                          <p className="text-sm font-semibold text-primary">
-                            {prompt.heading}
-                          </p>
+                          <p className="text-sm font-semibold text-primary">{prompt.heading}</p>
                         </div>
                       )}
                       <p className="text-sm text-foreground whitespace-pre-wrap leading-relaxed ml-1">
@@ -118,9 +109,7 @@ export default function JournalDatePage() {
               {(entry.emotion || entry.stressLevel) && (
                 <div className="flex gap-3 pt-2 border-t border-border">
                   {entry.emotion && (
-                    <span className="text-xs text-muted-foreground">
-                      Mood: {entry.emotion}/5
-                    </span>
+                    <span className="text-xs text-muted-foreground">Mood: {entry.emotion}/5</span>
                   )}
                   {entry.stressLevel && (
                     <span className="text-xs text-muted-foreground">

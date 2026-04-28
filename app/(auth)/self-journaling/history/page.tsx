@@ -1,12 +1,12 @@
-'use client';
+"use client";
 
-import { useState, useMemo, Suspense } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
-import { ChevronLeft, Search, X, Clock } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Skeleton } from '@/components/ui/skeleton';
-import { useSelfJournalingEntries } from '@/hooks/use-journaling';
-import type { SelfJournalingEntry } from '@/hooks/use-journaling';
+import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
+import { useSelfJournalingEntries } from "@/hooks/use-journaling";
+import type { SelfJournalingEntry } from "@/hooks/use-journaling";
+import { ChevronLeft, Clock, Search, X } from "lucide-react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { Suspense, useMemo, useState } from "react";
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -21,16 +21,16 @@ interface GroupedEntries {
 function groupByDate(entries: SelfJournalingEntry[]): GroupedEntries[] {
   const today = new Date();
   today.setHours(0, 0, 0, 0);
-  const todayStr = today.toISOString().split('T')[0];
+  const todayStr = today.toISOString().split("T")[0];
   const yesterday = new Date(today);
   yesterday.setDate(yesterday.getDate() - 1);
-  const yesterdayStr = yesterday.toISOString().split('T')[0];
+  const yesterdayStr = yesterday.toISOString().split("T")[0];
 
   const map = new Map<string, SelfJournalingEntry[]>();
   for (const entry of entries) {
     const d = new Date(entry.createdAt);
     if (isNaN(d.getTime())) continue;
-    const dateStr = d.toISOString().split('T')[0];
+    const dateStr = d.toISOString().split("T")[0];
     const arr = map.get(dateStr) ?? [];
     arr.push(entry);
     map.set(dateStr, arr);
@@ -40,11 +40,15 @@ function groupByDate(entries: SelfJournalingEntry[]): GroupedEntries[] {
     .sort(([a], [b]) => (a > b ? -1 : 1))
     .map(([dateStr, items]) => {
       let label: string;
-      if (dateStr === todayStr) label = 'Today';
-      else if (dateStr === yesterdayStr) label = 'Yesterday';
-      else label = new Date(dateStr + 'T00:00:00').toLocaleDateString('en-US', {
-        weekday: 'short', month: 'long', day: 'numeric', year: 'numeric',
-      });
+      if (dateStr === todayStr) label = "Today";
+      else if (dateStr === yesterdayStr) label = "Yesterday";
+      else
+        label = new Date(dateStr + "T00:00:00").toLocaleDateString("en-US", {
+          weekday: "short",
+          month: "long",
+          day: "numeric",
+          year: "numeric",
+        });
       return { label, dateStr, entries: items };
     });
 }
@@ -53,7 +57,12 @@ function matchesSearch(entry: SelfJournalingEntry, query: string): boolean {
   const q = query.toLowerCase();
   if (entry.title?.toLowerCase().includes(q)) return true;
   if (entry.entry?.toLowerCase().includes(q)) return true;
-  if (entry.prompts?.some((p) => p.heading?.toLowerCase().includes(q) || p.text?.toLowerCase().includes(q))) return true;
+  if (
+    entry.prompts?.some(
+      (p) => p.heading?.toLowerCase().includes(q) || p.text?.toLowerCase().includes(q),
+    )
+  )
+    return true;
   return false;
 }
 
@@ -79,19 +88,19 @@ function EntryDetailModal({
           <div className="flex items-start justify-between">
             <div>
               <h2 className="text-lg font-bold text-foreground">
-                {entry.title ?? 'Journal Entry'}
+                {entry.title ?? "Journal Entry"}
               </h2>
               <p className="text-xs text-muted-foreground mt-0.5">
-                {new Date(entry.createdAt).toLocaleDateString('en-US', {
-                  weekday: 'long',
-                  month: 'long',
-                  day: 'numeric',
-                  year: 'numeric',
-                })}{' '}
-                at{' '}
-                {new Date(entry.createdAt).toLocaleTimeString('en-US', {
-                  hour: 'numeric',
-                  minute: '2-digit',
+                {new Date(entry.createdAt).toLocaleDateString("en-US", {
+                  weekday: "long",
+                  month: "long",
+                  day: "numeric",
+                  year: "numeric",
+                })}{" "}
+                at{" "}
+                {new Date(entry.createdAt).toLocaleTimeString("en-US", {
+                  hour: "numeric",
+                  minute: "2-digit",
                   hour12: true,
                 })}
               </p>
@@ -156,11 +165,11 @@ function EntryDetailModal({
 function HistoryContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const categoryId = searchParams.get('categoryId');
-  const subJournalId = searchParams.get('subJournalId');
+  const categoryId = searchParams.get("categoryId");
+  const subJournalId = searchParams.get("subJournalId");
 
   const { entries: allEntries, isLoading } = useSelfJournalingEntries(300);
-  const [search, setSearch] = useState('');
+  const [search, setSearch] = useState("");
   const [selectedEntry, setSelectedEntry] = useState<SelfJournalingEntry | null>(null);
 
   const filteredEntries = useMemo(() => {
@@ -191,7 +200,7 @@ function HistoryContent() {
         <div className="flex-1">
           <h1 className="text-lg font-semibold text-foreground">Journal History</h1>
           <p className="text-xs text-muted-foreground">
-            {filteredEntries.length} {filteredEntries.length === 1 ? 'entry' : 'entries'}
+            {filteredEntries.length} {filteredEntries.length === 1 ? "entry" : "entries"}
           </p>
         </div>
       </div>
@@ -209,7 +218,7 @@ function HistoryContent() {
           />
           {search && (
             <button
-              onClick={() => setSearch('')}
+              onClick={() => setSearch("")}
               className="absolute right-3 top-1/2 -translate-y-1/2"
             >
               <X className="w-4 h-4 text-muted-foreground" />
@@ -229,13 +238,10 @@ function HistoryContent() {
         ) : grouped.length === 0 ? (
           <div className="flex-1 flex flex-col items-center justify-center gap-4 text-center py-20">
             <p className="text-muted-foreground">
-              {search ? 'No entries match your search.' : 'No journal entries yet.'}
+              {search ? "No entries match your search." : "No journal entries yet."}
             </p>
             {!search && (
-              <Button
-                className="rounded-full"
-                onClick={() => router.push('/self-journaling/new')}
-              >
+              <Button className="rounded-full" onClick={() => router.push("/self-journaling/new")}>
                 Write now
               </Button>
             )}
@@ -248,15 +254,15 @@ function HistoryContent() {
               </h3>
               <div className="flex flex-col gap-2">
                 {group.entries.map((entry) => {
-                  const time = new Date(entry.createdAt).toLocaleTimeString('en-US', {
-                    hour: 'numeric',
-                    minute: '2-digit',
+                  const time = new Date(entry.createdAt).toLocaleTimeString("en-US", {
+                    hour: "numeric",
+                    minute: "2-digit",
                     hour12: true,
                   });
                   const preview =
                     entry.prompts && entry.prompts.length > 0
-                      ? entry.prompts[0].text ?? entry.prompts[0].heading ?? ''
-                      : entry.entry ?? '';
+                      ? (entry.prompts[0].text ?? entry.prompts[0].heading ?? "")
+                      : (entry.entry ?? "");
                   const promptCount = entry.prompts?.length ?? 0;
 
                   return (
@@ -298,10 +304,7 @@ function HistoryContent() {
 
       {/* Entry Detail Modal */}
       {selectedEntry && (
-        <EntryDetailModal
-          entry={selectedEntry}
-          onClose={() => setSelectedEntry(null)}
-        />
+        <EntryDetailModal entry={selectedEntry} onClose={() => setSelectedEntry(null)} />
       )}
     </div>
   );

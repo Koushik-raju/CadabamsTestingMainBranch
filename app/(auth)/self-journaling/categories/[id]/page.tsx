@@ -1,12 +1,12 @@
-'use client';
+"use client";
 
-import { useState, useMemo } from 'react';
-import { useRouter, useParams } from 'next/navigation';
-import { ChevronLeft, Clock, X, Pencil } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Skeleton } from '@/components/ui/skeleton';
-import { useJournalingCategories } from '@/hooks/use-journaling';
-import type { SubJournalingItem } from '@/hooks/use-journaling';
+import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
+import { useJournalingCategories } from "@/hooks/use-journaling";
+import type { SubJournalingItem } from "@/hooks/use-journaling";
+import { ChevronLeft, Clock, Pencil, X } from "lucide-react";
+import { useParams, useRouter } from "next/navigation";
+import { useMemo, useState } from "react";
 
 export default function CategoryDetailPage() {
   const router = useRouter();
@@ -21,14 +21,14 @@ export default function CategoryDetailPage() {
   );
 
   const publishedSubs = useMemo(
-    () => (category?.subJournalings ?? []).filter((s) => s.status === 'PUBLISHED'),
+    () => (category?.subJournalings ?? []).filter((s) => s.status === "PUBLISHED"),
     [category],
   );
 
   const handleStartWriting = (sub: SubJournalingItem) => {
     // Store long AI prompts in sessionStorage
     if (sub.aiPrompt && sub.aiPrompt.length > 1000) {
-      sessionStorage.setItem('pending_ai_prompt', sub.aiPrompt);
+      sessionStorage.setItem("pending_ai_prompt", sub.aiPrompt);
     }
     const params = new URLSearchParams({
       title: sub.title,
@@ -37,7 +37,7 @@ export default function CategoryDetailPage() {
       slug: sub.slug,
     });
     if (sub.aiPrompt && sub.aiPrompt.length <= 1000) {
-      params.set('aiPrompt', sub.aiPrompt);
+      params.set("aiPrompt", sub.aiPrompt);
     }
     router.push(`/self-journaling/new?${params.toString()}`);
   };
@@ -81,9 +81,7 @@ export default function CategoryDetailPage() {
         <div className="flex-1">
           <h1 className="text-lg font-bold text-foreground">{category.title}</h1>
           {category.description && (
-            <p className="text-xs text-muted-foreground line-clamp-1">
-              {category.description}
-            </p>
+            <p className="text-xs text-muted-foreground line-clamp-1">{category.description}</p>
           )}
         </div>
         <Button
@@ -186,7 +184,7 @@ export default function CategoryDetailPage() {
               <div className="mx-5 mb-4 bg-muted rounded-xl p-3">
                 <p className="text-xs text-muted-foreground">
                   <span className="font-semibold">Recommended: </span>
-                  {selectedSub.recommendedCadence.replace(/_/g, ' ')}
+                  {selectedSub.recommendedCadence.replace(/_/g, " ")}
                 </p>
               </div>
             )}

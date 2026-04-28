@@ -1,19 +1,19 @@
-'use client';
+"use client";
 
-import { useState, useEffect, useCallback, Suspense } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
-import { ChevronLeft } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Skeleton } from '@/components/ui/skeleton';
-import { useAuth } from '@/hooks/use-auth';
-import { JournalEditor } from '@/components/journal/journal-editor';
+import { JournalEditor } from "@/components/journal/journal-editor";
+import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
+import { useAuth } from "@/hooks/use-auth";
 import {
+  type JournalingPrompt,
   createSelfJournalingEntry,
   useSelfJournalingEntries,
-  type JournalingPrompt,
-} from '@/hooks/use-journaling';
+} from "@/hooks/use-journaling";
+import { ChevronLeft } from "lucide-react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { Suspense, useCallback, useEffect, useState } from "react";
 
-const API_BASE = 'https://api-ai-mcp.mindtalkbuddy.com';
+const API_BASE = "https://api-ai-mcp.mindtalkbuddy.com";
 
 // ---------------------------------------------------------------------------
 // Template helpers
@@ -27,9 +27,9 @@ function fillPromptTemplate(
   entryText: string,
 ): string {
   return template
-    .replace(/\{\{memory_summary\}\}/g, memorySummary || 'No prior summary available.')
-    .replace(/\{\{recent_entries\}\}/g, recentEntries || 'No recent entries.')
-    .replace(/\{\{entry_text\}\}/g, entryText || '');
+    .replace(/\{\{memory_summary\}\}/g, memorySummary || "No prior summary available.")
+    .replace(/\{\{recent_entries\}\}/g, recentEntries || "No recent entries.")
+    .replace(/\{\{entry_text\}\}/g, entryText || "");
 }
 
 /** Build context strings from recent journal entries */
@@ -39,17 +39,18 @@ function buildContextFromEntries(
   const recent = entries.slice(0, 5);
   const recentEntriesText = recent
     .map((e) => {
-      const text = e.prompts?.map((p) => `${p.heading}: ${p.text}`).join('\n') ?? e.entry ?? '';
+      const text = e.prompts?.map((p) => `${p.heading}: ${p.text}`).join("\n") ?? e.entry ?? "";
       return text.slice(0, 500);
     })
-    .join('\n---\n');
+    .join("\n---\n");
 
-  const memorySummary = recent.length > 0
-    ? `User has ${entries.length} journal entries. Recent themes: ${recent
-        .map((e) => e.prompts?.[0]?.heading ?? e.entry?.slice(0, 50) ?? '')
-        .filter(Boolean)
-        .join(', ')}`
-    : '';
+  const memorySummary =
+    recent.length > 0
+      ? `User has ${entries.length} journal entries. Recent themes: ${recent
+          .map((e) => e.prompts?.[0]?.heading ?? e.entry?.slice(0, 50) ?? "")
+          .filter(Boolean)
+          .join(", ")}`
+      : "";
 
   return { recentEntriesText, memorySummary };
 }
@@ -64,23 +65,24 @@ function NewJournalContent() {
   const { user } = useAuth();
   const { entries: recentEntries } = useSelfJournalingEntries(10);
 
-  const [content, setContent] = useState('');
+  const [content, setContent] = useState("");
   const [savedPrompts, setSavedPrompts] = useState<JournalingPrompt[]>([]);
-  const [currentHeading, setCurrentHeading] = useState('');
+  const [currentHeading, setCurrentHeading] = useState("");
   const [isPromptMode, setIsPromptMode] = useState(false);
   const [isPrompting, setIsPrompting] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [hasAutoTriggered, setHasAutoTriggered] = useState(false);
 
-  const title = searchParams.get('title') ?? undefined;
-  const subJournalId = searchParams.get('subJournalId') ?? undefined;
-  const categoryId = searchParams.get('categoryId') ?? undefined;
-  const slug = searchParams.get('slug') ?? undefined;
+  const title = searchParams.get("title") ?? undefined;
+  const subJournalId = searchParams.get("subJournalId") ?? undefined;
+  const categoryId = searchParams.get("categoryId") ?? undefined;
+  const slug = searchParams.get("slug") ?? undefined;
 
   // Get AI prompt template: URL param → sessionStorage → null
-  const aiPromptTemplate = searchParams.get('aiPrompt')
-    ?? (typeof window !== 'undefined' ? sessionStorage.getItem('pending_ai_prompt') : null)
-    ?? null;
+  const aiPromptTemplate =
+    searchParams.get("aiPrompt") ??
+    (typeof window !== "undefined" ? sessionStorage.getItem("pending_ai_prompt") : null) ??
+    null;
 
   const getLeadId = useCallback((): number | null => {
     if (!user) return null;
@@ -90,14 +92,13 @@ function NewJournalContent() {
   const getMobile = useCallback((): string | null => {
     if (!user) return null;
     const m =
-      (user.caller_mobile as string | undefined) ??
-      (user.phone_number as string | undefined);
-    return m ? m.replace(/\D/g, '') : null;
+      (user.caller_mobile as string | undefined) ?? (user.phone_number as string | undefined);
+    return m ? m.replace(/\D/g, "") : null;
   }, [user]);
 
   // Fetch AI prompt using template + context
   const fetchPromptWithContext = useCallback(
-    async (template: string | null, conversationContext = ''): Promise<string | null> => {
+    async (template: string | null, conversationContext = ""): Promise<string | null> => {
       const leadId = getLeadId();
       const mobile = getMobile();
       if (!leadId || !mobile) return null;
@@ -110,8 +111,8 @@ function NewJournalContent() {
           : undefined;
 
         const res = await fetch(`${API_BASE}/api/journal/prompt-me`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             userId: leadId,
             mobile: String(mobile),
@@ -144,7 +145,7 @@ function NewJournalContent() {
       }
       setIsPrompting(false);
       // Clean up sessionStorage
-      sessionStorage.removeItem('pending_ai_prompt');
+      sessionStorage.removeItem("pending_ai_prompt");
     });
   }, [aiPromptTemplate, user, hasAutoTriggered, fetchPromptWithContext]);
 
@@ -165,8 +166,8 @@ function NewJournalContent() {
     try {
       await createSelfJournalingEntry({
         leadId,
-        title: title ?? allPrompts[0]?.heading ?? 'Journal Entry',
-        entry: allPrompts.map((p) => `${p.heading}\n${p.text}`).join('\n\n'),
+        title: title ?? allPrompts[0]?.heading ?? "Journal Entry",
+        entry: allPrompts.map((p) => `${p.heading}\n${p.text}`).join("\n\n"),
         prompts: allPrompts,
         subJournalingId: subJournalId,
       });
@@ -174,10 +175,10 @@ function NewJournalContent() {
       if (categoryId) {
         router.push(`/self-journaling/history?categoryId=${categoryId}`);
       } else {
-        router.push('/self-journaling');
+        router.push("/self-journaling");
       }
     } catch (err) {
-      console.error('Error saving journal:', err);
+      console.error("Error saving journal:", err);
     } finally {
       setIsSaving(false);
     }
@@ -188,12 +189,9 @@ function NewJournalContent() {
     const previousHeading = currentHeading || "What's on your mind...";
 
     // Build conversation context for go-deeper
-    const conversationCtx = [
-      ...savedPrompts.map((p) => `${p.heading}\n${p.text}`),
-      content.trim(),
-    ]
+    const conversationCtx = [...savedPrompts.map((p) => `${p.heading}\n${p.text}`), content.trim()]
       .filter(Boolean)
-      .join('\n\n');
+      .join("\n\n");
 
     const question = await fetchPromptWithContext(aiPromptTemplate, conversationCtx);
 
@@ -203,12 +201,9 @@ function NewJournalContent() {
     }
 
     if (content.trim()) {
-      setSavedPrompts((prev) => [
-        ...prev,
-        { heading: previousHeading, text: content },
-      ]);
+      setSavedPrompts((prev) => [...prev, { heading: previousHeading, text: content }]);
     }
-    setContent('');
+    setContent("");
     setCurrentHeading(question);
     setIsPromptMode(true);
     setIsPrompting(false);
@@ -219,22 +214,19 @@ function NewJournalContent() {
     const previousHeading = currentHeading || "What's on your mind...";
 
     if (previousContent) {
-      setSavedPrompts((prev) => [
-        ...prev,
-        { heading: previousHeading, text: previousContent },
-      ]);
+      setSavedPrompts((prev) => [...prev, { heading: previousHeading, text: previousContent }]);
     }
-    setContent('');
-    setCurrentHeading('');
+    setContent("");
+    setCurrentHeading("");
     setIsPrompting(true);
 
     // Build full conversation for context
     const conversationCtx = [
       ...savedPrompts.map((p) => `${p.heading}\n${p.text}`),
-      previousContent ? `${previousHeading}\n${previousContent}` : '',
+      previousContent ? `${previousHeading}\n${previousContent}` : "",
     ]
       .filter(Boolean)
-      .join('\n\n');
+      .join("\n\n");
 
     const question = await fetchPromptWithContext(aiPromptTemplate, conversationCtx);
 
@@ -268,9 +260,7 @@ function NewJournalContent() {
         <Button variant="ghost" size="icon" onClick={handleBack}>
           <ChevronLeft className="w-5 h-5" />
         </Button>
-        <h1 className="text-lg font-semibold text-foreground">
-          {title ?? 'Self Journaling'}
-        </h1>
+        <h1 className="text-lg font-semibold text-foreground">{title ?? "Self Journaling"}</h1>
       </div>
 
       {/* Editor */}
