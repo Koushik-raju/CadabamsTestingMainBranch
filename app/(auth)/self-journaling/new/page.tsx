@@ -1,3 +1,35 @@
+/**
+ * FILE: app/(auth)/self-journaling/new/page.tsx
+ *
+ * PURPOSE:
+ *   Free-flow journal entry creation page. Supports AI-assisted prompt mode
+ *   and plain-text mode; submits via createSelfJournalingEntry SDK wrapper.
+ *
+ * LOGIC OVERVIEW:
+ *   1. Reads `title`, `subJournalId`, `categoryId`, `slug`, `aiPrompt` from
+ *      URL search params and sessionStorage.
+ *   2. Fetches recent entries (useSelfJournalingEntries) to build AI context.
+ *   3. In prompt mode: calls the external AI endpoint to generate questions,
+ *      accumulates prompt pairs in savedPrompts state.
+ *   4. On save: assembles saved prompts + current content into a
+ *      CreateJournalEntryDto (entryText + prompts) and calls
+ *      createSelfJournalingEntry, then navigates away.
+ *
+ * KEY VARIABLES / PROPS / EXPORTS:
+ *   savedPrompts       — JournalPromptDto[]; accumulated AI Q&A pairs
+ *   content            — string; current free-text content in the editor
+ *   currentHeading     — string; heading for the in-progress prompt answer
+ *   createSelfJournalingEntry — SDK-backed mutation (hooks/use-journaling)
+ *
+ * DEPENDENCIES:
+ *   createSelfJournalingEntry / useSelfJournalingEntries (hooks/use-journaling)
+ *   JournalEditor (components/journal/journal-editor)
+ *   External AI API: https://api-ai-mcp.mindtalkbuddy.com
+ *
+ * LAST UPDATED: 2026-04-28 — replaced JournalingPrompt with JournalPromptDto;
+ *   createSelfJournalingEntry now uses entryText (SDK field) instead of entry;
+ *   removed leadId from save payload (server resolves user from auth token).
+ */
 "use client";
 
 import { JournalEditor } from "@/components/journal/journal-editor";
@@ -5,7 +37,7 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useAuth } from "@/hooks/use-auth";
 import {
-  type JournalingPrompt,
+  type JournalPromptDto,
   createSelfJournalingEntry,
   useSelfJournalingEntries,
 } from "@/hooks/use-journaling";
@@ -34,12 +66,19 @@ function fillPromptTemplate(
 
 /** Build context strings from recent journal entries */
 function buildContextFromEntries(
-  entries: Array<{ entry?: string | null; prompts?: JournalingPrompt[] | null; createdAt: string }>,
+  entries: Array<{
+    entryText?: { [key: string]: unknown } | null;
+    prompts?: JournalPromptDto[] | null;
+    createdAt: string;
+  }>,
 ): { recentEntriesText: string; memorySummary: string } {
   const recent = entries.slice(0, 5);
   const recentEntriesText = recent
     .map((e) => {
-      const text = e.prompts?.map((p) => `${p.heading}: ${p.text}`).join("\n") ?? e.entry ?? "";
+      const text =
+        e.prompts?.map((p) => `${p.heading}: ${p.text}`).join("\n") ??
+        (typeof e.entryText === "string" ? e.entryText : "") ??
+        "";
       return text.slice(0, 500);
     })
     .join("\n---\n");
@@ -47,7 +86,12 @@ function buildContextFromEntries(
   const memorySummary =
     recent.length > 0
       ? `User has ${entries.length} journal entries. Recent themes: ${recent
-          .map((e) => e.prompts?.[0]?.heading ?? e.entry?.slice(0, 50) ?? "")
+          .map(
+            (e) =>
+              e.prompts?.[0]?.heading ??
+              (typeof e.entryText === "string" ? e.entryText.slice(0, 50) : "") ??
+              "",
+          )
           .filter(Boolean)
           .join(", ")}`
       : "";
@@ -66,7 +110,7 @@ function NewJournalContent() {
   const { entries: recentEntries } = useSelfJournalingEntries(10);
 
   const [content, setContent] = useState("");
-  const [savedPrompts, setSavedPrompts] = useState<JournalingPrompt[]>([]);
+  const [savedPrompts, setSavedPrompts] = useState<JournalPromptDto[]>([]);
   const [currentHeading, setCurrentHeading] = useState("");
   const [isPromptMode, setIsPromptMode] = useState(false);
   const [isPrompting, setIsPrompting] = useState(false);
@@ -150,10 +194,7 @@ function NewJournalContent() {
   }, [aiPromptTemplate, user, hasAutoTriggered, fetchPromptWithContext]);
 
   const handleSave = useCallback(async () => {
-    const leadId = getLeadId();
-    if (!leadId) return;
-
-    const allPrompts: JournalingPrompt[] = [...savedPrompts];
+    const allPrompts: JournalPromptDto[] = [...savedPrompts];
     if (content.trim()) {
       allPrompts.push({
         heading: currentHeading || "What's on your mind...",
@@ -165,9 +206,8 @@ function NewJournalContent() {
     setIsSaving(true);
     try {
       await createSelfJournalingEntry({
-        leadId,
         title: title ?? allPrompts[0]?.heading ?? "Journal Entry",
-        entry: allPrompts.map((p) => `${p.heading}\n${p.text}`).join("\n\n"),
+        entryText: allPrompts.map((p) => `${p.heading}\n${p.text}`).join("\n\n"),
         prompts: allPrompts,
         subJournalingId: subJournalId,
       });
@@ -182,7 +222,7 @@ function NewJournalContent() {
     } finally {
       setIsSaving(false);
     }
-  }, [content, currentHeading, savedPrompts, getLeadId, router, title, subJournalId, categoryId]);
+  }, [content, currentHeading, savedPrompts, router, title, subJournalId, categoryId]);
 
   const handlePromptMe = useCallback(async () => {
     setIsPrompting(true);
