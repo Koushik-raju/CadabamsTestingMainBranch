@@ -143,18 +143,6 @@ export function selfJournalingEntryKey(id: string): string {
   return `/journaling/self/entry/${id}`;
 }
 
-export function journalingCategoriesKey(): string {
-  return '/journaling/categories';
-}
-
-export function selfJournalingEntriesKey(leadId: number | string): string {
-  return `/journaling/self/${leadId}`;
-}
-
-export function selfJournalingEntryKey(id: string): string {
-  return `/journaling/self/entry/${id}`;
-}
-
 export function availablePackagesKey(): string {
   return "/packages/available";
 }
