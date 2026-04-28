@@ -26,9 +26,8 @@
  *   JournalEditor (components/journal/journal-editor)
  *   External AI API: https://api-ai-mcp.mindtalkbuddy.com
  *
- * LAST UPDATED: 2026-04-28 — replaced JournalingPrompt with JournalPromptDto;
- *   createSelfJournalingEntry now uses entryText (SDK field) instead of entry;
- *   removed leadId from save payload (server resolves user from auth token).
+ * LAST UPDATED: 2026-04-28 — buildContextFromEntries accepts unknown fields to handle SDK type gaps
+ *   (entryText/prompts typed incorrectly as objects/nested arrays in generated SDK).
  */
 "use client";
 
@@ -64,11 +63,32 @@ function fillPromptTemplate(
     .replace(/\{\{entry_text\}\}/g, entryText || "");
 }
 
+/*
+ * SDK types entryText as `{ [key: string]: unknown } | null` and prompts as
+ * `unknown[][]`. Accept `unknown` for both so the function can receive the
+ * actual JournalEntryResponseDto[] array without type errors, then extract
+ * plain values at runtime.
+ */
+function safeStr(val: unknown): string {
+  return typeof val === "string" ? val : "";
+}
+
+function parsePromptItem(val: unknown): { heading?: string; text?: string } {
+  if (val && typeof val === "object" && !Array.isArray(val)) {
+    const o = val as Record<string, unknown>;
+    return {
+      heading: typeof o.heading === "string" ? o.heading : undefined,
+      text: typeof o.text === "string" ? o.text : undefined,
+    };
+  }
+  return {};
+}
+
 /** Build context strings from recent journal entries */
 function buildContextFromEntries(
   entries: Array<{
-    entryText?: { [key: string]: unknown } | null;
-    prompts?: JournalPromptDto[] | null;
+    entryText?: unknown;
+    prompts?: unknown[] | null;
     createdAt: string;
   }>,
 ): { recentEntriesText: string; memorySummary: string } {
@@ -76,9 +96,12 @@ function buildContextFromEntries(
   const recentEntriesText = recent
     .map((e) => {
       const text =
-        e.prompts?.map((p) => `${p.heading}: ${p.text}`).join("\n") ??
-        (typeof e.entryText === "string" ? e.entryText : "") ??
-        "";
+        e.prompts
+          ?.map((p) => {
+            const q = parsePromptItem(p);
+            return `${q.heading ?? ""}: ${q.text ?? ""}`;
+          })
+          .join("\n") ?? safeStr(e.entryText);
       return text.slice(0, 500);
     })
     .join("\n---\n");
@@ -86,12 +109,10 @@ function buildContextFromEntries(
   const memorySummary =
     recent.length > 0
       ? `User has ${entries.length} journal entries. Recent themes: ${recent
-          .map(
-            (e) =>
-              e.prompts?.[0]?.heading ??
-              (typeof e.entryText === "string" ? e.entryText.slice(0, 50) : "") ??
-              "",
-          )
+          .map((e) => {
+            const firstPrompt = e.prompts?.[0];
+            return parsePromptItem(firstPrompt).heading ?? safeStr(e.entryText).slice(0, 50);
+          })
           .filter(Boolean)
           .join(", ")}`
       : "";

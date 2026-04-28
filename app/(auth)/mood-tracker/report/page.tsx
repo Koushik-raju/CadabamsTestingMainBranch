@@ -18,7 +18,7 @@
  * DEPENDENCIES:
  *   useMoodReport, useMoodEntries, PageHeader, Card, Skeleton, Button.
  *
- * LAST UPDATED: 2026-04-28 — initial creation.
+ * LAST UPDATED: 2026-04-28 — fix moodLabel SDK type gap (generated as object, guarded at render).
  */
 "use client";
 
@@ -30,6 +30,11 @@ import { useMoodEntries, useMoodReport } from "@/hooks/mood-tracker/use-mood-tra
 import { useMemo, useState } from "react";
 
 type Window = "7d" | "30d" | "all";
+
+/* SDK types moodLabel as an object; extract only if it's a real string at runtime. */
+function safeStr(val: unknown, fallback: string): string {
+  return typeof val === "string" ? val : fallback;
+}
 
 const SCORE_EMOJI = ["😢", "😕", "😐", "🙂", "😄"];
 const SCORE_TINT: Record<number, string> = {
@@ -184,7 +189,7 @@ export default function MoodTrackerReportPage() {
                       <div className="flex-1 min-w-0">
                         <div className="flex items-baseline justify-between gap-2">
                           <p className="text-sm font-semibold truncate">
-                            {entry.moodLabel ?? `Mood ${entry.moodScore}`}
+                            {safeStr(entry.moodLabel, `Mood ${entry.moodScore}`)}
                           </p>
                           <p className="text-[11px] text-muted-foreground shrink-0">
                             {formatDay(entry.loggedAt)} · {formatTime(entry.loggedAt)}

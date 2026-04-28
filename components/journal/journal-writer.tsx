@@ -41,7 +41,7 @@
  *   emoji-picker-react          — emoji picker UI
  *   Web Speech API              — browser-native mic transcription
  *
- * LAST UPDATED: 2026-04-28 — Neo design system: shadow scale, color tokens, border radius
+ * LAST UPDATED: 2026-04-28 — fetchPrompt now extracts .question from GeneratedJournalPromptResponseDto
  */
 "use client";
 
@@ -175,7 +175,10 @@ export function JournalWriter({ slug }: JournalWriterProps) {
         : []),
     ];
 
-    return generateJournalPrompt(subJournalingId, history.length > 0 ? history : undefined);
+    /* generateJournalPrompt returns the full DTO; callers only need the question string. */
+    return generateJournalPrompt(subJournalingId, history.length > 0 ? history : undefined).then(
+      (r) => r?.question ?? null,
+    );
   }, [subJournalingId, savedPrompts, content, currentHeading]);
 
   /*

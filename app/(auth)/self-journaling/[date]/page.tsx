@@ -1,3 +1,28 @@
+/**
+ * FILE: app/(auth)/self-journaling/[date]/page.tsx
+ *
+ * PURPOSE:
+ *   Shows all journal entries logged on a specific date (route param `date`),
+ *   filtered client-side from the user's full entry list.
+ *
+ * LOGIC OVERVIEW:
+ *   1. Reads the `date` route param (YYYY-MM-DD).
+ *   2. Fetches all entries via useSelfJournalingEntries and filters to those
+ *      whose `createdAt` matches `date`.
+ *   3. Renders each entry: prompt Q&A pairs when present, otherwise the raw
+ *      entryText. Shows emotion and stress level when available.
+ *   SDK types several fields (entryText, emotion, stressLevel, prompts) as
+ *   `{ [key: string]: unknown }` or `Array<Array<unknown>>` — runtime helpers
+ *   (displayVal, parsePrompt) extract plain values safely without type coercion.
+ *
+ * KEY VARIABLES / EXPORTS:
+ *   JournalDatePage — default export.
+ *
+ * DEPENDENCIES:
+ *   useSelfJournalingEntries (hooks/use-journaling)
+ *
+ * LAST UPDATED: 2026-04-28 — added header; fixed SDK type gaps (displayVal, parsePrompt helpers).
+ */
 "use client";
 
 import { Button } from "@/components/ui/button";
@@ -6,6 +31,29 @@ import { useSelfJournalingEntries } from "@/hooks/use-journaling";
 import { Calendar, ChevronLeft } from "lucide-react";
 import { useParams, useRouter } from "next/navigation";
 import { useMemo } from "react";
+
+/*
+ * SDK generates entryText, emotion, stressLevel as `{ [key: string]: unknown } | null`
+ * and prompts as `Array<Array<unknown>>`. These helpers safely extract the actual
+ * string/number values the backend returns without `as T` type coercions.
+ */
+function displayVal(val: unknown): string | undefined {
+  if (val === null || val === undefined) return undefined;
+  if (typeof val === "string") return val;
+  if (typeof val === "number") return String(val);
+  return undefined;
+}
+
+function parsePrompt(val: unknown): { heading?: string; text?: string } {
+  if (val && typeof val === "object" && !Array.isArray(val)) {
+    const o = val as Record<string, unknown>;
+    return {
+      heading: typeof o.heading === "string" ? o.heading : undefined,
+      text: typeof o.text === "string" ? o.text : undefined,
+    };
+  }
+  return {};
+}
 
 export default function JournalDatePage() {
   const router = useRouter();
@@ -87,33 +135,38 @@ export default function JournalDatePage() {
 
               {entry.prompts && entry.prompts.length > 0 ? (
                 <div className="flex flex-col gap-4">
-                  {entry.prompts.map((prompt, idx) => (
-                    <div key={idx} className="flex flex-col gap-2">
-                      {prompt.heading && (
-                        <div className="border-l-4 border-primary pl-3 py-1.5 bg-primary/5 rounded-r-md">
-                          <p className="text-sm font-semibold text-primary">{prompt.heading}</p>
-                        </div>
-                      )}
-                      <p className="text-sm text-foreground whitespace-pre-wrap leading-relaxed ml-1">
-                        {prompt.text}
-                      </p>
-                    </div>
-                  ))}
+                  {entry.prompts.map((prompt, idx) => {
+                    const p = parsePrompt(prompt);
+                    return (
+                      <div key={idx} className="flex flex-col gap-2">
+                        {p.heading && (
+                          <div className="border-l-4 border-primary pl-3 py-1.5 bg-primary/5 rounded-r-md">
+                            <p className="text-sm font-semibold text-primary">{p.heading}</p>
+                          </div>
+                        )}
+                        <p className="text-sm text-foreground whitespace-pre-wrap leading-relaxed ml-1">
+                          {p.text}
+                        </p>
+                      </div>
+                    );
+                  })}
                 </div>
               ) : (
                 <p className="text-sm text-foreground whitespace-pre-wrap leading-relaxed">
-                  {entry.entry}
+                  {displayVal(entry.entryText)}
                 </p>
               )}
 
               {(entry.emotion || entry.stressLevel) && (
                 <div className="flex gap-3 pt-2 border-t border-border">
                   {entry.emotion && (
-                    <span className="text-xs text-muted-foreground">Mood: {entry.emotion}/5</span>
+                    <span className="text-xs text-muted-foreground">
+                      Mood: {displayVal(entry.emotion)}/5
+                    </span>
                   )}
                   {entry.stressLevel && (
                     <span className="text-xs text-muted-foreground">
-                      Stress: {entry.stressLevel}/5
+                      Stress: {displayVal(entry.stressLevel)}/5
                     </span>
                   )}
                 </div>
