@@ -27,6 +27,7 @@
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import {
+  Activity,
   BookOpen,
   CalendarCheck,
   ClipboardList,
@@ -36,6 +37,7 @@ import {
   MessageCircle,
   Package,
   Pill,
+  Smile,
   Wind,
 } from "lucide-react";
 
@@ -70,6 +72,24 @@ const ACTIONS: Action[] = [
     badgeVariant: "mt-green",
     icon: CalendarCheck,
     tint: "green",
+  },
+  {
+    key: "mood-tracker",
+    title: "Mood Tracker",
+    description: "Log your mood & view your report.",
+    badge: "Daily check-in",
+    icon: Smile,
+    iconBg: "bg-pink-100",
+    iconColor: "text-pink-600",
+  },
+  {
+    key: "stress-tracker",
+    title: "Stress Tracker",
+    description: "Track your stress level & stressors.",
+    badge: "Quick log",
+    icon: Activity,
+    iconBg: "bg-rose-100",
+    iconColor: "text-rose-600",
   },
   {
     key: "assessment",
