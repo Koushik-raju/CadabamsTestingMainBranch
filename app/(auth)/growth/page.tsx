@@ -29,7 +29,7 @@
  *   WeeklyCalendar, DayFeed, MarkdownModal (components/growth/*)
  *   PageHeader (components/shared/navigation/page-header)
  *
- * LAST UPDATED: 2026-04-27 — wrap useSearchParams in Suspense to fix build error
+ * LAST UPDATED: 2026-04-28 — Neo design system: shadow scale, color tokens, border radius
  */
 "use client";
 

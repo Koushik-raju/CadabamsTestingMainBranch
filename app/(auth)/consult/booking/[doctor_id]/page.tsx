@@ -25,7 +25,7 @@
  *   useBooking — BookingContext for saving selection before checkout
  *   PageHeader — shared navigation header
  *
- * LAST UPDATED: 2026-04-27 — add discard-slot confirmation dialog when user switches date with a slot already selected
+ * LAST UPDATED: 2026-04-28 — Neo design system: shadow scale, color tokens, border radius
  */
 "use client";
 
@@ -471,7 +471,9 @@ function BookingContent() {
               onClick={() => handleSessionToggle(true)}
               className={cn(
                 "px-4 py-1.5 rounded-md transition-all",
-                isOnline ? "bg-background text-foreground shadow-sm" : "text-muted-foreground",
+                isOnline
+                  ? "bg-background text-foreground shadow-[var(--sh-1)]"
+                  : "text-muted-foreground",
               )}
             >
               Online
@@ -481,7 +483,9 @@ function BookingContent() {
               onClick={() => handleSessionToggle(false)}
               className={cn(
                 "px-4 py-1.5 rounded-md transition-all",
-                !isOnline ? "bg-background text-foreground shadow-sm" : "text-muted-foreground",
+                !isOnline
+                  ? "bg-background text-foreground shadow-[var(--sh-1)]"
+                  : "text-muted-foreground",
               )}
             >
               In-person

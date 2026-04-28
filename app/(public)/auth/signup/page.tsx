@@ -1,3 +1,41 @@
+/**
+ * FILE: app/(public)/auth/signup/page.tsx
+ *
+ * PURPOSE:
+ *   Public signup page for new users. Implements two-step registration: step 1 collects
+ *   user details (first name, last name, email, phone), step 2 verifies OTP sent to phone.
+ *
+ * LOGIC OVERVIEW:
+ *   Form state tracks "form" (initial details) and "otp" (verification) steps. Step 1 renders
+ *   input fields for name, email, and phone with validation. On submission, sendOtp is called
+ *   and step advances to "otp". Step 2 renders OTP input that auto-submits on completion.
+ *   Successful verification calls verifySignup (includes first/last name, email, phone, country code),
+ *   then login() and redirects to /home. If account exists (duplicate phone), redirects to /auth/login.
+ *   Timer countdown allows resend after 30 sec. Search param "mobile" pre-fills the phone field.
+ *
+ * KEY VARIABLES / PROPS / EXPORTS:
+ *   step              — "form" | "otp"; controls which content is displayed
+ *   otp               — String of digits (auto-verifies at length 4)
+ *   timer             — Countdown in seconds until OTP resend is allowed
+ *   country           — Selected Country object for calling code info
+ *   form state        — Zod-validated firstName, lastName, email, phone
+ *   mobileParam       — Search param that pre-fills phone field if provided
+ *   onSendOtp         — Submits form data to sendOtp, advances to OTP step, starts timer
+ *   handleSignup      — Submits OTP to verifySignup with form data, redirects on success
+ *   SignupPage        — Page export; wraps SignupContent in Suspense
+ *   SignupContent     — Main component rendering signup form
+ *
+ * DEPENDENCIES:
+ *   useAuth, useAuthActions hooks
+ *   SWR hooks: sendOtp, verifySignup
+ *   react-hook-form + zod for form validation
+ *   react-toastify for notifications
+ *   shadcn/ui primitives: Card, Button, Input, Label, Dialog, Separator, Skeleton
+ *   lucide-react icons: ArrowLeft, Heart
+ *
+ * LAST UPDATED: 2026-04-28 — Neo design system: file header added
+ */
+
 "use client";
 
 import { OTPInput } from "@/components/common/otp-input";

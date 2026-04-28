@@ -1,3 +1,27 @@
+/**
+ * FILE: components/shared/questions/assessment-question-card.tsx
+ *
+ * PURPOSE:
+ *   Renders a single assessment question with various answer selector types
+ *   (smiley, single choice, range slider, etc.). Handles question display,
+ *   progress indicator, and answer callbacks.
+ *
+ * LOGIC OVERVIEW:
+ *   Maps question.type to a selector component (SmileySelector, SingleChoice, RangeSlider, etc.).
+ *   Extracts rich text fields (title, subtitle, hint) using extractTextFromRich utility.
+ *   Displays question index / total count in progress area.
+ *   Dispatches answer via onAnswer callback with question ID and selected value.
+ *
+ * KEY VARIABLES / PROPS / EXPORTS:
+ *   AssessmentQuestionItem — interface with id, type, title, subtitle, hint, options, etc.
+ *   onAnswer              — callback(questionId, value) fired on answer selection
+ *   selectedAnswer        — current selected value for this question
+ *
+ * DEPENDENCIES:
+ *   React hooks (useState)
+ *
+ * LAST UPDATED: 2026-04-28 — Neo design system: shadow scale, color tokens, border radius
+ */
 "use client";
 
 import { useState } from "react";
@@ -78,7 +102,7 @@ function SmileySelector({
             onClick={() => onSelect(index)}
             className={`flex flex-col items-center gap-2 p-3 rounded-xl border-2 transition-all ${
               isSelected
-                ? "border-primary bg-primary/10 shadow-md"
+                ? "border-primary bg-primary/10 shadow-[var(--sh-2)]"
                 : "border-transparent bg-card hover:border-border"
             }`}
           >
@@ -186,7 +210,7 @@ function Indicator({
           setSliderValue(v);
           onChange(v);
         }}
-        className="w-full h-2 bg-muted rounded-lg appearance-none cursor-pointer accent-primary"
+        className="w-full h-2 bg-muted rounded-xl appearance-none cursor-pointer accent-primary"
       />
     </div>
   );

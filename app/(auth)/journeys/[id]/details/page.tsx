@@ -21,7 +21,7 @@
  *   JourneyPathView — components/journey/journey-path-view
  *   PageHeader — shared navigation header
  *
- * LAST UPDATED: 2026-04-23 — migrated sticky app bar to PageHeader
+ * LAST UPDATED: 2026-04-28 — Neo design system: shadow scale, color tokens, border radius
  */
 "use client";
 
@@ -164,7 +164,7 @@ function DetailsContent({ params }: PageProps) {
               </div>
             </div>
           ) : (
-            <div className="relative overflow-hidden rounded-2xl border border-primary/30 bg-gradient-to-br from-primary to-primary/80 p-3 text-primary-foreground shadow-xl">
+            <div className="relative overflow-hidden rounded-2xl border border-primary/30 bg-gradient-to-br from-primary to-primary/80 p-3 text-primary-foreground shadow-[var(--sh-3)]">
               <div className="flex items-center gap-3">
                 <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white/20">
                   <Sparkles className="h-5 w-5" />

@@ -1,3 +1,29 @@
+/**
+ * FILE: components/worksheet/worksheet-card.tsx
+ *
+ * PURPOSE:
+ *   Displays a single worksheet item in a card layout with status badge, assigned date,
+ *   and an action button to open the worksheet. Used in list views of assigned worksheets.
+ *
+ * LOGIC OVERVIEW:
+ *   Renders a Card containing the worksheet metadata (label, description, categories,
+ *   completion status). Formats the assigned date using Indian locale. Displays a
+ *   completion badge and a button to trigger the onOpen callback for navigation.
+ *
+ * KEY VARIABLES / PROPS / EXPORTS:
+ *   item              — AssignedWorksheetItem passed as prop, contains label, description, status, etc.
+ *   onOpen            — Callback fired when the action button is clicked, receives the item
+ *   assignedDate      — Computed from item.assignedAt, formatted as "DD MMM YYYY" in Indian locale
+ *   WorksheetCard     — Main export; component that renders a single worksheet card
+ *   AssignedWorksheetItem — TypeScript interface defining the shape of a worksheet item
+ *
+ * DEPENDENCIES:
+ *   shadcn/ui primitives: Badge, Button, Card, CardContent
+ *   lucide-react icons: BookOpen, CheckCircle2, ChevronRight
+ *
+ * LAST UPDATED: 2026-04-28 — Neo design system: shadow scale (shadow-md → shadow-[var(--sh-2)])
+ */
+
 "use client";
 
 import { Badge } from "@/components/ui/badge";
@@ -33,7 +59,7 @@ export function WorksheetCard({ item, onOpen }: WorksheetCardProps) {
     : null;
 
   return (
-    <Card className="hover:shadow-md transition-shadow duration-200">
+    <Card className="hover:shadow-[var(--sh-2)] transition-shadow duration-200">
       <CardContent className="p-3 sm:p-4">
         <div className="flex items-center justify-between gap-3">
           <div className="flex items-center gap-3 flex-1 min-w-0">

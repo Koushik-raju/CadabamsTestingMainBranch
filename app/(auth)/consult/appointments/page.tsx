@@ -19,7 +19,7 @@
  *   AppointmentCard — shared appointment card component
  *   PageHeader      — shared navigation header
  *
- * LAST UPDATED: 2026-04-23 — migrated custom header div to PageHeader; added file header
+ * LAST UPDATED: 2026-04-28 — Neo design system: shadow scale, color tokens, border radius
  */
 "use client";
 
@@ -128,7 +128,7 @@ export default function AppointmentsPage() {
 
       {!isLoading && total > 0 && (
         <div className="fixed bottom-6 right-4">
-          <Button asChild size="lg" className="rounded-full shadow-lg gap-2">
+          <Button asChild size="lg" className="rounded-full shadow-[var(--sh-3)] gap-2">
             <Link href="/consult/find-therapist">
               <Plus className="h-5 w-5" strokeWidth={3} />
               New

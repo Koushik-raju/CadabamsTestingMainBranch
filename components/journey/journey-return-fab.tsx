@@ -29,7 +29,7 @@
  *   next/navigation useRouter, usePathname
  *   shadcn Button — components/ui/button
  *
- * LAST UPDATED: 2026-04-24 — allow FAB on /journeys/[id]/details for post-task redirect; "Continue your journey" dismiss mode.
+ * LAST UPDATED: 2026-04-28 — Neo design system: shadow scale, color tokens, border radius
  */
 "use client";
 
@@ -75,7 +75,7 @@ export function JourneyReturnFab() {
 
   return (
     <div className="fixed bottom-24 right-4 left-4 z-[100] sm:left-auto sm:max-w-sm animate-in fade-in slide-in-from-bottom-4 duration-300">
-      <div className="relative overflow-hidden rounded-2xl border border-emerald-500/20 bg-gradient-to-br from-emerald-500 to-teal-600 p-4 text-white shadow-xl shadow-emerald-500/30">
+      <div className="relative overflow-hidden rounded-2xl border border-emerald-500/20 bg-gradient-to-br from-emerald-500 to-teal-600 p-4 text-white shadow-[var(--sh-3)] shadow-emerald-500/30">
         <div className="absolute -top-6 -right-6 h-24 w-24 rounded-full bg-white/10" />
         <div className="relative flex items-start gap-3">
           <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white/20">

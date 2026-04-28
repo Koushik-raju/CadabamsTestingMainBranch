@@ -21,7 +21,7 @@
  *   BookedPackageDto  — from @/sdk/backend-v2
  *   odooTuple         — from @/lib/odoo (safe many2one tuple access)
  *
- * LAST UPDATED: 2026-04-17 — added odooTuple guard for package_id many2one field
+ * LAST UPDATED: 2026-04-28 — Neo design system: shadow scale, color tokens, border radius
  */
 "use client";
 
@@ -76,7 +76,7 @@ export function BookedPackageCard({
   const StageIcon = stageConfig.icon;
 
   return (
-    <Card className="border-border bg-card hover:shadow-md transition-shadow">
+    <Card className="border-border bg-card hover:shadow-[var(--sh-2)] transition-shadow">
       <CardContent className="p-4 space-y-4">
         {/* Header */}
         <div className="flex items-start justify-between gap-2">
@@ -94,7 +94,7 @@ export function BookedPackageCard({
         {/* Details */}
         <div className="space-y-2.5">
           <div className="flex items-center gap-2.5">
-            <div className="flex items-center justify-center w-7 h-7 bg-muted rounded-lg shrink-0">
+            <div className="flex items-center justify-center w-7 h-7 bg-muted rounded-xl shrink-0">
               <IndianRupee className="w-3.5 h-3.5 text-primary" />
             </div>
             <div>
@@ -106,7 +106,7 @@ export function BookedPackageCard({
           </div>
 
           <div className="flex items-center gap-2.5">
-            <div className="flex items-center justify-center w-7 h-7 bg-muted rounded-lg shrink-0">
+            <div className="flex items-center justify-center w-7 h-7 bg-muted rounded-xl shrink-0">
               <Hash className="w-3.5 h-3.5 text-primary" />
             </div>
             <div>
@@ -116,7 +116,7 @@ export function BookedPackageCard({
           </div>
 
           <div className="flex items-center gap-2.5">
-            <div className="flex items-center justify-center w-7 h-7 bg-muted rounded-lg shrink-0">
+            <div className="flex items-center justify-center w-7 h-7 bg-muted rounded-xl shrink-0">
               <CalendarDays className="w-3.5 h-3.5 text-primary" />
             </div>
             <div>

@@ -1,3 +1,25 @@
+/**
+ * FILE: components/home/recommendations.tsx
+ *
+ * PURPOSE:
+ *   Renders a horizontally scrollable carousel of recommended content items (guided sessions, soundscapes, etc.).
+ *
+ * LOGIC OVERVIEW:
+ *   Accepts an optional items array; falls back to placeholders if empty or not provided.
+ *   Maps items to card tiles with image, title, category, and optional duration badge.
+ *   Each tile is clickable and dispatches onRecommendClick callback.
+ *   Right edge has a gradient fade to hint at horizontal scrolling.
+ *
+ * KEY VARIABLES / PROPS / EXPORTS:
+ *   items            — array of RecommendationItem (id, title, category, duration, image)
+ *   onRecommendClick — callback fired when item is tapped
+ *
+ * DEPENDENCIES:
+ *   lucide-react Play icon
+ *   next/image
+ *
+ * LAST UPDATED: 2026-04-28 — Neo design system: shadow scale, color tokens, border radius
+ */
 import { Play } from "lucide-react";
 import Image from "next/image";
 
@@ -53,7 +75,7 @@ export function Recommendations({ items, onRecommendClick }: Props) {
                   className="object-cover transition-transform duration-700 group-hover:scale-110"
                 />
                 {item.duration && (
-                  <div className="absolute right-4 bottom-4 bg-foreground/80 text-background backdrop-blur-md px-3 py-1.5 rounded-lg text-[11px] font-bold flex items-center gap-1.5">
+                  <div className="absolute right-4 bottom-4 bg-foreground/80 text-background backdrop-blur-md px-3 py-1.5 rounded-xl text-[11px] font-bold flex items-center gap-1.5">
                     <Play className="w-2.5 h-2.5 fill-background" />
                     <span>{item.duration}</span>
                   </div>

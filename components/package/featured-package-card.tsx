@@ -1,3 +1,31 @@
+/**
+ * FILE: components/package/featured-package-card.tsx
+ *
+ * PURPOSE:
+ *   Renders a featured package card with gradient background, badge, and call-to-action button.
+ *   Used to highlight premium or promoted packages in the packages list.
+ *
+ * LOGIC OVERVIEW:
+ *   1. Accepts a PackageResponseDto as prop.
+ *   2. Retrieves package color palette using getPackagePalette(pkg.id).
+ *   3. Renders a Card with gradient background, decorative circles, and content at bottom.
+ *   4. On click, navigates to /packages/browse/{pkg.id}.
+ *   5. Book Now button also navigates to the same route and prevents propagation.
+ *
+ * KEY VARIABLES / PROPS / EXPORTS:
+ *   pkg                     — PackageResponseDto; the package data to display
+ *   palette                 — object from getPackagePalette; contains gradient and badgeBg classes
+ *   FeaturedPackageCard     — exported component function
+ *
+ * DEPENDENCIES:
+ *   @/lib/package-colors    — getPackagePalette function for color schemes
+ *   @/sdk/backend-v2        — PackageResponseDto type
+ *   lucide-react            — icon library
+ *   next/navigation         — useRouter hook
+ *
+ * LAST UPDATED: 2026-04-28 — Neo design system: shadow scale, color tokens, border radius
+ */
+
 "use client";
 
 import { Badge } from "@/components/ui/badge";
@@ -19,7 +47,7 @@ export function FeaturedPackageCard({ pkg }: FeaturedPackageCardProps) {
 
   return (
     <Card
-      className="relative w-full overflow-hidden cursor-pointer active:scale-[0.98] transition-all border-0 shadow-lg"
+      className="relative w-full overflow-hidden cursor-pointer active:scale-[0.98] transition-all border-0 shadow-[var(--sh-3)]"
       style={{ minHeight: 230 }}
       onClick={() => router.push(`/packages/browse/${pkg.id}`)}
     >
@@ -65,7 +93,7 @@ export function FeaturedPackageCard({ pkg }: FeaturedPackageCardProps) {
 
         <Button
           size="sm"
-          className="bg-white hover:bg-white/90 font-bold text-xs rounded-full px-5 shadow-md border-0"
+          className="bg-white hover:bg-white/90 font-bold text-xs rounded-full px-5 shadow-[var(--sh-2)] border-0"
           style={{ color: "var(--primary)" }}
           onClick={(e) => {
             e.stopPropagation();

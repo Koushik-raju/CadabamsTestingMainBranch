@@ -1,3 +1,28 @@
+/**
+ * FILE: app/(auth)/stress-management/body-scan/page.tsx
+ *
+ * PURPOSE:
+ *   Guided body scan meditation exercise page.
+ *   Steps through body parts (feet to head) with timed instructions for progressive relaxation.
+ *
+ * LOGIC OVERVIEW:
+ *   Renders a step-by-step body scan with navigation (previous/next).
+ *   Tracks current body part index. Displays timed instruction for each part.
+ *   Timer counts down and auto-advances to next part when complete.
+ *   Shows progress (completed checkmarks) for previous parts.
+ *
+ * KEY VARIABLES / PROPS / EXPORTS:
+ *   currentIndex   — index into BODY_PARTS array
+ *   timeRemaining  — countdown timer for current part in seconds
+ *   BODY_PARTS     — predefined body part sequence with instructions and duration
+ *
+ * DEPENDENCIES:
+ *   Button, Card, CardContent  — shadcn/ui primitives
+ *   CheckCircle2, ChevronLeft, ChevronRight  — lucide icons
+ *
+ * LAST UPDATED: 2026-04-28 — Neo design system: shadow scale, color tokens, border radius
+ */
+
 "use client";
 
 import { Button } from "@/components/ui/button";

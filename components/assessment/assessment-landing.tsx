@@ -1,3 +1,32 @@
+/**
+ * FILE: components/assessment/assessment-landing.tsx
+ *
+ * PURPOSE:
+ *   Landing/intro card shown before starting an assessment — displays title,
+ *   description, hero image, metadata (duration/question count), and expected outcomes.
+ *
+ * LOGIC OVERVIEW:
+ *   - Receives assessment data and callback functions (onStart, onBack).
+ *   - Extracts landing-specific fields (landingTitle, landingDescription, etc.)
+ *     from nested object/string properties using extractTextFromRich helper.
+ *   - Renders hero image, metadata cards, "What to expect" list, citation note, and
+ *     bottom sticky CTA button.
+ *   - No data fetching; component is presentational only.
+ *
+ * KEY VARIABLES / PROPS / EXPORTS:
+ *   assessment      — AssessmentItem: assessment data from hook
+ *   onStart         — callback fired when user taps Start CTA
+ *   onBack          — callback fired when user taps back button
+ *   landingTitle    — extracted from assessment.landingTitle.title or falls back to title
+ *   points          — "What to expect" array from landing metadata
+ *   AssessmentLanding — default export
+ *
+ * DEPENDENCIES:
+ *   shadcn/ui Badge, Button, Card, CardContent
+ *   lucide-react icons
+ *
+ * LAST UPDATED: 2026-04-28 — Neo design system: shadow scale, color tokens, border radius
+ */
 "use client";
 
 import { Badge } from "@/components/ui/badge";
@@ -63,7 +92,7 @@ export function AssessmentLanding({ assessment, onStart, onBack }: AssessmentLan
 
       <main className="flex-1 px-5 pb-32 space-y-6">
         {assessment.image && (
-          <div className="w-full overflow-hidden rounded-3xl bg-muted border border-border shadow-sm">
+          <div className="w-full overflow-hidden rounded-3xl bg-muted border border-border shadow-[var(--sh-2)]">
             <div className="aspect-[4/3] flex items-center justify-center">
               <img
                 src={assessment.image}

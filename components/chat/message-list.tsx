@@ -1,3 +1,30 @@
+/**
+ * FILE: components/chat/message-list.tsx
+ *
+ * PURPOSE:
+ *   Renders a scrollable list of chat messages with infinite scroll support for loading
+ *   older messages. Handles auto-scroll to new messages and maintains scroll position
+ *   when prepending older messages.
+ *
+ * LOGIC OVERVIEW:
+ *   - Maintains ref to bottom of list for auto-scroll on new messages
+ *   - Detects scroll-to-top to trigger onLoadMore callback (infinite scroll)
+ *   - Uses useLayoutEffect to preserve scroll position when messages are prepended
+ *   - Renders loading spinner, date label, and MessageBubble components
+ *
+ * KEY VARIABLES / PROPS / EXPORTS:
+ *   messages        — array of UIMessage objects to display
+ *   isStreaming     — whether the last message is being streamed in real-time
+ *   onLoadMore      — callback to load older messages (infinite scroll)
+ *   hasMore         — whether older messages exist to load
+ *   isLoadingMore   — whether older messages are currently loading
+ *
+ * DEPENDENCIES:
+ *   ai library      — UIMessage type
+ *   MessageBubble   — component that renders individual messages
+ *
+ * LAST UPDATED: 2026-04-28 — Neo design system: shadow scale, color tokens, border radius
+ */
 "use client";
 
 import type { UIMessage } from "ai";
@@ -67,7 +94,7 @@ export function MessageList({
       <div className="px-4 py-6 flex flex-col gap-5">
         {isLoadingMore && (
           <div className="flex justify-center py-2">
-            <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-gray-400" />
+            <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-muted-foreground" />
           </div>
         )}
 

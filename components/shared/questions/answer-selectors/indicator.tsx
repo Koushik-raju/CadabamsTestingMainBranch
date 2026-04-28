@@ -1,3 +1,25 @@
+/**
+ * FILE: components/shared/questions/answer-selectors/indicator.tsx
+ *
+ * PURPOSE:
+ *   Renders a slider-based indicator selector with a large central numeric display.
+ *   Shows impact level description based on slider value and optional keyValue mapping.
+ *
+ * LOGIC OVERVIEW:
+ *   Maintains local slider state; displays value 0-100 in large circle.
+ *   Derives description from getDescription utility using value and optional keyValue ranges.
+ *   Updates parent via onChange callback on slider change.
+ *
+ * KEY VARIABLES / PROPS / EXPORTS:
+ *   value        — current numeric value (0-100)
+ *   onChange     — callback(value: number) on slider change
+ *   keyValue     — optional object mapping ranges (e.g. "0-25": "Low") to descriptions
+ *
+ * DEPENDENCIES:
+ *   React useState hook
+ *
+ * LAST UPDATED: 2026-04-28 — Neo design system: shadow scale, color tokens, border radius
+ */
 "use client";
 
 import { useState } from "react";
@@ -68,7 +90,7 @@ export function IndicatorSelector({
             setLocalValue(v);
             onChange(v);
           }}
-          className="w-full h-2 bg-muted rounded-lg appearance-none cursor-pointer accent-primary"
+          className="w-full h-2 bg-muted rounded-xl appearance-none cursor-pointer accent-primary"
         />
       </div>
     </div>

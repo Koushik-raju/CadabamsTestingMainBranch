@@ -20,13 +20,13 @@
  *   Button (components/ui/button)
  *   getJournalVisual (lib/journal-visual)
  *
- * LAST UPDATED: 2026-04-27 — created
+ * LAST UPDATED: 2026-04-28 — Neo icon style: compact gradient tile row header (homepage pattern), removed full-width banner
  */
+import { GlyphTile } from "@/components/shared/glyph-tile";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { getJournalVisual } from "@/lib/journal-visual";
-import { cn } from "@/lib/utils";
 import { BookOpen, Pencil } from "lucide-react";
 import Image from "next/image";
 
@@ -60,7 +60,7 @@ export function JournalEntrySheet({
   dateLabel,
   onJournal,
 }: JournalEntrySheetProps) {
-  const { gradient, Icon } = getJournalVisual(journalName);
+  const { tint, Icon } = getJournalVisual(journalName);
   const hasPrompts = Array.isArray(prompts) && prompts.length > 0;
 
   return (
@@ -74,47 +74,31 @@ export function JournalEntrySheet({
         side="bottom"
         className="p-0 rounded-t-3xl max-h-[85vh] flex flex-col overflow-hidden"
       >
-        {/* ── Journal identity card ── */}
-        <div className="relative overflow-hidden flex-shrink-0">
+        {/* ── Journal identity row — compact tile + name + date (homepage pattern) ── */}
+        <div className="px-5 pt-5 pb-4 flex items-center gap-3 flex-shrink-0">
           {journalIcon ? (
-            <div className="relative h-28 w-full">
-              <Image
-                src={journalIcon}
-                alt={journalName}
-                fill
-                className="object-cover"
-                sizes="100vw"
-              />
-              {/* gradient overlay for legibility */}
-              <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
-            </div>
+            <Image
+              src={journalIcon}
+              alt={journalName}
+              width={48}
+              height={48}
+              className="w-12 h-12 rounded-2xl object-cover flex-shrink-0 shadow-[var(--sh-1)]"
+            />
           ) : (
-            <div className={cn("h-28 w-full bg-gradient-to-br relative overflow-hidden", gradient)}>
-              <div className="absolute -top-6 -right-6 w-32 h-32 rounded-full bg-white/10" />
-              <div className="absolute -bottom-8 -left-4 w-40 h-40 rounded-full bg-white/5" />
-              <div className="absolute inset-0 flex items-center justify-center">
-                <Icon className="w-10 h-10 text-white/70" />
-              </div>
-            </div>
+            <GlyphTile icon={Icon} tint={tint} size="lg" />
           )}
-
-          {/* Journal name + date overlaid on the image */}
-          <div
-            className={cn(
-              "absolute bottom-0 left-0 right-0 px-5 pb-4 pt-2",
-              journalIcon ? "" : "bg-gradient-to-t from-black/40 to-transparent",
-            )}
-          >
-            <p className="text-[11px] font-bold uppercase tracking-widest text-white/70 mb-0.5">
+          <div className="flex-1 min-w-0">
+            <p className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground mb-0.5">
               {dateLabel}
             </p>
             <SheetHeader className="p-0">
-              <SheetTitle className="text-left text-base font-bold text-white leading-snug">
+              <SheetTitle className="text-left text-base font-bold text-foreground leading-snug truncate">
                 {journalName}
               </SheetTitle>
             </SheetHeader>
           </div>
         </div>
+        <Separator />
 
         {/* ── Entry body ── */}
         <div className="flex-1 overflow-y-auto px-5 pt-4 pb-32">

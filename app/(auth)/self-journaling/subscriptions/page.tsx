@@ -24,7 +24,7 @@
  *   PageHeader                   — components/shared/navigation/page-header.tsx
  *   getJournalVisual()           — lib/journal-visual.ts
  *
- * LAST UPDATED: 2026-04-23 — each card now fetches sub-journal detail to show icon image
+ * LAST UPDATED: 2026-04-28 — Neo design system: shadow scale, color tokens, border radius
  */
 "use client";
 
@@ -58,7 +58,7 @@ function SubscriptionGridCard({
   return (
     <button
       onClick={onClick}
-      className="bg-card border border-border rounded-2xl overflow-hidden text-left shadow-sm hover:shadow-lg transition-all duration-300 hover:-translate-y-1 active:scale-[0.97] w-full"
+      className="bg-card border border-border rounded-3xl overflow-hidden text-left shadow-[var(--sh-1)] hover:shadow-[var(--sh-2)] transition-all duration-300 hover:-translate-y-1 active:scale-[0.97] w-full"
     >
       {/* Image area — show cover if available, gradient tile while loading or as fallback */}
       {sub?.icon ? (

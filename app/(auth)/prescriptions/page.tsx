@@ -18,7 +18,7 @@
  *   PrescriptionCard — renders a single prescription row
  *   PageHeader       — shared navigation header
  *
- * LAST UPDATED: 2026-04-23 — migrated custom header div to PageHeader
+ * LAST UPDATED: 2026-04-28 — Neo design system: shadow scale, color tokens, border radius
  */
 
 "use client";

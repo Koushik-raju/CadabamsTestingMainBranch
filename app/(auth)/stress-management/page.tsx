@@ -1,3 +1,28 @@
+/**
+ * FILE: app/(auth)/stress-management/page.tsx
+ *
+ * PURPOSE:
+ *   Main stress management page. Displays mood chart, quick stress tools (breathing, body scan),
+ *   and allows recording new stress assessments.
+ *
+ * LOGIC OVERVIEW:
+ *   Shows a mood chart of historical stress entries. Renders grid of tool cards (breathing, body scan).
+ *   Provides a floating action button to record a new stress assessment (links to /assessments).
+ *   Currently uses placeholder history (empty array) — ready for backend integration.
+ *
+ * KEY VARIABLES / PROPS / EXPORTS:
+ *   history     — array of StressEntry objects (stress level, reasons, impacts, timestamps)
+ *   tools       — predefined tool metadata (label, description, icon, href, color)
+ *   StressEntry — interface for mood/stress log entry
+ *
+ * DEPENDENCIES:
+ *   MoodChart             — stress history visualization component
+ *   Button, Card, Badge   — shadcn/ui primitives
+ *   Lucide icons: Brain, ChevronLeft, ClipboardCheck, Plus, TrendingUp, Wind
+ *
+ * LAST UPDATED: 2026-04-28 — Neo design system: shadow scale, color tokens, border radius
+ */
+
 "use client";
 
 import { MoodChart } from "@/components/stress/mood-chart";
@@ -71,7 +96,7 @@ export default function StressManagementPage() {
           <Link href="/assessments">
             <Button
               size="icon"
-              className="rounded-full w-12 h-12 bg-white text-primary hover:bg-white/90 shadow-lg"
+              className="rounded-full w-12 h-12 bg-white text-primary hover:bg-white/90 shadow-[var(--sh-3)]"
               aria-label="Record new stress level"
             >
               <Plus className="w-6 h-6" />
@@ -87,7 +112,7 @@ export default function StressManagementPage() {
           <div className="grid grid-cols-3 gap-3">
             {tools.map((tool) => (
               <Link key={tool.label} href={tool.href}>
-                <Card className="hover:shadow-md transition-shadow cursor-pointer h-full">
+                <Card className="hover:shadow-[var(--sh-2)] transition-shadow cursor-pointer h-full">
                   <CardContent className="p-3 flex flex-col items-center gap-2 text-center">
                     <div className={`rounded-xl p-2.5 ${tool.color}`}>
                       <tool.icon className="w-5 h-5" />

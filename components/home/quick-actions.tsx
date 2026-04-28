@@ -24,6 +24,7 @@
  *   MTGlyphTile glyph style, updated badge variants to mt-* tints
  */
 
+import { GlyphTile } from "@/components/shared/glyph-tile";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import {
@@ -41,17 +42,7 @@ import {
   Wind,
 } from "lucide-react";
 
-/* Design system tint palette — matches --mt-tint-* CSS vars */
-const TINTS: Record<string, { bg: string; fg: string }> = {
-  blue: { bg: "#E8F1FF", fg: "#2C7BE5" },
-  purple: { bg: "#F1EBFF", fg: "#6C5CE7" },
-  green: { bg: "#E6F4EA", fg: "#1F8B4C" },
-  pink: { bg: "#FFE6EA", fg: "#D03B5C" },
-  peach: { bg: "#FFE9D9", fg: "#C9531A" },
-  orange: { bg: "#FFE4D2", fg: "#E8620A" },
-};
-
-type TintKey = keyof typeof TINTS;
+import type { TintKey } from "@/components/shared/glyph-tile";
 
 interface Action {
   key: string;
@@ -175,7 +166,6 @@ export function QuickActions({ onActionClick }: Props) {
       <h3 className="mt-h3 text-[#0E1726] mb-5">Quick actions</h3>
       <div className="grid grid-cols-2 gap-3">
         {ACTIONS.map(({ key, title, description, badge, badgeVariant, icon: Icon, tint }) => {
-          const { bg, fg } = TINTS[tint];
           return (
             <Card
               key={key}
@@ -183,13 +173,7 @@ export function QuickActions({ onActionClick }: Props) {
               onClick={() => onActionClick?.(key)}
             >
               <CardContent className="p-4 flex flex-col items-start gap-3">
-                {/* MTGlyphTile pattern: tinted 44×44 square, centered glyph */}
-                <div
-                  className="w-11 h-11 rounded-[12px] flex items-center justify-center flex-shrink-0"
-                  style={{ background: bg }}
-                >
-                  <Icon size={20} strokeWidth={2} style={{ color: fg }} />
-                </div>
+                <GlyphTile icon={Icon} tint={tint} />
                 <div className="flex flex-col gap-1 flex-1">
                   <h4 className="text-[15px] font-bold leading-snug text-[#0E1726]">{title}</h4>
                   <p className="text-[11px] font-medium leading-tight line-clamp-2 text-[#6B7280]">

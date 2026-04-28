@@ -1,3 +1,35 @@
+/**
+ * FILE: components/journey/task-preview-sheet.tsx
+ *
+ * PURPOSE:
+ *   Bottom sheet preview of a journey task. Displays task type badge, title,
+ *   mandatory/optional status, completed state, XP reward, and a CTA to start
+ *   or review the task.
+ *
+ * LOGIC OVERVIEW:
+ *   Receives task data and renders UI based on taskType (assessment, audio,
+ *   journal, book, gift, video) with a type-specific badge. Shows "Completed"
+ *   badge if variant is "completed". Shows "Optional" badge if not mandatory.
+ *   CTA text toggles between "Start" and "Review" based on completion state.
+ *   Calls onStart() or onClose() on user action.
+ *
+ * KEY VARIABLES / PROPS / EXPORTS:
+ *   task             — task object or null (if null, renders nothing)
+ *   taskTitle        — display title for the sheet
+ *   taskType         — type enum (assessment, audio, journal, book, gift, video)
+ *   variant          — state (completed or in-progress)
+ *   isMandatory      — whether the task is required to complete the day
+ *   open             — sheet visibility
+ *   onStart          — callback when user taps the CTA
+ *   onClose          — callback when user dismisses the sheet
+ *   TaskPreviewSheet — default export component
+ *
+ * DEPENDENCIES:
+ *   Sheet, SheetContent, SheetHeader, SheetTitle — @/components/ui/sheet
+ *   lucide-react icons (Check, BookOpen, Headphones, etc.)
+ *
+ * LAST UPDATED: 2026-04-28 — Neo design system: shadow scale, color tokens, border radius
+ */
 "use client";
 
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
@@ -146,10 +178,10 @@ export function TaskPreviewSheet({
         <button
           onClick={onStart}
           className={cn(
-            "w-full h-14 rounded-2xl font-extrabold text-base tracking-wide transition-all active:scale-[0.98] shadow-sm",
+            "w-full h-14 rounded-2xl font-extrabold text-base tracking-wide transition-all active:scale-[0.98] shadow-[var(--sh-1)]",
             isCompleted
               ? "bg-muted text-foreground hover:bg-muted/80"
-              : "bg-primary text-primary-foreground shadow-primary/30 shadow-md",
+              : "bg-primary text-primary-foreground shadow-primary/30 shadow-[var(--sh-glow-orange)]",
           )}
         >
           {isCompleted ? "Review" : "Start"}

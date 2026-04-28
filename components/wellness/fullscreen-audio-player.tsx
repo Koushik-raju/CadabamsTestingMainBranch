@@ -23,7 +23,7 @@
  *   MindfulMinuteAudio (hooks/wellness/use-mindful-minutes)
  *   Slider, Button (shadcn/ui)
  *
- * LAST UPDATED: 2026-04-17 — removed category display (not in MindfulMinuteAudio type)
+ * LAST UPDATED: 2026-04-28 — Neo design system: shadow scale, color tokens, border radius
  */
 "use client";
 

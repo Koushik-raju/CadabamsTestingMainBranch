@@ -1,3 +1,28 @@
+/**
+ * FILE: components/assessment/answer-selectors/yes-no.tsx
+ *
+ * PURPOSE:
+ *   Yes/No binary choice selector — renders two option buttons side by side with
+ *   selected state styling (green for yes, red for no).
+ *
+ * LOGIC OVERVIEW:
+ *   - Receives title/question text and selected state.
+ *   - Renders two buttons with conditional styling based on selection.
+ *   - Yes button: green background when selected; No button: red (destructive).
+ *   - Both buttons use scale-95 on active and transition effects.
+ *
+ * KEY VARIABLES / PROPS / EXPORTS:
+ *   selected    — current selection (yesLabel or noLabel string)
+ *   onSelect    — callback fired with selected label
+ *   yesLabel    — text for yes button (defaults to "Yes")
+ *   noLabel     — text for no button (defaults to "No")
+ *   YesNoSelector — default export
+ *
+ * DEPENDENCIES:
+ *   Tailwind CSS for styling
+ *
+ * LAST UPDATED: 2026-04-28 — Neo design system: shadow scale, color tokens, border radius
+ */
 "use client";
 
 interface YesNoSelectorProps {
@@ -35,7 +60,7 @@ export function YesNoSelector({
           onClick={() => onSelect(yesLabel)}
           className={`w-28 sm:w-32 py-4 rounded-2xl border-2 font-semibold text-base transition-all duration-200 active:scale-95 ${
             selected === yesLabel
-              ? "bg-green-500 border-green-500 text-white shadow-md"
+              ? "bg-green-500 border-green-500 text-white shadow-[var(--sh-1)]"
               : "bg-card border-border text-foreground hover:border-green-400"
           }`}
           aria-pressed={selected === yesLabel}
@@ -46,7 +71,7 @@ export function YesNoSelector({
           onClick={() => onSelect(noLabel)}
           className={`w-28 sm:w-32 py-4 rounded-2xl border-2 font-semibold text-base transition-all duration-200 active:scale-95 ${
             selected === noLabel
-              ? "bg-destructive border-destructive text-destructive-foreground shadow-md"
+              ? "bg-destructive border-destructive text-destructive-foreground shadow-[var(--sh-1)]"
               : "bg-card border-border text-foreground hover:border-destructive/50"
           }`}
           aria-pressed={selected === noLabel}

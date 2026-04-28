@@ -19,8 +19,7 @@
  *   Sheet, SheetContent, SheetTitle — @/components/ui/sheet
  *   Skeleton — @/components/ui/skeleton
  *
- * LAST UPDATED: 2026-04-23 — Render summary through ReactMarkdown so bold
- *   labels and bullet lists from AI-generated markdown display correctly.
+ * LAST UPDATED: 2026-04-28 — Neo design system: shadow scale, color tokens, border radius
  */
 "use client";
 
@@ -155,7 +154,7 @@ export function JourneyDaySummarySheet({
           <div className="absolute -bottom-10 -left-6 w-36 h-36 rounded-full bg-white/10" />
 
           <div className="relative flex flex-col items-center gap-3 text-center">
-            <div className="w-16 h-16 rounded-2xl bg-white/20 flex items-center justify-center shadow-sm">
+            <div className="w-16 h-16 rounded-2xl bg-white/20 flex items-center justify-center shadow-[var(--sh-1)]">
               <div className="absolute -top-1 -right-1 w-7 h-7 rounded-full bg-white/10" />
               <Trophy className="w-8 h-8 text-white" />
             </div>

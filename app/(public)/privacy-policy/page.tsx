@@ -1,3 +1,26 @@
+/**
+ * FILE: app/(public)/privacy-policy/page.tsx
+ *
+ * PURPOSE:
+ *   Static privacy policy page. Explains how the application collects, uses, and protects
+ *   user personal data. Accessible from the public login/signup pages.
+ *
+ * LOGIC OVERVIEW:
+ *   Renders a static article with structured privacy policy content. Includes a back link
+ *   to the home page. The page metadata sets SEO title and description. Content is hard-coded
+ *   as static sections covering data collection, usage, protection, and user rights.
+ *
+ * KEY VARIABLES / PROPS / EXPORTS:
+ *   metadata          — Next.js page metadata object with title and description
+ *   PrivacyPolicyPage — Page export; renders the privacy policy article with metadata
+ *
+ * DEPENDENCIES:
+ *   Next.js: Link component for navigation
+ *   lucide-react icons: ChevronLeft
+ *
+ * LAST UPDATED: 2026-04-28 — Neo design system: file header added
+ */
+
 import { ChevronLeft } from "lucide-react";
 import Link from "next/link";
 

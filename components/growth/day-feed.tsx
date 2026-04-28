@@ -20,7 +20,7 @@
  * DEPENDENCIES:
  *   lucide-react icons, shadcn Card / Skeleton / Separator
  *
- * LAST UPDATED: 2026-04-23 — initial scaffold
+ * LAST UPDATED: 2026-04-28 — Neo design system: shadow scale, color tokens, border radius
  */
 "use client";
 

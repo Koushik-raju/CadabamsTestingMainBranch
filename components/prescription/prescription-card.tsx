@@ -18,12 +18,12 @@
  *   @/sdk/backend-v2 — PrescriptionItemDto type
  *   dayjs            — date formatting
  *
- * LAST UPDATED: 2026-04-17 — redesign as grouped list row with clear Download PDF CTA
+ * LAST UPDATED: 2026-04-28 — Neo design system: shadow scale, color tokens, border radius
  */
 "use client";
 
+import { GlyphTile } from "@/components/shared/glyph-tile";
 import { Button } from "@/components/ui/button";
-import { cn } from "@/lib/utils";
 import type { PrescriptionItemDto } from "@/sdk/backend-v2";
 import dayjs from "dayjs";
 import { Download, FileText } from "lucide-react";
@@ -40,17 +40,7 @@ export function PrescriptionCard({ prescription, index, onDownload }: Prescripti
 
   return (
     <div className="flex items-center gap-3 py-3 transition-colors hover:bg-muted/50 active:bg-muted">
-      {/* Gradient PDF icon tile */}
-      <div
-        className={cn(
-          "relative w-11 h-11 rounded-2xl bg-gradient-to-br flex-shrink-0",
-          "flex items-center justify-center overflow-hidden shadow-sm",
-          "from-red-500 to-rose-600",
-        )}
-      >
-        <div className="absolute -top-2 -right-2 w-7 h-7 rounded-full bg-white/10" />
-        <FileText className="w-5 h-5 text-white" />
-      </div>
+      <GlyphTile icon={FileText} tint="pink" />
 
       {/* Name + date */}
       <div className="flex-1 min-w-0">

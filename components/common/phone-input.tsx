@@ -1,3 +1,35 @@
+/**
+ * FILE: components/common/phone-input.tsx
+ *
+ * PURPOSE:
+ *   Renders a phone number input field with an interactive country/dialing code selector.
+ *   Provides a searchable dialog to select from a list of countries with their calling codes.
+ *
+ * LOGIC OVERVIEW:
+ *   Displays a button (country selector) next to a numeric input field. When clicked, opens
+ *   a dialog showing all countries filterable by name, country code, or calling code. Initializes
+ *   with India as the default country if none is selected. The component is controlled and
+ *   calls onCountryChange when a country is selected and onChange when phone digits are entered.
+ *
+ * KEY VARIABLES / PROPS / EXPORTS:
+ *   value             — Phone number string (digits only), controlled by onChange callback
+ *   onChange          — Callback fired with a synthetic event when phone digits are entered
+ *   selectedCountry   — Current Country object or null; controls the country selector button
+ *   onCountryChange   — Callback fired with selected Country object
+ *   countries         — Computed list of all countries with dialing codes (memoized)
+ *   filtered          — Countries matching the current search query (memoized)
+ *   Country           — TypeScript interface: { name, countryCode, callingCode }
+ *   PhoneInput        — Main export; controlled phone input with country selector
+ *
+ * DEPENDENCIES:
+ *   React hooks: useEffect, useId, useMemo, useState
+ *   shadcn/ui primitives: Button, Dialog, DialogContent, DialogTitle, Input, Label, ScrollArea
+ *   country-codes-list — npm library providing country data
+ *   lucide-react icons: Phone, Search, X
+ *
+ * LAST UPDATED: 2026-04-28 — Neo design system: file header added
+ */
+
 "use client";
 
 import { Button } from "@/components/ui/button";

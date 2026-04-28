@@ -52,12 +52,6 @@ export function SupportSection({ onTalk, onMatch }: Props) {
             </div>
           </div>
 
-          {/* Matching suggestion */}
-          <p className="text-[13px] text-[#6B7280] leading-relaxed -mt-1">
-            Not sure who to choose? Answer a few quick questions and we'll match you with the right
-            specialist.
-          </p>
-
           {/* CTAs */}
           <div className="flex gap-3">
             <Button variant="mt-primary" size="mt-sm" onClick={onTalk} className="flex-1">

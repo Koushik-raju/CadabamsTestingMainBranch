@@ -24,7 +24,7 @@
  *   lucide-react icons
  *   shadcn Button, Input
  *
- * LAST UPDATED: 2026-04-28 — solid selected-state fill + Clear button for mode and location sheets
+ * LAST UPDATED: 2026-04-28 — Neo design system: shadow scale, color tokens, border radius
  */
 "use client";
 
@@ -291,7 +291,7 @@ export function ModeSheet({ onClose }: SheetProps) {
                       setCity(c);
                       setCenter(null);
                     }}
-                    className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg border transition-colors text-left ${
+                    className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl border transition-colors text-left ${
                       isSelectedCity
                         ? "bg-primary text-primary-foreground border-primary"
                         : "border-border hover:bg-muted/50"
@@ -318,7 +318,7 @@ export function ModeSheet({ onClose }: SheetProps) {
                           <button
                             key={ct.campus_id}
                             onClick={() => setCenter(ct)}
-                            className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg border transition-colors text-left ${
+                            className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl border transition-colors text-left ${
                               isSelectedCenter
                                 ? "bg-primary text-primary-foreground border-primary"
                                 : "border-border hover:bg-muted/50"
@@ -591,7 +591,7 @@ export function LocationSheet({ onClose }: SheetProps) {
                       <button
                         key={ct.campus_id}
                         onClick={() => setCenter(ct)}
-                        className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg border transition-colors text-left ${
+                        className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl border transition-colors text-left ${
                           isSelectedCenter
                             ? "bg-primary text-primary-foreground border-primary"
                             : "border-border hover:bg-muted/50"

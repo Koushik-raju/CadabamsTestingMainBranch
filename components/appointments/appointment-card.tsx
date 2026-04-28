@@ -1,3 +1,25 @@
+/**
+ * FILE: components/appointments/appointment-card.tsx
+ *
+ * PURPOSE:
+ *   Displays a single appointment in list view. Shows doctor name, time, status,
+ *   consultation type, and session status indicator (online/in-person).
+ *
+ * LOGIC OVERVIEW:
+ *   Renders a clickable card with appointment details. Status badge uses color
+ *   based on appointment.availability. Green dot indicator on upcoming appointments.
+ *   Click navigates to appointment detail page.
+ *
+ * KEY VARIABLES / PROPS / EXPORTS:
+ *   appointment  — SlotDetailDto from the appointments list
+ *   isPast       — optional flag; if true, avatar shows muted colors
+ *
+ * DEPENDENCIES:
+ *   SlotDetailDto — type from use-appointments-page hook
+ *   lucide-react icons
+ *
+ * LAST UPDATED: 2026-04-28 — Neo design system: shadow scale, color tokens, border radius
+ */
 "use client";
 
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
@@ -84,7 +106,7 @@ export function AppointmentCard({ appointment, isPast }: AppointmentCardProps) {
     <button
       type="button"
       onClick={() => router.push(`/consult/appointments/${appointment.id}`)}
-      className="w-full text-left bg-white rounded-2xl border border-border shadow-sm p-4 flex items-center gap-3 active:scale-[0.98] transition-transform"
+      className="w-full text-left bg-white rounded-2xl border border-border shadow-[var(--sh-1)] p-4 flex items-center gap-3 active:scale-[0.98] transition-transform"
     >
       <div className="relative shrink-0">
         <Avatar className="h-12 w-12">

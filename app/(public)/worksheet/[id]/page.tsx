@@ -1,3 +1,39 @@
+/**
+ * FILE: app/(public)/worksheet/[id]/page.tsx
+ *
+ * PURPOSE:
+ *   Public worksheet form page that allows users to fill out and submit a dynamically-rendered
+ *   questionnaire. Supports multi-step form rendering with progress tracking and answer persistence.
+ *
+ * LOGIC OVERVIEW:
+ *   Fetches worksheet metadata and questions from cmsWorksheetsControllerFindOne. Renders questions
+ *   one per step with a progress bar. Tracks user answers in state. Validates step completion before
+ *   allowing navigation. On submission, sends answers to the backend. Handles loading, error, and
+ *   success states with appropriate UI feedback. Back button returns to previous page.
+ *
+ * KEY VARIABLES / PROPS / EXPORTS:
+ *   worksheetId       — URL param [id]; passed to fetch API
+ *   worksheet         — Fetched WorksheetData containing title, description, questions
+ *   questions         — Array of Question objects from worksheet
+ *   answers           — Record of question key to AnswerValue (user responses)
+ *   currentStep       — Currently displayed question index (0-based)
+ *   isStepComplete    — Boolean validation flag for current step
+ *   loading           — Fetch in progress
+ *   submitted         — Worksheet has been successfully submitted
+ *   error             — Error message if fetch or submit fails
+ *   WorksheetFormPage — Page export; receives params Promise<{ id }>
+ *   WorksheetData     — Interface: title?, description?, Questions?
+ *   AnswerValue       — Type for question answers (imported from question-renderer)
+ *
+ * DEPENDENCIES:
+ *   SDK: cmsWorksheetsControllerFindOne
+ *   Components: BackButton, QuestionRenderer, Button, Progress, Skeleton
+ *   Libs: getUser (cookies), useRouter
+ *   lucide-react icons: AlertCircle, CheckCircle2, ChevronLeft, ChevronRight
+ *
+ * LAST UPDATED: 2026-04-28 — Neo design system: file header added
+ */
+
 "use client";
 
 import { BackButton } from "@/components/shared/navigation/back-button";

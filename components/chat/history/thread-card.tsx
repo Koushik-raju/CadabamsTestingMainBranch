@@ -1,3 +1,27 @@
+/**
+ * FILE: components/chat/history/thread-card.tsx
+ *
+ * PURPOSE:
+ *   Renders an individual thread card in the chat history list. Displays thread title,
+ *   last updated date, and a message icon. Clickable to open the thread.
+ *
+ * LOGIC OVERVIEW:
+ *   - Accepts thread object and onClick callback
+ *   - Handles both click and keyboard (Enter/Space) interactions for accessibility
+ *   - Scales down briefly on click (active:scale-[0.99]) for feedback
+ *   - Shows hover shadow on interaction
+ *
+ * KEY VARIABLES / PROPS / EXPORTS:
+ *   thread          — MastraThread object containing id, title, createdAt, updatedAt
+ *   onClick         — callback fired when user selects this thread
+ *
+ * DEPENDENCIES:
+ *   Card, CardContent — shadcn/ui card primitives
+ *   formatDate      — utility to format thread timestamps
+ *   lucide-react    — icon components (MessageSquare, ChevronRight)
+ *
+ * LAST UPDATED: 2026-04-28 — Neo design system: shadow scale, color tokens, border radius
+ */
 import { Card, CardContent } from "@/components/ui/card";
 import { MastraThread } from "@/lib/chat";
 import { formatDate } from "@/lib/chat";
@@ -11,7 +35,7 @@ interface ThreadCardProps {
 export function ThreadCard({ thread, onClick }: ThreadCardProps) {
   return (
     <Card
-      className="cursor-pointer hover:shadow-md transition-shadow active:scale-[0.99]"
+      className="cursor-pointer hover:shadow-[var(--sh-2)] transition-shadow active:scale-[0.99]"
       onClick={() => onClick(thread)}
       role="button"
       tabIndex={0}

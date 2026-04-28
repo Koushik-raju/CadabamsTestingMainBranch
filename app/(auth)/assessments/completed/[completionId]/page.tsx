@@ -22,7 +22,7 @@
  *   useCompletionById — hooks/assessments/use-assessment-detail
  *   PageHeader        — shared navigation header
  *
- * LAST UPDATED: 2026-04-23 — migrated custom header div to PageHeader
+ * LAST UPDATED: 2026-04-28 — Neo design system: shadow scale, color tokens, border radius
  */
 "use client";
 
@@ -174,7 +174,7 @@ export default function CompletedAssessmentPage({
             <div
               className={cn(
                 "relative w-11 h-11 rounded-2xl bg-gradient-to-br flex-shrink-0",
-                "flex items-center justify-center overflow-hidden shadow-sm",
+                "flex items-center justify-center overflow-hidden shadow-[var(--sh-1)]",
                 config.gradient,
               )}
             >

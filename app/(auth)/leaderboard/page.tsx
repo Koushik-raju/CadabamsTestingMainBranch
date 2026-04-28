@@ -1,3 +1,30 @@
+/**
+ * FILE: app/(auth)/leaderboard/page.tsx
+ *
+ * PURPOSE:
+ *   Displays a competitive leaderboard of users ranked by score/level.
+ *   Shows top 3 users in a podium layout, rest in scrollable list.
+ *   Highlights the current user's position.
+ *
+ * LOGIC OVERVIEW:
+ *   1. Fetches leaderboard data via useLeaderboard() SWR hook.
+ *   2. Normalizes backend response to LeaderboardEntryData shape.
+ *   3. Slices top 3 entries for podium; remainder for list.
+ *   4. Renders header with stats (total entries, current rank, user score).
+ *   5. Renders Podium for top 3; LeaderboardEntry list for rest.
+ *
+ * KEY VARIABLES / PROPS / EXPORTS:
+ *   data       — RawLeaderboardEntry[] from useLeaderboard
+ *   entries    — normalized LeaderboardEntryData[] for rendering
+ *   currentEntry — current user's position (highlighted in list)
+ *
+ * DEPENDENCIES:
+ *   useLeaderboard — SWR hook for ranking data
+ *   Podium, LeaderboardEntry — display components
+ *   useAuth — for current user identification
+ *
+ * LAST UPDATED: 2026-04-28 — Neo design system: shadow scale, color tokens, border radius
+ */
 "use client";
 
 import { Star, TrendingUp, Trophy, Zap } from "lucide-react";
@@ -53,7 +80,7 @@ function ScoreCard({
   value: string | number;
 }) {
   return (
-    <div className="bg-white/20 rounded-lg p-3 text-center backdrop-blur-sm">
+    <div className="bg-white/20 rounded-xl p-3 text-center backdrop-blur-sm">
       <div className="flex justify-center mb-1" aria-hidden="true">
         {icon}
       </div>
@@ -82,7 +109,7 @@ export default function LeaderboardPage() {
   return (
     <main className="min-h-screen bg-background" role="main" aria-label="Leaderboard page">
       {/* Header */}
-      <header className="bg-primary pb-4 px-4 rounded-b-[2.5rem] shadow-md">
+      <header className="bg-primary pb-4 px-4 rounded-b-[2.5rem] shadow-[var(--sh-glow-orange)]">
         <div className="flex items-center gap-3 pt-4 pb-2">
           <BackButton fallback="/" className="text-white hover:bg-white/20" />
           <div>

@@ -41,9 +41,7 @@
  *   emoji-picker-react          — emoji picker UI
  *   Web Speech API              — browser-native mic transcription
  *
- * LAST UPDATED: 2026-04-27 — auto-prompt now also fires for free-flow when
- *   opened from an active journey task (continuation.active); plain free-flow
- *   (no slug, no journey task) still starts blank with a single "Prompt Me" CTA.
+ * LAST UPDATED: 2026-04-28 — Neo design system: shadow scale, color tokens, border radius
  */
 "use client";
 
@@ -453,14 +451,14 @@ export function JournalWriter({ slug }: JournalWriterProps) {
         {isInitialLoading || isLoadingPrompt ? (
           <div className="flex flex-col gap-4 pt-2">
             <Skeleton className="h-3 w-28 rounded" />
-            <Skeleton className="h-8 w-full rounded-lg" />
-            <Skeleton className="h-8 w-4/5 rounded-lg" />
+            <Skeleton className="h-8 w-full rounded-xl" />
+            <Skeleton className="h-8 w-4/5 rounded-xl" />
             <div className="flex gap-4 mt-3">
               {[0, 1, 2, 3].map((i) => (
                 <Skeleton key={i} className="w-5 h-5 rounded" />
               ))}
             </div>
-            <Skeleton className="h-32 w-full rounded-lg mt-2" />
+            <Skeleton className="h-32 w-full rounded-xl mt-2" />
           </div>
         ) : (
           <>
@@ -532,7 +530,11 @@ export function JournalWriter({ slug }: JournalWriterProps) {
                     <Smile className="w-5 h-5" />
                   </button>
                 </PopoverTrigger>
-                <PopoverContent side="top" align="start" className="p-0 border-0 shadow-xl w-auto">
+                <PopoverContent
+                  side="top"
+                  align="start"
+                  className="p-0 border-0 shadow-[var(--sh-3)] w-auto"
+                >
                   <EmojiPicker
                     onEmojiClick={handleEmojiClick}
                     lazyLoadEmojis

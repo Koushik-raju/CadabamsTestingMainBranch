@@ -22,9 +22,7 @@
  *   Dialog, DialogContent, DialogTitle — @/components/ui/dialog
  *   ReactMarkdown, remarkGfm
  *
- * LAST UPDATED: 2026-04-23 — use a ref for onSummaryGenerated to prevent
- *   fetchSummary from recreating on every parent render (was causing request spam);
- *   added mx-4 + w-[calc(100%-2rem)] so the modal has side margins on mobile.
+ * LAST UPDATED: 2026-04-28 — Neo design system: shadow scale, color tokens, border radius
  */
 "use client";
 
@@ -118,7 +116,7 @@ export function JourneyDaySummaryModal({
           <div className="absolute -top-6 -right-6 w-24 h-24 rounded-full bg-white/10" />
           <div className="flex items-center gap-3 relative">
             <div className="w-11 h-11 rounded-2xl bg-white/20 flex items-center justify-center">
-              <Sparkles className="w-5 h-5 text-white" />
+              <Sparkles size={20} strokeWidth={2} className="text-white" />
             </div>
             <div className="flex-1 min-w-0">
               <DialogTitle className="text-white text-base font-bold">
@@ -159,7 +157,7 @@ export function JourneyDaySummaryModal({
               {hasError && (
                 <button
                   onClick={() => void fetchSummary()}
-                  className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-muted text-xs font-medium"
+                  className="inline-flex items-center gap-2 px-3 py-1.5 rounded-xl bg-muted text-xs font-medium"
                 >
                   <Loader2 className="w-3.5 h-3.5" />
                   Retry

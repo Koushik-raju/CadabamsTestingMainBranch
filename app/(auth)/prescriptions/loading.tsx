@@ -1,3 +1,21 @@
+/**
+ * FILE: app/(auth)/prescriptions/loading.tsx
+ *
+ * PURPOSE:
+ *   Loading skeleton for the Prescriptions page. Displays placeholders while prescriptions data is fetched.
+ *
+ * LOGIC OVERVIEW:
+ *   Renders header skeleton with icon and text placeholders.
+ *   Below: 3 card skeletons mimicking prescription list card structure (title, metadata, divider, actions).
+ *
+ * KEY VARIABLES / PROPS / EXPORTS:
+ *   PrescriptionsLoading — default export, no props
+ *
+ * DEPENDENCIES:
+ *   @/components/ui/skeleton
+ *
+ * LAST UPDATED: 2026-04-28 — Neo design system: shadow scale, color tokens, border radius
+ */
 import { Skeleton } from "@/components/ui/skeleton";
 
 export default function PrescriptionsLoading() {

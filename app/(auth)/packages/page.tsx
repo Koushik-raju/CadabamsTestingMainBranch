@@ -24,7 +24,7 @@
  *   FeaturedPackageCard, PackageDiscoveryCard — from @/components/package/
  *   odooTuple                                 — from @/lib/odoo (safe many2one tuple access)
  *
- * LAST UPDATED: 2026-04-23 — migrated custom header div to PageHeader
+ * LAST UPDATED: 2026-04-28 — Neo design system: shadow scale, color tokens, border radius
  */
 "use client";
 
@@ -108,7 +108,7 @@ function PurchasedPackageCard({ pkg }: { pkg: BookedPackageDto }) {
 
   return (
     <Card
-      className="flex-shrink-0 w-56 cursor-pointer active:scale-[0.97] transition-transform border-0 overflow-hidden shadow-md"
+      className="flex-shrink-0 w-56 cursor-pointer active:scale-[0.97] transition-transform border-0 overflow-hidden shadow-[var(--sh-2)]"
       onClick={() => router.push(`/packages/${pkg.booked_package_id}`)}
     >
       <CardContent className="p-0">

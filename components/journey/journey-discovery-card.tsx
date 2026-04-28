@@ -1,3 +1,31 @@
+/**
+ * FILE: components/journey/journey-discovery-card.tsx
+ *
+ * PURPOSE:
+ *   Card component for rendering a journey discovery item in the journeys list.
+ *   Displays journey name, day count, media type badge, and premium indicator.
+ *
+ * LOGIC OVERVIEW:
+ *   Accepts a journey object and derives display values: name via getSafeString
+ *   (extracts text from rich text blocks), day count from steps, media type by
+ *   checking for audio/worksheet/interactive tasks, and image URL from icon or
+ *   banner. Renders as a clickable Card that navigates to the journey detail.
+ *
+ * KEY VARIABLES / PROPS / EXPORTS:
+ *   journey          — discovery journey item with name, steps, icon, isPremium
+ *   className        — optional additional Card classes
+ *   JourneyDiscoveryCard — default export component
+ *   getSafeString    — helper to extract text from rich text blocks
+ *   getMediaType     — helper to classify task content (audio/journal/interactive)
+ *
+ * DEPENDENCIES:
+ *   Card, CardContent, CardHeader — @/components/ui/card
+ *   Badge — @/components/ui/badge
+ *   PremiumBadge — components/journey/premium-badge
+ *   lucide-react Clock icon
+ *
+ * LAST UPDATED: 2026-04-28 — Neo design system: shadow scale, color tokens, border radius
+ */
 "use client";
 
 import { Badge } from "@/components/ui/badge";
@@ -70,7 +98,7 @@ export function JourneyDiscoveryCard({ journey, className }: JourneyDiscoveryCar
   return (
     <Card
       className={cn(
-        "cursor-pointer hover:shadow-md transition-shadow border border-border overflow-hidden pt-0",
+        "cursor-pointer hover:shadow-[var(--sh-2)] transition-shadow border border-border overflow-hidden pt-0",
         className,
       )}
       onClick={handleClick}

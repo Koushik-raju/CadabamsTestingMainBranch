@@ -1,3 +1,21 @@
+/**
+ * FILE: app/(auth)/documents/loading.tsx
+ *
+ * PURPOSE:
+ *   Loading skeleton for the Documents page. Displays placeholders while data is fetched.
+ *
+ * LOGIC OVERVIEW:
+ *   Renders a primary header bar with skeleton circles and text blocks.
+ *   Below: grid of skeleton rows (5 items) to mimic document list layout.
+ *
+ * KEY VARIABLES / PROPS / EXPORTS:
+ *   DocumentsLoading — default export, no props
+ *
+ * DEPENDENCIES:
+ *   @/components/ui/skeleton
+ *
+ * LAST UPDATED: 2026-04-28 — Neo design system: shadow scale, color tokens, border radius
+ */
 import { Skeleton } from "@/components/ui/skeleton";
 
 export default function DocumentsLoading() {

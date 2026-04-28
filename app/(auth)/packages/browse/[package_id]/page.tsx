@@ -26,7 +26,7 @@
  *   odooTuple                                       — from @/lib/odoo (safe many2one tuple access)
  *   PackageResponseDto                              — from @/sdk/backend-v2
  *
- * LAST UPDATED: 2026-04-23 — migrated custom header divs to PageHeader
+ * LAST UPDATED: 2026-04-28 — Neo design system: shadow scale, color tokens, border radius
  */
 "use client";
 
