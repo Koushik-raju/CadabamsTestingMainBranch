@@ -33,7 +33,7 @@ export function SupportSection({ onTalk, onMatch }: Props) {
   return (
     <div className="px-4 mb-8">
       <Card>
-        <CardContent className="flex flex-col gap-6 pt-6">
+        <CardContent className="flex flex-col gap-3">
           <div className="flex items-center gap-5">
             <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center text-primary shrink-0">
               <LayoutGrid size={24} />

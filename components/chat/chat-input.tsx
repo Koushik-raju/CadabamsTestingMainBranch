@@ -1,3 +1,26 @@
+/*
+ * FILE: components/chat/chat-input.tsx
+ *
+ * PURPOSE:
+ *   Controlled text input bar for the chat thread. Renders a pill-shaped
+ *   text field and a send button; delegates all state to the parent.
+ *
+ * LOGIC OVERVIEW:
+ *   Stateless — receives text, onTextChange, onSubmit, and isStreaming as
+ *   props. The send button is disabled when the field is blank or a stream
+ *   is in progress.
+ *
+ * KEY VARIABLES / PROPS / EXPORTS:
+ *   text          — current input value (controlled)
+ *   onTextChange  — parent setter for text
+ *   onSubmit      — form submit handler (calls useChatSession.sendMessage)
+ *   isStreaming   — disables send while assistant is generating
+ *
+ * DEPENDENCIES:
+ *   components/ui/button, components/ui/input, lucide-react
+ *
+ * LAST UPDATED: 2026-04-28 — add file header; replace hardcoded #f6f4f2 with var(--mt-cream-bg)
+ */
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Send } from "lucide-react";
@@ -18,7 +41,7 @@ export function ChatInput({ text, onTextChange, onSubmit, isStreaming }: ChatInp
           value={text}
           onChange={(e) => onTextChange(e.target.value)}
           placeholder="Type a message..."
-          className="h-11 flex-1 rounded-full border-border bg-[#f6f4f2] text-[15px] text-foreground placeholder:text-muted-foreground"
+          className="h-11 flex-1 rounded-full border-border bg-[var(--mt-cream-bg)] text-[15px] text-foreground placeholder:text-muted-foreground"
         />
         <Button
           type="submit"

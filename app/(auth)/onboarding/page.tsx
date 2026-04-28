@@ -1,3 +1,31 @@
+/*
+ * FILE: app/(auth)/onboarding/page.tsx
+ *
+ * PURPOSE:
+ *   Multi-step onboarding flow for new users. Collects service context,
+ *   patient details, date of birth, assistance type, and notification /
+ *   permission preferences before creating a CRM lead.
+ *
+ * LOGIC OVERVIEW:
+ *   1. Step machine driven by a `step` state string; each step renders
+ *      its own form section inside a shared full-screen layout.
+ *   2. Flow: service-for → patient-form → date-of-birth →
+ *      assistance-selection → notification → permissions.
+ *   3. On the final step, calls crmControllerCreateLead with the collected
+ *      FormData, then redirects to the authenticated home screen.
+ *   4. useAuth provides the current user; useSearchParams reads any
+ *      deep-link pre-selections.
+ *
+ * KEY VARIABLES / PROPS / EXPORTS:
+ *   step        — current step name driving conditional rendering
+ *   formData    — accumulated field values across steps
+ *   handleNext  — advances step and submits lead on the final step
+ *
+ * DEPENDENCIES:
+ *   useAuth, crmControllerCreateLead, crmControllerGetRelationships
+ *
+ * LAST UPDATED: 2026-04-28 — remove per-page bg; root layout now owns bg-background
+ */
 "use client";
 
 import { Button } from "@/components/ui/button";
@@ -157,7 +185,7 @@ function OnboardingContent() {
   };
 
   return (
-    <div className="flex flex-col min-h-screen bg-[#f6f4f2]">
+    <div className="flex flex-col min-h-screen">
       {/* ── Top bar ── */}
       <div className="px-5 pt-12 pb-4 flex flex-col gap-4">
         {/* Progress segments */}

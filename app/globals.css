@@ -1,3 +1,39 @@
+/*
+ * FILE: frontend-neo/app/globals.css
+ *
+ * PURPOSE:
+ *   Global stylesheet for the Cadabams MindTalk Next.js app. Defines Tailwind
+ *   configuration, shadcn CSS variables, the full MindTalk design-system token
+ *   set (colors, typography, spacing, radii, shadows, motion), and utility
+ *   classes (safe-area, scrollbar-hide, breathing animations, type scale).
+ *
+ * LOGIC OVERVIEW:
+ *   1. Tailwind + shadcn imports and @theme inline mappings.
+ *   2. :root — shadcn semantic variables (background, foreground, primary, etc.)
+ *      + MindTalk design tokens (--mt-*, --fg*, --bg*, --r-*, --s-*, --sh-*, --dur-*).
+ *   3. .dark — dark-mode overrides for shadcn variables.
+ *   4. Safe-area inset and keyboard-height variables updated at runtime by
+ *      lib/capacitor/safe-area.ts and lib/capacitor/keyboard.ts.
+ *   5. Utility classes: safe-area padding, scrollbar-hide, gradient helpers,
+ *      leaderboard rank badges, chat typing indicator, breathing exercise
+ *      animations, and semantic type-scale classes (.mt-h1, .mt-body, etc.).
+ *
+ * KEY VARIABLES / PROPS / EXPORTS:
+ *   --mt-orange-500    — Primary CTA color (#F97316)
+ *   --mt-cream-bg      — Canvas background (#FAF7F4)
+ *   --mt-ink-900       — Primary text (#0E1726)
+ *   --primary          — shadcn primary (maps to brand orange)
+ *   --safe-area-inset-* — Updated at runtime for Capacitor native shell
+ *   --keyboard-height  — Updated at runtime when software keyboard opens
+ *
+ * DEPENDENCIES:
+ *   tailwindcss, tw-animate-css, shadcn/tailwind.css, @tailwindcss/typography
+ *
+ * LAST UPDATED: 2026-04-28 — Aligned with DESIGN.md: added --font-display / --font-text tokens
+ *   (alias to --font-sans until optical-cut woff2 files are bundled); wired font-family into
+ *   .mt-display-* (display) and .mt-meta/.mt-caption (text) per DESIGN.md §3 type table
+ */
+
 @import "tailwindcss";
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
@@ -10,7 +46,9 @@
   --color-foreground: var(--foreground);
   --font-sans: var(--font-sans);
   --font-mono: var(--font-geist-mono);
-  --font-heading: var(--font-sans);
+  --font-display: var(--font-display);
+  --font-text: var(--font-text);
+  --font-heading: var(--font-display);
   --color-sidebar-ring: var(--sidebar-ring);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
@@ -395,19 +433,186 @@
   --sidebar-ring: oklch(0.556 0 0);
 }
 
-/* Brand + safe area (added for Cadabams migration) */
+/* ── MindTalk design-system tokens (source of truth: DESIGN.md) ─────────── */
 :root {
-  --brand: #e7590f;
+  /* Brand orange — primary CTA family */
+  --mt-orange-50: #fff4ec;
+  --mt-orange-100: #ffe4d2;
+  --mt-orange-200: #ffc9a6;
+  --mt-orange-300: #ffa875;
+  --mt-orange-400: #ff8a47;
+  --mt-orange-500: #f97316; /* primary CTA */
+  --mt-orange-600: #e8620a;
+  --mt-orange-700: #d8670e; /* logo / deep brand */
+  --mt-orange-800: #a8480a;
+  --mt-orange-900: #6e2f08;
+
+  /* Coral & pink accents — gradient hero, mood */
+  --mt-coral-300: #ff9c8a;
+  --mt-coral-400: #f77268;
+  --mt-pink-200: #ffd9dc;
+  --mt-pink-300: #fbb7bc;
+  --mt-pink-400: #f58f9a;
+
+  /* Cream / cool neutrals */
+  --mt-cream-bg: #fffdf9; /* canvas — almost every screen */
+  --mt-cream-soft: #fbf5ef; /* AI summary tint, secondary surfaces */
+  --mt-cream-card: #ffffff; /* cards float on cream */
+  --mt-line: #ece6de; /* hairline on cream */
+  --mt-line-soft: #f1ece5; /* softer hairline */
+  --mt-fog: #f4f2ee; /* disabled / locked tile */
+
+  /* Ink — text & dark surfaces */
+  --mt-ink-900: #0e1726; /* near-black, primary text */
+  --mt-ink-800: #1c2433; /* dark CTA / dark hero card */
+  --mt-ink-700: #2d3441;
+  --mt-ink-600: #4a5260; /* secondary text */
+  --mt-ink-500: #6b7280; /* tertiary / meta */
+  --mt-ink-400: #9aa0ab; /* placeholder */
+  --mt-ink-300: #c7ccd3; /* dividers on white */
+  --mt-ink-200: #e2e5ea;
+
+  /* Mood dots */
+  --mt-mood-yellow: #f7c44a;
+  --mt-mood-peach: #f7a172;
+  --mt-mood-pink: #f58f9a;
+  --mt-mood-green: #6fb58a;
+  --mt-mood-teal: #1f4d55;
+  --mt-mood-red: #dc4b45;
+
+  /* Semantic — crisis copy never uses red; use warm orange instead */
+  --mt-success: #1f8b4c;
+  --mt-success-bg: #e6f4ea;
+  --mt-warning: #c9531a;
+  --mt-warning-bg: #ffe9d9;
+  --mt-danger: #dc4b45;
+  --mt-danger-bg: #fce4e2;
+  --mt-info: #2c7be5;
+  --mt-info-bg: #e8f1ff;
+
+  /* Gradients */
+  --mt-gradient-cta: linear-gradient(90deg, #f77268 0%, #f97316 100%);
+  --mt-gradient-hero: linear-gradient(120deg, #f77268 0%, #ff9466 45%, #f97316 100%);
+  --mt-gradient-greeting: linear-gradient(135deg, #f58f9a 0%, #f77268 50%, #f97316 100%);
+  --mt-gradient-orange-soft: linear-gradient(180deg, #ffe4d2 0%, #faf7f4 70%);
+  --mt-gradient-coral-pink: linear-gradient(90deg, #f77268 0%, #fbb7bc 100%);
+  --mt-gradient-glow: radial-gradient(
+    60% 60% at 50% 50%,
+    rgba(249, 115, 22, 0.35) 0%,
+    rgba(249, 115, 22, 0) 70%
+  );
+
+  /* Semantic aliases */
+  --bg: var(--mt-cream-bg);
+  --bg-elev: var(--mt-cream-card);
+  --bg-sunken: var(--mt-fog);
+  --fg1: var(--mt-ink-900);
+  --fg2: var(--mt-ink-600);
+  --fg3: var(--mt-ink-500);
+  --fg-muted: var(--mt-ink-400);
+  --fg-on-orange: #ffffff;
+  --fg-on-ink: #ffffff;
+  --accent-mt: var(--mt-orange-500);
+  --accent-deep: var(--mt-orange-700);
+
+  /*
+   * Font families — DESIGN.md §3 defines 3 Inter optical cuts:
+   *   --font-display  Inter Display (28pt cut) — headlines ≥28px
+   *   --font-sans     Inter          (24pt cut) — body & most UI  ← managed by next/font/google in layout.tsx
+   *   --font-text     Inter Text     (18pt cut) — small labels / dense rows
+   *
+   * Inter Display and Inter Text are not yet bundled locally.
+   * Both alias to --font-sans (Next.js-managed Inter) until the optical-cut
+   * woff2 files are added to fonts/ and loaded via next/font/local.
+   * Do NOT redeclare --font-sans here — next/font injects it via className on <html>.
+   */
+  --font-display: var(--font-sans);
+  --font-text: var(--font-sans);
+
+  /* Typography — type scale */
+  --fs-display-1: 40px;
+  --fs-display-2: 32px;
+  --fs-h1: 28px;
+  --fs-h2: 22px;
+  --fs-h3: 18px;
+  --fs-body: 16px;
+  --fs-body-sm: 14px;
+  --fs-meta: 13px;
+  --fs-caption: 12px;
+  --fs-overline: 11px;
+
+  /* Line heights */
+  --lh-tight: 1.12;
+  --lh-snug: 1.25;
+  --lh-base: 1.45;
+  --lh-relaxed: 1.6;
+
+  /* Tracking */
+  --tracking-tight: -0.02em;
+  --tracking-snug: -0.01em;
+  --tracking-base: 0em;
+  --tracking-wide: 0.02em;
+  --tracking-overline: 0.08em;
+
+  /* Font weights */
+  --fw-regular: 400;
+  --fw-medium: 500;
+  --fw-semi: 600;
+  --fw-bold: 700;
+  --fw-black: 800;
+
+  /* Spacing */
+  --s-1: 4px;
+  --s-2: 8px;
+  --s-3: 12px;
+  --s-4: 16px;
+  --s-5: 20px;
+  --s-6: 24px;
+  --s-7: 32px;
+  --s-8: 40px;
+  --s-9: 56px;
+  --gutter: 20px;
+
+  /* Radii (heavy rounding) */
+  --r-xs: 6px;
+  --r-sm: 10px;
+  --r-md: 14px;
+  --r-lg: 18px;
+  --r-xl: 24px;
+  --r-2xl: 32px;
+  --r-3xl: 40px;
+  --r-pill: 999px;
+
+  /* Shadows (soft, never hard — colored shadows only for orange glows) */
+  --sh-1: 0 1px 2px rgba(15, 23, 42, 0.04), 0 1px 1px rgba(15, 23, 42, 0.03);
+  --sh-2: 0 2px 6px rgba(15, 23, 42, 0.05), 0 6px 16px rgba(15, 23, 42, 0.04);
+  --sh-3: 0 8px 24px rgba(15, 23, 42, 0.08), 0 2px 6px rgba(15, 23, 42, 0.04);
+  --sh-glow-orange: 0 12px 28px rgba(249, 115, 22, 0.28);
+  --sh-glow-soft: 0 8px 24px rgba(247, 114, 104, 0.18);
+  --sh-press: inset 0 1px 2px rgba(15, 23, 42, 0.08);
+
+  /* Motion — no bounce; calm, deliberate transitions */
+  --ease-out: cubic-bezier(0.22, 0.61, 0.36, 1);
+  --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+  --dur-fast: 140ms; /* press feedback */
+  --dur-base: 220ms; /* transitions */
+  --dur-slow: 380ms; /* hero reveals */
+
+  /* Legacy brand aliases (kept for backward-compat) */
+  --brand: var(--mt-orange-600);
   --brand-foreground: #ffffff;
-  --brand-bg: #f6f4f2;
+  --brand-bg: var(--mt-cream-bg);
+
   /* Safe area insets — updated at runtime by lib/capacitor/safe-area.ts on native */
   --safe-area-inset-top: env(safe-area-inset-top, 0px);
   --safe-area-inset-bottom: env(safe-area-inset-bottom, 0px);
   --safe-area-inset-left: env(safe-area-inset-left, 0px);
   --safe-area-inset-right: env(safe-area-inset-right, 0px);
+
   /* Keyboard height — updated at runtime by lib/capacitor/keyboard.ts */
   --keyboard-height: 0px;
-  /* Home header gradient — centralized here so components stay color-free */
+
+  /* Home header gradient */
   --home-gradient-from: #ff7ec7;
   --home-gradient-via: #9735e7;
   --home-gradient-to: #ff8c42;
@@ -600,115 +805,82 @@
     @apply border-border outline-ring/50;
   }
   body {
-    @apply bg-[#f6f4f2] text-foreground overflow-x-hidden;
+    @apply text-foreground overflow-x-hidden;
+    background-color: var(--mt-cream-bg);
   }
   html {
     @apply font-sans;
   }
 }
 
-/* ── Breathing exercise animations (Phase 6) ───────────────── */
-@keyframes breathe-expand {
-  0%,
-  100% {
-    transform: scale(1);
-    opacity: 0.8;
-  }
-  50% {
-    transform: scale(1.4);
-    opacity: 1;
-  }
+/* ── Semantic type-scale classes (DESIGN.md §3) ─────────────────────────── */
+.mt-display-1 {
+  font-family: var(--font-display);
+  font-size: var(--fs-display-1);
+  font-weight: var(--fw-black);
+  line-height: var(--lh-tight);
+  letter-spacing: var(--tracking-tight);
 }
-@keyframes breathe-shrink {
-  0%,
-  100% {
-    transform: scale(1.4);
-    opacity: 1;
-  }
-  50% {
-    transform: scale(1);
-    opacity: 0.8;
-  }
+.mt-display-2 {
+  font-family: var(--font-display);
+  font-size: var(--fs-display-2);
+  font-weight: var(--fw-bold);
+  line-height: var(--lh-tight);
+  letter-spacing: var(--tracking-tight);
 }
-
-/* Outer ring */
-.breathing-circle-expand-outer {
-  width: 240px;
-  height: 240px;
-  animation: breathe-expand 4s ease-in-out forwards;
+.mt-h1 {
+  font-size: var(--fs-h1);
+  font-weight: var(--fw-bold);
+  line-height: var(--lh-snug);
+  letter-spacing: var(--tracking-snug);
 }
-.breathing-circle-shrink-outer {
-  width: 240px;
-  height: 240px;
-  animation: breathe-shrink 4s ease-in-out forwards;
+.mt-h2 {
+  font-size: var(--fs-h2);
+  font-weight: var(--fw-bold);
+  line-height: var(--lh-snug);
+  letter-spacing: var(--tracking-snug);
 }
-.breathing-circle-hold-big-outer {
-  width: 240px;
-  height: 240px;
-  transform: scale(1.4);
-  opacity: 1;
+.mt-h3 {
+  font-size: var(--fs-h3);
+  font-weight: var(--fw-semi);
+  line-height: var(--lh-snug);
 }
-.breathing-circle-hold-small-outer {
-  width: 240px;
-  height: 240px;
-  transform: scale(1);
-  opacity: 0.8;
+.mt-body {
+  font-size: var(--fs-body);
+  font-weight: var(--fw-regular);
+  line-height: var(--lh-base);
+  color: var(--fg2);
 }
-.breathing-circle-idle-outer {
-  width: 240px;
-  height: 240px;
+.mt-body-sm {
+  font-size: var(--fs-body-sm);
+  font-weight: var(--fw-regular);
+  color: var(--fg2);
 }
-
-/* Middle ring */
-.breathing-circle-expand-middle {
-  width: 192px;
-  height: 192px;
-  animation: breathe-expand 4s ease-in-out forwards;
+.mt-meta {
+  font-family: var(--font-text);
+  font-size: var(--fs-meta);
+  font-weight: var(--fw-regular);
+  color: var(--fg3);
 }
-.breathing-circle-shrink-middle {
-  width: 192px;
-  height: 192px;
-  animation: breathe-shrink 4s ease-in-out forwards;
+.mt-caption {
+  font-family: var(--font-text);
+  font-size: var(--fs-caption);
+  font-weight: var(--fw-regular);
+  color: var(--fg3);
 }
-.breathing-circle-hold-big-middle {
-  width: 192px;
-  height: 192px;
-  transform: scale(1.4);
-  opacity: 1;
+/* Overline style: short, ALL-CAPS, tracked-out, brand orange */
+.mt-overline {
+  font-size: var(--fs-overline);
+  font-weight: var(--fw-bold);
+  letter-spacing: var(--tracking-overline);
+  text-transform: uppercase;
+  color: var(--mt-orange-600);
 }
-.breathing-circle-hold-small-middle {
-  width: 192px;
-  height: 192px;
-  transform: scale(1);
-  opacity: 0.8;
-}
-.breathing-circle-idle-middle {
-  width: 192px;
-  height: 192px;
+/* Tabular + lining figures for stats, day counts, percentages */
+.mt-numeric {
+  font-feature-settings: "tnum" 1, "lnum" 1;
 }
 
-/* Inner circle */
-.breathing-circle-expand-inner {
-  width: 144px;
-  height: 144px;
-  animation: breathe-expand 4s ease-in-out forwards;
-}
-.breathing-circle-shrink-inner {
-  width: 144px;
-  height: 144px;
-  animation: breathe-shrink 4s ease-in-out forwards;
-}
-.breathing-circle-hold-big-inner {
-  width: 144px;
-  height: 144px;
-  transform: scale(1.4);
-}
-.breathing-circle-hold-small-inner {
-  width: 144px;
-  height: 144px;
-  transform: scale(1);
-}
-.breathing-circle-idle-inner {
-  width: 144px;
-  height: 144px;
+.bg-background {
+  background-color: #fffdf9;
 }

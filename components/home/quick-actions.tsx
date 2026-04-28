@@ -144,7 +144,7 @@ export function QuickActions({ onActionClick }: Props) {
         {ACTIONS.map(({ key, title, description, badge, icon: Icon, iconBg, iconColor }) => (
           <Card
             key={key}
-            className="cursor-pointer active:scale-95 transition-all overflow-hidden"
+            className="cursor-pointer active:scale-95 transition-all overflow-hidden py-0"
             onClick={() => onActionClick?.(key)}
           >
             <CardContent className="p-4 flex flex-col items-start gap-3">

@@ -1,3 +1,31 @@
+/**
+ * FILE: components/find-therapist/filter-sheets.tsx
+ *
+ * PURPOSE:
+ *   Bottom-sheet filter panels for the Find-a-Therapist flow. Each sheet manages
+ *   one filter dimension (specialist type, consultation mode, language, issue, location).
+ *
+ * LOGIC OVERVIEW:
+ *   Each sheet reads/writes filter state via useFindTherapist() context. SheetShell
+ *   provides the backdrop + slide-up container. Selected rows use a solid primary fill
+ *   (bg-primary / text-primary-foreground) so the active choice is immediately obvious.
+ *   ModeSheet embeds an inline city+center picker when "In-person" is selected.
+ *   LocationSheet exposes the same city+center picker independently.
+ *
+ * KEY VARIABLES / PROPS / EXPORTS:
+ *   DoctorTypeSheet  — selects specialist type (profession filter)
+ *   ModeSheet        — selects online vs. in-person + inline location sub-picker
+ *   LangSheet        — multi-select language preference
+ *   ExperiencingSheet — multi-select mental-health concerns with search
+ *   LocationSheet    — selects city + center for in-person bookings
+ *
+ * DEPENDENCIES:
+ *   useFindTherapist() — shared filter context (context.tsx)
+ *   lucide-react icons
+ *   shadcn Button, Input
+ *
+ * LAST UPDATED: 2026-04-28 — solid selected-state fill + Clear button for mode and location sheets
+ */
 "use client";
 
 import { Button } from "@/components/ui/button";
@@ -93,11 +121,13 @@ export function DoctorTypeSheet({ onClose }: SheetProps) {
             onClose();
           }}
           className={`w-full flex items-center justify-between px-4 py-3 rounded-xl border transition-colors ${
-            profession === null ? "border-primary bg-primary/5" : "border-border hover:bg-muted/50"
+            profession === null
+              ? "bg-primary text-primary-foreground border-primary"
+              : "border-border hover:bg-muted/50"
           }`}
         >
           <span className="font-medium">All types</span>
-          {profession === null && <Check className="h-4 w-4 text-primary shrink-0" />}
+          {profession === null && <Check className="h-4 w-4 shrink-0" />}
         </button>
 
         {PROFESSION_OPTIONS.map((opt) => {
@@ -111,23 +141,29 @@ export function DoctorTypeSheet({ onClose }: SheetProps) {
                 onClose();
               }}
               className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl border transition-colors text-left ${
-                isSelected ? "border-primary bg-primary/5" : "border-border hover:bg-muted/50"
+                isSelected
+                  ? "bg-primary text-primary-foreground border-primary"
+                  : "border-border hover:bg-muted/50"
               }`}
             >
               <Icon
                 className={`h-5 w-5 shrink-0 ${
-                  isSelected ? "text-primary" : "text-muted-foreground"
+                  isSelected ? "text-primary-foreground" : "text-muted-foreground"
                 }`}
               />
               <div className="flex-1 min-w-0">
-                <p className={`text-sm font-medium ${isSelected ? "text-primary" : ""}`}>
-                  {opt.label}
-                </p>
+                <p className="text-sm font-medium">{opt.label}</p>
                 {opt.desc && (
-                  <p className="text-xs text-muted-foreground mt-0.5 truncate">{opt.desc}</p>
+                  <p
+                    className={`text-xs mt-0.5 truncate ${
+                      isSelected ? "text-primary-foreground/70" : "text-muted-foreground"
+                    }`}
+                  >
+                    {opt.desc}
+                  </p>
                 )}
               </div>
-              {isSelected && <Check className="h-4 w-4 text-primary shrink-0" />}
+              {isSelected && <Check className="h-4 w-4 shrink-0" />}
             </button>
           );
         })}
@@ -148,13 +184,27 @@ export function ModeSheet({ onClose }: SheetProps) {
       {/* Header */}
       <div className="flex items-center justify-between px-4 py-3 border-b shrink-0">
         <h2 className="text-base font-semibold">Consultation mode</h2>
-        <button
-          onClick={onClose}
-          className="p-1 rounded-full hover:bg-muted transition-colors"
-          aria-label="Close"
-        >
-          <X className="h-5 w-5" />
-        </button>
+        <div className="flex items-center gap-2">
+          {mode !== null && (
+            <button
+              onClick={() => {
+                setMode(null);
+                setCity(null);
+                setCenter(null);
+              }}
+              className="text-sm text-primary font-medium hover:underline"
+            >
+              Clear
+            </button>
+          )}
+          <button
+            onClick={onClose}
+            className="p-1 rounded-full hover:bg-muted transition-colors"
+            aria-label="Close"
+          >
+            <X className="h-5 w-5" />
+          </button>
+        </div>
       </div>
 
       {/* Body */}
@@ -163,53 +213,67 @@ export function ModeSheet({ onClose }: SheetProps) {
         <button
           onClick={() => setMode(null)}
           className={`w-full flex items-center justify-between px-4 py-3 rounded-xl border transition-colors ${
-            mode === null ? "border-primary bg-primary/5" : "border-border hover:bg-muted/50"
+            mode === null
+              ? "bg-primary text-primary-foreground border-primary"
+              : "border-border hover:bg-muted/50"
           }`}
         >
           <span className="font-medium">Any mode</span>
-          {mode === null && <Check className="h-4 w-4 text-primary shrink-0" />}
+          {mode === null && <Check className="h-4 w-4 shrink-0" />}
         </button>
 
         {/* Online */}
         <button
           onClick={() => setMode("online")}
           className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl border transition-colors text-left ${
-            mode === "online" ? "border-primary bg-primary/5" : "border-border hover:bg-muted/50"
+            mode === "online"
+              ? "bg-primary text-primary-foreground border-primary"
+              : "border-border hover:bg-muted/50"
           }`}
         >
           <Monitor
             className={`h-5 w-5 shrink-0 ${
-              mode === "online" ? "text-primary" : "text-muted-foreground"
+              mode === "online" ? "text-primary-foreground" : "text-muted-foreground"
             }`}
           />
           <div className="flex-1 min-w-0">
-            <p className={`text-sm font-medium ${mode === "online" ? "text-primary" : ""}`}>
-              Online
+            <p className="text-sm font-medium">Online</p>
+            <p
+              className={`text-xs mt-0.5 ${
+                mode === "online" ? "text-primary-foreground/70" : "text-muted-foreground"
+              }`}
+            >
+              Consult from anywhere
             </p>
-            <p className="text-xs text-muted-foreground mt-0.5">Consult from anywhere</p>
           </div>
-          {mode === "online" && <Check className="h-4 w-4 text-primary shrink-0" />}
+          {mode === "online" && <Check className="h-4 w-4 shrink-0" />}
         </button>
 
         {/* In-person */}
         <button
           onClick={() => setMode("in-person")}
           className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl border transition-colors text-left ${
-            mode === "in-person" ? "border-primary bg-primary/5" : "border-border hover:bg-muted/50"
+            mode === "in-person"
+              ? "bg-primary text-primary-foreground border-primary"
+              : "border-border hover:bg-muted/50"
           }`}
         >
           <Building2
             className={`h-5 w-5 shrink-0 ${
-              mode === "in-person" ? "text-primary" : "text-muted-foreground"
+              mode === "in-person" ? "text-primary-foreground" : "text-muted-foreground"
             }`}
           />
           <div className="flex-1 min-w-0">
-            <p className={`text-sm font-medium ${mode === "in-person" ? "text-primary" : ""}`}>
-              In-person
+            <p className="text-sm font-medium">In-person</p>
+            <p
+              className={`text-xs mt-0.5 ${
+                mode === "in-person" ? "text-primary-foreground/70" : "text-muted-foreground"
+              }`}
+            >
+              Visit a center near you
             </p>
-            <p className="text-xs text-muted-foreground mt-0.5">Visit a center near you</p>
           </div>
-          {mode === "in-person" && <Check className="h-4 w-4 text-primary shrink-0" />}
+          {mode === "in-person" && <Check className="h-4 w-4 shrink-0" />}
         </button>
 
         {/* Inline city + center picker when in-person is selected */}
@@ -229,23 +293,17 @@ export function ModeSheet({ onClose }: SheetProps) {
                     }}
                     className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg border transition-colors text-left ${
                       isSelectedCity
-                        ? "border-primary bg-primary/5"
+                        ? "bg-primary text-primary-foreground border-primary"
                         : "border-border hover:bg-muted/50"
                     }`}
                   >
                     <MapPin
                       className={`h-4 w-4 shrink-0 ${
-                        isSelectedCity ? "text-primary" : "text-muted-foreground"
+                        isSelectedCity ? "text-primary-foreground" : "text-muted-foreground"
                       }`}
                     />
-                    <span
-                      className={`text-sm font-medium flex-1 ${
-                        isSelectedCity ? "text-primary" : ""
-                      }`}
-                    >
-                      {c.name}
-                    </span>
-                    {isSelectedCity && <Check className="h-4 w-4 text-primary shrink-0" />}
+                    <span className="text-sm font-medium flex-1">{c.name}</span>
+                    {isSelectedCity && <Check className="h-4 w-4 shrink-0" />}
                   </button>
 
                   {/* Centers for this city */}
@@ -262,25 +320,19 @@ export function ModeSheet({ onClose }: SheetProps) {
                             onClick={() => setCenter(ct)}
                             className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg border transition-colors text-left ${
                               isSelectedCenter
-                                ? "border-primary bg-primary/5"
+                                ? "bg-primary text-primary-foreground border-primary"
                                 : "border-border hover:bg-muted/50"
                             }`}
                           >
                             <Building2
                               className={`h-4 w-4 shrink-0 ${
-                                isSelectedCenter ? "text-primary" : "text-muted-foreground"
+                                isSelectedCenter
+                                  ? "text-primary-foreground"
+                                  : "text-muted-foreground"
                               }`}
                             />
-                            <span
-                              className={`text-sm flex-1 ${
-                                isSelectedCenter ? "text-primary font-medium" : ""
-                              }`}
-                            >
-                              {ct.name}
-                            </span>
-                            {isSelectedCenter && (
-                              <Check className="h-4 w-4 text-primary shrink-0" />
-                            )}
+                            <span className="text-sm font-medium flex-1">{ct.name}</span>
+                            {isSelectedCenter && <Check className="h-4 w-4 shrink-0" />}
                           </button>
                         );
                       })}
@@ -463,13 +515,26 @@ export function LocationSheet({ onClose }: SheetProps) {
       {/* Header */}
       <div className="flex items-center justify-between px-4 py-3 border-b shrink-0">
         <h2 className="text-base font-semibold">Select location</h2>
-        <button
-          onClick={onClose}
-          className="p-1 rounded-full hover:bg-muted transition-colors"
-          aria-label="Close"
-        >
-          <X className="h-5 w-5" />
-        </button>
+        <div className="flex items-center gap-2">
+          {city !== null && (
+            <button
+              onClick={() => {
+                setCity(null);
+                setCenter(null);
+              }}
+              className="text-sm text-primary font-medium hover:underline"
+            >
+              Clear
+            </button>
+          )}
+          <button
+            onClick={onClose}
+            className="p-1 rounded-full hover:bg-muted transition-colors"
+            aria-label="Close"
+          >
+            <X className="h-5 w-5" />
+          </button>
+        </div>
       </div>
 
       {/* Body */}
@@ -481,11 +546,13 @@ export function LocationSheet({ onClose }: SheetProps) {
             setCenter(null);
           }}
           className={`w-full flex items-center justify-between px-4 py-3 rounded-xl border transition-colors ${
-            city === null ? "border-primary bg-primary/5" : "border-border hover:bg-muted/50"
+            city === null
+              ? "bg-primary text-primary-foreground border-primary"
+              : "border-border hover:bg-muted/50"
           }`}
         >
           <span className="font-medium">Any location</span>
-          {city === null && <Check className="h-4 w-4 text-primary shrink-0" />}
+          {city === null && <Check className="h-4 w-4 shrink-0" />}
         </button>
 
         {CITIES.map((c) => {
@@ -498,20 +565,18 @@ export function LocationSheet({ onClose }: SheetProps) {
                   setCenter(null);
                 }}
                 className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl border transition-colors text-left ${
-                  isSelectedCity ? "border-primary bg-primary/5" : "border-border hover:bg-muted/50"
+                  isSelectedCity
+                    ? "bg-primary text-primary-foreground border-primary"
+                    : "border-border hover:bg-muted/50"
                 }`}
               >
                 <MapPin
                   className={`h-5 w-5 shrink-0 ${
-                    isSelectedCity ? "text-primary" : "text-muted-foreground"
+                    isSelectedCity ? "text-primary-foreground" : "text-muted-foreground"
                   }`}
                 />
-                <span
-                  className={`text-sm font-medium flex-1 ${isSelectedCity ? "text-primary" : ""}`}
-                >
-                  {c.name}
-                </span>
-                {isSelectedCity && <Check className="h-4 w-4 text-primary shrink-0" />}
+                <span className="text-sm font-medium flex-1">{c.name}</span>
+                {isSelectedCity && <Check className="h-4 w-4 shrink-0" />}
               </button>
 
               {/* Centers for selected city */}
@@ -528,23 +593,17 @@ export function LocationSheet({ onClose }: SheetProps) {
                         onClick={() => setCenter(ct)}
                         className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg border transition-colors text-left ${
                           isSelectedCenter
-                            ? "border-primary bg-primary/5"
+                            ? "bg-primary text-primary-foreground border-primary"
                             : "border-border hover:bg-muted/50"
                         }`}
                       >
                         <Building2
                           className={`h-4 w-4 shrink-0 ${
-                            isSelectedCenter ? "text-primary" : "text-muted-foreground"
+                            isSelectedCenter ? "text-primary-foreground" : "text-muted-foreground"
                           }`}
                         />
-                        <span
-                          className={`text-sm flex-1 ${
-                            isSelectedCenter ? "text-primary font-medium" : ""
-                          }`}
-                        >
-                          {ct.name}
-                        </span>
-                        {isSelectedCenter && <Check className="h-4 w-4 text-primary shrink-0" />}
+                        <span className="text-sm font-medium flex-1">{ct.name}</span>
+                        {isSelectedCenter && <Check className="h-4 w-4 shrink-0" />}
                       </button>
                     );
                   })}

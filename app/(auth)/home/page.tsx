@@ -119,11 +119,11 @@ export default function HomePage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50/50">
+    <div className="min-h-screen">
       <HomeHeader onMoodClick={(moodId) => router.push(`/journeys/mood-check?mood=${moodId}`)} />
 
       {/* Main content — overlaps header by pulling up with negative margin */}
-      <div className="relative mt-[-20px] pt-8 pb-20 bg-gray-50/50 rounded-t-2xl z-10 flex flex-col gap-0">
+      <div className="relative mt-[-20px] pt-8 pb-20 bg-background rounded-t-2xl z-10 flex flex-col gap-0">
         <UpcomingSession appointments={appointments} onJoin={() => handleAction("join_session")} />
 
         <SupportSection

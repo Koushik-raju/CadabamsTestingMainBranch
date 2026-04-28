@@ -24,7 +24,7 @@
  *   PROFESSION_OPTIONS — specialist type options from context
  *   DOCTORS            — static doctor data
  *
- * LAST UPDATED: 2026-04-24 — specialist type pills, clear button, image fix, button size
+ * LAST UPDATED: 2026-04-28 — replace hardcoded #f6f4f2 with var(--mt-cream-bg) token
  */
 "use client";
 
@@ -159,7 +159,7 @@ export function ListView() {
   // ── Render ───────────────────────────────────────────────────────────────────
 
   return (
-    <div className="min-h-screen bg-[#f6f4f2] flex flex-col">
+    <div className="min-h-screen bg-[var(--mt-cream-bg)] flex flex-col">
       {/* Header */}
       <div className="px-5 pt-6 pb-3 flex items-center justify-between">
         <div className="flex items-center gap-2">

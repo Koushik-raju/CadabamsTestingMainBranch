@@ -28,7 +28,7 @@
  *   useChatSession, mastraDataContext, ChatHeader, MessageList, ChatInput,
  *   HistoryDrawer
  *
- * LAST UPDATED: 2026-04-23 — auto-send ?q= param from home Dr. Riya input
+ * LAST UPDATED: 2026-04-28 — remove per-page bg; root layout now owns bg-background
  */
 "use client";
 
@@ -82,7 +82,7 @@ export default function ChatPage() {
   );
 
   return (
-    <div className="flex h-[100dvh] flex-col bg-[#f6f4f2] overflow-hidden">
+    <div className="flex h-[100dvh] flex-col overflow-hidden">
       <ChatHeader onHistoryClick={() => setHistoryOpen(true)} />
 
       <MessageList

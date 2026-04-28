@@ -25,7 +25,7 @@ export const viewport: Viewport = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en" suppressHydrationWarning className={`${inter.variable} ${urbanist.variable}`}>
-      <body suppressHydrationWarning className="font-sans bg-[#f6f4f2] overflow-x-hidden">
+      <body suppressHydrationWarning className="font-sans overflow-x-hidden">
         {/* Google Tag Manager */}
         <Script id="gtm-script" strategy="afterInteractive">{`
           (function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':new Date().getTime(),event:'gtm.js'});
@@ -62,7 +62,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <main>
           <AppProviders>
             <CapacitorInit />
-            <div className="overflow-x-clip">{children}</div>
+            <div className="overflow-x-clip bg-background">{children}</div>
           </AppProviders>
         </main>
       </body>
