@@ -7,8 +7,8 @@
  *
  * LOGIC OVERVIEW:
  *   Renders a week navigation row (prev/next arrows + label) and 7 day buttons.
- *   Each day shows: narrow weekday letter, day number circle (highlighted when
- *   selected), and a dot indicator when that day has at least one entry.
+ *   Each day shows: narrow weekday letter, day number circle (orange filled when
+ *   selected), and an orange dot indicator when that day has at least one entry.
  *   The parent owns all state (selectedDate, weekOffset); this component is
  *   purely presentational.
  *
@@ -20,9 +20,9 @@
  * DEPENDENCIES:
  *   lucide-react, cn (lib/utils)
  *
- * LAST UPDATED: 2026-04-27 — created; extracted from home page; used on home + slug detail pages
+ * LAST UPDATED: 2026-04-28 — Design system migration: orange selected state (#F97316),
+ *   removed Tailwind semantic color tokens in favour of exact design-system hex values
  */
-import { cn } from "@/lib/utils";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 
 export interface WeekDay {
@@ -57,25 +57,27 @@ export function WeekDateStrip({
       <div className="flex items-center justify-between mb-1">
         <button
           onClick={onPrevWeek}
-          className="p-1 rounded-lg hover:bg-muted transition-colors"
+          className="p-1 rounded-[10px] hover:bg-[#F4F2EE] transition-colors"
           aria-label="Previous week"
         >
-          <ChevronLeft className="w-4 h-4 text-muted-foreground" />
+          <ChevronLeft className="w-4 h-4" style={{ color: "#6B7280" }} />
         </button>
-        <span className="text-xs text-muted-foreground font-medium">{weekLabel}</span>
+        <span className="text-[12px] font-medium" style={{ color: "#6B7280" }}>
+          {weekLabel}
+        </span>
         <button
           onClick={onNextWeek}
-          className={cn(
-            "p-1 rounded-lg transition-colors",
-            canGoForward ? "hover:bg-muted" : "opacity-30 pointer-events-none",
-          )}
+          className={[
+            "p-1 rounded-[10px] transition-colors",
+            canGoForward ? "hover:bg-[#F4F2EE]" : "opacity-30 pointer-events-none",
+          ].join(" ")}
           aria-label="Next week"
         >
-          <ChevronRight className="w-4 h-4 text-muted-foreground" />
+          <ChevronRight className="w-4 h-4" style={{ color: "#6B7280" }} />
         </button>
       </div>
 
-      {/* Day buttons */}
+      {/* Day buttons — active day = orange filled circle (squircle pattern) */}
       <div className="flex items-center justify-between gap-1 mb-4">
         {days.map(({ dateStr, dayLetter, dayNum, hasEntries }) => {
           const isSelected = dateStr === selectedDate;
@@ -86,28 +88,24 @@ export function WeekDateStrip({
               className="flex-1 flex flex-col items-center gap-1 py-1 transition-colors"
             >
               <span
-                className={cn(
-                  "text-[11px] font-medium",
-                  isSelected ? "text-primary" : "text-muted-foreground",
-                )}
+                className="text-[11px] font-semibold"
+                style={{ color: isSelected ? "#F97316" : "#6B7280" }}
               >
                 {dayLetter}
               </span>
               <span
-                className={cn(
-                  "w-8 h-8 rounded-full flex items-center justify-center text-sm font-semibold transition-colors",
-                  isSelected
-                    ? "bg-primary text-primary-foreground"
-                    : "text-foreground hover:bg-muted",
-                )}
+                className="w-8 h-8 rounded-full flex items-center justify-center text-[13px] font-bold transition-colors mt-numeric"
+                style={{
+                  background: isSelected ? "#F97316" : "transparent",
+                  color: isSelected ? "#fff" : "#0E1726",
+                }}
               >
                 {dayNum}
               </span>
+              {/* Entry indicator dot */}
               <span
-                className={cn(
-                  "w-1 h-1 rounded-full transition-opacity",
-                  hasEntries ? "bg-primary opacity-100" : "opacity-0",
-                )}
+                className="w-1 h-1 rounded-full transition-opacity"
+                style={{ background: hasEntries ? "#F97316" : "transparent" }}
               />
             </button>
           );

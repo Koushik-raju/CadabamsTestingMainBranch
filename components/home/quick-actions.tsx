@@ -6,19 +6,22 @@
  *   of shortcut tiles linking to major app features.
  *
  * LOGIC OVERVIEW:
- *   ACTIONS defines the static list of tiles (key, label, description, badge,
- *   icon, colours). Each card fires onActionClick with its key; the parent
- *   (home page) handles routing.
+ *   ACTIONS defines the static list of tiles. Each tile uses the MTGlyphTile
+ *   pattern: a soft tinted square (--mt-tint-* palette) with a centered line icon.
+ *   Each card fires onActionClick with its key; the parent (home page) handles routing.
+ *   Badge copy is sentence case and never uses alarm language.
  *
  * KEY VARIABLES / PROPS / EXPORTS:
- *   ACTIONS        — static config array for all quick-action tiles
+ *   ACTIONS        — static config array: key, title, description, badge, icon, tint
+ *   TintKey        — union of allowed tint names matching the design system palette
  *   onActionClick  — callback from parent; receives the action key string
  *
  * DEPENDENCIES:
  *   lucide-react   — icons
  *   shadcn Card, Badge
  *
- * LAST UPDATED: 2026-04-17 — add Appointments tile before Assessments
+ * LAST UPDATED: 2026-04-28 — Migrated to --mt-tint-* colors, sentence-case copy,
+ *   MTGlyphTile glyph style, updated badge variants to mt-* tints
  */
 
 import { Badge } from "@/components/ui/badge";
@@ -36,14 +39,26 @@ import {
   Wind,
 } from "lucide-react";
 
+/* Design system tint palette — matches --mt-tint-* CSS vars */
+const TINTS: Record<string, { bg: string; fg: string }> = {
+  blue: { bg: "#E8F1FF", fg: "#2C7BE5" },
+  purple: { bg: "#F1EBFF", fg: "#6C5CE7" },
+  green: { bg: "#E6F4EA", fg: "#1F8B4C" },
+  pink: { bg: "#FFE6EA", fg: "#D03B5C" },
+  peach: { bg: "#FFE9D9", fg: "#C9531A" },
+  orange: { bg: "#FFE4D2", fg: "#E8620A" },
+};
+
+type TintKey = keyof typeof TINTS;
+
 interface Action {
   key: string;
   title: string;
   description: string;
   badge: string;
+  badgeVariant: "mt-blue" | "mt-purple" | "mt-green" | "mt-pink" | "mt-peach" | "mt-orange";
   icon: LucideIcon;
-  iconBg: string;
-  iconColor: string;
+  tint: TintKey;
 }
 
 const ACTIONS: Action[] = [
@@ -52,83 +67,81 @@ const ACTIONS: Action[] = [
     title: "Appointments",
     description: "View and manage your sessions.",
     badge: "My sessions",
+    badgeVariant: "mt-green",
     icon: CalendarCheck,
-    iconBg: "bg-emerald-100",
-    iconColor: "text-emerald-600",
+    tint: "green",
   },
   {
     key: "assessment",
     title: "Assessments",
-    description: "Check anxiety, mood & more.",
-    badge: "New added !!!",
+    description: "Check anxiety, mood and more.",
+    badge: "Try one now",
+    badgeVariant: "mt-purple",
     icon: ClipboardList,
-    iconBg: "bg-violet-100",
-    iconColor: "text-violet-600",
+    tint: "purple",
   },
   {
     key: "journey",
     title: "Guided journeys",
-    description: "Duolingo-style paths for your mind.",
-    badge: "Continue your streak",
+    description: "Structured paths for your mind.",
+    badge: "Keep going",
+    badgeVariant: "mt-green",
     icon: Map,
-    iconBg: "bg-emerald-100",
-    iconColor: "text-emerald-600",
+    tint: "green",
   },
   {
     key: "prescriptions",
     title: "Prescriptions",
     description: "Download your prescription PDFs.",
     badge: "View all",
+    badgeVariant: "mt-pink",
     icon: Pill,
-    iconBg: "bg-rose-100",
-    iconColor: "text-rose-600",
+    tint: "pink",
   },
   {
     key: "packages",
     title: "Packages",
     description: "Comprehensive care plans.",
     badge: "Browse now",
+    badgeVariant: "mt-peach",
     icon: Package,
-    iconBg: "bg-amber-100",
-    iconColor: "text-amber-600",
+    tint: "peach",
   },
   {
     key: "journal",
-    title: "Journal & reflect",
+    title: "Journal and reflect",
     description: "Free-flow or guided prompts.",
     badge: "3-min gratitude",
+    badgeVariant: "mt-blue",
     icon: BookOpen,
-    iconBg: "bg-sky-100",
-    iconColor: "text-sky-600",
+    tint: "blue",
   },
-  // { key: 'breathe', title: 'Quick relief', description: 'Breath, audio & visual resets.', badge: 'Under 5 min', icon: Sparkles, iconBg: 'bg-pink-100', iconColor: 'text-pink-600' },
   {
     key: "mindful-minutes",
-    title: "Mindful Minutes",
+    title: "Mindful minutes",
     description: "Short guided mindfulness sessions.",
     badge: "Start now",
+    badgeVariant: "mt-blue",
     icon: Wind,
-    iconBg: "bg-teal-100",
-    iconColor: "text-teal-600",
+    tint: "blue",
   },
   {
     key: "chat",
     title: "Chat",
     description: "Message your care team anytime.",
     badge: "Open chat",
+    badgeVariant: "mt-purple",
     icon: MessageCircle,
-    iconBg: "bg-indigo-100",
-    iconColor: "text-indigo-600",
+    tint: "purple",
   },
-  // { key: 'videos', title: 'Videos', description: 'Expert-led mental wellness content.', badge: 'Watch now', icon: PlayCircle, iconBg: 'bg-orange-100', iconColor: 'text-orange-600' },
   {
     key: "documents",
     title: "Documents",
-    description: "Access your reports & files.",
+    description: "Access your reports and files.",
     badge: "View files",
+    badgeVariant: "mt-peach",
     icon: FileText,
-    iconBg: "bg-slate-100",
-    iconColor: "text-slate-600",
+    tint: "peach",
   },
 ];
 
@@ -138,33 +151,38 @@ interface Props {
 
 export function QuickActions({ onActionClick }: Props) {
   return (
-    <div className="px-4 mb-10">
-      <h3 className="text-lg font-bold mb-5">Quick Actions</h3>
+    <div className="px-5 mb-10">
+      <h3 className="mt-h3 text-[#0E1726] mb-5">Quick actions</h3>
       <div className="grid grid-cols-2 gap-3">
-        {ACTIONS.map(({ key, title, description, badge, icon: Icon, iconBg, iconColor }) => (
-          <Card
-            key={key}
-            className="cursor-pointer active:scale-95 transition-all overflow-hidden py-0"
-            onClick={() => onActionClick?.(key)}
-          >
-            <CardContent className="p-4 flex flex-col items-start gap-3">
-              <div
-                className={`w-10 h-10 rounded-lg flex items-center justify-center ${iconBg} ${iconColor}`}
-              >
-                <Icon size={20} strokeWidth={2.5} />
-              </div>
-              <div className="flex flex-col gap-1">
-                <h4 className="text-[15px] font-bold leading-snug">{title}</h4>
-                <p className="text-muted-foreground text-[11px] font-medium leading-tight line-clamp-2">
-                  {description}
-                </p>
-              </div>
-              <Badge variant="secondary" className="text-[10px] mt-auto">
-                {badge}
-              </Badge>
-            </CardContent>
-          </Card>
-        ))}
+        {ACTIONS.map(({ key, title, description, badge, badgeVariant, icon: Icon, tint }) => {
+          const { bg, fg } = TINTS[tint];
+          return (
+            <Card
+              key={key}
+              className="cursor-pointer active:scale-[0.97] transition-transform duration-[140ms] overflow-hidden py-0"
+              onClick={() => onActionClick?.(key)}
+            >
+              <CardContent className="p-4 flex flex-col items-start gap-3">
+                {/* MTGlyphTile pattern: tinted 44×44 square, centered glyph */}
+                <div
+                  className="w-11 h-11 rounded-[12px] flex items-center justify-center flex-shrink-0"
+                  style={{ background: bg }}
+                >
+                  <Icon size={20} strokeWidth={2} style={{ color: fg }} />
+                </div>
+                <div className="flex flex-col gap-1 flex-1">
+                  <h4 className="text-[15px] font-bold leading-snug text-[#0E1726]">{title}</h4>
+                  <p className="text-[11px] font-medium leading-tight line-clamp-2 text-[#6B7280]">
+                    {description}
+                  </p>
+                </div>
+                <Badge variant={badgeVariant} className="text-[10px] mt-auto">
+                  {badge}
+                </Badge>
+              </CardContent>
+            </Card>
+          );
+        })}
       </div>
     </div>
   );

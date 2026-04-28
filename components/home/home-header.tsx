@@ -2,35 +2,36 @@
  * FILE: components/home/home-header.tsx
  *
  * PURPOSE:
- *   Gradient hero header shown only on the home screen. Contains the greeting,
- *   mood selector, and a functional "Ask Dr. Riya" input bar.
+ *   Gradient hero header on the home screen. Coral-orange gradient banner with
+ *   greeting, mood emoji selector row, and the "Ask Dr. Riya" AI input bar.
  *
  * LOGIC OVERVIEW:
  *   1. Derives firstName and profileImage from the auth session.
- *   2. Renders a gradient banner with greeting text and mood selector row.
- *   3. The AI input bar is a real controlled <input>. While empty it shows a
- *      Mic icon; once the user types, the Mic swaps for a SendHorizonal icon.
- *   4. On submit (Enter or tap send icon), a new UUID thread is generated and
- *      the router navigates to /chat/thread/<uuid>?q=<encoded message>.
- *      The chat thread page reads the ?q param and auto-sends it as the first
- *      message, so the new chat opens with the user's question in-flight.
+ *   2. Renders a coral→orange gradient banner (--mt-gradient-greeting) with the
+ *      greeting text (sentence case, mt-h2 + display name), mood row, and AI bar.
+ *   3. Mood selector: 5 emoji faces in a frosted pill. Active mood = orange filled
+ *      circle. Tapping fires onMoodClick with the mood index (1-5).
+ *   4. AI input bar: white floating card overlapping the content below. Empty =
+ *      mic icon; typed text = orange send icon. Enter or tap send opens /chat/thread.
+ *   5. The banner uses rounded-b-[32px] so the card section below sits flush.
  *
  * KEY VARIABLES / PROPS / EXPORTS:
  *   firstName        — first word of user.name, or "There" as fallback
  *   profileImage     — user profile image URL (may be absent)
- *   inputText        — controlled state for the Dr. Riya input
- *   handleSend       — creates a new thread UUID and pushes to it with ?q=
+ *   currentMoodId    — active mood index from moodTracker API (1–5)
+ *   inputText        — controlled state for the Dr. Riya input bar
+ *   handleSend       — creates UUID thread and navigates to /chat/thread/<id>?q=
  *
  * DEPENDENCIES:
- *   useAuth() — provides user name and profile image
- *   useRouter() — for navigation on send
+ *   useAuth() — provides user.name and profile_image
+ *   useRouter() — navigation on send
  *
- * LAST UPDATED: 2026-04-24 — mood button radius updated to rounded-[28px] to match Dr. Riya input bar
+ * LAST UPDATED: 2026-04-28 — Full redesign: coral-orange gradient, design-system
+ *   type scale, mood row with orange active state, correct AI bar styling
  */
 
 "use client";
 
-import { Input } from "@/components/ui/input";
 import { useAuth } from "@/hooks/use-auth";
 import { Bell, Mic, SendHorizonal, Sparkles } from "lucide-react";
 import Image from "next/image";
@@ -42,7 +43,8 @@ interface Props {
   onMoodClick?: (moodId: number) => void;
 }
 
-const MOODS = ["😟", "😐", "😊", "😄", "🤩"];
+/* Mood faces per design system spec — emoji only in the mood-faces selector */
+const MOODS = ["😣", "😔", "😀", "😊", "😄"];
 
 export function HomeHeader({ moodTracker, onMoodClick }: Props) {
   const router = useRouter();
@@ -68,27 +70,38 @@ export function HomeHeader({ moodTracker, onMoodClick }: Props) {
   };
 
   return (
-    <div className="home-header-gradient relative w-full rounded-b-2xl px-4 pt-5 pb-8 text-white z-[16]">
-      <div className="relative z-20 flex flex-col gap-4">
-        {/* Top bar — greeting + actions */}
-        <div className="flex justify-between items-center h-12">
+    <div
+      className="relative w-full rounded-b-[32px] px-5 pt-4 pb-10 text-white z-[16]"
+      style={{ background: "var(--mt-gradient-greeting)" }}
+    >
+      <div className="relative z-20 flex flex-col gap-5">
+        {/* ── Top bar: greeting + notification + avatar ── */}
+        <div className="flex justify-between items-center">
           <div className="flex flex-col leading-tight">
-            <span className="text-[13px] font-medium text-white/80">Good Morning,</span>
-            <span className="text-[20px] font-black text-white leading-tight">{firstName}</span>
+            <span
+              className="text-[13px] font-medium text-white/75 tracking-wide uppercase"
+              style={{ letterSpacing: "0.04em" }}
+            >
+              Good morning,
+            </span>
+            <span className="text-[24px] font-black text-white leading-tight tracking-tight mt-0.5">
+              {firstName}
+            </span>
           </div>
 
           <div className="flex items-center gap-2">
             <button
               onClick={() => router.push("/notifications")}
-              className="w-9 h-9 rounded-full flex items-center justify-center hover:bg-white/20 transition-all active:scale-95"
+              className="w-9 h-9 rounded-full flex items-center justify-center bg-white/15 hover:bg-white/25 transition-colors duration-[140ms] active:scale-95"
               aria-label="View notifications"
             >
               <Bell className="w-5 h-5 text-white" />
             </button>
 
+            {/* Avatar — orange gradient fallback when no profile image */}
             <button
               onClick={() => router.push("/profile")}
-              className="w-10 h-10 rounded-full overflow-hidden border border-white/30 transition-all hover:scale-105 active:scale-95 bg-white/10"
+              className="w-10 h-10 rounded-full overflow-hidden border-2 border-white/40 transition-transform duration-[140ms] hover:scale-105 active:scale-95"
               aria-label="Go to profile"
             >
               {profileImage && profileImage !== "/profile.png" ? (
@@ -100,8 +113,11 @@ export function HomeHeader({ moodTracker, onMoodClick }: Props) {
                   className="object-cover h-full w-full"
                 />
               ) : (
-                <div className="w-full h-full flex items-center justify-center bg-white/20">
-                  <span className="text-base font-bold text-white select-none">
+                <div
+                  className="w-full h-full flex items-center justify-center"
+                  style={{ background: "linear-gradient(135deg, #FBB7BC, #F97316)" }}
+                >
+                  <span className="text-base font-black text-white select-none">
                     {firstName?.[0]}
                   </span>
                 </div>
@@ -110,52 +126,53 @@ export function HomeHeader({ moodTracker, onMoodClick }: Props) {
           </div>
         </div>
 
-        {/* Greeting + mood selector */}
-        <div className="flex flex-col gap-4 w-full">
-          <div className="flex flex-col gap-1.5 max-w-[280px]">
-            <h2 className="text-[22px] font-bold leading-[1.15] tracking-tight">
-              How are you feeling today?
-            </h2>
-            <p className="text-white/80 text-[13px] font-medium leading-relaxed">
-              Your check-in helps us shape your home, guidance, and support.
-            </p>
-          </div>
-
-          <button
-            onClick={() => onMoodClick?.(currentMoodId ?? 3)}
-            className="flex items-center bg-white/15 backdrop-blur-md rounded-[28px] px-4 py-2 gap-2.5 border border-white/10 w-fit hover:bg-white/20 transition-all"
-            aria-label="Select your mood"
-          >
-            <span className="text-[9px] font-bold text-white uppercase tracking-widest whitespace-nowrap opacity-90">
-              Tap your mood
-            </span>
-            <div className="flex gap-2.5">
-              {MOODS.map((emoji, i) => {
-                const isSelected = currentMoodId ? currentMoodId === i + 1 : false;
-                return (
-                  <span
-                    key={i}
-                    className={`text-xl transition-all duration-300 ${
-                      isSelected
-                        ? "bg-black/80 rounded-full w-8 h-8 flex items-center justify-center -mx-0.5 scale-110"
-                        : "opacity-90 hover:opacity-100 hover:scale-125"
-                    }`}
-                  >
-                    {emoji}
-                  </span>
-                );
-              })}
-            </div>
-          </button>
+        {/* ── Greeting question ── */}
+        <div className="flex flex-col gap-1">
+          <h2 className="text-[22px] font-bold leading-snug tracking-tight max-w-[260px]">
+            How are you feeling today?
+          </h2>
+          <p className="text-[13px] text-white/75 font-medium leading-relaxed">
+            Your check-in shapes your guidance and support.
+          </p>
         </div>
 
-        {/* AI input bar — overlaps the card section below */}
-        <div className="mt-1 mb-[-24px] z-50">
-          <div className="w-full bg-card rounded-[28px] shadow-lg px-4 py-2 flex items-center gap-3 border border-border">
-            <Sparkles className="w-5 h-5 text-primary flex-shrink-0" />
-            <Input
-              className="flex-1 border-0 bg-transparent shadow-none focus-visible:ring-0 text-[14px] font-medium text-foreground placeholder:text-muted-foreground px-0 py-1 h-auto"
-              placeholder="Ask Dr. Riya anything..."
+        {/* ── Mood emoji row — active mood = orange filled circle ── */}
+        <button
+          onClick={() => onMoodClick?.(currentMoodId ?? 3)}
+          className="flex items-center gap-3 bg-white/15 backdrop-blur-md rounded-full px-4 py-2.5 border border-white/10 w-fit hover:bg-white/22 transition-colors duration-[140ms]"
+          aria-label="Select your mood"
+        >
+          <span className="text-[10px] font-bold text-white/80 uppercase tracking-widest whitespace-nowrap">
+            Tap your mood
+          </span>
+          <div className="flex gap-2">
+            {MOODS.map((emoji, i) => {
+              const moodId = i + 1;
+              const isSelected = currentMoodId === moodId;
+              return (
+                <span
+                  key={i}
+                  className={[
+                    "text-xl transition-all duration-[220ms] select-none",
+                    isSelected
+                      ? "bg-[#F97316] rounded-full w-8 h-8 flex items-center justify-center scale-110 shadow-[0_4px_10px_rgba(249,115,22,0.4)]"
+                      : "opacity-80 hover:opacity-100 hover:scale-110",
+                  ].join(" ")}
+                >
+                  {emoji}
+                </span>
+              );
+            })}
+          </div>
+        </button>
+
+        {/* ── AI input bar — floats down over the card section below ── */}
+        <div className="mt-1 mb-[-28px] z-50">
+          <div className="w-full bg-white rounded-[28px] shadow-[0_8px_24px_rgba(15,23,42,0.10)] px-4 py-2.5 flex items-center gap-3 border border-[#ECE6DE]">
+            <Sparkles className="w-4 h-4 flex-shrink-0" style={{ color: "#F97316" }} />
+            <input
+              className="flex-1 border-0 bg-transparent outline-none text-[14px] font-medium text-[#0E1726] placeholder:text-[#9AA0AB] py-1"
+              placeholder="Ask Dr. Riya anything…"
               value={inputText}
               onChange={(e) => setInputText(e.target.value)}
               onKeyDown={(e) => {
@@ -168,16 +185,19 @@ export function HomeHeader({ moodTracker, onMoodClick }: Props) {
             />
             <button
               onClick={handleSend}
-              className="w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0 transition-all active:scale-95"
+              className="w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0 transition-transform duration-[140ms] active:scale-95"
               aria-label={inputText.trim() ? "Send message" : "Open chat"}
             >
               {inputText.trim() ? (
-                <div className="w-9 h-9 rounded-full bg-primary flex items-center justify-center">
-                  <SendHorizonal className="w-4 h-4 text-primary-foreground" />
+                <div
+                  className="w-9 h-9 rounded-full flex items-center justify-center shadow-[0_4px_12px_rgba(249,115,22,0.28)]"
+                  style={{ background: "#F97316" }}
+                >
+                  <SendHorizonal className="w-4 h-4 text-white" />
                 </div>
               ) : (
-                <div className="w-9 h-9 rounded-full bg-muted flex items-center justify-center">
-                  <Mic className="w-4 h-4 text-muted-foreground" />
+                <div className="w-9 h-9 rounded-full flex items-center justify-center bg-[#F4F2EE]">
+                  <Mic className="w-4 h-4 text-[#6B7280]" />
                 </div>
               )}
             </button>

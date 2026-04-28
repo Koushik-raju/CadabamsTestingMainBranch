@@ -2,17 +2,16 @@
  * FILE: components/chat/message-bubble.tsx
  *
  * PURPOSE:
- *   Renders a single chat message — either a user bubble (right-aligned,
- *   warm-peach fill) or an assistant reply (left-aligned, plain text with
- *   markdown streaming).
+ *   Renders a single chat message — user bubble (right-aligned, orange-100 fill)
+ *   or an assistant reply (left-aligned, markdown text with AI pill).
  *
  * LOGIC OVERVIEW:
  *   1. Derives isUser from message.role.
  *   2. Extracts plain text from UIMessage parts via getMessageText.
  *   3. While isLastAssistantStreaming, shows ThinkingComponent above the text.
- *   4. After the assistant finishes streaming, renders MessageEnrichments
- *      (quick-reply chips, links, etc.) below the bubble.
- *   5. Timestamp shown below every message in muted-foreground.
+ *   4. Every assistant message shows an AIPill above its content per design system rule.
+ *   5. After streaming ends, MessageEnrichments (quick-reply chips, links) renders below.
+ *   6. Timestamp shown below every message in mt-ink-500.
  *
  * KEY VARIABLES / PROPS / EXPORTS:
  *   message                  — ai-sdk UIMessage (role, parts, id)
@@ -20,12 +19,14 @@
  *   timestamp                — pre-formatted time string from the parent list
  *
  * DEPENDENCIES:
- *   MessageEnrichments, ThinkingComponent, Streamdown (streamdown)
+ *   MessageEnrichments, ThinkingComponent, Streamdown (streamdown), AIPill
  *
- * LAST UPDATED: 2026-04-28 — add file header; replace #fde8dc with var(--mt-orange-100)
+ * LAST UPDATED: 2026-04-28 — Added AI pill above assistant messages, design-system
+ *   bubble colors (#FFE4D2 user, plain text assistant), ink text colors
  */
 import { MessageEnrichments } from "@/components/chat/specialized-components/message-enrichments";
 import { ThinkingComponent } from "@/components/chat/thinking-component";
+import { AIPill } from "@/components/shared/ai-pill";
 import type { UIMessage } from "ai";
 import { Streamdown } from "streamdown";
 
@@ -50,14 +51,19 @@ export function MessageBubble({
           <ThinkingComponent isStreaming steps={[]} />
         </div>
       )}
+
+      {/* AI pill above every assistant message — mandatory per design system */}
+      {!isUser && messageText && (
+        <div className="mb-1">
+          <AIPill label="Dr. Riya" size="sm" />
+        </div>
+      )}
+
       {messageText && (
         <div className={isUser ? "flex justify-end" : "flex justify-start"}>
           <div
-            className={
-              isUser
-                ? "max-w-[75%] rounded-2xl rounded-br-sm bg-[var(--mt-orange-100)] px-4 py-3 text-foreground"
-                : "max-w-[90%] text-foreground"
-            }
+            className={isUser ? "max-w-[75%] rounded-2xl rounded-br-sm px-4 py-3" : "max-w-[90%]"}
+            style={isUser ? { background: "#FFE4D2", color: "#0E1726" } : { color: "#0E1726" }}
           >
             <Streamdown
               className="text-[15px] leading-relaxed prose-sm max-w-none"
@@ -72,9 +78,8 @@ export function MessageBubble({
       )}
       {!isUser && !isLastAssistantStreaming && <MessageEnrichments text={messageText} />}
       <span
-        className={`mt-1 px-1 text-[10px] text-muted-foreground ${
-          isUser ? "text-right" : "text-left"
-        }`}
+        className={`mt-1 px-1 text-[10px] ${isUser ? "text-right" : "text-left"}`}
+        style={{ color: "#9AA0AB" }}
       >
         {timestamp}
       </span>

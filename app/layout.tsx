@@ -2,11 +2,12 @@ import { CapacitorInit } from "@/components/common/capacitor-init";
 import { siteConfig } from "@/config/site";
 import { AppProviders } from "@/providers/app-providers";
 import type { Metadata, Viewport } from "next";
-import { Inter, Urbanist } from "next/font/google";
+import { Urbanist } from "next/font/google";
 import Script from "next/script";
 import "./globals.css";
 
-const inter = Inter({ variable: "--font-sans", subsets: ["latin"] });
+/* Inter is loaded via @font-face in globals.css (3 optical cuts bundled locally).
+   Urbanist is kept via next/font/google for any legacy usage. */
 const urbanist = Urbanist({ variable: "--font-urbanist", subsets: ["latin"] });
 
 export const metadata: Metadata = {
@@ -24,7 +25,7 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" suppressHydrationWarning className={`${inter.variable} ${urbanist.variable}`}>
+    <html lang="en" suppressHydrationWarning className={urbanist.variable}>
       <body suppressHydrationWarning className="font-sans overflow-x-hidden">
         {/* Google Tag Manager */}
         <Script id="gtm-script" strategy="afterInteractive">{`

@@ -60,16 +60,23 @@ export function PageHeader({
   return (
     <div
       className={cn(
-        "flex items-center gap-2 px-4 pt-5 pb-1 bg-background",
+        "flex items-center gap-2 px-5 pt-5 pb-1",
         sticky && "sticky top-0 z-10",
         className,
       )}
+      style={{ background: "#FAF7F4" }}
     >
       <BackButton fallback={fallback} hardBack={hardBack} onClick={onBack} />
 
       <div className="flex-1 min-w-0">
-        <h1 className="text-lg font-bold text-foreground leading-tight">{title}</h1>
-        {subtitle && <p className="text-xs text-muted-foreground mt-0.5">{subtitle}</p>}
+        <h1 className="text-[18px] font-bold leading-tight" style={{ color: "#0E1726" }}>
+          {title}
+        </h1>
+        {subtitle && (
+          <p className="text-[12px] mt-0.5" style={{ color: "#6B7280" }}>
+            {subtitle}
+          </p>
+        )}
       </div>
 
       {right && <div className="flex-shrink-0 flex items-center gap-1">{right}</div>}

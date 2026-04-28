@@ -137,10 +137,24 @@ export function AssessmentLanding({ assessment, onStart, onBack }: AssessmentLan
         )}
       </main>
 
-      <footer className="sticky bottom-0 inset-x-0 bg-background/95 backdrop-blur px-5 pb-8 pt-4 border-t border-border">
-        <Button size="lg" className="w-full rounded-full" onClick={onStart}>
+      {/* Private & Confidential — mandatory on all assessment surfaces */}
+      <div className="px-5 pb-2">
+        <p
+          className="text-[11px] text-center flex items-center justify-center gap-1"
+          style={{ color: "#6B7280" }}
+        >
+          <ShieldCheck className="w-3 h-3" style={{ color: "#1F8B4C" }} />
+          Private &amp; confidential — your results are only visible to you.
+        </p>
+      </div>
+
+      <footer
+        className="sticky bottom-0 inset-x-0 backdrop-blur px-5 pb-8 pt-4"
+        style={{ background: "rgba(250,247,244,0.95)", borderTop: "1px solid #ECE6DE" }}
+      >
+        <Button variant="mt-primary" size="mt-lg" onClick={onStart}>
           {actionLabel}
-          <ChevronRight className="w-4 h-4 ml-2" />
+          <ChevronRight className="w-4 h-4" />
         </Button>
       </footer>
     </div>

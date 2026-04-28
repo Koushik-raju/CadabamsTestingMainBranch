@@ -33,13 +33,14 @@
  */
 "use client";
 
+import { AIDisclaimer, AIPill } from "@/components/shared/ai-pill";
 import { PageHeader } from "@/components/shared/navigation/page-header";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useLatestAssessmentResult } from "@/hooks/assessments/use-assessment-reports";
 import { useJourneyTaskContinuation } from "@/hooks/journeys/use-journey-task-continuation";
-import { AlertCircle, FileText, Loader2, RefreshCw, Sparkles } from "lucide-react";
+import { AlertCircle, FileText, Loader2, RefreshCw } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { use, useEffect, useRef } from "react";
@@ -235,36 +236,40 @@ function ReportView({
 
   return (
     <div className="space-y-4">
-      <Card>
-        <CardContent className="p-4 flex items-start gap-3">
-          <div className="relative w-11 h-11 rounded-2xl bg-gradient-to-br from-violet-500 to-purple-600 flex-shrink-0 flex items-center justify-center overflow-hidden shadow-sm">
-            <div className="absolute -top-2 -right-2 w-7 h-7 rounded-full bg-white/10" />
-            <Sparkles className="w-5 h-5 text-white" />
-          </div>
-          <div className="flex-1 min-w-0">
-            <p className="text-sm font-medium text-foreground leading-snug">
-              AI-Generated Insights
-            </p>
-            <p className="text-xs text-muted-foreground mt-0.5">
-              Submitted {formatDate(completedAt)}
-            </p>
-            {(severity || pct != null) && (
-              <div className="flex items-center gap-2 mt-2">
-                {severity && (
-                  <span className="text-[10px] font-semibold text-foreground bg-muted px-2 py-0.5 rounded-full capitalize">
-                    {severity}
-                  </span>
-                )}
-                {pct != null && (
-                  <span className="text-[10px] font-semibold text-muted-foreground">
-                    Score: {pct}%
-                  </span>
-                )}
+      {/* AI pill — mandatory on all AI-generated report surfaces */}
+      <div className="flex items-center justify-between">
+        <AIPill label="AI-generated report" />
+        <p className="text-[11px] text-[#6B7280]">Submitted {formatDate(completedAt)}</p>
+      </div>
+
+      {/* Score summary card */}
+      {(severity || pct != null) && (
+        <Card>
+          <CardContent className="p-4 flex items-center gap-4">
+            {pct != null && (
+              <div className="flex flex-col items-center">
+                <span
+                  className="text-[40px] font-black mt-numeric leading-none"
+                  style={{ color: "#F97316" }}
+                >
+                  {pct}
+                </span>
+                <span className="text-[11px] font-medium" style={{ color: "#6B7280" }}>
+                  % score
+                </span>
               </div>
             )}
-          </div>
-        </CardContent>
-      </Card>
+            {severity && (
+              <div className="flex flex-col gap-1">
+                <span className="text-[13px] font-semibold text-[#0E1726] capitalize">
+                  {severity}
+                </span>
+                <span className="text-[12px] text-[#6B7280]">Overall balance</span>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      )}
 
       {regenerateError && (
         <div className="flex items-start gap-2 rounded-xl bg-destructive/10 p-3">
@@ -303,20 +308,27 @@ function ReportView({
           >
             {report}
           </Markdown>
-          <p className="text-[10px] text-muted-foreground mt-3">Model: {model}</p>
         </CardContent>
       </Card>
 
-      <Button asChild size="lg" className="w-full">
-        <a href="/consult/find-therapist">Book Appointment</a>
+      {/* AI disclaimer — always shown below the report */}
+      <AIDisclaimer label="AI-generated report" />
+
+      <Button variant="mt-primary" size="mt-lg" asChild>
+        <a href="/consult/find-therapist">Book appointment with a specialist</a>
       </Button>
 
       <Link
         href={`/assessments/${assessmentId}/reports`}
-        className="flex items-center justify-center gap-2 w-full h-12 rounded-2xl border border-border bg-card hover:bg-muted/50 active:bg-muted transition-colors text-sm font-semibold text-foreground"
+        className="flex items-center justify-center gap-2 w-full py-3.5 rounded-full font-bold text-[15px] transition-colors"
+        style={{
+          background: "#fff",
+          color: "#0E1726",
+          boxShadow: "0 2px 6px rgba(15,23,42,0.05),0 6px 16px rgba(15,23,42,0.04)",
+        }}
       >
         <FileText className="w-4 h-4" />
-        View All Reports
+        View all reports
       </Link>
     </div>
   );

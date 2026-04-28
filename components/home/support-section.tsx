@@ -6,8 +6,9 @@
  *   "Talk to a therapist" (direct listing) and "Match me" (guided wizard).
  *
  * LOGIC OVERVIEW:
- *   1. Renders a card with a grid icon and "Find the right expert for you" heading.
- *   2. Two full-width buttons delegate navigation to the parent via callbacks.
+ *   1. Renders a white card with a blue glyph tile and "Find the right expert for you" heading.
+ *   2. Two buttons: primary mt-primary ("Talk to a therapist") and mt-secondary ("Match me").
+ *      "Not sure?" copy above uses the design system recommendation pattern.
  *
  * KEY VARIABLES / PROPS / EXPORTS:
  *   onTalk   — called when user taps "Talk to a therapist"; navigates to find-therapist list
@@ -15,14 +16,15 @@
  *
  * DEPENDENCIES:
  *   Button, Card, CardContent — shadcn/ui primitives
- *   LayoutGrid                — lucide-react icon
+ *   Users2                    — lucide-react icon
  *
- * LAST UPDATED: 2026-04-24 — add file header; increase button size to lg
+ * LAST UPDATED: 2026-04-28 — Redesigned with mt-* button variants, blue glyph tile,
+ *   design-system type scale, and sentence-case copy
  */
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { LayoutGrid } from "lucide-react";
+import { Users2 } from "lucide-react";
 
 interface Props {
   onTalk: () => void;
@@ -31,25 +33,37 @@ interface Props {
 
 export function SupportSection({ onTalk, onMatch }: Props) {
   return (
-    <div className="px-4 mb-8">
+    <div className="px-5 mb-8">
       <Card>
-        <CardContent className="flex flex-col gap-3">
-          <div className="flex items-center gap-5">
-            <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center text-primary shrink-0">
-              <LayoutGrid size={24} />
+        <CardContent className="flex flex-col gap-4 pt-1">
+          {/* Glyph tile + heading */}
+          <div className="flex items-center gap-4">
+            <div
+              className="w-11 h-11 rounded-[12px] flex items-center justify-center flex-shrink-0"
+              style={{ background: "#E8F1FF" }}
+            >
+              <Users2 size={20} style={{ color: "#2C7BE5" }} strokeWidth={2} />
             </div>
             <div className="flex flex-col gap-0.5">
-              <span className="text-[11px] font-extrabold text-muted-foreground uppercase tracking-[1.5px]">
-                NEED SUPPORT?
-              </span>
-              <h4 className="text-lg font-bold leading-tight">Find the right expert for you</h4>
+              <span className="mt-overline">Need support?</span>
+              <h4 className="text-[17px] font-bold leading-tight text-[#0E1726]">
+                Find the right expert for you
+              </h4>
             </div>
           </div>
+
+          {/* Matching suggestion */}
+          <p className="text-[13px] text-[#6B7280] leading-relaxed -mt-1">
+            Not sure who to choose? Answer a few quick questions and we'll match you with the right
+            specialist.
+          </p>
+
+          {/* CTAs */}
           <div className="flex gap-3">
-            <Button size="lg" onClick={onTalk} className="flex-1 rounded-full">
+            <Button variant="mt-primary" size="mt-sm" onClick={onTalk} className="flex-1">
               Talk to a therapist
             </Button>
-            <Button size="lg" onClick={onMatch} variant="secondary" className="flex-1 rounded-full">
+            <Button variant="mt-secondary" size="mt-sm" onClick={onMatch} className="flex-1">
               Match me
             </Button>
           </div>
