@@ -29,20 +29,24 @@
  *   useSelfJournalingEntry     — { entry, isLoading, error }
  *   createSelfJournalingEntry  — async; returns JournalEntryResponseDto | null
  *   deleteSelfJournalingEntry  — async; void
+ *   generateJournalPrompt      — async; returns GeneratedJournalPromptResponseDto | null
+ *   ConversationTurnDto        — re-exported SDK type; AI conversation turn shape
  *   extractString              — (val: unknown) => string
  *
  * DEPENDENCIES:
  *   cmsJournalingControllerGetJournalings (sdk)
- *   journalingControllerListMine / GetEntry / CreateEntry / DeleteEntry (sdk)
+ *   journalingControllerListMine / GetEntry / CreateEntry / DeleteEntry / PromptMe (sdk)
  *   SWR (useSWR, mutate)
  *
- * LAST UPDATED: 2026-04-28 — full rewrite; replaced custom types and axios
- *   with SDK types and SDK function calls.
+ * LAST UPDATED: 2026-04-28 — added generateJournalPrompt and ConversationTurnDto
+ *   re-export to fix journal-writer.tsx build error.
  */
 import { swrConfig } from "@/lib/swr-config";
 import { journalingCategoriesKey, selfJournalingEntryKey, selfJournalingKey } from "@/lib/swr-keys";
 import {
+  type ConversationTurnDto,
   type CreateJournalEntryDto,
+  type GeneratedJournalPromptResponseDto,
   type JournalEntryResponseDto,
   type JournalPromptDto,
   type JournalingListResponseDto,
@@ -53,10 +57,12 @@ import {
   journalingControllerDeleteEntry,
   journalingControllerGetEntry,
   journalingControllerListMine,
+  journalingControllerPromptMe,
 } from "@/sdk/backend-v2";
 import useSWR, { mutate as globalMutate } from "swr";
 
 export type {
+  ConversationTurnDto,
   CreateJournalEntryDto,
   JournalEntryResponseDto,
   JournalPromptDto,
@@ -143,6 +149,23 @@ export function useSelfJournalingEntry(id: string | null | undefined) {
   );
 
   return { entry: data ?? null, isLoading, error };
+}
+
+// ---------------------------------------------------------------------------
+// AI prompt generation
+// ---------------------------------------------------------------------------
+
+/** Generate the next AI journal question for a sub-journaling session. */
+export async function generateJournalPrompt(
+  subJournalingId: string,
+  conversationHistory?: ConversationTurnDto[],
+): Promise<GeneratedJournalPromptResponseDto | null> {
+  const res = await journalingControllerPromptMe({
+    path: { campus: "cadabams" },
+    body: { subJournalingId, conversationHistory },
+  });
+  if (res.error) return null;
+  return (res.data as GeneratedJournalPromptResponseDto | undefined) ?? null;
 }
 
 // ---------------------------------------------------------------------------
