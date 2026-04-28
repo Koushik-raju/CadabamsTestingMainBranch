@@ -2672,6 +2672,146 @@ export type AssessmentAnalysisListResponseDto = {
     pageSize: number;
 };
 
+export type CreateMoodEntryDto = {
+    /**
+     * Smiley score, 1 (worst) – 5 (best)
+     */
+    moodScore: number;
+    /**
+     * Human-readable label for moodScore
+     */
+    moodLabel?: string;
+    /**
+     * Bubble-selected feelings (free-form labels sourced from CMS)
+     */
+    feelings?: Array<string>;
+    note?: string;
+    /**
+     * CmsAssessment.id whose questions drove this submission
+     */
+    cmsAssessmentId?: string;
+    loggedAt?: string;
+};
+
+export type MoodEntryResponseDto = {
+    id: string;
+    crmLeadId?: {
+        [key: string]: unknown;
+    };
+    patientRef?: {
+        [key: string]: unknown;
+    };
+    campus: string;
+    moodScore: number;
+    moodLabel?: {
+        [key: string]: unknown;
+    };
+    feelings: Array<string>;
+    note?: {
+        [key: string]: unknown;
+    };
+    cmsAssessmentId?: {
+        [key: string]: unknown;
+    };
+    loggedAt: string;
+    createdAt: string;
+    updatedAt: string;
+};
+
+export type MoodEntryListResponseDto = {
+    items: Array<MoodEntryResponseDto>;
+    total: number;
+    limit: number;
+    offset: number;
+};
+
+export type MoodTrackerFeelingCountDto = {
+    label: string;
+    count: number;
+};
+
+export type MoodTrackerReportDto = {
+    /**
+     * Number of mood entries in the window
+     */
+    count: number;
+    /**
+     * Mean of moodScore across the window (null when count = 0)
+     */
+    averageScore: {
+        [key: string]: unknown;
+    } | null;
+    /**
+     * Count of entries at each smiley score (1–5)
+     */
+    scoreBuckets: {
+        [key: string]: number;
+    };
+    topFeelings: Array<MoodTrackerFeelingCountDto>;
+    from?: string;
+    to?: string;
+};
+
+export type CreateStressEntryDto = {
+    /**
+     * 1 (Very Low) – 5 (Very High)
+     */
+    stressLevel: number;
+    stressLevelLabel?: string;
+    /**
+     * Stressor labels (Work, Finance, Health, Relationship, Family, Life, Others).
+     */
+    stressReasons?: Array<string>;
+    loggedAt?: string;
+};
+
+export type StressEntryResponseDto = {
+    id: string;
+    crmLeadId?: {
+        [key: string]: unknown;
+    };
+    patientRef?: {
+        [key: string]: unknown;
+    };
+    campus: string;
+    stressLevel: number;
+    stressLevelLabel?: {
+        [key: string]: unknown;
+    };
+    stressReasons: Array<string>;
+    loggedAt: string;
+    createdAt: string;
+    updatedAt: string;
+};
+
+export type StressEntryListResponseDto = {
+    items: Array<StressEntryResponseDto>;
+    total: number;
+    limit: number;
+    offset: number;
+};
+
+export type StressTrackerReasonCountDto = {
+    label: string;
+    count: number;
+};
+
+export type StressTrackerReportDto = {
+    count: number;
+    averageLevel: {
+        [key: string]: unknown;
+    } | null;
+    /**
+     * Count per stress level (1–5)
+     */
+    levelBuckets: {
+        [key: string]: number;
+    };
+    topReasons: Array<StressTrackerReasonCountDto>;
+    from?: string;
+    to?: string;
+};
+
 export type AssignmentItemInputDto = {
     contentType: 'ASSESSMENT' | 'WORKSHEET' | 'AUDIO' | 'VIDEO' | 'WELLNESS' | 'JOURNEY';
     /**
@@ -9145,53 +9285,6 @@ export type EvaluationsControllerGetPrescriptionsResponses = {
 
 export type EvaluationsControllerGetPrescriptionsResponse = EvaluationsControllerGetPrescriptionsResponses[keyof EvaluationsControllerGetPrescriptionsResponses];
 
-export type EvaluationsControllerGetPatientDocumentsData = {
-    body?: never;
-    path: {
-        /**
-         * Campus slug
-         */
-        campus: 'cadabams' | 'whitefield' | 'mysore' | 'mindtalk';
-    };
-    query?: {
-        /**
-         * Domain filter expression for ERP query
-         */
-        domain?: string;
-        /**
-         * Comma-separated list of fields to return
-         */
-        fields?: string;
-        /**
-         * Additional context for the query
-         */
-        context?: string;
-        /**
-         * Maximum number of records to return
-         */
-        limit?: number;
-        /**
-         * Number of records to skip
-         */
-        offset?: number;
-        /**
-         * Field to order by
-         */
-        order?: string;
-        /**
-         * Sort direction (asc or desc)
-         */
-        sort?: string;
-    };
-    url: '/api/v1/{campus}/evaluations/patient-documents';
-};
-
-export type EvaluationsControllerGetPatientDocumentsResponses = {
-    200: ErpListResponseDto;
-};
-
-export type EvaluationsControllerGetPatientDocumentsResponse = EvaluationsControllerGetPatientDocumentsResponses[keyof EvaluationsControllerGetPatientDocumentsResponses];
-
 export type EvaluationsControllerGetLabTestsData = {
     body?: never;
     path: {
@@ -9628,6 +9721,172 @@ export type PatientAssessmentsAnalysisControllerGetByIdResponses = {
 };
 
 export type PatientAssessmentsAnalysisControllerGetByIdResponse = PatientAssessmentsAnalysisControllerGetByIdResponses[keyof PatientAssessmentsAnalysisControllerGetByIdResponses];
+
+export type MoodTrackerControllerListData = {
+    body?: never;
+    path: {
+        /**
+         * Campus slug
+         */
+        campus: 'cadabams' | 'whitefield' | 'mysore' | 'mindtalk';
+    };
+    query?: {
+        from?: string;
+        to?: string;
+        limit?: number;
+        offset?: number;
+    };
+    url: '/api/v1/{campus}/mood-tracker';
+};
+
+export type MoodTrackerControllerListResponses = {
+    200: MoodEntryListResponseDto;
+};
+
+export type MoodTrackerControllerListResponse = MoodTrackerControllerListResponses[keyof MoodTrackerControllerListResponses];
+
+export type MoodTrackerControllerCreateData = {
+    body: CreateMoodEntryDto;
+    path: {
+        /**
+         * Campus slug
+         */
+        campus: 'cadabams' | 'whitefield' | 'mysore' | 'mindtalk';
+    };
+    query?: never;
+    url: '/api/v1/{campus}/mood-tracker';
+};
+
+export type MoodTrackerControllerCreateResponses = {
+    201: MoodEntryResponseDto;
+};
+
+export type MoodTrackerControllerCreateResponse = MoodTrackerControllerCreateResponses[keyof MoodTrackerControllerCreateResponses];
+
+export type MoodTrackerControllerReportData = {
+    body?: never;
+    path: {
+        /**
+         * Campus slug
+         */
+        campus: 'cadabams' | 'whitefield' | 'mysore' | 'mindtalk';
+    };
+    query?: {
+        from?: string;
+        to?: string;
+        limit?: number;
+        offset?: number;
+    };
+    url: '/api/v1/{campus}/mood-tracker/report';
+};
+
+export type MoodTrackerControllerReportResponses = {
+    200: MoodTrackerReportDto;
+};
+
+export type MoodTrackerControllerReportResponse = MoodTrackerControllerReportResponses[keyof MoodTrackerControllerReportResponses];
+
+export type MoodTrackerControllerFindOneData = {
+    body?: never;
+    path: {
+        /**
+         * Campus slug
+         */
+        campus: 'cadabams' | 'whitefield' | 'mysore' | 'mindtalk';
+        id: string;
+    };
+    query?: never;
+    url: '/api/v1/{campus}/mood-tracker/{id}';
+};
+
+export type MoodTrackerControllerFindOneResponses = {
+    200: MoodEntryResponseDto;
+};
+
+export type MoodTrackerControllerFindOneResponse = MoodTrackerControllerFindOneResponses[keyof MoodTrackerControllerFindOneResponses];
+
+export type StressTrackerControllerListData = {
+    body?: never;
+    path: {
+        /**
+         * Campus slug
+         */
+        campus: 'cadabams' | 'whitefield' | 'mysore' | 'mindtalk';
+    };
+    query?: {
+        from?: string;
+        to?: string;
+        limit?: number;
+        offset?: number;
+    };
+    url: '/api/v1/{campus}/stress-tracker';
+};
+
+export type StressTrackerControllerListResponses = {
+    200: StressEntryListResponseDto;
+};
+
+export type StressTrackerControllerListResponse = StressTrackerControllerListResponses[keyof StressTrackerControllerListResponses];
+
+export type StressTrackerControllerCreateData = {
+    body: CreateStressEntryDto;
+    path: {
+        /**
+         * Campus slug
+         */
+        campus: 'cadabams' | 'whitefield' | 'mysore' | 'mindtalk';
+    };
+    query?: never;
+    url: '/api/v1/{campus}/stress-tracker';
+};
+
+export type StressTrackerControllerCreateResponses = {
+    201: StressEntryResponseDto;
+};
+
+export type StressTrackerControllerCreateResponse = StressTrackerControllerCreateResponses[keyof StressTrackerControllerCreateResponses];
+
+export type StressTrackerControllerReportData = {
+    body?: never;
+    path: {
+        /**
+         * Campus slug
+         */
+        campus: 'cadabams' | 'whitefield' | 'mysore' | 'mindtalk';
+    };
+    query?: {
+        from?: string;
+        to?: string;
+        limit?: number;
+        offset?: number;
+    };
+    url: '/api/v1/{campus}/stress-tracker/report';
+};
+
+export type StressTrackerControllerReportResponses = {
+    200: StressTrackerReportDto;
+};
+
+export type StressTrackerControllerReportResponse = StressTrackerControllerReportResponses[keyof StressTrackerControllerReportResponses];
+
+export type StressTrackerControllerFindOneData = {
+    body?: never;
+    path: {
+        /**
+         * Campus slug
+         */
+        campus: 'cadabams' | 'whitefield' | 'mysore' | 'mindtalk';
+        id: string;
+    };
+    query?: never;
+    url: '/api/v1/{campus}/stress-tracker/{id}';
+};
+
+export type StressTrackerControllerFindOneResponses = {
+    200: StressEntryResponseDto;
+};
+
+export type StressTrackerControllerFindOneResponse = StressTrackerControllerFindOneResponses[keyof StressTrackerControllerFindOneResponses];
 
 export type LeadAssignmentsControllerListData = {
     body?: never;
