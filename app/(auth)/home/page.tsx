@@ -83,6 +83,12 @@ export default function HomePage() {
           case "assessment":
             router.push("/assessments");
             break;
+          case "mood-tracker":
+            router.push("/mood-tracker");
+            break;
+          case "stress-tracker":
+            router.push("/stress-tracker");
+            break;
           case "journey":
             router.push("/journeys");
             break;
