@@ -96,7 +96,7 @@ export default function MoodTrackerReportPage() {
               <>
                 <div className="flex flex-col">
                   <span className="text-3xl font-bold">
-                    {report?.averageScore != null ? report.averageScore.toFixed(1) : "—"}
+                    {report?.averageScore != null ? Number(report.averageScore).toFixed(1) : "—"}
                   </span>
                   <span className="text-xs text-muted-foreground">Average mood</span>
                 </div>
