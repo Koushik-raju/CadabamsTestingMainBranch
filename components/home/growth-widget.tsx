@@ -34,7 +34,16 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { type GrowthDay, todayIso, useGrowthDay, useGrowthWeek } from "@/hooks/growth/use-growth";
 import { useAuth } from "@/hooks/use-auth";
 import { cn } from "@/lib/utils";
-import { ClipboardList, MapIcon, MessageSquare, NotebookPen, Sparkles } from "lucide-react";
+import {
+  Activity,
+  ClipboardList,
+  MapIcon,
+  MessageSquare,
+  Moon,
+  NotebookPen,
+  Smile,
+  Sparkles,
+} from "lucide-react";
 import Link from "next/link";
 
 const DOW_LABELS = ["M", "T", "W", "T", "F", "S", "S"];
@@ -44,13 +53,18 @@ type DayLike = {
   hasJournal?: boolean;
   hasAssessment?: boolean;
   hasChatSummary?: boolean;
+  hasMood?: boolean;
+  hasStress?: boolean;
+  hasSleep?: boolean;
 };
 
-/* Order matters — chat summaries are usually the most recent activity, then
- * journals, then assessments, then journey progress. We surface up to 3 icons
+/* Order matters — most recent activity types first. We surface up to 3 icons
  * under each day cell; a "+N" pill flags any extras and the View All link in
  * the header takes the user to the full breakdown. */
 const SOURCE_ORDER: { key: keyof DayLike; Icon: typeof Sparkles; tint: string }[] = [
+  { key: "hasMood", Icon: Smile, tint: "text-pink-500" },
+  { key: "hasStress", Icon: Activity, tint: "text-orange-500" },
+  { key: "hasSleep", Icon: Moon, tint: "text-blue-500" },
   { key: "hasChatSummary", Icon: MessageSquare, tint: "text-indigo-500" },
   { key: "hasJournal", Icon: NotebookPen, tint: "text-sky-500" },
   { key: "hasAssessment", Icon: ClipboardList, tint: "text-violet-500" },
@@ -133,6 +147,42 @@ function buildRecent(day: GrowthDay | undefined): RecentItem[] {
       bg: "bg-indigo-50",
     });
   }
+  for (const m of day.moods ?? []) {
+    items.push({
+      id: `mood-${m.id}`,
+      date: day.date,
+      ts: new Date(m.loggedAt).getTime(),
+      label: m.moodLabel?.trim() || `Mood ${m.moodScore}/5`,
+      preview: m.feelings.length > 0 ? m.feelings.join(", ") : (m.note ?? "Mood logged"),
+      Icon: Smile,
+      tint: "text-pink-700",
+      bg: "bg-pink-50",
+    });
+  }
+  for (const s of day.stress ?? []) {
+    items.push({
+      id: `stress-${s.id}`,
+      date: day.date,
+      ts: new Date(s.loggedAt).getTime(),
+      label: s.stressLevelLabel?.trim() || `Stress ${s.stressLevel}/5`,
+      preview: s.stressReasons.length > 0 ? s.stressReasons.join(", ") : "Stress logged",
+      Icon: Activity,
+      tint: "text-orange-700",
+      bg: "bg-orange-50",
+    });
+  }
+  for (const sl of day.sleep ?? []) {
+    items.push({
+      id: `sleep-${sl.id}`,
+      date: day.date,
+      ts: new Date(sl.loggedAt).getTime(),
+      label: sl.sleepLabel?.trim() || `Sleep ${sl.sleepScore}/5`,
+      preview: sl.factors.length > 0 ? sl.factors.join(", ") : (sl.note ?? "Sleep logged"),
+      Icon: Moon,
+      tint: "text-blue-700",
+      bg: "bg-blue-50",
+    });
+  }
 
   return items.sort((a, b) => b.ts - a.ts);
 }
@@ -163,18 +213,36 @@ export function GrowthWidget() {
   const recent = buildRecent(previewDay);
   const recentTop3 = recent.slice(0, 3);
 
-  const activeDays =
-    week?.days.filter((d) => d.hasJourney || d.hasJournal || d.hasAssessment || d.hasChatSummary) ??
-    [];
+  const isDayActive = (d: {
+    hasJourney: boolean;
+    hasJournal: boolean;
+    hasAssessment: boolean;
+    hasChatSummary: boolean;
+    hasMood: boolean;
+    hasStress: boolean;
+    hasSleep: boolean;
+  }) =>
+    d.hasJourney ||
+    d.hasJournal ||
+    d.hasAssessment ||
+    d.hasChatSummary ||
+    d.hasMood ||
+    d.hasStress ||
+    d.hasSleep;
+
+  const activeDays = week?.days.filter(isDayActive) ?? [];
   const sourceFlags = week?.days.reduce(
     (acc, d) => ({
       j: acc.j || d.hasJourney,
       n: acc.n || d.hasJournal,
       a: acc.a || d.hasAssessment,
       c: acc.c || d.hasChatSummary,
+      m: acc.m || d.hasMood,
+      s: acc.s || d.hasStress,
+      sl: acc.sl || d.hasSleep,
     }),
-    { j: false, n: false, a: false, c: false },
-  ) ?? { j: false, n: false, a: false, c: false };
+    { j: false, n: false, a: false, c: false, m: false, s: false, sl: false },
+  ) ?? { j: false, n: false, a: false, c: false, m: false, s: false, sl: false };
   const sourceCount = Object.values(sourceFlags).filter(Boolean).length;
 
   return (
@@ -226,8 +294,7 @@ export function GrowthWidget() {
               (d, i) => {
                 const iso = d?.date;
                 const isToday = iso === today;
-                const active =
-                  d && (d.hasJourney || d.hasJournal || d.hasAssessment || d.hasChatSummary);
+                const active = d && isDayActive(d);
                 const cell = (
                   <div className="flex flex-col items-center gap-1 py-1">
                     <span

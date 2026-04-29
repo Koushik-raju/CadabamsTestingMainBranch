@@ -32,6 +32,9 @@ export interface GrowthWeekDay {
   hasJournal: boolean;
   hasAssessment: boolean;
   hasChatSummary: boolean;
+  hasMood: boolean;
+  hasStress: boolean;
+  hasSleep: boolean;
 }
 
 export interface GrowthWeek {
@@ -93,12 +96,41 @@ export interface GrowthChatSummaryItem {
   createdAt: string;
 }
 
+export interface GrowthMoodItem {
+  id: string;
+  moodScore: number;
+  moodLabel: string | null;
+  feelings: string[];
+  note: string | null;
+  loggedAt: string;
+}
+
+export interface GrowthStressItem {
+  id: string;
+  stressLevel: number;
+  stressLevelLabel: string | null;
+  stressReasons: string[];
+  loggedAt: string;
+}
+
+export interface GrowthSleepItem {
+  id: string;
+  sleepScore: number;
+  sleepLabel: string | null;
+  factors: string[];
+  note: string | null;
+  loggedAt: string;
+}
+
 export interface GrowthDay {
   date: string;
   journeys: GrowthJourneyItem[];
   journals: GrowthJournalItem[];
   assessments: GrowthAssessmentItem[];
   chatSummaries: GrowthChatSummaryItem[];
+  moods: GrowthMoodItem[];
+  stress: GrowthStressItem[];
+  sleep: GrowthSleepItem[];
 }
 
 export interface GrowthLatestActiveDate {
