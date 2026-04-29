@@ -11775,3 +11775,86 @@ export type NotificationsControllerGetLogResponses = {
 };
 
 export type NotificationsControllerGetLogResponse = NotificationsControllerGetLogResponses[keyof NotificationsControllerGetLogResponses];
+
+// ─── Sleep Tracker (hand-stubbed pending next SDK regen) ──────────────────
+
+export type CreateSleepEntryDto = {
+    sleepScore: number;
+    sleepLabel?: string;
+    factors?: Array<string>;
+    note?: string;
+    cmsAssessmentId?: string;
+    loggedAt?: string;
+};
+
+export type SleepEntryResponseDto = {
+    id: string;
+    crmLeadId?: { [key: string]: unknown } | null;
+    patientRef?: { [key: string]: unknown } | null;
+    campus: string;
+    sleepScore: number;
+    sleepLabel?: { [key: string]: unknown } | null;
+    factors: Array<string>;
+    note?: { [key: string]: unknown } | null;
+    cmsAssessmentId?: { [key: string]: unknown } | null;
+    loggedAt: string;
+    createdAt: string;
+    updatedAt: string;
+};
+
+export type SleepEntryListResponseDto = {
+    items: Array<SleepEntryResponseDto>;
+    total: number;
+    limit: number;
+    offset: number;
+};
+
+export type SleepTrackerFactorCountDto = {
+    label: string;
+    count: number;
+};
+
+export type SleepTrackerReportDto = {
+    count: number;
+    averageScore: { [key: string]: unknown } | null;
+    scoreBuckets: { [key: string]: number };
+    topFactors: Array<SleepTrackerFactorCountDto>;
+    from?: string;
+    to?: string;
+};
+
+export type SleepTrackerControllerListData = {
+    body?: never;
+    path: { campus: 'cadabams' | 'whitefield' | 'mysore' | 'mindtalk' };
+    query?: { from?: string; to?: string; limit?: number; offset?: number };
+    url: '/api/v1/{campus}/sleep-tracker';
+};
+export type SleepTrackerControllerListResponses = { 200: SleepEntryListResponseDto };
+export type SleepTrackerControllerListResponse = SleepTrackerControllerListResponses[keyof SleepTrackerControllerListResponses];
+
+export type SleepTrackerControllerCreateData = {
+    body: CreateSleepEntryDto;
+    path: { campus: 'cadabams' | 'whitefield' | 'mysore' | 'mindtalk' };
+    query?: never;
+    url: '/api/v1/{campus}/sleep-tracker';
+};
+export type SleepTrackerControllerCreateResponses = { 201: SleepEntryResponseDto };
+export type SleepTrackerControllerCreateResponse = SleepTrackerControllerCreateResponses[keyof SleepTrackerControllerCreateResponses];
+
+export type SleepTrackerControllerReportData = {
+    body?: never;
+    path: { campus: 'cadabams' | 'whitefield' | 'mysore' | 'mindtalk' };
+    query?: { from?: string; to?: string; limit?: number; offset?: number };
+    url: '/api/v1/{campus}/sleep-tracker/report';
+};
+export type SleepTrackerControllerReportResponses = { 200: SleepTrackerReportDto };
+export type SleepTrackerControllerReportResponse = SleepTrackerControllerReportResponses[keyof SleepTrackerControllerReportResponses];
+
+export type SleepTrackerControllerFindOneData = {
+    body?: never;
+    path: { campus: 'cadabams' | 'whitefield' | 'mysore' | 'mindtalk'; id: string };
+    query?: never;
+    url: '/api/v1/{campus}/sleep-tracker/{id}';
+};
+export type SleepTrackerControllerFindOneResponses = { 200: SleepEntryResponseDto };
+export type SleepTrackerControllerFindOneResponse = SleepTrackerControllerFindOneResponses[keyof SleepTrackerControllerFindOneResponses];

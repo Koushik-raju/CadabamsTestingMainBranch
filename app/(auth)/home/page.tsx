@@ -89,6 +89,9 @@ export default function HomePage() {
           case "stress-tracker":
             router.push("/stress-tracker");
             break;
+          case "sleep-tracker":
+            router.push("/sleep-tracker");
+            break;
           case "journey":
             router.push("/journeys");
             break;
