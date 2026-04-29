@@ -36,6 +36,7 @@ import {
   LucideIcon,
   Map,
   MessageCircle,
+  Moon,
   Package,
   Pill,
   Smile,
@@ -81,6 +82,15 @@ const ACTIONS: Action[] = [
     badgeVariant: "mt-orange",
     icon: Activity,
     tint: "orange",
+  },
+  {
+    key: "sleep-tracker",
+    title: "Sleep Tracker",
+    description: "Log your sleep & spot patterns.",
+    badge: "Nightly check-in",
+    badgeVariant: "mt-blue",
+    icon: Moon,
+    tint: "blue",
   },
   {
     key: "assessment",

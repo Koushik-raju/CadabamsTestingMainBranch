@@ -31,13 +31,7 @@
 
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import {
-  type GrowthDay,
-  todayIso,
-  useGrowthDay,
-  useGrowthLatestActiveDate,
-  useGrowthWeek,
-} from "@/hooks/growth/use-growth";
+import { type GrowthDay, todayIso, useGrowthDay, useGrowthWeek } from "@/hooks/growth/use-growth";
 import { useAuth } from "@/hooks/use-auth";
 import { cn } from "@/lib/utils";
 import { ClipboardList, MapIcon, MessageSquare, NotebookPen, Sparkles } from "lucide-react";
@@ -160,11 +154,11 @@ export function GrowthWidget() {
   const { user } = useAuth();
   const firstName = ((user?.name as string | undefined) ?? "").split(" ")[0];
   const { week, isLoading } = useGrowthWeek(today);
-  /* The widget shows the latest day with activity (could be today, could be
-   * a few days back). The growth/day endpoint then returns the full breakdown
-   * for that date so we can render preview cards. */
-  const { latest } = useGrowthLatestActiveDate();
-  const previewDate = latest ?? today;
+  /* Recent-items preview is always pinned to TODAY. Showing data from a
+   * stale "latest active day" was confusing — users read the cards as
+   * today's activity. If today has nothing, the section collapses and the
+   * fallback footer line ("Tap any day to see the details") takes over. */
+  const previewDate = today;
   const { day: previewDay, isLoading: dayLoading } = useGrowthDay(previewDate);
   const recent = buildRecent(previewDay);
   const recentTop3 = recent.slice(0, 3);
@@ -310,7 +304,11 @@ export function GrowthWidget() {
 
           {/* Recent activity preview — top 3 items from the latest active day,
               each linking into /growth?date=…. The View All link in the
-              widget header surfaces the rest. Hidden while loading. */}
+              widget header surfaces the rest. Hidden while loading.
+
+              The date this preview belongs to may NOT be today (latest active
+              day can be days earlier). Show the date as a small header so
+              users don't read the cards as today's data. */}
           {(dayLoading || recentTop3.length > 0) && (
             <div className="mt-3 pt-3 border-t border-border/50 flex flex-col gap-2">
               {dayLoading && !previewDay ? (
@@ -320,6 +318,21 @@ export function GrowthWidget() {
                 </>
               ) : (
                 <>
+                  <div className="flex items-center justify-between px-1 -mb-1">
+                    <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
+                      {previewDate === today
+                        ? "Today"
+                        : new Date(`${previewDate}T00:00:00Z`).toLocaleDateString(undefined, {
+                            weekday: "short",
+                            month: "short",
+                            day: "numeric",
+                            timeZone: "UTC",
+                          })}
+                    </span>
+                    <span className="text-[10px] text-muted-foreground">
+                      {recent.length} {recent.length === 1 ? "item" : "items"}
+                    </span>
+                  </div>
                   {recentTop3.map((item) => (
                     <Link
                       key={item.id}

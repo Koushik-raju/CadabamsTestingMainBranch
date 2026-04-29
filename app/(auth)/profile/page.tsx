@@ -31,12 +31,13 @@
  *   crmControllerGetAppointmentDashboard — SDK call for appointment stats
  *   BackButton — shared back navigation component
  *
- * LAST UPDATED: 2026-04-28 — Neo design system: shadow scale, color tokens, border radius
+ * LAST UPDATED: 2026-04-29 — replaced inline gradient icon tiles with shared GlyphTile
  */
 
 "use client";
 
 import { PackageListCard } from "@/components/package/package-list-card";
+import { GlyphTile, type TintKey } from "@/components/shared/glyph-tile";
 import { BackButton } from "@/components/shared/navigation/back-button";
 import {
   AlertDialog,
@@ -56,7 +57,6 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useManagedPackages } from "@/hooks/packages/use-packages";
 import { useAuthMe } from "@/hooks/shared/auth/use-auth";
 import { useAuth } from "@/hooks/use-auth";
-import { cn } from "@/lib/utils";
 import { crmControllerGetAppointmentDashboard } from "@/sdk/backend-v2";
 import type { AppointmentDashboardResponseDto, LeadResponseDto } from "@/sdk/backend-v2";
 import type { BookedPackageDto } from "@/sdk/backend-v2";
@@ -77,31 +77,22 @@ import useSWR from "swr";
 
 /* ------------------------------------------------------------------
  * InfoRow — a single row inside the contact info grouped card.
- * Uses gradient icon tile (§4) + label/value layout (§3).
+ * Uses canonical GlyphTile + label/value layout (§3).
  * ------------------------------------------------------------------ */
 function InfoRow({
-  gradient,
   icon,
+  tint,
   label,
   value,
 }: {
-  gradient: string;
-  icon: React.ReactNode;
+  icon: React.ElementType;
+  tint: TintKey;
   label: string;
   value: string;
 }) {
   return (
     <div className="flex items-center gap-3 py-3">
-      <div
-        className={cn(
-          "relative w-11 h-11 rounded-2xl bg-gradient-to-br flex-shrink-0",
-          "flex items-center justify-center overflow-hidden shadow-[var(--sh-1)]",
-          gradient,
-        )}
-      >
-        <div className="absolute -top-2 -right-2 w-7 h-7 rounded-full bg-white/10" />
-        {icon}
-      </div>
+      <GlyphTile icon={icon} tint={tint} size="md" />
       <div className="flex flex-col min-w-0 flex-1">
         <span className="text-xs text-muted-foreground">{label}</span>
         <span className="text-sm font-medium text-foreground truncate">{value}</span>
@@ -111,32 +102,23 @@ function InfoRow({
 }
 
 /* ------------------------------------------------------------------
- * StatTile — one appointment stat with a gradient icon tile (§4).
+ * StatTile — one appointment stat using the canonical GlyphTile.
  * Three tiles sit side-by-side in a flex row.
  * ------------------------------------------------------------------ */
 function StatTile({
-  gradient,
   icon,
+  tint,
   label,
   value,
 }: {
-  gradient: string;
-  icon: React.ReactNode;
+  icon: React.ElementType;
+  tint: TintKey;
   label: string;
   value: number | string;
 }) {
   return (
     <div className="flex-1 rounded-2xl bg-card border border-border p-4 flex flex-col items-center gap-2 shadow-[var(--sh-1)]">
-      <div
-        className={cn(
-          "relative w-11 h-11 rounded-2xl bg-gradient-to-br flex-shrink-0",
-          "flex items-center justify-center overflow-hidden shadow-[var(--sh-1)]",
-          gradient,
-        )}
-      >
-        <div className="absolute -top-2 -right-2 w-7 h-7 rounded-full bg-white/10" />
-        {icon}
-      </div>
+      <GlyphTile icon={icon} tint={tint} size="md" />
       <span className="text-[22px] font-black text-foreground leading-none">{value}</span>
       <span className="text-xs text-muted-foreground text-center leading-tight">{label}</span>
     </div>
@@ -241,22 +223,22 @@ export default function ProfilePage() {
               ) : (
                 <>
                   <InfoRow
-                    gradient="from-sky-500 to-blue-600"
-                    icon={<Phone className="w-5 h-5 text-white" />}
+                    icon={Phone}
+                    tint="blue"
                     label="Mobile"
                     value={(profile?.caller_mobile as string) ?? "—"}
                   />
                   <Separator />
                   <InfoRow
-                    gradient="from-violet-500 to-purple-600"
-                    icon={<Mail className="w-5 h-5 text-white" />}
+                    icon={Mail}
+                    tint="purple"
                     label="Email"
                     value={(profile?.email as string) || "Not provided"}
                   />
                   <Separator />
                   <InfoRow
-                    gradient="from-teal-500 to-emerald-600"
-                    icon={<Hash className="w-5 h-5 text-white" />}
+                    icon={Hash}
+                    tint="green"
                     label="Patient ID"
                     value={profile?.id ? `#${String(profile?.id)}` : "—"}
                   />
@@ -277,24 +259,9 @@ export default function ProfilePage() {
             </div>
           ) : (
             <div className="flex gap-3">
-              <StatTile
-                gradient="from-violet-500 to-purple-600"
-                icon={<CalendarCheck2 className="w-5 h-5 text-white" />}
-                label="Total"
-                value={totalCount}
-              />
-              <StatTile
-                gradient="from-orange-400 to-amber-500"
-                icon={<CalendarClock className="w-5 h-5 text-white" />}
-                label="Upcoming"
-                value={upcomingCount}
-              />
-              <StatTile
-                gradient="from-emerald-500 to-teal-600"
-                icon={<CheckCircle2 className="w-5 h-5 text-white" />}
-                label="Completed"
-                value={completedCount}
-              />
+              <StatTile icon={CalendarCheck2} tint="purple" label="Total" value={totalCount} />
+              <StatTile icon={CalendarClock} tint="orange" label="Upcoming" value={upcomingCount} />
+              <StatTile icon={CheckCircle2} tint="green" label="Completed" value={completedCount} />
             </div>
           )}
         </section>
