@@ -30,7 +30,15 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
 import type { GrowthDay } from "@/hooks/growth/use-growth";
-import { ClipboardList, MapIcon, MessageSquare, NotebookPen } from "lucide-react";
+import {
+  Activity,
+  ClipboardList,
+  MapIcon,
+  MessageSquare,
+  Moon,
+  NotebookPen,
+  Smile,
+} from "lucide-react";
 import type { ElementType } from "react";
 import ReactMarkdown, { type Components } from "react-markdown";
 
@@ -155,7 +163,13 @@ export function DayFeed({ day, isLoading, onOpenItem }: Props) {
   }
 
   const totalItems =
-    day.journeys.length + day.journals.length + day.assessments.length + day.chatSummaries.length;
+    day.journeys.length +
+    day.journals.length +
+    day.assessments.length +
+    day.chatSummaries.length +
+    (day.moods?.length ?? 0) +
+    (day.stress?.length ?? 0) +
+    (day.sleep?.length ?? 0);
 
   if (totalItems === 0) {
     return (
@@ -296,6 +310,97 @@ export function DayFeed({ day, isLoading, onOpenItem }: Props) {
               isLast={i === day.chatSummaries.length - 1}
             />
           ))}
+        </Section>
+      )}
+
+      {(day.moods?.length ?? 0) > 0 && (
+        <Section title="Mood check-ins" icon={Smile} tint="pink">
+          {day.moods.map((item, i) => {
+            const title = item.moodLabel?.trim() || `Mood ${item.moodScore}/5`;
+            const subtitle = item.feelings.length > 0 ? item.feelings.join(", ") : undefined;
+            return (
+              <Row
+                key={item.id}
+                onClick={() =>
+                  onOpenItem({
+                    title,
+                    subtitle: `${item.moodScore}/5 · ${formatTime(item.loggedAt)}`,
+                    body: item.note,
+                    qa:
+                      item.feelings.length > 0
+                        ? [{ question: "Feelings", answer: item.feelings.join(", ") }]
+                        : undefined,
+                  })
+                }
+                title={title}
+                subtitle={subtitle}
+                meta={formatTime(item.loggedAt)}
+                preview={null}
+                isLast={i === day.moods.length - 1}
+              />
+            );
+          })}
+        </Section>
+      )}
+
+      {(day.stress?.length ?? 0) > 0 && (
+        <Section title="Stress logs" icon={Activity} tint="orange">
+          {day.stress.map((item, i) => {
+            const title = item.stressLevelLabel?.trim() || `Stress ${item.stressLevel}/5`;
+            const subtitle =
+              item.stressReasons.length > 0 ? item.stressReasons.join(", ") : undefined;
+            return (
+              <Row
+                key={item.id}
+                onClick={() =>
+                  onOpenItem({
+                    title,
+                    subtitle: `${item.stressLevel}/5 · ${formatTime(item.loggedAt)}`,
+                    body: null,
+                    qa:
+                      item.stressReasons.length > 0
+                        ? [{ question: "Stressors", answer: item.stressReasons.join(", ") }]
+                        : undefined,
+                  })
+                }
+                title={title}
+                subtitle={subtitle}
+                meta={formatTime(item.loggedAt)}
+                preview={null}
+                isLast={i === day.stress.length - 1}
+              />
+            );
+          })}
+        </Section>
+      )}
+
+      {(day.sleep?.length ?? 0) > 0 && (
+        <Section title="Sleep logs" icon={Moon} tint="blue">
+          {day.sleep.map((item, i) => {
+            const title = item.sleepLabel?.trim() || `Sleep ${item.sleepScore}/5`;
+            const subtitle = item.factors.length > 0 ? item.factors.join(", ") : undefined;
+            return (
+              <Row
+                key={item.id}
+                onClick={() =>
+                  onOpenItem({
+                    title,
+                    subtitle: `${item.sleepScore}/5 · ${formatTime(item.loggedAt)}`,
+                    body: item.note,
+                    qa:
+                      item.factors.length > 0
+                        ? [{ question: "Factors", answer: item.factors.join(", ") }]
+                        : undefined,
+                  })
+                }
+                title={title}
+                subtitle={subtitle}
+                meta={formatTime(item.loggedAt)}
+                preview={null}
+                isLast={i === day.sleep.length - 1}
+              />
+            );
+          })}
         </Section>
       )}
     </div>
