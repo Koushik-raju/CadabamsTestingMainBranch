@@ -24,7 +24,7 @@
  * DEPENDENCIES:
  *   useAuth, crmControllerCreateLead, crmControllerGetRelationships
  *
- * LAST UPDATED: 2026-04-28 — remove per-page bg; root layout now owns bg-background
+ * LAST UPDATED: 2026-04-28 — Neo design system: shadow scale, color tokens, border radius
  */
 "use client";
 
@@ -255,7 +255,7 @@ function OnboardingContent() {
                     set("serviceForSelf", self);
                     setStep(self ? "date-of-birth" : "patient-form");
                   }}
-                  className="w-full text-left bg-card rounded-2xl border-2 p-5 flex items-start gap-4 transition-all active:scale-[0.98] shadow-sm border-transparent hover:border-primary/30"
+                  className="w-full text-left bg-card rounded-2xl border-2 p-5 flex items-start gap-4 transition-all active:scale-[0.98] shadow-[var(--sh-1)] border-transparent hover:border-primary/30"
                 >
                   <div className="w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center flex-shrink-0">
                     <Icon className="w-6 h-6 text-primary" />
@@ -285,7 +285,7 @@ function OnboardingContent() {
               </p>
             </div>
 
-            <div className="bg-card rounded-2xl border border-border shadow-sm p-5 flex flex-col gap-4">
+            <div className="bg-card rounded-2xl border border-border shadow-[var(--sh-1)] p-5 flex flex-col gap-4">
               <div className="grid grid-cols-2 gap-3">
                 <div className="flex flex-col gap-1.5">
                   <Label
@@ -365,7 +365,7 @@ function OnboardingContent() {
               </p>
             </div>
 
-            <div className="bg-card rounded-2xl border border-border shadow-sm p-5">
+            <div className="bg-card rounded-2xl border border-border shadow-[var(--sh-1)] p-5">
               <Label
                 htmlFor="dob"
                 className="text-[12px] font-semibold text-muted-foreground uppercase tracking-wide"
@@ -427,8 +427,8 @@ function OnboardingContent() {
                     className={cn(
                       "px-4 py-2 rounded-full text-[13px] font-semibold border-2 transition-all active:scale-95",
                       selected
-                        ? "bg-primary text-white border-primary shadow-sm"
-                        : "bg-card text-foreground border-transparent shadow-sm hover:border-primary/40",
+                        ? "bg-primary text-white border-primary shadow-[var(--sh-glow-orange)]"
+                        : "bg-card text-foreground border-transparent shadow-[var(--sh-1)] hover:border-primary/40",
                     )}
                   >
                     {tag}
@@ -466,7 +466,7 @@ function OnboardingContent() {
               </p>
             </div>
 
-            <div className="bg-card rounded-2xl border border-border shadow-sm divide-y divide-border overflow-hidden">
+            <div className="bg-card rounded-2xl border border-border shadow-[var(--sh-1)] divide-y divide-border overflow-hidden">
               {[
                 {
                   key: "notifPhone" as const,
@@ -525,7 +525,7 @@ function OnboardingContent() {
               </p>
             </div>
 
-            <div className="bg-card rounded-2xl border border-border shadow-sm divide-y divide-border overflow-hidden">
+            <div className="bg-card rounded-2xl border border-border shadow-[var(--sh-1)] divide-y divide-border overflow-hidden">
               {[
                 {
                   key: "locationPermission" as const,

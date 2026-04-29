@@ -1,5 +1,6 @@
 "use client";
 
+import { type TintKey } from "@/components/shared/glyph-tile";
 import type { AssessmentItem } from "@/hooks/use-assessments";
 import {
   Activity,
@@ -40,6 +41,8 @@ import {
 
 type CategoryInfo = {
   icon: React.ElementType;
+  tint: TintKey;
+  /* retained for any legacy callers */
   bgColor: string;
   textColor: string;
 };
@@ -47,87 +50,182 @@ type CategoryInfo = {
 // Keys must match ASSESSMENT_CATEGORIES exactly (case-sensitive)
 const categoryMap: Record<string, CategoryInfo> = {
   // ── Mood & Emotional ──────────────────────────────────────────────────────
-  depression: { icon: Heart, bgColor: "bg-blue-50", textColor: "text-blue-600" },
-  anxiety: { icon: Cloud, bgColor: "bg-sky-50", textColor: "text-sky-600" },
-  stress: { icon: Flame, bgColor: "bg-amber-50", textColor: "text-amber-600" },
-  "mood-disorder": { icon: Smile, bgColor: "bg-yellow-50", textColor: "text-yellow-600" },
-  "bipolar-disorder": { icon: Zap, bgColor: "bg-orange-50", textColor: "text-orange-600" },
-  ptsd: { icon: ShieldAlert, bgColor: "bg-red-50", textColor: "text-red-600" },
-  trauma: { icon: AlertTriangle, bgColor: "bg-rose-50", textColor: "text-rose-600" },
+  depression: { icon: Heart, tint: "blue", bgColor: "bg-blue-50", textColor: "text-blue-600" },
+  anxiety: { icon: Cloud, tint: "blue", bgColor: "bg-sky-50", textColor: "text-sky-600" },
+  stress: { icon: Flame, tint: "peach", bgColor: "bg-amber-50", textColor: "text-amber-600" },
+  "mood-disorder": {
+    icon: Smile,
+    tint: "orange",
+    bgColor: "bg-yellow-50",
+    textColor: "text-yellow-600",
+  },
+  "bipolar-disorder": {
+    icon: Zap,
+    tint: "orange",
+    bgColor: "bg-orange-50",
+    textColor: "text-orange-600",
+  },
+  ptsd: { icon: ShieldAlert, tint: "pink", bgColor: "bg-red-50", textColor: "text-red-600" },
+  trauma: { icon: AlertTriangle, tint: "pink", bgColor: "bg-rose-50", textColor: "text-rose-600" },
 
   // ── Sleep & Wellbeing ─────────────────────────────────────────────────────
-  sleep: { icon: Moon, bgColor: "bg-indigo-50", textColor: "text-indigo-600" },
-  "self-love": { icon: Sparkles, bgColor: "bg-pink-50", textColor: "text-pink-600" },
-  love: { icon: Heart, bgColor: "bg-rose-50", textColor: "text-rose-600" },
-  "Self-Care Planning": { icon: CalendarHeart, bgColor: "bg-teal-50", textColor: "text-teal-600" },
+  sleep: { icon: Moon, tint: "purple", bgColor: "bg-indigo-50", textColor: "text-indigo-600" },
+  "self-love": { icon: Sparkles, tint: "pink", bgColor: "bg-pink-50", textColor: "text-pink-600" },
+  love: { icon: Heart, tint: "pink", bgColor: "bg-rose-50", textColor: "text-rose-600" },
+  "Self-Care Planning": {
+    icon: CalendarHeart,
+    tint: "green",
+    bgColor: "bg-teal-50",
+    textColor: "text-teal-600",
+  },
 
   // ── Relationships & Social ────────────────────────────────────────────────
   "relationship-issues": {
     icon: HeartHandshake,
+    tint: "pink",
     bgColor: "bg-rose-50",
     textColor: "text-rose-600",
   },
-  "family-issues": { icon: Users2, bgColor: "bg-amber-50", textColor: "text-amber-600" },
+  "family-issues": {
+    icon: Users2,
+    tint: "peach",
+    bgColor: "bg-amber-50",
+    textColor: "text-amber-600",
+  },
   "Relationship Beliefs": {
     icon: Handshake,
+    tint: "purple",
     bgColor: "bg-violet-50",
     textColor: "text-violet-600",
   },
 
   // ── Personality & Identity ────────────────────────────────────────────────
-  "personality-disorder": { icon: User, bgColor: "bg-purple-50", textColor: "text-purple-600" },
-  "gender-identity-disorder": { icon: Users2, bgColor: "bg-pink-50", textColor: "text-pink-600" },
-  ocd: { icon: Repeat2, bgColor: "bg-cyan-50", textColor: "text-cyan-600" },
-  "Rewiring Patterns": { icon: Repeat2, bgColor: "bg-emerald-50", textColor: "text-emerald-600" },
+  "personality-disorder": {
+    icon: User,
+    tint: "purple",
+    bgColor: "bg-purple-50",
+    textColor: "text-purple-600",
+  },
+  "gender-identity-disorder": {
+    icon: Users2,
+    tint: "pink",
+    bgColor: "bg-pink-50",
+    textColor: "text-pink-600",
+  },
+  ocd: { icon: Repeat2, tint: "peach", bgColor: "bg-cyan-50", textColor: "text-cyan-600" },
+  "Rewiring Patterns": {
+    icon: Repeat2,
+    tint: "green",
+    bgColor: "bg-emerald-50",
+    textColor: "text-emerald-600",
+  },
 
   // ── Neurodevelopmental ────────────────────────────────────────────────────
-  adhd: { icon: Target, bgColor: "bg-orange-50", textColor: "text-orange-600" },
-  autism: { icon: Puzzle, bgColor: "bg-violet-50", textColor: "text-violet-600" },
-  "learning-disability": { icon: BookOpen, bgColor: "bg-green-50", textColor: "text-green-600" },
+  adhd: { icon: Target, tint: "orange", bgColor: "bg-orange-50", textColor: "text-orange-600" },
+  autism: { icon: Puzzle, tint: "purple", bgColor: "bg-violet-50", textColor: "text-violet-600" },
+  "learning-disability": {
+    icon: BookOpen,
+    tint: "green",
+    bgColor: "bg-green-50",
+    textColor: "text-green-600",
+  },
   "intellectual-disability": {
     icon: BrainCircuit,
+    tint: "blue",
     bgColor: "bg-yellow-50",
     textColor: "text-yellow-600",
   },
-  "developmental-delay": { icon: Baby, bgColor: "bg-blue-50", textColor: "text-blue-600" },
-  "cerebral-palsy": { icon: Activity, bgColor: "bg-teal-50", textColor: "text-teal-600" },
+  "developmental-delay": {
+    icon: Baby,
+    tint: "blue",
+    bgColor: "bg-blue-50",
+    textColor: "text-blue-600",
+  },
+  "cerebral-palsy": {
+    icon: Activity,
+    tint: "green",
+    bgColor: "bg-teal-50",
+    textColor: "text-teal-600",
+  },
 
   // ── Psychotic & Cognitive ─────────────────────────────────────────────────
-  schizophrenia: { icon: Brain, bgColor: "bg-purple-50", textColor: "text-purple-600" },
-  psychosis: { icon: Eye, bgColor: "bg-violet-50", textColor: "text-violet-600" },
-  dementia: { icon: Brain, bgColor: "bg-indigo-50", textColor: "text-indigo-600" },
-  alzheimers: { icon: Brain, bgColor: "bg-blue-50", textColor: "text-blue-600" },
-  "dual-diagnosis": { icon: ClipboardList, bgColor: "bg-teal-50", textColor: "text-teal-600" },
+  schizophrenia: {
+    icon: Brain,
+    tint: "purple",
+    bgColor: "bg-purple-50",
+    textColor: "text-purple-600",
+  },
+  psychosis: { icon: Eye, tint: "purple", bgColor: "bg-violet-50", textColor: "text-violet-600" },
+  dementia: { icon: Brain, tint: "blue", bgColor: "bg-indigo-50", textColor: "text-indigo-600" },
+  alzheimers: { icon: Brain, tint: "blue", bgColor: "bg-blue-50", textColor: "text-blue-600" },
+  "dual-diagnosis": {
+    icon: ClipboardList,
+    tint: "green",
+    bgColor: "bg-teal-50",
+    textColor: "text-teal-600",
+  },
 
   // ── Addiction ─────────────────────────────────────────────────────────────
-  Addiction: { icon: AlertTriangle, bgColor: "bg-red-50", textColor: "text-red-600" },
-  addiction: { icon: AlertTriangle, bgColor: "bg-red-50", textColor: "text-red-600" },
-  "drug-addiction": { icon: Pill, bgColor: "bg-red-50", textColor: "text-red-600" },
-  "alcohol-addiction": { icon: Wine, bgColor: "bg-amber-50", textColor: "text-amber-600" },
-  "Gaming Disorder": { icon: Gamepad2, bgColor: "bg-indigo-50", textColor: "text-indigo-600" },
+  Addiction: {
+    icon: AlertTriangle,
+    tint: "peach",
+    bgColor: "bg-red-50",
+    textColor: "text-red-600",
+  },
+  addiction: {
+    icon: AlertTriangle,
+    tint: "peach",
+    bgColor: "bg-red-50",
+    textColor: "text-red-600",
+  },
+  "drug-addiction": { icon: Pill, tint: "peach", bgColor: "bg-red-50", textColor: "text-red-600" },
+  "alcohol-addiction": {
+    icon: Wine,
+    tint: "orange",
+    bgColor: "bg-amber-50",
+    textColor: "text-amber-600",
+  },
+  "Gaming Disorder": {
+    icon: Gamepad2,
+    tint: "purple",
+    bgColor: "bg-indigo-50",
+    textColor: "text-indigo-600",
+  },
 
   // ── Eating & Body ─────────────────────────────────────────────────────────
-  "eating-disorder": { icon: Scale, bgColor: "bg-green-50", textColor: "text-green-600" },
+  "eating-disorder": {
+    icon: Scale,
+    tint: "green",
+    bgColor: "bg-green-50",
+    textColor: "text-green-600",
+  },
 
   // ── Clinical & Specialist ─────────────────────────────────────────────────
   "perinatal-mental-health": {
     icon: Leaf,
+    tint: "green",
     bgColor: "bg-emerald-50",
     textColor: "text-emerald-600",
   },
   "conduct-disorder": {
     icon: AlertTriangle,
+    tint: "orange",
     bgColor: "bg-orange-50",
     textColor: "text-orange-600",
   },
 
   // ── General ───────────────────────────────────────────────────────────────
-  general: { icon: BarChart3, bgColor: "bg-slate-100", textColor: "text-slate-600" },
-  Healthcare: { icon: Stethoscope, bgColor: "bg-teal-50", textColor: "text-teal-600" },
-  Medical: { icon: Microscope, bgColor: "bg-rose-50", textColor: "text-rose-600" },
-  AI: { icon: BrainCircuit, bgColor: "bg-violet-50", textColor: "text-violet-600" },
-  Dna: { icon: Dna, bgColor: "bg-green-50", textColor: "text-green-600" },
-  Sun: { icon: Sun, bgColor: "bg-yellow-50", textColor: "text-yellow-600" },
+  general: { icon: BarChart3, tint: "blue", bgColor: "bg-slate-100", textColor: "text-slate-600" },
+  Healthcare: {
+    icon: Stethoscope,
+    tint: "green",
+    bgColor: "bg-teal-50",
+    textColor: "text-teal-600",
+  },
+  Medical: { icon: Microscope, tint: "pink", bgColor: "bg-rose-50", textColor: "text-rose-600" },
+  AI: { icon: BrainCircuit, tint: "purple", bgColor: "bg-violet-50", textColor: "text-violet-600" },
+  Dna: { icon: Dna, tint: "green", bgColor: "bg-green-50", textColor: "text-green-600" },
+  Sun: { icon: Sun, tint: "orange", bgColor: "bg-yellow-50", textColor: "text-yellow-600" },
 };
 
 export const ASSESSMENT_CATEGORIES = [
@@ -201,6 +299,7 @@ const PRIORITY_CATEGORY_ORDER = [
 export function getCategoryInfo(assessment: AssessmentItem): CategoryInfo {
   const DEFAULT: CategoryInfo = {
     icon: BarChart3,
+    tint: "blue",
     bgColor: "bg-slate-100",
     textColor: "text-slate-500",
   };
@@ -285,25 +384,63 @@ export function getCategoryInfo(assessment: AssessmentItem): CategoryInfo {
 
   // 5. ID-based deterministic fallback — ensures visual variety even for uncategorised items
   const FALLBACK_PALETTE: CategoryInfo[] = [
-    { icon: categoryMap["depression"].icon, bgColor: "bg-blue-50", textColor: "text-blue-600" },
-    { icon: categoryMap["anxiety"].icon, bgColor: "bg-sky-50", textColor: "text-sky-600" },
-    { icon: categoryMap["stress"].icon, bgColor: "bg-amber-50", textColor: "text-amber-600" },
-    { icon: categoryMap["sleep"].icon, bgColor: "bg-indigo-50", textColor: "text-indigo-600" },
-    { icon: categoryMap["self-love"].icon, bgColor: "bg-pink-50", textColor: "text-pink-600" },
-    { icon: categoryMap["adhd"].icon, bgColor: "bg-orange-50", textColor: "text-orange-600" },
-    { icon: categoryMap["ocd"].icon, bgColor: "bg-cyan-50", textColor: "text-cyan-600" },
+    {
+      icon: categoryMap["depression"].icon,
+      tint: "blue",
+      bgColor: "bg-blue-50",
+      textColor: "text-blue-600",
+    },
+    {
+      icon: categoryMap["anxiety"].icon,
+      tint: "blue",
+      bgColor: "bg-sky-50",
+      textColor: "text-sky-600",
+    },
+    {
+      icon: categoryMap["stress"].icon,
+      tint: "peach",
+      bgColor: "bg-amber-50",
+      textColor: "text-amber-600",
+    },
+    {
+      icon: categoryMap["sleep"].icon,
+      tint: "purple",
+      bgColor: "bg-indigo-50",
+      textColor: "text-indigo-600",
+    },
+    {
+      icon: categoryMap["self-love"].icon,
+      tint: "pink",
+      bgColor: "bg-pink-50",
+      textColor: "text-pink-600",
+    },
+    {
+      icon: categoryMap["adhd"].icon,
+      tint: "orange",
+      bgColor: "bg-orange-50",
+      textColor: "text-orange-600",
+    },
+    {
+      icon: categoryMap["ocd"].icon,
+      tint: "peach",
+      bgColor: "bg-cyan-50",
+      textColor: "text-cyan-600",
+    },
     {
       icon: categoryMap["Self-Care Planning"].icon,
+      tint: "green",
       bgColor: "bg-teal-50",
       textColor: "text-teal-600",
     },
     {
       icon: categoryMap["Rewiring Patterns"].icon,
+      tint: "green",
       bgColor: "bg-emerald-50",
       textColor: "text-emerald-600",
     },
     {
       icon: categoryMap["personality-disorder"].icon,
+      tint: "purple",
       bgColor: "bg-purple-50",
       textColor: "text-purple-600",
     },

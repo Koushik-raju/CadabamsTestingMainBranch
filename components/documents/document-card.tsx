@@ -1,7 +1,28 @@
+/**
+ * FILE: components/documents/document-card.tsx
+ *
+ * PURPOSE:
+ *   Renders a single document as a list row inside a grouped card, with download and delete actions.
+ *
+ * LOGIC OVERVIEW:
+ *   Determines file type from MIME and extension, selects appropriate icon and gradient color.
+ *   Formats file size and date for display.
+ *   Renders a gradient file-type icon tile, document name, metadata, and action buttons.
+ *
+ * KEY VARIABLES / PROPS / EXPORTS:
+ *   DocumentData        — document interface with id, name, url, type, size, createdAt
+ *   getFileConfig       — determines gradient color and icon based on file type
+ *   formatSize, formatDate — utility functions for display formatting
+ *
+ * DEPENDENCIES:
+ *   lucide-react — file type icons
+ *
+ * LAST UPDATED: 2026-04-28 — Neo design system: shadow scale, color tokens, border radius
+ */
 "use client";
 
+import { GlyphTile, type TintKey } from "@/components/shared/glyph-tile";
 import { Button } from "@/components/ui/button";
-import { cn } from "@/lib/utils";
 import { Download, File, FileCode, FileImage, FileText, Trash2 } from "lucide-react";
 
 export interface DocumentData {
@@ -42,23 +63,17 @@ function formatDate(isoStr?: string): string {
 function getFileConfig(
   name: string,
   type?: string,
-): {
-  ext: string;
-  gradient: string;
-  Icon: React.ElementType;
-} {
+): { ext: string; tint: TintKey; Icon: React.ElementType } {
   const ext = name.split(".").pop()?.toUpperCase() ?? "FILE";
   const mime = type ?? "";
 
-  if (mime.includes("pdf") || ext === "PDF")
-    return { ext, gradient: "from-red-500 to-rose-600", Icon: FileText };
+  if (mime.includes("pdf") || ext === "PDF") return { ext, tint: "pink", Icon: FileText };
   if (mime.includes("image") || ["JPG", "JPEG", "PNG", "GIF", "WEBP", "HEIC"].includes(ext))
-    return { ext, gradient: "from-sky-500 to-blue-600", Icon: FileImage };
+    return { ext, tint: "blue", Icon: FileImage };
   if (mime.includes("word") || ["DOC", "DOCX"].includes(ext))
-    return { ext, gradient: "from-indigo-500 to-violet-600", Icon: FileText };
-  if (["TXT", "CSV", "JSON", "XML"].includes(ext))
-    return { ext, gradient: "from-slate-400 to-slate-600", Icon: FileCode };
-  return { ext, gradient: "from-teal-500 to-emerald-600", Icon: File };
+    return { ext, tint: "purple", Icon: FileText };
+  if (["TXT", "CSV", "JSON", "XML"].includes(ext)) return { ext, tint: "peach", Icon: FileCode };
+  return { ext, tint: "green", Icon: File };
 }
 
 export function DocumentCard({
@@ -70,25 +85,13 @@ export function DocumentCard({
   deleting,
 }: DocumentCardProps) {
   const displayName = doc.name || `Document #${index + 1}`;
-  const { ext, gradient, Icon } = getFileConfig(doc.name, doc.type);
+  const { ext, tint, Icon } = getFileConfig(doc.name, doc.type);
   const size = formatSize(doc.size);
   const date = formatDate(doc.createdAt);
 
   return (
     <div className="flex items-center gap-3 py-3 px-1" role="listitem" aria-label={displayName}>
-      {/* Colored file-type icon */}
-      <div
-        className={cn(
-          "relative w-12 h-12 rounded-2xl bg-gradient-to-br flex-shrink-0 flex flex-col items-center justify-center overflow-hidden shadow-sm",
-          gradient,
-        )}
-      >
-        <div className="absolute -top-2 -right-2 w-8 h-8 rounded-full bg-white/10" />
-        <Icon className="w-5 h-5 text-white" aria-hidden="true" />
-        <span className="text-[8px] font-bold text-white/80 leading-none mt-0.5">
-          {ext.slice(0, 4)}
-        </span>
-      </div>
+      <GlyphTile icon={Icon} tint={tint} size="lg" label={ext.slice(0, 4)} />
 
       {/* Info */}
       <div className="flex-1 min-w-0">

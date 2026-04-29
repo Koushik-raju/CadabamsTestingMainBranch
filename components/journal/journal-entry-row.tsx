@@ -17,9 +17,9 @@
  * DEPENDENCIES:
  *   lucide-react, cn (lib/utils)
  *
- * LAST UPDATED: 2026-04-27 — created; extracted from duplicate EntryRow impls in home + slug pages
+ * LAST UPDATED: 2026-04-28 — Neo design system: shadow scale, color tokens, border radius
  */
-import { cn } from "@/lib/utils";
+import { GlyphTile } from "@/components/shared/glyph-tile";
 import { BookOpen } from "lucide-react";
 
 export interface JournalEntryRowProps {
@@ -32,15 +32,7 @@ export interface JournalEntryRowProps {
 export function JournalEntryRow({ title, preview, time, promptCount = 0 }: JournalEntryRowProps) {
   return (
     <div className="py-3 flex items-start gap-3 transition-colors hover:bg-muted/50 active:bg-muted cursor-pointer">
-      <div
-        className={cn(
-          "relative w-11 h-11 rounded-2xl bg-gradient-to-br from-violet-500 to-purple-600",
-          "flex-shrink-0 flex items-center justify-center overflow-hidden shadow-sm",
-        )}
-      >
-        <div className="absolute -top-2 -right-2 w-7 h-7 rounded-full bg-white/10" />
-        <BookOpen className="w-5 h-5 text-white" />
-      </div>
+      <GlyphTile icon={BookOpen} tint="purple" />
 
       <div className="flex-1 min-w-0">
         {title && (

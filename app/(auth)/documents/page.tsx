@@ -22,7 +22,7 @@
  *   DocumentCard — shared document row component
  *   PageHeader   — shared navigation header
  *
- * LAST UPDATED: 2026-04-23 — migrated custom header div to PageHeader; added file header
+ * LAST UPDATED: 2026-04-28 — Neo design system: shadow scale, color tokens, border radius
  */
 "use client";
 

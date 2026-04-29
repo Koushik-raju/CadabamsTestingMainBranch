@@ -21,7 +21,7 @@
  * DEPENDENCIES:
  *   useMindfulMinutes() — SWR hook for all collections (SDK-backed, returns pre-signed S3 URLs)
  *
- * LAST UPDATED: 2026-04-24 — use coverImageUrl directly (backend returns pre-signed S3 URLs); getStrapiImageUrl stripped signing params
+ * LAST UPDATED: 2026-04-28 — Neo design system: shadow scale, color tokens, border radius
  */
 
 "use client";
@@ -139,7 +139,7 @@ export default function MindfulMinutesPage() {
             </div>
             <div
               onClick={() => router.push(`/wellness/mindful-minutes/${featuredItem.slug}`)}
-              className="bg-card border border-border rounded-2xl overflow-hidden cursor-pointer active:scale-[0.99] transition-transform shadow-sm"
+              className="bg-card border border-border rounded-2xl overflow-hidden cursor-pointer active:scale-[0.99] transition-transform shadow-[var(--sh-1)]"
             >
               <div className="p-4 flex gap-5">
                 <div className="relative w-32 h-28 rounded-xl overflow-hidden flex-shrink-0 bg-muted border border-border/50">
@@ -208,7 +208,7 @@ export default function MindfulMinutesPage() {
                 <div
                   key={item.slug}
                   onClick={() => router.push(`/wellness/mindful-minutes/${item.slug}`)}
-                  className="bg-card border border-border rounded-2xl overflow-hidden cursor-pointer active:scale-[0.99] transition-transform shadow-sm"
+                  className="bg-card border border-border rounded-2xl overflow-hidden cursor-pointer active:scale-[0.99] transition-transform shadow-[var(--sh-1)]"
                 >
                   <div className="p-3 flex gap-4">
                     <div className="relative w-[72px] h-[72px] rounded-xl overflow-hidden flex-shrink-0 bg-muted border border-border/30">

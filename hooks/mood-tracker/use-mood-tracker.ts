@@ -13,69 +13,47 @@
  *      MOOD_TRACKER_ASSESSMENT_ID at build time.
  *   2. useMoodTrackerAssessment — wraps useAssessmentById and extracts the
  *      first question's smiley list and the second question's bubble options.
- *   3. useMoodEntries(limit) — lists recent mood entries (newest first).
- *   4. useMoodReport(window) — aggregate metrics for the analyse screen.
- *   5. submitMoodEntry — POSTs a new MoodEntry; the SDK method may not exist
- *      yet (it's added by the backend regeneration step) so this calls the
- *      configured axios client directly with the typed body / response.
+ *   3. useMoodEntries(limit) — lists recent mood entries (newest first) via
+ *      moodTrackerControllerList SDK function.
+ *   4. useMoodReport(from, to) — aggregate metrics via moodTrackerControllerReport.
+ *   5. submitMoodEntry — POSTs a new entry via moodTrackerControllerCreate.
  *
  * KEY VARIABLES / EXPORTS:
- *   MOOD_TRACKER_CMS_ASSESSMENT_ID, MoodEntry, MoodTrackerReport,
+ *   MOOD_TRACKER_CMS_ASSESSMENT_ID, MoodEntryResponseDto, MoodEntryListResponseDto,
+ *   MoodTrackerReportDto, CreateMoodEntryDto,
  *   useMoodTrackerAssessment, useMoodEntries, useMoodReport, submitMoodEntry.
  *
  * DEPENDENCIES:
- *   swr, apiClient (axios with auth), useAssessmentById.
+ *   moodTrackerControllerList / Create / Report (sdk)
+ *   useAssessmentById (hooks/assessments/use-assessment-detail)
+ *   SWR (useSWR)
  *
- * LAST UPDATED: 2026-04-28 — initial creation.
+ * LAST UPDATED: 2026-04-28 — replaced apiClient axios calls with SDK functions;
+ *   removed custom types in favour of SDK types.
  */
-import { apiClient } from "@/api/backend-v2";
 import { useAssessmentById } from "@/hooks/assessments/use-assessment-detail";
+import {
+  type CreateMoodEntryDto,
+  type MoodEntryListResponseDto,
+  type MoodEntryResponseDto,
+  type MoodTrackerReportDto,
+  moodTrackerControllerCreate,
+  moodTrackerControllerList,
+  moodTrackerControllerReport,
+} from "@/sdk/backend-v2";
 import useSWR from "swr";
+
+export type {
+  CreateMoodEntryDto,
+  MoodEntryListResponseDto,
+  MoodEntryResponseDto,
+  MoodTrackerReportDto,
+};
 
 const CAMPUS = "cadabams";
 
 export const MOOD_TRACKER_CMS_ASSESSMENT_ID =
   process.env.NEXT_PUBLIC_MOOD_TRACKER_ASSESSMENT_ID ?? "avym73d4x6258t3ligurl56r";
-
-export interface MoodEntry {
-  id: string;
-  crmLeadId: string | null;
-  patientRef: string | null;
-  campus: string;
-  moodScore: number;
-  moodLabel: string | null;
-  feelings: string[];
-  note: string | null;
-  cmsAssessmentId: string | null;
-  loggedAt: string;
-  createdAt: string;
-  updatedAt: string;
-}
-
-export interface MoodEntryListResponse {
-  items: MoodEntry[];
-  total: number;
-  limit: number;
-  offset: number;
-}
-
-export interface MoodTrackerReport {
-  count: number;
-  averageScore: number | null;
-  scoreBuckets: Record<string, number>;
-  topFeelings: { label: string; count: number }[];
-  from?: string;
-  to?: string;
-}
-
-export interface CreateMoodEntryBody {
-  moodScore: number;
-  moodLabel?: string;
-  feelings?: string[];
-  note?: string;
-  cmsAssessmentId?: string;
-  loggedAt?: string;
-}
 
 /* Q1 = smiley list, Q2 = bubble options. We rely on order from CMS rather
  * than the question component name because the CmsAssessmentQuestion table
@@ -96,27 +74,35 @@ export function useMoodTrackerAssessment() {
 }
 
 export function useMoodEntries(limit = 30) {
-  return useSWR<MoodEntryListResponse>(["mood-tracker", "list", limit], async () => {
-    const res = await apiClient.get<MoodEntryListResponse>(`/api/v1/${CAMPUS}/mood-tracker`, {
-      params: { limit },
+  return useSWR<MoodEntryListResponseDto>(["mood-tracker", "list", limit], async () => {
+    const res = await moodTrackerControllerList({
+      path: { campus: CAMPUS },
+      query: { limit },
     });
-    return res.data;
+    if (res.error) throw new Error(JSON.stringify(res.error));
+    return res.data as MoodEntryListResponseDto;
   });
 }
 
 export function useMoodReport(from?: string, to?: string) {
-  return useSWR<MoodTrackerReport>(["mood-tracker", "report", from ?? "", to ?? ""], async () => {
-    const res = await apiClient.get<MoodTrackerReport>(`/api/v1/${CAMPUS}/mood-tracker/report`, {
-      params: { from, to },
-    });
-    return res.data;
-  });
+  return useSWR<MoodTrackerReportDto>(
+    ["mood-tracker", "report", from ?? "", to ?? ""],
+    async () => {
+      const res = await moodTrackerControllerReport({
+        path: { campus: CAMPUS },
+        query: { from, to },
+      });
+      if (res.error) throw new Error(JSON.stringify(res.error));
+      return res.data as MoodTrackerReportDto;
+    },
+  );
 }
 
-export async function submitMoodEntry(body: CreateMoodEntryBody): Promise<MoodEntry> {
-  const res = await apiClient.post<MoodEntry>(`/api/v1/${CAMPUS}/mood-tracker`, {
-    cmsAssessmentId: MOOD_TRACKER_CMS_ASSESSMENT_ID,
-    ...body,
+export async function submitMoodEntry(body: CreateMoodEntryDto): Promise<MoodEntryResponseDto> {
+  const res = await moodTrackerControllerCreate({
+    path: { campus: CAMPUS },
+    body: { cmsAssessmentId: MOOD_TRACKER_CMS_ASSESSMENT_ID, ...body },
   });
-  return res.data;
+  if (res.error) throw new Error(JSON.stringify(res.error));
+  return res.data as MoodEntryResponseDto;
 }

@@ -114,17 +114,34 @@ function getIconForTitle(title: string): ElementType {
 // Public API
 // ---------------------------------------------------------------------------
 
+/* Maps each gradient slot to the nearest MTGlyphTile tint for GlyphTile usage */
+const GRADIENT_TO_TINT = [
+  "purple", // from-violet-500 to-purple-700
+  "green", // from-emerald-500 to-teal-600
+  "blue", // from-sky-500 to-blue-600
+  "orange", // from-orange-400 to-amber-600
+  "pink", // from-rose-500 to-pink-600
+  "purple", // from-indigo-500 to-violet-700
+  "blue", // from-cyan-500 to-sky-700
+  "green", // from-lime-500 to-green-600
+] as const;
+
+export type JournalTint = (typeof GRADIENT_TO_TINT)[number];
+
 export interface JournalVisual {
   gradient: string;
+  tint: JournalTint;
   Icon: ElementType;
 }
 
 /**
- * Returns a stable gradient + icon pair for the given journal title.
+ * Returns a stable gradient + tint + icon for the given journal title.
  * The same title always produces the same output.
  */
 export function getJournalVisual(title: string): JournalVisual {
-  const gradient = GRADIENTS[hashStr(title) % GRADIENTS.length];
+  const idx = hashStr(title) % GRADIENTS.length;
+  const gradient = GRADIENTS[idx];
+  const tint = GRADIENT_TO_TINT[idx];
   const Icon = getIconForTitle(title);
-  return { gradient, Icon };
+  return { gradient, tint, Icon };
 }

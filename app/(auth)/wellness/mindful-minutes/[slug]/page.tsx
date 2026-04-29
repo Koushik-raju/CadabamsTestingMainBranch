@@ -26,7 +26,7 @@
  *   useMindfulMinuteDetail(slug) — SWR hook for single collection
  *   FullscreenAudioPlayer        — fullscreen player overlay component
  *
- * LAST UPDATED: 2026-04-23 — migrated sticky header to PageHeader
+ * LAST UPDATED: 2026-04-28 — Neo design system: shadow scale, color tokens, border radius
  */
 
 "use client";
@@ -285,7 +285,7 @@ export default function MindfulMinuteDetailPage() {
               <div
                 key={audio.documentId ?? idx}
                 onClick={() => handleAudioTap(idx)}
-                className="bg-card border border-border rounded-2xl cursor-pointer active:scale-[0.99] transition-transform shadow-sm"
+                className="bg-card border border-border rounded-2xl cursor-pointer active:scale-[0.99] transition-transform shadow-[var(--sh-1)]"
               >
                 <div className="p-3.5 flex items-center gap-4">
                   {/* Icon / equalizer */}

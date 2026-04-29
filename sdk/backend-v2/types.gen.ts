@@ -1619,6 +1619,258 @@ export type CompletionResponseDto = {
     userResponse: Array<UserResponseItemDto>;
 };
 
+export type ConsultationPaginationDto = {
+    total_records: number;
+    per_page: number;
+    page: number;
+};
+
+export type ConsultationItemDto = {
+    id: number;
+    name: string;
+    display_name: string;
+    /**
+     * State: draft | completed | ended
+     */
+    state: string;
+    type: string;
+    date: string;
+    /**
+     * Patient age as string
+     */
+    age: string;
+    sex: string;
+    team_role: string;
+    /**
+     * Prescription status: changed | continued
+     */
+    prescription_status: string;
+    /**
+     * Lab advice text or default "/"
+     */
+    lab_advice: string;
+    create_date: string;
+    write_date: string;
+    __last_update: string;
+    spo2: number;
+    pulse: number;
+    grbs: number;
+    /**
+     * Systolic blood pressure
+     */
+    bp: number;
+    /**
+     * Diastolic blood pressure
+     */
+    bp2: number;
+    wt: number;
+    hospitalization_length: number;
+    approx_cost: number;
+    message_unread: boolean;
+    message_is_follower: boolean;
+    message_last_post: boolean;
+    message_needaction: boolean;
+    cross_consultation: boolean;
+    is_sos: boolean;
+    next_followup: boolean;
+    consultation_require: boolean;
+    treatment_planned: boolean;
+    message_unread_counter: number;
+    message_needaction_counter: number;
+    /**
+     * Odoo many2one [id, display_name]
+     */
+    write_uid: [
+        unknown,
+        unknown
+    ];
+    /**
+     * Odoo many2one [id, display_name]
+     */
+    company_id: [
+        unknown,
+        unknown
+    ];
+    /**
+     * Odoo many2one [id, display_name]
+     */
+    op_visit_id: [
+        unknown,
+        unknown
+    ];
+    /**
+     * Odoo many2one [id, display_name]
+     */
+    create_uid: [
+        unknown,
+        unknown
+    ];
+    /**
+     * Odoo many2one [id, display_name]
+     */
+    user_id: [
+        unknown,
+        unknown
+    ];
+    /**
+     * Odoo many2one [id, display_name]
+     */
+    psychiatrist_id: [
+        unknown,
+        unknown
+    ];
+    /**
+     * Odoo many2one [id, display_name]
+     */
+    patient_id: [
+        unknown,
+        unknown
+    ];
+    /**
+     * Odoo many2one [id, display_name]
+     */
+    followup_type_id: [
+        unknown,
+        unknown
+    ];
+    message_ids: Array<number>;
+    message_follower_ids: Array<number>;
+    message_partner_ids: Array<number>;
+    consultation_prescription_line_ids: Array<number>;
+    admission_consultation_ids: Array<number>;
+    admission_labtest_ids: Array<number>;
+    labtest_type_ids: Array<number>;
+    provisional_diagnosis_ids: Array<number>;
+    cross_consultation_ids: Array<number>;
+    active_prescription_ids: Array<number>;
+    speciality_ids: Array<number>;
+    session_type_ids: Array<number>;
+    consultation_type_ids: Array<number>;
+    counsellor_purpose_ids: Array<number>;
+    scale_type_ids: Array<number>;
+    admission_scale_ids: Array<number>;
+    admission_room_type_ids: Array<number>;
+    consultation_require_ids: Array<number>;
+    admission_misc_item_ids: Array<number>;
+    cp_purpose_ids: Array<number>;
+    website_message_ids: Array<unknown>;
+    message_channel_ids: Array<unknown>;
+    cp_therapist_id: {
+        [key: string]: unknown;
+    } | null;
+    bed_type_id: {
+        [key: string]: unknown;
+    } | null;
+    illness_tag: {
+        [key: string]: unknown;
+    } | null;
+    speciality_id: {
+        [key: string]: unknown;
+    } | null;
+    provisional_admission_date: {
+        [key: string]: unknown;
+    } | null;
+    consultant_comments: {
+        [key: string]: unknown;
+    } | null;
+    current_medication: {
+        [key: string]: unknown;
+    } | null;
+    /**
+     * Doctor advice text, or false if not set
+     */
+    doctor_advice: {
+        [key: string]: unknown;
+    } | null;
+    precautions: {
+        [key: string]: unknown;
+    } | null;
+    todo: {
+        [key: string]: unknown;
+    } | null;
+    /**
+     * Consultation type string, or false if not set
+     */
+    consultation_type: {
+        [key: string]: unknown;
+    } | null;
+    geo_location: {
+        [key: string]: unknown;
+    } | null;
+    vitals_checked_user_id: {
+        [key: string]: unknown;
+    } | null;
+    vitals_checked_on: {
+        [key: string]: unknown;
+    } | null;
+    advice_to_counsellor: {
+        [key: string]: unknown;
+    } | null;
+    doctor_id: {
+        [key: string]: unknown;
+    } | null;
+    /**
+     * General observation text, or false if not set
+     */
+    general_observation: {
+        [key: string]: unknown;
+    } | null;
+    priority: {
+        [key: string]: unknown;
+    } | null;
+    prescription_id: {
+        [key: string]: unknown;
+    } | null;
+    inpatient_admission_id: {
+        [key: string]: unknown;
+    } | null;
+    sos_text: {
+        [key: string]: unknown;
+    } | null;
+    advice_to_psychologist: {
+        [key: string]: unknown;
+    } | null;
+    /**
+     * End datetime string, or false if not set
+     */
+    end_datetime: {
+        [key: string]: unknown;
+    } | null;
+    /**
+     * Start datetime string, or false if not set
+     */
+    start_datetime: {
+        [key: string]: unknown;
+    } | null;
+    /**
+     * Next follow-up date string, or false if not set
+     */
+    next_followup_date: {
+        [key: string]: unknown;
+    } | null;
+    referral_config_id: {
+        [key: string]: unknown;
+    } | null;
+    price_tag: {
+        [key: string]: unknown;
+    } | null;
+    advised_doctor: {
+        [key: string]: unknown;
+    } | null;
+    /**
+     * Virtual consultation URL, or false if not virtual
+     */
+    virtual_consultation_url: {
+        [key: string]: unknown;
+    } | null;
+    /**
+     * Patient indication string, or false if not set
+     */
+    patient_indication: {
+        [key: string]: unknown;
+    } | null;
+};
+
 export type ErpListResponseDto = {
     /**
      * List of records from ERP (passthrough)
@@ -1932,6 +2184,158 @@ export type CreatePaymentDto = {
     vals: string;
 };
 
+export type PsychiatristEvaluationPaginationDto = {
+    total_records: number;
+    per_page: number;
+    page: number;
+};
+
+export type PsychiatristEvaluationFormItemDto = {
+    id: number;
+    display_name: string;
+    /**
+     * Evaluation state (draft, confirmed, etc.)
+     */
+    state: string;
+    type: string;
+    date: string;
+    create_date: string;
+    write_date: string;
+    __last_update: string;
+    spo2: number;
+    pulse: number;
+    grbs: number;
+    /**
+     * Systolic blood pressure
+     */
+    bp: number;
+    /**
+     * Diastolic blood pressure
+     */
+    bp2: number;
+    wt: number;
+    /**
+     * Odoo returns false when no linked consultation
+     */
+    consultation_id: boolean;
+    /**
+     * Odoo returns false when no consultant comments
+     */
+    consultant_comments: boolean;
+    message_unread: boolean;
+    message_is_follower: boolean;
+    message_last_post: boolean;
+    message_needaction: boolean;
+    /**
+     * Odoo returns false when vitals user not set
+     */
+    vitals_checked_user_id: boolean;
+    /**
+     * Odoo returns false when vitals not yet checked
+     */
+    vitals_checked_on: boolean;
+    message_unread_counter: number;
+    message_needaction_counter: number;
+    /**
+     * Odoo many2one [id, display_name]
+     */
+    create_uid: [
+        unknown,
+        unknown
+    ];
+    /**
+     * Odoo many2one [id, display_name]
+     */
+    user_id: [
+        unknown,
+        unknown
+    ];
+    /**
+     * Odoo many2one [id, display_name]
+     */
+    company_id: [
+        unknown,
+        unknown
+    ];
+    /**
+     * Odoo many2one [id, display_name]
+     */
+    followup_type_id: [
+        unknown,
+        unknown
+    ];
+    /**
+     * Odoo many2one [id, display_name]
+     */
+    write_uid: [
+        unknown,
+        unknown
+    ];
+    /**
+     * Odoo many2one [id, display_name]
+     */
+    psychiatrist_id: [
+        unknown,
+        unknown
+    ];
+    /**
+     * Odoo many2one [id, display_name]
+     */
+    patient_id: [
+        unknown,
+        unknown
+    ];
+    message_follower_ids: Array<number>;
+    message_ids: Array<number>;
+    message_partner_ids: Array<number>;
+    pd_signs_symptoms_ids: Array<number>;
+    df_signs_symptoms_ids: Array<number>;
+    df_icd_coding_ids: Array<number>;
+    pd_icd_coding_ids: Array<number>;
+    message_channel_ids: Array<unknown>;
+    evaluation_prescription_line_ids: Array<unknown>;
+    website_message_ids: Array<unknown>;
+    advice_to_psychologist: {
+        [key: string]: unknown;
+    } | null;
+    confirmed_user_id: {
+        [key: string]: unknown;
+    } | null;
+    team_role: {
+        [key: string]: unknown;
+    } | null;
+    op_visit_id: {
+        [key: string]: unknown;
+    } | null;
+    confirmed_on: {
+        [key: string]: unknown;
+    } | null;
+    start_datetime: {
+        [key: string]: unknown;
+    } | null;
+    inpatient_admission_id: {
+        [key: string]: unknown;
+    } | null;
+    approved_on: {
+        [key: string]: unknown;
+    } | null;
+    approved_user_id: {
+        [key: string]: unknown;
+    } | null;
+    advice_to_counsellor: {
+        [key: string]: unknown;
+    } | null;
+    pd_description: {
+        [key: string]: unknown;
+    } | null;
+    df_description: {
+        [key: string]: unknown;
+    } | null;
+    end_datetime: {
+        [key: string]: unknown;
+    } | null;
+};
+
 export type EvaluationValsDto = {
     /**
      * JSON-encoded vals object for ERP create/update
@@ -2122,55 +2526,6 @@ export type MarkUploadCompleteResponseDto = {
     } | null;
 };
 
-export type ConsultationDocumentPresignUploadDto = {
-    crmLeadId: string;
-    fileName: string;
-    contentType: string;
-    /**
-     * Max 500MB
-     */
-    sizeBytes?: number;
-};
-
-export type ConsultationDocumentResponseDto = {
-    /**
-     * Document ID
-     */
-    id: string;
-    /**
-     * File name
-     */
-    name: string;
-    /**
-     * File size in bytes
-     */
-    size?: {
-        [key: string]: unknown;
-    };
-    /**
-     * MIME type
-     */
-    type?: {
-        [key: string]: unknown;
-    };
-    /**
-     * Presigned URL for download
-     */
-    url?: {
-        [key: string]: unknown;
-    };
-    /**
-     * Creation timestamp
-     */
-    createdAt?: {
-        [key: string]: unknown;
-    };
-};
-
-export type ConsultationDocumentListResponseDto = {
-    documents: Array<ConsultationDocumentResponseDto>;
-};
-
 export type GenerateNoteDto = {
     noteTypeId: string;
     /**
@@ -2317,17 +2672,199 @@ export type AssessmentAnalysisListResponseDto = {
     pageSize: number;
 };
 
-export type PatchLeadAssignmentsDto = {
+export type CreateMoodEntryDto = {
     /**
-     * Bucket map (subset allowed): assessments, worksheets, audio, video, wellness, journeys. Merged with existing; new items replace same id/documentId.
+     * Smiley score, 1 (worst) – 5 (best)
      */
-    assignments: {
+    moodScore: number;
+    /**
+     * Human-readable label for moodScore
+     */
+    moodLabel?: string;
+    /**
+     * Bubble-selected feelings (free-form labels sourced from CMS)
+     */
+    feelings?: Array<string>;
+    note?: string;
+    /**
+     * CmsAssessment.id whose questions drove this submission
+     */
+    cmsAssessmentId?: string;
+    loggedAt?: string;
+};
+
+export type MoodEntryResponseDto = {
+    id: string;
+    crmLeadId?: {
+        [key: string]: unknown;
+    };
+    patientRef?: {
+        [key: string]: unknown;
+    };
+    campus: string;
+    moodScore: number;
+    moodLabel?: {
+        [key: string]: unknown;
+    };
+    feelings: Array<string>;
+    note?: {
+        [key: string]: unknown;
+    };
+    cmsAssessmentId?: {
+        [key: string]: unknown;
+    };
+    loggedAt: string;
+    createdAt: string;
+    updatedAt: string;
+};
+
+export type MoodEntryListResponseDto = {
+    items: Array<MoodEntryResponseDto>;
+    total: number;
+    limit: number;
+    offset: number;
+};
+
+export type MoodTrackerFeelingCountDto = {
+    label: string;
+    count: number;
+};
+
+export type MoodTrackerReportDto = {
+    /**
+     * Number of mood entries in the window
+     */
+    count: number;
+    /**
+     * Mean of moodScore across the window (null when count = 0)
+     */
+    averageScore: {
+        [key: string]: unknown;
+    } | null;
+    /**
+     * Count of entries at each smiley score (1–5)
+     */
+    scoreBuckets: {
+        [key: string]: number;
+    };
+    topFeelings: Array<MoodTrackerFeelingCountDto>;
+    from?: string;
+    to?: string;
+};
+
+export type CreateStressEntryDto = {
+    /**
+     * 1 (Very Low) – 5 (Very High)
+     */
+    stressLevel: number;
+    stressLevelLabel?: string;
+    /**
+     * Stressor labels (Work, Finance, Health, Relationship, Family, Life, Others).
+     */
+    stressReasons?: Array<string>;
+    loggedAt?: string;
+};
+
+export type StressEntryResponseDto = {
+    id: string;
+    crmLeadId?: {
+        [key: string]: unknown;
+    };
+    patientRef?: {
+        [key: string]: unknown;
+    };
+    campus: string;
+    stressLevel: number;
+    stressLevelLabel?: {
+        [key: string]: unknown;
+    };
+    stressReasons: Array<string>;
+    loggedAt: string;
+    createdAt: string;
+    updatedAt: string;
+};
+
+export type StressEntryListResponseDto = {
+    items: Array<StressEntryResponseDto>;
+    total: number;
+    limit: number;
+    offset: number;
+};
+
+export type StressTrackerReasonCountDto = {
+    label: string;
+    count: number;
+};
+
+export type StressTrackerReportDto = {
+    count: number;
+    averageLevel: {
+        [key: string]: unknown;
+    } | null;
+    /**
+     * Count per stress level (1–5)
+     */
+    levelBuckets: {
+        [key: string]: number;
+    };
+    topReasons: Array<StressTrackerReasonCountDto>;
+    from?: string;
+    to?: string;
+};
+
+export type AssignmentItemInputDto = {
+    contentType: 'ASSESSMENT' | 'WORKSHEET' | 'AUDIO' | 'VIDEO' | 'WELLNESS' | 'JOURNEY';
+    /**
+     * Stable logical id (Strapi `documentId` when present, else CMS row id). Combined with crmLeadId+contentType for dedupe.
+     */
+    contentId: string;
+    /**
+     * Display title snapshot at assign time
+     */
+    title: string;
+    /**
+     * Display description snapshot at assign time
+     */
+    description?: string;
+    /**
+     * Bucket-specific extras to snapshot (forJourney, hint, category, slug, inDraft, etc.).
+     */
+    metadata?: {
         [key: string]: unknown;
     };
     /**
-     * Optional metadata only (e.g. doctor home campus). Omitted = on create use JWT campus; on update leave unchanged.
+     * Optional due date (ISO8601)
      */
-    campus?: string;
+    dueAt?: string;
+    /**
+     * Originating consultation id (clinical context)
+     */
+    assignedFromConsultationId?: number;
+};
+
+export type AssignItemsDto = {
+    /**
+     * Items to assign. Idempotent on (crmLeadId, contentType, contentId): existing non-revoked rows are left untouched; previously revoked rows are reactivated; new rows are created.
+     */
+    items: Array<AssignmentItemInputDto>;
+};
+
+export type UpdateAssignmentItemDto = {
+    status?: 'ASSIGNED' | 'IN_PROGRESS' | 'COMPLETED' | 'REVOKED';
+    /**
+     * Optional due date (ISO8601)
+     */
+    dueAt?: string;
+    /**
+     * Mark completion time (ISO8601). Setting status=COMPLETED auto-fills if absent.
+     */
+    completedAt?: string;
+    /**
+     * Replace metadata snapshot. Pass null to clear.
+     */
+    metadata?: {
+        [key: string]: unknown;
+    };
 };
 
 export type WorksheetSubmissionListResponseDto = {
@@ -6025,12 +6562,19 @@ export type ConsultationsControllerGetAllData = {
          * Per page count
          */
         per_page?: number;
+        /**
+         * Order-by (JSON array string, Odoo REST)
+         */
+        order_by?: string;
     };
     url: '/api/v1/{campus}/consultations';
 };
 
 export type ConsultationsControllerGetAllResponses = {
-    200: ErpListResponseDto;
+    200: {
+        pagination: ConsultationPaginationDto;
+        'consultation.consultation': Array<ConsultationItemDto>;
+    };
 };
 
 export type ConsultationsControllerGetAllResponse = ConsultationsControllerGetAllResponses[keyof ConsultationsControllerGetAllResponses];
@@ -6076,6 +6620,10 @@ export type ConsultationsControllerGetCounsellorSessionsData = {
          * Per page count
          */
         per_page?: number;
+        /**
+         * Order-by (JSON array string, Odoo REST)
+         */
+        order_by?: string;
     };
     url: '/api/v1/{campus}/consultations/counsellor-sessions';
 };
@@ -6380,6 +6928,18 @@ export type SessionsControllerGetAllData = {
          * Order by clause
          */
         order?: string;
+        /**
+         * Page number
+         */
+        page?: number;
+        /**
+         * Records per page
+         */
+        per_page?: number;
+        /**
+         * Order-by (JSON array string, Odoo REST)
+         */
+        order_by?: string;
     };
     url: '/api/v1/{campus}/sessions/{sessionType}';
 };
@@ -6426,6 +6986,18 @@ export type SessionsControllerGetHomeworkData = {
          * Order by clause
          */
         order?: string;
+        /**
+         * Page number
+         */
+        page?: number;
+        /**
+         * Records per page
+         */
+        per_page?: number;
+        /**
+         * Order-by (JSON array string, Odoo REST)
+         */
+        order_by?: string;
     };
     url: '/api/v1/{campus}/sessions/{sessionType}/homework';
 };
@@ -8527,7 +9099,10 @@ export type EvaluationsControllerGetAllData = {
 };
 
 export type EvaluationsControllerGetAllResponses = {
-    200: ErpListResponseDto;
+    200: {
+        pagination: PsychiatristEvaluationPaginationDto;
+        'psychiatrist.evaluation.form': Array<PsychiatristEvaluationFormItemDto>;
+    };
 };
 
 export type EvaluationsControllerGetAllResponse = EvaluationsControllerGetAllResponses[keyof EvaluationsControllerGetAllResponses];
@@ -8709,53 +9284,6 @@ export type EvaluationsControllerGetPrescriptionsResponses = {
 };
 
 export type EvaluationsControllerGetPrescriptionsResponse = EvaluationsControllerGetPrescriptionsResponses[keyof EvaluationsControllerGetPrescriptionsResponses];
-
-export type EvaluationsControllerGetPatientDocumentsData = {
-    body?: never;
-    path: {
-        /**
-         * Campus slug
-         */
-        campus: 'cadabams' | 'whitefield' | 'mysore' | 'mindtalk';
-    };
-    query?: {
-        /**
-         * Domain filter expression for ERP query
-         */
-        domain?: string;
-        /**
-         * Comma-separated list of fields to return
-         */
-        fields?: string;
-        /**
-         * Additional context for the query
-         */
-        context?: string;
-        /**
-         * Maximum number of records to return
-         */
-        limit?: number;
-        /**
-         * Number of records to skip
-         */
-        offset?: number;
-        /**
-         * Field to order by
-         */
-        order?: string;
-        /**
-         * Sort direction (asc or desc)
-         */
-        sort?: string;
-    };
-    url: '/api/v1/{campus}/evaluations/patient-documents';
-};
-
-export type EvaluationsControllerGetPatientDocumentsResponses = {
-    200: ErpListResponseDto;
-};
-
-export type EvaluationsControllerGetPatientDocumentsResponse = EvaluationsControllerGetPatientDocumentsResponses[keyof EvaluationsControllerGetPatientDocumentsResponses];
 
 export type EvaluationsControllerGetLabTestsData = {
     body?: never;
@@ -8949,85 +9477,6 @@ export type TranscriptionControllerUploadCompleteResponses = {
 };
 
 export type TranscriptionControllerUploadCompleteResponse = TranscriptionControllerUploadCompleteResponses[keyof TranscriptionControllerUploadCompleteResponses];
-
-export type ConsultationDocumentsControllerPresignUploadData = {
-    body: ConsultationDocumentPresignUploadDto;
-    path: {
-        /**
-         * Campus slug
-         */
-        campus: 'cadabams' | 'whitefield' | 'mysore' | 'mindtalk';
-    };
-    query?: never;
-    url: '/api/v1/{campus}/consultation-documents/presign-upload';
-};
-
-export type ConsultationDocumentsControllerPresignUploadResponses = {
-    200: PresignUploadResponseDto;
-};
-
-export type ConsultationDocumentsControllerPresignUploadResponse = ConsultationDocumentsControllerPresignUploadResponses[keyof ConsultationDocumentsControllerPresignUploadResponses];
-
-export type ConsultationDocumentsControllerUploadCompleteData = {
-    body?: never;
-    path: {
-        /**
-         * Campus slug
-         */
-        campus: 'cadabams' | 'whitefield' | 'mysore' | 'mindtalk';
-        documentId: string;
-    };
-    query?: never;
-    url: '/api/v1/{campus}/consultation-documents/{documentId}/upload-complete';
-};
-
-export type ConsultationDocumentsControllerUploadCompleteResponses = {
-    200: ConsultationDocumentResponseDto;
-};
-
-export type ConsultationDocumentsControllerUploadCompleteResponse = ConsultationDocumentsControllerUploadCompleteResponses[keyof ConsultationDocumentsControllerUploadCompleteResponses];
-
-export type ConsultationDocumentsControllerListData = {
-    body?: never;
-    path: {
-        /**
-         * Campus slug
-         */
-        campus: 'cadabams' | 'whitefield' | 'mysore' | 'mindtalk';
-    };
-    query: {
-        /**
-         * CRM Lead ID
-         */
-        crmLeadId: string;
-    };
-    url: '/api/v1/{campus}/consultation-documents';
-};
-
-export type ConsultationDocumentsControllerListResponses = {
-    200: ConsultationDocumentListResponseDto;
-};
-
-export type ConsultationDocumentsControllerListResponse = ConsultationDocumentsControllerListResponses[keyof ConsultationDocumentsControllerListResponses];
-
-export type ConsultationDocumentsControllerDeleteData = {
-    body?: never;
-    path: {
-        /**
-         * Campus slug
-         */
-        campus: 'cadabams' | 'whitefield' | 'mysore' | 'mindtalk';
-        documentId: string;
-    };
-    query?: never;
-    url: '/api/v1/{campus}/consultation-documents/{documentId}';
-};
-
-export type ConsultationDocumentsControllerDeleteResponses = {
-    200: ConsultationDocumentResponseDto;
-};
-
-export type ConsultationDocumentsControllerDeleteResponse = ConsultationDocumentsControllerDeleteResponses[keyof ConsultationDocumentsControllerDeleteResponses];
 
 export type NoteTemplatesControllerGenerateNoteData = {
     body: GenerateNoteDto;
@@ -9273,53 +9722,269 @@ export type PatientAssessmentsAnalysisControllerGetByIdResponses = {
 
 export type PatientAssessmentsAnalysisControllerGetByIdResponse = PatientAssessmentsAnalysisControllerGetByIdResponses[keyof PatientAssessmentsAnalysisControllerGetByIdResponses];
 
-export type LeadAssignmentsControllerGetOneData = {
+export type MoodTrackerControllerListData = {
     body?: never;
     path: {
+        /**
+         * Campus slug
+         */
+        campus: 'cadabams' | 'whitefield' | 'mysore' | 'mindtalk';
+    };
+    query?: {
+        from?: string;
+        to?: string;
+        limit?: number;
+        offset?: number;
+    };
+    url: '/api/v1/{campus}/mood-tracker';
+};
+
+export type MoodTrackerControllerListResponses = {
+    200: MoodEntryListResponseDto;
+};
+
+export type MoodTrackerControllerListResponse = MoodTrackerControllerListResponses[keyof MoodTrackerControllerListResponses];
+
+export type MoodTrackerControllerCreateData = {
+    body: CreateMoodEntryDto;
+    path: {
+        /**
+         * Campus slug
+         */
+        campus: 'cadabams' | 'whitefield' | 'mysore' | 'mindtalk';
+    };
+    query?: never;
+    url: '/api/v1/{campus}/mood-tracker';
+};
+
+export type MoodTrackerControllerCreateResponses = {
+    201: MoodEntryResponseDto;
+};
+
+export type MoodTrackerControllerCreateResponse = MoodTrackerControllerCreateResponses[keyof MoodTrackerControllerCreateResponses];
+
+export type MoodTrackerControllerReportData = {
+    body?: never;
+    path: {
+        /**
+         * Campus slug
+         */
+        campus: 'cadabams' | 'whitefield' | 'mysore' | 'mindtalk';
+    };
+    query?: {
+        from?: string;
+        to?: string;
+        limit?: number;
+        offset?: number;
+    };
+    url: '/api/v1/{campus}/mood-tracker/report';
+};
+
+export type MoodTrackerControllerReportResponses = {
+    200: MoodTrackerReportDto;
+};
+
+export type MoodTrackerControllerReportResponse = MoodTrackerControllerReportResponses[keyof MoodTrackerControllerReportResponses];
+
+export type MoodTrackerControllerFindOneData = {
+    body?: never;
+    path: {
+        /**
+         * Campus slug
+         */
+        campus: 'cadabams' | 'whitefield' | 'mysore' | 'mindtalk';
+        id: string;
+    };
+    query?: never;
+    url: '/api/v1/{campus}/mood-tracker/{id}';
+};
+
+export type MoodTrackerControllerFindOneResponses = {
+    200: MoodEntryResponseDto;
+};
+
+export type MoodTrackerControllerFindOneResponse = MoodTrackerControllerFindOneResponses[keyof MoodTrackerControllerFindOneResponses];
+
+export type StressTrackerControllerListData = {
+    body?: never;
+    path: {
+        /**
+         * Campus slug
+         */
+        campus: 'cadabams' | 'whitefield' | 'mysore' | 'mindtalk';
+    };
+    query?: {
+        from?: string;
+        to?: string;
+        limit?: number;
+        offset?: number;
+    };
+    url: '/api/v1/{campus}/stress-tracker';
+};
+
+export type StressTrackerControllerListResponses = {
+    200: StressEntryListResponseDto;
+};
+
+export type StressTrackerControllerListResponse = StressTrackerControllerListResponses[keyof StressTrackerControllerListResponses];
+
+export type StressTrackerControllerCreateData = {
+    body: CreateStressEntryDto;
+    path: {
+        /**
+         * Campus slug
+         */
+        campus: 'cadabams' | 'whitefield' | 'mysore' | 'mindtalk';
+    };
+    query?: never;
+    url: '/api/v1/{campus}/stress-tracker';
+};
+
+export type StressTrackerControllerCreateResponses = {
+    201: StressEntryResponseDto;
+};
+
+export type StressTrackerControllerCreateResponse = StressTrackerControllerCreateResponses[keyof StressTrackerControllerCreateResponses];
+
+export type StressTrackerControllerReportData = {
+    body?: never;
+    path: {
+        /**
+         * Campus slug
+         */
+        campus: 'cadabams' | 'whitefield' | 'mysore' | 'mindtalk';
+    };
+    query?: {
+        from?: string;
+        to?: string;
+        limit?: number;
+        offset?: number;
+    };
+    url: '/api/v1/{campus}/stress-tracker/report';
+};
+
+export type StressTrackerControllerReportResponses = {
+    200: StressTrackerReportDto;
+};
+
+export type StressTrackerControllerReportResponse = StressTrackerControllerReportResponses[keyof StressTrackerControllerReportResponses];
+
+export type StressTrackerControllerFindOneData = {
+    body?: never;
+    path: {
+        /**
+         * Campus slug
+         */
+        campus: 'cadabams' | 'whitefield' | 'mysore' | 'mindtalk';
+        id: string;
+    };
+    query?: never;
+    url: '/api/v1/{campus}/stress-tracker/{id}';
+};
+
+export type StressTrackerControllerFindOneResponses = {
+    200: StressEntryResponseDto;
+};
+
+export type StressTrackerControllerFindOneResponse = StressTrackerControllerFindOneResponses[keyof StressTrackerControllerFindOneResponses];
+
+export type LeadAssignmentsControllerListData = {
+    body?: never;
+    path: {
+        /**
+         * Campus slug
+         */
+        campus: 'cadabams' | 'whitefield' | 'mysore' | 'mindtalk';
         crmLeadId: string;
     };
     query?: never;
-    url: '/api/v1/lead-assignments/{crmLeadId}';
+    url: '/api/v1/{campus}/lead-assignments/{crmLeadId}';
 };
 
-export type LeadAssignmentsControllerGetOneResponses = {
+export type LeadAssignmentsControllerListResponses = {
     /**
-     * Assignment row or empty defaults
+     * { campus, crmLeadId, items: [...], buckets: { assessments: [], worksheets: [], audio: [], video: [], wellness: [], journeys: [] } }
      */
     200: unknown;
 };
 
-export type LeadAssignmentsControllerPatchMergeData = {
-    body: PatchLeadAssignmentsDto;
+export type LeadAssignmentsControllerAssignItemsData = {
+    body: AssignItemsDto;
     path: {
+        /**
+         * Campus slug
+         */
+        campus: 'cadabams' | 'whitefield' | 'mysore' | 'mindtalk';
         crmLeadId: string;
     };
     query?: never;
-    url: '/api/v1/lead-assignments/{crmLeadId}';
+    url: '/api/v1/{campus}/lead-assignments/{crmLeadId}/items';
 };
 
-export type LeadAssignmentsControllerPatchMergeResponses = {
+export type LeadAssignmentsControllerAssignItemsResponses = {
     /**
-     * Updated assignment row
+     * Updated list view (same shape as GET).
+     */
+    200: unknown;
+};
+
+export type LeadAssignmentsControllerRevokeItemData = {
+    body?: never;
+    path: {
+        /**
+         * Campus slug
+         */
+        campus: 'cadabams' | 'whitefield' | 'mysore' | 'mindtalk';
+        crmLeadId: string;
+        itemId: string;
+    };
+    query?: never;
+    url: '/api/v1/{campus}/lead-assignments/{crmLeadId}/items/{itemId}';
+};
+
+export type LeadAssignmentsControllerRevokeItemResponses = {
+    /**
+     * Updated (revoked) item.
+     */
+    200: unknown;
+};
+
+export type LeadAssignmentsControllerPatchItemData = {
+    body: UpdateAssignmentItemDto;
+    path: {
+        /**
+         * Campus slug
+         */
+        campus: 'cadabams' | 'whitefield' | 'mysore' | 'mindtalk';
+        crmLeadId: string;
+        itemId: string;
+    };
+    query?: never;
+    url: '/api/v1/{campus}/lead-assignments/{crmLeadId}/items/{itemId}';
+};
+
+export type LeadAssignmentsControllerPatchItemResponses = {
+    /**
+     * Updated item.
      */
     200: unknown;
 };
 
 export type PatientAssignedContentControllerListAssignedData = {
     body?: never;
-    path?: never;
-    query?: {
+    path: {
         /**
-         * If set, only return the row when its optional metadata campus matches (or is unset)
+         * Campus slug
          */
-        campus?: string;
+        campus: 'cadabams' | 'whitefield' | 'mysore' | 'mindtalk';
     };
-    url: '/api/v1/patient/assigned-content';
+    query?: never;
+    url: '/api/v1/{campus}/patient/assigned-content';
 };
 
 export type PatientAssignedContentControllerListAssignedResponses = {
     /**
-     * crmLeadId from token; items has 0 or 1 entry
+     * { campus, crmLeadId, items: [...], buckets: { ... } }
      */
     200: unknown;
 };

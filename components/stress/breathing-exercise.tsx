@@ -1,3 +1,31 @@
+/**
+ * FILE: components/stress/breathing-exercise.tsx
+ *
+ * PURPOSE:
+ *   Interactive breathing exercise component with multiple breathing patterns.
+ *   Guides users through timed breathing phases (inhale, hold, exhale) with visual feedback.
+ *
+ * LOGIC OVERVIEW:
+ *   Allows selection from predefined breathing patterns (4-7-8, Box Breathing, Deep Breath).
+ *   Runs a cycle that steps through each phase with countdown. Animates a central circle that
+ *   expands/shrinks based on phase. Tracks completed cycles. Uses AbortController to stop
+ *   gracefully when exercise is paused.
+ *
+ * KEY VARIABLES / PROPS / EXPORTS:
+ *   selectedPattern   — index into PATTERNS array
+ *   phase             — current breathing phase (inhale, hold-in, exhale, hold-out, idle)
+ *   countdown         — seconds remaining in current phase
+ *   isActive          — whether exercise is currently running
+ *   cycles            — number of completed breathing cycles
+ *   circleClass       — CSS class modifier based on phase for animation
+ *
+ * DEPENDENCIES:
+ *   Button from shadcn/ui
+ *   React hooks: useState, useEffect, useCallback, AbortController
+ *
+ * LAST UPDATED: 2026-04-28 — Neo design system: shadow scale, color tokens, border radius
+ */
+
 "use client";
 
 import { Button } from "@/components/ui/button";
@@ -153,7 +181,7 @@ export function BreathingExercise() {
         />
         {/* Inner circle */}
         <div
-          className={`relative rounded-full bg-primary flex flex-col items-center justify-center shadow-lg transition-all duration-1000 ease-in-out ${circleClass}-inner`}
+          className={`relative rounded-full bg-primary flex flex-col items-center justify-center shadow-[var(--sh-3)] transition-all duration-1000 ease-in-out ${circleClass}-inner`}
         >
           <span className="text-primary-foreground text-lg font-semibold text-center px-3 leading-tight">
             {PHASE_LABELS[phase]}
@@ -189,7 +217,7 @@ export function BreathingExercise() {
           { label: "Exhale", value: pattern.exhale },
           { label: "Hold", value: pattern.holdOut },
         ].map((item) => (
-          <div key={item.label + item.value} className="bg-muted rounded-lg p-2">
+          <div key={item.label + item.value} className="bg-muted rounded-xl p-2">
             <div className="text-lg font-bold text-primary">{item.value}s</div>
             <div className="text-xs text-muted-foreground">{item.label}</div>
           </div>

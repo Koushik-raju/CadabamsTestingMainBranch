@@ -25,7 +25,7 @@
  *   PageHeader             — shared navigation header
  *   react-markdown         — renders analysis.result markdown
  *
- * LAST UPDATED: 2026-04-27 — added Book Appointment CTA in expanded report view
+ * LAST UPDATED: 2026-04-28 — Neo design system: shadow scale, color tokens, border radius
  */
 "use client";
 
@@ -140,7 +140,7 @@ function ReportRow({
         className="w-full flex items-start gap-3 text-left"
         aria-expanded={expanded}
       >
-        <div className="relative w-11 h-11 rounded-2xl bg-gradient-to-br from-violet-500 to-purple-600 flex-shrink-0 flex items-center justify-center overflow-hidden shadow-sm">
+        <div className="relative w-11 h-11 rounded-2xl bg-gradient-to-br from-violet-500 to-purple-600 flex-shrink-0 flex items-center justify-center overflow-hidden shadow-[var(--sh-1)]">
           <div className="absolute -top-2 -right-2 w-7 h-7 rounded-full bg-white/10" />
           <FileText className="w-5 h-5 text-white" />
         </div>

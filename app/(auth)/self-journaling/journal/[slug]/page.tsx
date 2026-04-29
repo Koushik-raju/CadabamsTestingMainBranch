@@ -31,8 +31,7 @@
  *   DateEntriesCard — components/journal/date-entries-card.tsx
  *   buildWeekBaseDays, toLocalDateStr — lib/journal-utils.ts
  *
- * LAST UPDATED: 2026-04-27 — subscribed view now uses shared WeekDateStrip + DateEntriesCard
- *   matching the home page; static streak calendar removed.
+ * LAST UPDATED: 2026-04-28 — Neo design system: shadow scale, color tokens, border radius
  */
 "use client";
 
@@ -230,13 +229,13 @@ export default function JournalDetailPage({ params }: { params: Promise<{ slug: 
         <div className="flex flex-col gap-5 px-4 mt-2">
           {/* Hero image */}
           {sub.icon ? (
-            <div className="relative w-full h-36 rounded-2xl overflow-hidden shadow-sm">
+            <div className="relative w-full h-36 rounded-3xl overflow-hidden shadow-[var(--sh-1)]">
               <Image src={sub.icon} alt={sub.title} fill className="object-cover" sizes="100vw" />
             </div>
           ) : (
             <div
               className={cn(
-                "relative w-full h-36 rounded-2xl bg-gradient-to-br overflow-hidden shadow-sm",
+                "relative w-full h-36 rounded-3xl bg-gradient-to-br overflow-hidden shadow-[var(--sh-1)]",
                 gradient,
               )}
             >
@@ -329,13 +328,13 @@ export default function JournalDetailPage({ params }: { params: Promise<{ slug: 
       <div className="flex flex-col gap-5 px-4 mt-2">
         {/* Hero image */}
         {sub.icon ? (
-          <div className="relative w-full h-48 rounded-2xl overflow-hidden shadow-sm">
+          <div className="relative w-full h-48 rounded-3xl overflow-hidden shadow-[var(--sh-1)]">
             <Image src={sub.icon} alt={sub.title} fill className="object-cover" sizes="100vw" />
           </div>
         ) : (
           <div
             className={cn(
-              "relative w-full h-48 rounded-2xl bg-gradient-to-br overflow-hidden shadow-sm",
+              "relative w-full h-48 rounded-3xl bg-gradient-to-br overflow-hidden shadow-[var(--sh-1)]",
               gradient,
             )}
           >
@@ -384,7 +383,7 @@ export default function JournalDetailPage({ params }: { params: Promise<{ slug: 
           Subscribe to track your streak and start writing
         </p>
         <Button
-          className="w-full rounded-full h-14 text-base font-semibold gap-2 shadow-lg active:scale-[0.98] transition-transform"
+          className="w-full rounded-full h-14 text-base font-semibold gap-2 shadow-[var(--sh-glow-orange)] active:scale-[0.98] transition-transform"
           onClick={handleSubscribe}
           disabled={isSubscribing}
         >

@@ -21,7 +21,7 @@
  *   PackageResponseDto, PackageProductLineDto  — from @/sdk/backend-v2
  *   odooTuple                                  — from @/lib/odoo (safe many2one tuple access)
  *
- * LAST UPDATED: 2026-04-17 — added odooTuple guard for product_id many2one field
+ * LAST UPDATED: 2026-04-28 — Neo design system: shadow scale, color tokens, border radius
  */
 "use client";
 
@@ -41,7 +41,7 @@ interface PackageCardProps {
 
 export function PackageCard({ pkg, productLines, onBook }: PackageCardProps) {
   return (
-    <Card className="border-border bg-card hover:shadow-md transition-shadow">
+    <Card className="border-border bg-card hover:shadow-[var(--sh-2)] transition-shadow">
       <CardContent className="p-4 space-y-4">
         {/* Header */}
         <div className="flex items-start justify-between gap-2">
@@ -61,7 +61,7 @@ export function PackageCard({ pkg, productLines, onBook }: PackageCardProps) {
         {/* Details */}
         <div className="space-y-2.5">
           <div className="flex items-center gap-2.5">
-            <div className="flex items-center justify-center w-7 h-7 bg-muted rounded-lg shrink-0">
+            <div className="flex items-center justify-center w-7 h-7 bg-muted rounded-xl shrink-0">
               <IndianRupee className="w-3.5 h-3.5 text-primary" />
             </div>
             <div>
@@ -73,7 +73,7 @@ export function PackageCard({ pkg, productLines, onBook }: PackageCardProps) {
           </div>
 
           <div className="flex items-center gap-2.5">
-            <div className="flex items-center justify-center w-7 h-7 bg-muted rounded-lg shrink-0">
+            <div className="flex items-center justify-center w-7 h-7 bg-muted rounded-xl shrink-0">
               <Layers className="w-3.5 h-3.5 text-primary" />
             </div>
             <div>
@@ -87,7 +87,7 @@ export function PackageCard({ pkg, productLines, onBook }: PackageCardProps) {
 
         {/* Services preview */}
         {productLines && productLines.length > 0 && (
-          <div className="rounded-lg bg-muted p-3 space-y-1.5">
+          <div className="rounded-3xl bg-muted p-3 space-y-1.5">
             <p className="text-xs font-medium text-muted-foreground">Package includes:</p>
             <ul className="space-y-1">
               {productLines.slice(0, 3).map((line) => (

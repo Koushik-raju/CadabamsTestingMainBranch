@@ -41,10 +41,7 @@
  *   globalMutate (swr) — revalidates enrollment key on return
  *   journeyEnrollmentKey — lib/swr-keys
  *
- * LAST UPDATED: 2026-04-27 — StatsBar made sticky at top-[60px] so it pins below the 60px PageHeader; fall back to getTaskType(task) when server kind
- *   is OTHER (DB relation not yet connected) so assessment nodes don't render
- *   as "journal". Previously: cooldown banner, auto-scroll polling, id-specific
- *   URL fallback, server-kind sourcing with client fallback for pre-enrolment.
+ * LAST UPDATED: 2026-04-28 — Neo design system: shadow scale, color tokens, border radius
  */
 "use client";
 
@@ -803,9 +800,9 @@ export function JourneyPathView({ journey, progress, journeyId }: JourneyPathVie
       {isPaidFreePreview && (
         <div className="mx-4 mt-3 rounded-2xl overflow-hidden border border-violet-200">
           <div className="bg-gradient-to-br from-violet-500 to-purple-600 px-4 py-3 flex items-start gap-3">
-            <div className="relative w-11 h-11 rounded-2xl bg-gradient-to-br from-violet-400 to-purple-500 flex-shrink-0 flex items-center justify-center shadow-sm">
+            <div className="relative w-11 h-11 rounded-2xl bg-gradient-to-br from-violet-400 to-purple-500 flex-shrink-0 flex items-center justify-center shadow-[var(--sh-1)]">
               <div className="absolute -top-2 -right-2 w-7 h-7 rounded-full bg-white/10" />
-              <Sparkles className="w-5 h-5 text-white" />
+              <Sparkles size={20} strokeWidth={2} className="text-white" />
             </div>
             <div className="flex-1 min-w-0">
               <p className="text-sm font-bold text-white">Premium Journey</p>
@@ -830,11 +827,11 @@ export function JourneyPathView({ journey, progress, journeyId }: JourneyPathVie
           Rendered inline (not sticky) so it's guaranteed visible under the
           app bar on every scroll container. */}
       {showCooldownBanner && (
-        <div className="mx-4 mt-3 rounded-2xl overflow-hidden border border-emerald-200 shadow-lg">
+        <div className="mx-4 mt-3 rounded-2xl overflow-hidden border border-emerald-200 shadow-[var(--sh-3)]">
           <div className="bg-gradient-to-br from-emerald-500 to-teal-600 px-4 py-3 flex items-start gap-3">
-            <div className="relative w-11 h-11 rounded-2xl bg-gradient-to-br from-emerald-400 to-teal-500 flex-shrink-0 flex items-center justify-center shadow-sm">
+            <div className="relative w-11 h-11 rounded-2xl bg-gradient-to-br from-emerald-400 to-teal-500 flex-shrink-0 flex items-center justify-center shadow-[var(--sh-1)]">
               <div className="absolute -top-2 -right-2 w-7 h-7 rounded-full bg-white/10" />
-              <Clock className="w-5 h-5 text-white" />
+              <Clock size={20} strokeWidth={2} className="text-white" />
             </div>
             <div className="flex-1 min-w-0">
               <p className="text-sm font-bold text-white">Day complete</p>
@@ -1029,9 +1026,9 @@ export function JourneyPathView({ journey, progress, journeyId }: JourneyPathVie
           ) : isPaidFreePreview ? (
             <>
               <div className="flex items-center gap-3 mb-4">
-                <div className="relative w-11 h-11 rounded-2xl bg-gradient-to-br from-violet-500 to-purple-600 flex-shrink-0 flex items-center justify-center shadow-sm">
+                <div className="relative w-11 h-11 rounded-2xl bg-gradient-to-br from-violet-500 to-purple-600 flex-shrink-0 flex items-center justify-center shadow-[var(--sh-1)]">
                   <div className="absolute -top-2 -right-2 w-7 h-7 rounded-full bg-white/10" />
-                  <Sparkles className="w-5 h-5 text-white" />
+                  <Sparkles size={20} strokeWidth={2} className="text-white" />
                 </div>
                 <div>
                   <p className="text-base font-bold text-foreground">Premium Journey</p>

@@ -20,7 +20,7 @@
  *   BookedPackageDto  — from @/sdk/backend-v2
  *   odooTuple         — from @/lib/odoo (safe many2one tuple access)
  *
- * LAST UPDATED: 2026-04-17 — added odooTuple guard for package_id many2one field
+ * LAST UPDATED: 2026-04-28 — Neo design system: shadow scale, color tokens, border radius
  */
 "use client";
 

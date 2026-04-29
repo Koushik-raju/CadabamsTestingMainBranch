@@ -46,9 +46,7 @@
  *   AssessmentEmptyState        — empty-state display
  *   categoryMap                 — maps category string to icon + metadata
  *
- * LAST UPDATED: 2026-04-28 — My Assessments tab now shows doctor-assigned
- *   assessments (LeadContentAssignment) instead of completions, matching the
- *   reference frontned "Assigned Assessments" tab.
+ * LAST UPDATED: 2026-04-28 — Neo design system: shadow scale, color tokens, border radius
  */
 "use client";
 
@@ -196,7 +194,7 @@ export default function AssessmentsPage() {
         <TabsContent value="browse" className="mt-0 space-y-3">
           {/* Search bar */}
           <div className="flex gap-2 mt-4 items-stretch">
-            <div className="flex-1 flex items-center gap-2 bg-card rounded-2xl px-4 h-12 shadow-sm border border-input">
+            <div className="flex-1 flex items-center gap-2 bg-card rounded-2xl px-4 h-12 shadow-[var(--sh-2)] border border-input">
               <Search className="w-4 h-4 text-muted-foreground flex-shrink-0" />
               <Input
                 value={searchTerm}

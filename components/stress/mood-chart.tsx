@@ -1,3 +1,26 @@
+/**
+ * FILE: components/stress/mood-chart.tsx
+ *
+ * PURPOSE:
+ *   Visualizes historical stress level entries as a color-coded bar chart.
+ *   Shows stress levels (1–5) over time with contextual labels and reasons if available.
+ *
+ * LOGIC OVERVIEW:
+ *   Renders a horizontal bar for each entry, colored by stress level (green → red).
+ *   Falls back to an empty state message when no entries exist.
+ *   Each bar shows date, stress level name, and optionally stress reasons if recorded.
+ *
+ * KEY VARIABLES / PROPS / EXPORTS:
+ *   entries         — array of StressEntry objects (stressLevel, createdAt, optional stressReason)
+ *   LEVEL_LABELS    — numeric level (1–5) to human-readable label mapping
+ *   LEVEL_COLORS    — numeric level to bg- color class mapping
+ *
+ * DEPENDENCIES:
+ *   None (pure component, no hooks or external libs)
+ *
+ * LAST UPDATED: 2026-04-28 — Neo design system: shadow scale, color tokens, border radius
+ */
+
 "use client";
 
 interface StressEntry {

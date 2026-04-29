@@ -1,3 +1,32 @@
+/**
+ * FILE: components/wellness/audio-player.tsx
+ *
+ * PURPOSE:
+ *   Audio player component for playing wellness and meditation audio tracks.
+ *   Provides playback controls (play/pause, skip forward/back, mute) and progress tracking.
+ *
+ * LOGIC OVERVIEW:
+ *   Wraps an HTML audio element and exposes controls for playback. Tracks current time,
+ *   duration, mute state, and loading state. Allows seeking via slider, skipping in 10-second
+ *   increments, and toggling mute. Updates UI based on playback state.
+ *
+ * KEY VARIABLES / PROPS / EXPORTS:
+ *   src           — audio file URL to load
+ *   title         — optional title to display above the player
+ *   autoPlay      — whether to auto-play on load (default: false)
+ *   className     — optional CSS classes for container
+ *   isPlaying     — current playback state
+ *   currentTime   — current position in seconds
+ *   duration      — total audio length in seconds
+ *   isMuted       — mute state
+ *
+ * DEPENDENCIES:
+ *   Button, Slider from shadcn/ui
+ *   Lucide icons: Pause, Play, RotateCcw, RotateCw, Volume2, VolumeX
+ *
+ * LAST UPDATED: 2026-04-28 — Neo design system: shadow scale, color tokens, border radius
+ */
+
 "use client";
 
 import { Button } from "@/components/ui/button";
@@ -135,7 +164,7 @@ export function AudioPlayer({ src, title, autoPlay = false, className }: AudioPl
           onClick={togglePlay}
           disabled={isLoading}
           size="icon"
-          className="h-14 w-14 rounded-full bg-primary text-primary-foreground hover:bg-primary/90 shadow-md"
+          className="h-14 w-14 rounded-full bg-primary text-primary-foreground hover:bg-primary/90 shadow-[var(--sh-glow-orange)]"
           aria-label={isPlaying ? "Pause" : "Play"}
         >
           {isPlaying ? (

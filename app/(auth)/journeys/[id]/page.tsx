@@ -29,7 +29,7 @@
  *   subscribeToJourney      — mutation to enroll user
  *   BlocksRenderer          — @strapi/blocks-react-renderer for rich-text
  *
- * LAST UPDATED: 2026-04-27 — fixed header not sticking: outer container changed from min-h-screen to h-screen so the inner overflow-y-auto div is the true scroll container and the header stays pinned above it
+ * LAST UPDATED: 2026-04-28 — Neo design system: shadow scale, color tokens, border radius
  */
 
 "use client";
@@ -296,7 +296,7 @@ function JourneyLandingContent({ params }: PageProps) {
             </button>
           ) : (
             <Button
-              className="h-14 rounded-2xl bg-primary hover:bg-primary/90 text-primary-foreground font-bold text-base shadow-md shadow-primary/30"
+              className="h-14 rounded-2xl bg-primary hover:bg-primary/90 text-primary-foreground font-bold text-base shadow-[var(--sh-glow-orange)] shadow-primary/30"
               disabled={subscribing}
               onClick={handleSubscribe}
             >

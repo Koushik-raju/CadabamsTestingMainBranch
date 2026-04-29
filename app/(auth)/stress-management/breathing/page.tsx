@@ -1,3 +1,25 @@
+/**
+ * FILE: app/(auth)/stress-management/breathing/page.tsx
+ *
+ * PURPOSE:
+ *   Page wrapper for the breathing exercise component.
+ *   Provides navigation header and contextual tips for guided breathing.
+ *
+ * LOGIC OVERVIEW:
+ *   Renders header with back button, breathing exercise component, and tips section.
+ *   Back button navigates to previous page via router.back().
+ *
+ * KEY VARIABLES / PROPS / EXPORTS:
+ *   router  — Next.js navigation object
+ *
+ * DEPENDENCIES:
+ *   BreathingExercise  — interactive breathing component
+ *   Button             — shadcn/ui button primitive
+ *   ChevronLeft        — lucide icon
+ *
+ * LAST UPDATED: 2026-04-28 — Neo design system: shadow scale, color tokens, border radius
+ */
+
 "use client";
 
 import { BreathingExercise } from "@/components/stress/breathing-exercise";

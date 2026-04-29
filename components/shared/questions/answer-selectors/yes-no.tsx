@@ -1,3 +1,25 @@
+/**
+ * FILE: components/shared/questions/answer-selectors/yes-no.tsx
+ *
+ * PURPOSE:
+ *   Renders a binary choice selector with two buttons: yes/no or custom labels.
+ *   Handles selected state and dispatch via onSelect callback.
+ *
+ * LOGIC OVERVIEW:
+ *   Displays heading (from title or question prop), optional subtitle.
+ *   Two buttons side-by-side; selected button shows primary/destructive styling.
+ *   Yes button uses primary color (orange); no button uses destructive (red).
+ *
+ * KEY VARIABLES / PROPS / EXPORTS:
+ *   selected  — current selected label ("Yes", "No", or custom)
+ *   onSelect  — callback(label: string) on button click
+ *   yesLabel, noLabel — customizable button text
+ *
+ * DEPENDENCIES:
+ *   None (pure UI)
+ *
+ * LAST UPDATED: 2026-04-28 — Neo design system: shadow scale, color tokens, border radius
+ */
 "use client";
 
 interface YesNoSelectorProps {
@@ -35,7 +57,7 @@ export function YesNoSelector({
           onClick={() => onSelect(yesLabel)}
           className={`w-28 sm:w-32 py-4 rounded-2xl border-2 font-semibold text-base transition-all duration-200 active:scale-95 ${
             selected === yesLabel
-              ? "bg-primary border-primary text-primary-foreground shadow-md"
+              ? "bg-primary border-primary text-primary-foreground shadow-[var(--sh-glow-orange)]"
               : "bg-card border-border text-foreground hover:border-primary/50"
           }`}
           aria-pressed={selected === yesLabel}
@@ -46,7 +68,7 @@ export function YesNoSelector({
           onClick={() => onSelect(noLabel)}
           className={`w-28 sm:w-32 py-4 rounded-2xl border-2 font-semibold text-base transition-all duration-200 active:scale-95 ${
             selected === noLabel
-              ? "bg-destructive border-destructive text-destructive-foreground shadow-md"
+              ? "bg-destructive border-destructive text-destructive-foreground shadow-[var(--sh-2)]"
               : "bg-card border-border text-foreground hover:border-destructive/50"
           }`}
           aria-pressed={selected === noLabel}

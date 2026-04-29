@@ -1,3 +1,34 @@
+/**
+ * FILE: components/assessment/assessment-question-card.tsx
+ *
+ * PURPOSE:
+ *   Question card component that renders a single assessment question with
+ *   type-specific answer selectors (smiley, single choice, text, slider).
+ *
+ * LOGIC OVERVIEW:
+ *   - AssessmentQuestionCard is the main export that dispatches rendering based
+ *     on question.type (smiley, choice, textarea, indicator).
+ *   - SmileySelector: emoji button grid with selected state styling.
+ *   - SingleChoice: radio button list with selected state.
+ *   - TextArea: text input field with placeholder.
+ *   - Indicator: horizontal slider (range input) with labels.
+ *   - All selectors accept a callback (onSelect/onChange) that triggers parent
+ *     onAnswer(questionId, value).
+ *
+ * KEY VARIABLES / PROPS / EXPORTS:
+ *   question        — AssessmentQuestionItem with type and options
+ *   questionIndex   — current question number (for progress display)
+ *   totalQuestions  — total question count (for progress display)
+ *   selectedAnswer  — current answer value (string, number, or array)
+ *   onAnswer        — callback fired when answer changes
+ *   AssessmentQuestionCard — default export
+ *
+ * DEPENDENCIES:
+ *   React useState hook
+ *   Tailwind CSS for styling
+ *
+ * LAST UPDATED: 2026-04-28 — Neo design system: shadow scale, color tokens, border radius
+ */
 "use client";
 
 import { useState } from "react";
@@ -78,7 +109,7 @@ function SmileySelector({
             onClick={() => onSelect(index)}
             className={`flex flex-col items-center gap-2 p-3 rounded-xl border-2 transition-all ${
               isSelected
-                ? "border-primary/30 bg-primary/5 shadow-md"
+                ? "border-primary/30 bg-primary/5 shadow-[var(--sh-1)]"
                 : "border-transparent bg-card hover:border-border"
             }`}
           >
@@ -186,7 +217,7 @@ function Indicator({
           setSliderValue(v);
           onChange(v);
         }}
-        className="w-full h-2 bg-muted rounded-lg appearance-none cursor-pointer accent-primary"
+        className="w-full h-2 bg-muted rounded-xl appearance-none cursor-pointer accent-primary"
       />
     </div>
   );

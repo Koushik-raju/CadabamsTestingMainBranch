@@ -25,7 +25,7 @@
  *   useBooking — BookingContext hook for slot/doctor/campus IDs
  *   PageHeader — shared navigation header
  *
- * LAST UPDATED: 2026-04-23 — migrated custom header div to PageHeader; added file header
+ * LAST UPDATED: 2026-04-28 — Neo design system: shadow scale, color tokens, border radius
  */
 "use client";
 
@@ -304,7 +304,7 @@ function CheckoutContent() {
                             className="w-full flex items-center gap-3 py-3 transition-colors hover:bg-muted/50 active:bg-muted"
                             onClick={() => handleRelationSelect(relation)}
                           >
-                            <div className="relative w-11 h-11 rounded-2xl bg-gradient-to-br from-sky-500 to-blue-600 flex-shrink-0 flex items-center justify-center overflow-hidden shadow-sm">
+                            <div className="relative w-11 h-11 rounded-2xl bg-gradient-to-br from-sky-500 to-blue-600 flex-shrink-0 flex items-center justify-center overflow-hidden shadow-[var(--sh-1)]">
                               <div className="absolute -top-2 -right-2 w-7 h-7 rounded-full bg-white/10" />
                               <Users className="w-5 h-5 text-white" />
                             </div>

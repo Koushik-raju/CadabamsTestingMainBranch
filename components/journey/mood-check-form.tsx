@@ -23,7 +23,7 @@
  *   shadcn: Card, CardContent, Button. lucide-react: Sparkles, Check.
  *   lib/utils: cn.
  *
- * LAST UPDATED: 2026-04-24 — filter undefined answers before calling onSubmit to satisfy Record<string, number> contract.
+ * LAST UPDATED: 2026-04-28 — Neo design system: shadow scale, color tokens, border radius
  */
 "use client";
 
@@ -104,7 +104,7 @@ export function MoodCheckForm({
   return (
     <div className="flex flex-col gap-5">
       {/* Hero card */}
-      <Card className="relative w-full overflow-hidden border-0 shadow-lg">
+      <Card className="relative w-full overflow-hidden border-0 shadow-[var(--sh-3)]">
         <div className="absolute inset-0 bg-gradient-to-br from-violet-500 to-purple-600" />
         <div className="absolute -top-8 -right-8 w-40 h-40 rounded-full bg-white/10" />
         <div className="absolute -bottom-12 -left-6 w-52 h-52 rounded-full bg-white/5" />
@@ -156,7 +156,7 @@ export function MoodCheckForm({
                         className={cn(
                           "relative flex-1 aspect-square rounded-2xl flex items-center justify-center transition-all active:scale-95",
                           isSelected
-                            ? cn("bg-gradient-to-br shadow-md", step.gradient)
+                            ? cn("bg-gradient-to-br shadow-[var(--sh-2)]", step.gradient)
                             : "bg-muted hover:bg-muted/70",
                         )}
                       >

@@ -1,3 +1,31 @@
+/**
+ * FILE: components/common/otp-input.tsx
+ *
+ * PURPOSE:
+ *   Renders a customizable one-time-password (OTP) input component that accepts numeric digits
+ *   only. Supports paste, arrow keys, backspace, and automatic focus management between fields.
+ *
+ * LOGIC OVERVIEW:
+ *   Displays a row of number input fields (default 4). Each field accepts one digit. On input,
+ *   automatically moves focus to the next field if a digit is entered. Supports pasting a complete
+ *   OTP code, arrow key navigation, and backspace deletion. The component maintains a refs array
+ *   to manage focus between fields.
+ *
+ * KEY VARIABLES / PROPS / EXPORTS:
+ *   value             — String of digits entered; controlled by onChange callback
+ *   onChange          — Callback fired with the complete OTP string when user types or pastes
+ *   length            — Number of OTP fields (default 4)
+ *   label             — Label text displayed above the inputs (default "Enter OTP")
+ *   refs              — useRef array tracking each input element for focus management
+ *   OTPInput          — Main export; controlled component for OTP entry
+ *
+ * DEPENDENCIES:
+ *   React hooks: useEffect, useRef
+ *   shadcn/ui primitives: Input, Label
+ *
+ * LAST UPDATED: 2026-04-28 — Neo design system: file header added
+ */
+
 "use client";
 
 import { Input } from "@/components/ui/input";

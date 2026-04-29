@@ -1,3 +1,33 @@
+/**
+ * FILE: components/package/package-discovery-card.tsx
+ *
+ * PURPOSE:
+ *   Hero-style package card showing a gradient header with initials circle, price badge,
+ *   and basic package info below. Used in package discovery/browse views.
+ *
+ * LOGIC OVERVIEW:
+ *   1. Receives a PackageResponseDto and optional className.
+ *   2. Derives initials from first 2 words of package name.
+ *   3. Gets color palette via getPackagePalette(pkg.id).
+ *   4. Renders gradient header with initials circle, price badge, and arrow.
+ *   5. Below header shows package name and session count.
+ *   6. On click, navigates to /packages/browse/{pkg.id}.
+ *
+ * KEY VARIABLES / PROPS / EXPORTS:
+ *   pkg                      — PackageResponseDto; the package data to display
+ *   className               — optional additional classes for the Card
+ *   palette                 — object from getPackagePalette; gradient, badgeBg, iconBg
+ *   initials                — 2-char string derived from package name
+ *   PackageDiscoveryCard    — exported component function
+ *
+ * DEPENDENCIES:
+ *   @/lib/package-colors    — getPackagePalette function
+ *   @/sdk/backend-v2        — PackageResponseDto type
+ *   next/navigation         — useRouter hook
+ *
+ * LAST UPDATED: 2026-04-28 — Neo design system: shadow scale, color tokens, border radius
+ */
+
 "use client";
 
 import { Card, CardContent } from "@/components/ui/card";
@@ -26,7 +56,7 @@ export function PackageDiscoveryCard({ pkg, className }: PackageDiscoveryCardPro
   return (
     <Card
       className={cn(
-        "cursor-pointer hover:shadow-lg transition-all border-0 overflow-hidden pt-0 active:scale-[0.97]",
+        "cursor-pointer hover:shadow-[var(--sh-3)] transition-all border-0 overflow-hidden pt-0 active:scale-[0.97]",
         className,
       )}
       onClick={() => router.push(`/packages/browse/${pkg.id}`)}

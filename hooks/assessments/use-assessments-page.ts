@@ -396,7 +396,9 @@ export function useAssignedAssessments(leadId: string | null) {
   return useSWR<AssignedAssessmentItem[]>(
     leadId ? assignedAssessmentsKey(leadId) : null,
     async () => {
-      const res = await patientAssignedContentControllerListAssigned();
+      const res = await patientAssignedContentControllerListAssigned({
+        path: { campus: "cadabams" },
+      });
       if (res.error) throw new Error(JSON.stringify(res.error));
       const data = res.data as AssignedContentResponse | undefined;
       const row = data?.items?.[0];

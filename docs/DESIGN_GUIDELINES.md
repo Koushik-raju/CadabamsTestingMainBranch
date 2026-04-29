@@ -1,12 +1,12 @@
 # Design Guidelines — Cadabams Consult Frontend
 
-## Style Name: Compact Card UI
+## Style Name: Compact Card UI — Neo
 
-This app uses a **Compact Card UI** style — a mobile-first design language common in modern health and wellness apps (similar to Material You / iOS Health). The core idea is:
+This app uses a **Compact Card UI** style — a mobile-first design language for health and wellness apps. The visual language is **neo**: warm cream surfaces, heavy rounding, layered soft shadows, glassmorphic overlays on the header, and a coral-orange brand that glows on interactive elements.
 
-> **Grouped list cards + gradient accent tiles replace individual item cards and images.**
+> **Grouped list cards + gradient accent tiles + soft depth layers replace individual item cards and images.**
 
-Content without images gets visual identity through **colored gradient icon tiles** derived from its type or category. Layouts are tight, scannable, and thumb-friendly.
+Content without images gets visual identity through **colored gradient icon tiles**. Layouts are tight, scannable, and thumb-friendly. Depth is created through shadow stacking, not borders.
 
 ---
 
@@ -254,22 +254,88 @@ Match the shape of the real content exactly so there is no layout shift.
 
 ---
 
-## 11. Color Tokens
+## 11. Color System
 
-**Never use raw hex, rgb, or hsl values.** Use only theme tokens:
+**Never use raw hex, rgb, or hsl values in JSX className.** Use theme tokens or the `--mt-*` custom properties. Gradient tile classes are the only exception.
 
-| Token | Use |
-|---|---|
-| `bg-background` | Page background |
-| `bg-card` | Card surface |
-| `bg-muted` | Subtle surface, icon containers in empty states |
-| `text-foreground` | Primary text, headings |
-| `text-muted-foreground` | Secondary text, meta |
-| `bg-primary` / `text-primary` | Brand color, accents, unread dots |
-| `border` | Default border |
-| `bg-destructive` / `text-destructive` | Errors, delete actions |
+### Surface stack (light, bottom → top)
 
-Gradient classes (`from-violet-500 to-purple-600` etc.) are the **only** exception to the token rule — they are used exclusively for icon tiles and hero cards, not for text or backgrounds.
+| Token / var | Hex | Use |
+|---|---|---|
+| `bg-background` / `--mt-cream-bg` | `#faf7f4` | Page canvas — every screen |
+| `--mt-cream-soft` | `#fbf5ef` | Secondary surfaces, AI tint areas |
+| `bg-muted` / `--mt-fog` | `#f4f2ee` | Disabled/locked tiles, sunken wells |
+| `bg-card` / `--mt-cream-card` | `#ffffff` | Cards, modals, elevated sheets |
+
+Always layer in this order — never skip a level (e.g. don't put a card-colored element directly on cream without a shadow).
+
+### Text scale
+
+| Token / var | Hex | Use |
+|---|---|---|
+| `text-foreground` / `--mt-ink-900` | `#0e1726` | Headings, primary labels |
+| `--mt-ink-800` | `#1c2433` | Dark CTA text, hero card text |
+| `--mt-ink-600` | `#4a5260` | Secondary body text |
+| `text-muted-foreground` / `--mt-ink-500` | `#6b7280` | Meta, timestamps |
+| `--mt-ink-400` | `#9aa0ab` | Placeholder text |
+| `--mt-ink-300` | `#c7ccd3` | Dividers on white |
+
+### Brand orange scale
+
+| Token | Hex | Use |
+|---|---|---|
+| `--mt-orange-50` | `#fff4ec` | Hover wash on white |
+| `--mt-orange-100` / `bg-accent` | `#ffe4d2` | Soft accent badges |
+| `--mt-orange-200` | `#ffc9a6` | — |
+| `--mt-orange-300` | `#ffa875` | — |
+| `--mt-orange-400` | `#ff8a47` | — |
+| `--mt-orange-500` / `bg-primary` | `#f97316` | **Primary CTA** |
+| `--mt-orange-600` | `#e8620a` | Pressed / active state |
+| `--mt-orange-700` / `text-accent-foreground` | `#d8670e` | Logo, deep brand |
+| `--mt-orange-800` | `#a8480a` | — |
+| `--mt-orange-900` | `#6e2f08` | On-dark text |
+
+### Coral / pink accent
+
+| Token | Hex | Use |
+|---|---|---|
+| `--mt-pink-300` | `#fbb7bc` | Avatar fallback gradient start |
+| `--mt-pink-400` | `#f58f9a` | Gradient greeting start |
+| `--mt-coral-300` | `#ff9c8a` | Soft gradient midpoint |
+| `--mt-coral-400` | `#f77268` | Gradient greeting mid, CTA gradient start |
+
+### Borders and hairlines
+
+| Token / var | Hex | Use |
+|---|---|---|
+| `border` / `--mt-line` | `#ece6de` | Default card border, input border |
+| `--mt-line-soft` | `#f1ece5` | Softer row separator on cream |
+| `--mt-ink-300` | `#c7ccd3` | Divider on a white card surface |
+
+Always use `border border-[--mt-line]` (or `border-border`) on cards. Never `border-gray-*`.
+
+### Semantic status colors
+
+| Token | Hex | Use |
+|---|---|---|
+| `--mt-success` / `--mt-success-bg` | `#1f8b4c` / `#e6f4ea` | Success badges |
+| `--mt-warning` / `--mt-warning-bg` | `#c9531a` / `#ffe9d9` | Warnings |
+| `--mt-danger` / `--mt-danger-bg` | `#dc4b45` / `#fce4e2` | Destructive |
+| `--mt-info` / `--mt-info-bg` | `#2c7be5` / `#e8f1ff` | Info banners |
+
+### Gradients
+
+Never inline gradient values — always use the CSS variable:
+
+| Variable | Value | Use |
+|---|---|---|
+| `var(--mt-gradient-greeting)` | `135deg, #f58f9a → #f77268 → #f97316` | Home header banner only |
+| `var(--mt-gradient-hero)` | `120deg, #f77268 → #ff9466 → #f97316` | Featured / hero cards |
+| `var(--mt-gradient-cta)` | `90deg, #f77268 → #f97316` | CTA buttons |
+| `var(--mt-gradient-orange-soft)` | `180deg, #ffe4d2 → #faf7f4` | Soft section backgrounds |
+| `var(--mt-gradient-coral-pink)` | `90deg, #f77268 → #fbb7bc` | Decorative accents |
+
+Gradient tile classes (`from-violet-500 to-purple-600` etc.) are the **only** Tailwind color classes that may bypass the token rule — used exclusively for icon tiles and hero cards.
 
 ---
 
@@ -286,7 +352,155 @@ Gradient classes (`from-violet-500 to-purple-600` etc.) are the **only** excepti
 
 ---
 
-## 13. Spacing Conventions
+## 13. Shadow System
+
+**Shadows create depth — never hard drop shadows, never outlines for elevation.** All shadows use a cool-navy base tint (`rgba(15,23,42,…)`) except brand glows which use orange.
+
+### Elevation scale
+
+| Token | CSS value | When to use |
+|---|---|---|
+| `--sh-1` | `0 1px 2px rgba(15,23,42,.04), 0 1px 1px rgba(15,23,42,.03)` | Row items, inline badges, chips |
+| `--sh-2` | `0 2px 6px rgba(15,23,42,.05), 0 6px 16px rgba(15,23,42,.04)` | Cards, input fields, grouped lists |
+| `--sh-3` | `0 8px 24px rgba(15,23,42,.08), 0 2px 6px rgba(15,23,42,.04)` | Modals, bottom sheets, floating bars |
+| `--sh-glow-orange` | `0 12px 28px rgba(249,115,22,.28)` | Primary CTA buttons, active mood circle |
+| `--sh-glow-soft` | `0 8px 24px rgba(247,114,104,.18)` | Hero cards, header AI bar |
+| `--sh-press` | `inset 0 1px 2px rgba(15,23,42,.08)` | Pressed/active state inset |
+
+### Usage in Tailwind
+
+Use `shadow-[var(--sh-N)]` syntax since these are not Tailwind default shadows:
+
+```tsx
+// Card — level 2
+<Card className="shadow-[var(--sh-2)] border border-border">
+
+// Floating AI bar — level 3 with soft glow
+<div className="shadow-[var(--sh-glow-soft)] border border-[--mt-line]">
+
+// Orange CTA button — brand glow
+<button className="shadow-[var(--sh-glow-orange)] bg-primary text-white">
+
+// Inset press feedback
+<button className="active:shadow-[var(--sh-press)]">
+```
+
+### Rules
+
+- **Cards on cream** → always `--sh-2`. Never borderless + shadowless — the separation must be visible.
+- **Cards on white** (e.g. inside a modal) → `--sh-1` or just `border-border` — don't stack heavy shadows in an already-elevated context.
+- **Floating elements** (AI bar, FAB, bottom sheet handle) → `--sh-3`.
+- **Brand CTA** → `--sh-glow-orange`. Regular secondary buttons → `--sh-1` only.
+- **Never** use Tailwind `shadow-md`, `shadow-lg`, etc. — they use the wrong tint and don't match the design system.
+
+---
+
+## 13a. Border Radius (Edge) System
+
+The design language uses **heavy, consistent rounding**. Every element should map to the scale below — never freestyle `rounded-[17px]` values.
+
+### Radius scale
+
+| Token | px | Tailwind equivalent | Use |
+|---|---|---|---|
+| `--r-xs` | 6px | `rounded` | Tiny chips, micro badges |
+| `--r-sm` | 10px | `rounded-lg` | Input fields, small buttons |
+| `--r-md` | 14px | `rounded-xl` | Standard buttons, tags, inputs |
+| `--r-lg` | 18px | `rounded-2xl` | Icon tiles (gradient tiles), row avatars |
+| `--r-xl` | 24px | `rounded-3xl` | Cards, list containers |
+| `--r-2xl` | 32px | `rounded-[32px]` | Hero cards, home header bottom edge |
+| `--r-3xl` | 40px | `rounded-[40px]` | Full-screen modals, large sheets |
+| `--r-pill` | 999px | `rounded-full` | Pill badges, mood selector, avatar circles, FABs |
+
+### Canonical shapes per component type
+
+| Component | Radius |
+|---|---|
+| Gradient icon tile | `rounded-2xl` (`--r-lg`) |
+| List / grouped card | `rounded-3xl` (`--r-xl`) |
+| Input field | `rounded-xl` (`--r-md`) |
+| Standard button | `rounded-xl` (`--r-md`) |
+| CTA / primary button | `rounded-full` (`--r-pill`) |
+| Status badge / chip | `rounded-full` (`--r-pill`) |
+| Hero / featured card | `rounded-[32px]` (`--r-2xl`) |
+| Home header bottom | `rounded-b-[32px]` (`--r-2xl`) |
+| Bottom sheet top | `rounded-t-[32px]` (`--r-2xl`) |
+| Avatar circle | `rounded-full` |
+| Notification dot | `rounded-full` |
+| Modal / sheet | `rounded-[40px]` top only |
+
+### Rules
+
+- **Consistency over convenience** — if a new component doesn't map cleanly, pick the nearest step down.
+- **Never mix rounding within a single component** — if the outer container is `rounded-3xl`, inner tiles must be smaller (`rounded-2xl`), not equal or larger.
+- **Bottom edge rounding** — use `rounded-b-[32px]` for the home header. Use `rounded-t-[32px]` for bottom sheets and drawers. Never `rounded-t-lg` on a bottom sheet.
+
+---
+
+## 13b. Glassmorphism (Header Overlays)
+
+The home header is the only surface that uses frosted-glass overlays. These values are specific — do not approximate.
+
+### Glass layer recipe
+
+```tsx
+// Frosted pill (mood selector, overlay controls on gradient)
+className="bg-white/15 backdrop-blur-md border border-white/10"
+
+// Slightly stronger glass (notification/bell button)
+className="bg-white/15 hover:bg-white/25"
+
+// Avatar border on gradient
+className="border-2 border-white/40"
+
+// Subtle tint on gradient (decorative circles)
+className="bg-white/10"   // top decorative
+className="bg-white/5"    // bottom decorative
+```
+
+### Rules
+
+- `backdrop-blur-md` only — `backdrop-blur-sm` is too weak, `backdrop-blur-lg` too heavy for mobile.
+- White opacity layers: `bg-white/5` → `bg-white/10` → `bg-white/15` → `bg-white/25`. Never exceed `/25` or the frost reads as opaque.
+- Glass elements only appear over gradient surfaces. Never on cream or card surfaces — use a border + shadow instead.
+- Do **not** add `backdrop-blur` to cards that sit on the main page — only on elements that float over the gradient header.
+
+---
+
+## 14a. Motion & Interaction
+
+| Duration var | Value | Use |
+|---|---|---|
+| `--dur-fast` | 140ms | Press feedback (scale, bg flash) |
+| `--dur-base` | 220ms | State transitions (color, opacity) |
+| `--dur-slow` | 380ms | Hero reveals, sheet slides |
+
+| Easing var | Value | Use |
+|---|---|---|
+| `--ease-out` | `cubic-bezier(0.22, 0.61, 0.36, 1)` | Entrances, tap releases |
+| `--ease-in-out` | `cubic-bezier(0.65, 0, 0.35, 1)` | Crossfades, toggles |
+
+**Standard press feedback pattern** (all tappable elements):
+
+```tsx
+// Cards
+className="active:scale-[0.97] transition-transform duration-[140ms]"
+
+// Hero cards
+className="active:scale-[0.98] transition-all"
+
+// Rows
+className="transition-colors hover:bg-muted/50 active:bg-muted"
+
+// Icon buttons (bell, avatar)
+className="transition-transform duration-[140ms] active:scale-95"
+```
+
+Never use `cursor-pointer` alone — always pair with a `transition-*` + `active:` class.
+
+---
+
+## 15. Spacing Conventions
 
 | Context | Class |
 |---|---|
@@ -300,11 +514,26 @@ Gradient classes (`from-violet-500 to-purple-600` etc.) are the **only** excepti
 
 ---
 
-## 14. What NOT to Do
+## 16. What NOT to Do
 
-- Do not use `home-header-gradient` on inner pages — that class is only for the home screen `HomeHeader` component.
-- Do not render one `<Card>` per list item in a list — always group with `<Separator>`.
-- Do not use `<ArrowLeft>` + raw `Button` for back navigation — always use `<BackButton>`.
-- Do not hardcode colors — no `#hex`, `rgb()`, or `hsl()` values in className.
+**Colors**
+- Do not hardcode hex, rgb, or hsl in `className` — use tokens or CSS vars.
+- Do not use Tailwind gray/slate/zinc color scales for text or surfaces — use `--mt-ink-*` tokens.
+- Do not use `border-gray-*` — always `border-border` or `border-[--mt-line]`.
+
+**Shadows**
+- Do not use Tailwind's built-in `shadow-sm`, `shadow-md`, `shadow-lg` — they use the wrong tint. Use `shadow-[var(--sh-N)]`.
+- Do not add `--sh-glow-orange` to non-CTA elements — brand glow is reserved for primary actions and active states.
+- Do not apply `backdrop-blur` to cards on cream — only to overlays on the gradient header.
+
+**Edges / radius**
+- Do not use freestyle border radius values (`rounded-[17px]`) — always pick from the `--r-*` scale.
+- Do not use `rounded-md` (Tailwind default 6px) for cards — minimum card radius is `rounded-3xl`.
+- Do not mix equal rounding between an outer container and its children — children must always be one step smaller.
+
+**Layout**
+- Do not use `home-header-gradient` on inner pages — home `HomeHeader` only.
+- Do not render one `<Card>` per list item — group with `<Separator>`.
+- Do not use `<ArrowLeft>` + raw `Button` for back navigation — use `<BackButton>`.
 - Do not add `pt-12` or `pt-safe-top` to inner page headers — use `pt-5`.
-- Do not skip the decorative `bg-white/10` circle on gradient tiles — it is part of the visual language.
+- Do not skip the decorative `bg-white/10` circle on gradient icon tiles.

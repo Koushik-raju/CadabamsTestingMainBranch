@@ -1,3 +1,39 @@
+/**
+ * FILE: app/(public)/auth/login/page.tsx
+ *
+ * PURPOSE:
+ *   Public login page for existing users. Implements two-step OTP-based authentication:
+ *   step 1 accepts a phone number, step 2 verifies a 4-digit OTP sent to that number.
+ *
+ * LOGIC OVERVIEW:
+ *   Form state tracks "phone" (initial) and "otp" (verification) steps. Step 1 sends an OTP
+ *   via sendOtp hook. If user not found (404), shows a modal offering signup. Step 2 renders
+ *   OTP input that auto-submits on completion. Successful verification calls login() and
+ *   redirects to /home. Timer countdown shown for resend eligibility (30 sec). Step progress
+ *   bar updates visually as user progresses. Dialog handles account not found redirect to signup.
+ *
+ * KEY VARIABLES / PROPS / EXPORTS:
+ *   step              — "phone" | "otp"; controls which form is displayed
+ *   otp               — String of digits entered (auto-verifies at length 4)
+ *   timer             — Countdown in seconds until OTP can be resent
+ *   country           — Selected Country object for formatting phone numbers
+ *   redirectModal     — Boolean controlling account-not-found modal
+ *   onSendOtp         — Submits phone to sendOtp hook, sets step to "otp", starts timer
+ *   handleVerifyOtp   — Submits OTP to verifyLogin hook, calls login(), redirects on success
+ *   LoginPage         — Page export; wraps LoginContent in Suspense with skeleton fallback
+ *   LoginContent      — Main component rendering the login form
+ *
+ * DEPENDENCIES:
+ *   useAuth, useAuthActions hooks for authentication flows
+ *   SWR hooks: sendOtp, verifyLogin
+ *   react-hook-form + zod for form validation
+ *   react-toastify for error/success notifications
+ *   shadcn/ui primitives: Card, Button, Input, Dialog, Separator, Skeleton
+ *   lucide-react icons: ArrowLeft, Heart
+ *
+ * LAST UPDATED: 2026-04-28 — Neo design system: file header added
+ */
+
 "use client";
 
 import { OTPInput } from "@/components/common/otp-input";

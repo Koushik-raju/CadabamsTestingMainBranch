@@ -1,3 +1,26 @@
+/**
+ * FILE: app/(public)/term-and-condition/page.tsx
+ *
+ * PURPOSE:
+ *   Static terms and conditions page. Outlines the legal terms governing use of the
+ *   application. Accessible from the public login/signup pages.
+ *
+ * LOGIC OVERVIEW:
+ *   Renders a static article with structured terms and conditions content. Includes a back link
+ *   to the home page. The page metadata sets SEO title and description. Content is hard-coded
+ *   as numbered sections covering introduction, usage rights, limitations, liability, and more.
+ *
+ * KEY VARIABLES / PROPS / EXPORTS:
+ *   metadata              — Next.js page metadata object with title and description
+ *   TermsAndConditionsPage — Page export; renders the terms and conditions article with metadata
+ *
+ * DEPENDENCIES:
+ *   Next.js: Link component for navigation
+ *   lucide-react icons: ChevronLeft
+ *
+ * LAST UPDATED: 2026-04-28 — Neo design system: file header added
+ */
+
 import { ChevronLeft } from "lucide-react";
 import Link from "next/link";
 

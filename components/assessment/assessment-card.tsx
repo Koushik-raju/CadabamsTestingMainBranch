@@ -21,11 +21,13 @@
  *   getCategoryInfo — maps assessment type to icon, bgColor, textColor
  *   lucide-react, Card, CardContent, Link
  *
- * LAST UPDATED: 2026-04-28 — Design system migration: --mt-tint-* colors,
- *   dark hero card, sentence-case labels, Private & Confidential note
+ * LAST UPDATED: 2026-04-28 — Neo design system: white bg-card cards with gradient icon tiles,
+ *   token-based colors, shadow scale; removed pastel card backgrounds
  */
 
 "use client";
+import { GlyphTile, TINTS } from "@/components/shared/glyph-tile";
+
 import type { AssessmentItem } from "@/hooks/use-assessments";
 import { CalendarClock, ChevronRight, Clock3, FileText, HelpCircle, Lock } from "lucide-react";
 import Link from "next/link";
@@ -47,41 +49,37 @@ function extractHintCategory(hint: string | null): string | null {
 
 /* Plain row — used in search results list */
 export function AssessmentCard({ assessment, onClick }: AssessmentCardProps) {
-  const { icon: Icon, bgColor, textColor } = getCategoryInfo(assessment);
+  const { icon: Icon, tint } = getCategoryInfo(assessment);
   const hintCategory = extractHintCategory(assessment.hint);
   const minutes = assessment.landingTitle?.minutes;
 
   return (
     <div
-      className="flex items-center gap-3 py-3 cursor-pointer transition-colors hover:bg-[#F4F2EE] active:bg-[#ECE6DE] rounded-[14px] px-2"
+      className="flex items-center gap-3 py-3 cursor-pointer transition-colors hover:bg-muted active:bg-muted/80 rounded-[14px] px-2"
       onClick={() => onClick(assessment)}
       role="button"
       tabIndex={0}
       aria-label={assessment.title}
       onKeyDown={(e) => e.key === "Enter" && onClick(assessment)}
     >
-      {/* Glyph tile using --mt-tint-* colors from getCategoryInfo */}
-      <div
-        className={`w-12 h-12 ${bgColor} rounded-[12px] flex items-center justify-center flex-shrink-0`}
-      >
-        <Icon className={`w-6 h-6 ${textColor}`} />
-      </div>
+      <GlyphTile icon={Icon} tint={tint} />
       <div className="flex-1 min-w-0">
-        <p className="text-[15px] font-semibold text-[#0E1726] leading-snug truncate">
+        <p className="text-[15px] font-semibold text-foreground leading-snug truncate">
           {assessment.title}
         </p>
-        <p className="text-[12px] text-[#6B7280] mt-0.5">
+        <p className="text-[12px] text-muted-foreground mt-0.5">
           {[hintCategory, minutes ? `${minutes} min` : null].filter(Boolean).join(" · ")}
         </p>
       </div>
-      <ChevronRight className="w-4 h-4 flex-shrink-0" style={{ color: "#9AA0AB" }} />
+      <ChevronRight className="w-4 h-4 text-muted-foreground flex-shrink-0" />
     </div>
   );
 }
 
-/* Grid tile — 2-column layout on the assessments screen */
+/* Grid tile — full-width card on the assessments screen */
 export function AssessmentGridCard({ assessment, onClick }: AssessmentCardProps) {
-  const { icon: Icon, bgColor, textColor } = getCategoryInfo(assessment);
+  const { icon: Icon, tint } = getCategoryInfo(assessment);
+  const { bg, fg } = TINTS[tint];
   const hintCategory = extractHintCategory(assessment.hint);
   const minutes = assessment.landingTitle?.minutes;
   const questionCount = assessment.landingTitle?.numberOfQuestion || assessment.Questions?.length;
@@ -89,54 +87,47 @@ export function AssessmentGridCard({ assessment, onClick }: AssessmentCardProps)
 
   return (
     <div
-      className={`${bgColor} rounded-[20px] p-4 cursor-pointer active:scale-[0.97] transition-transform duration-[140ms] overflow-hidden relative`}
+      className="bg-card rounded-3xl border border-border shadow-[var(--sh-2)] p-4 cursor-pointer active:scale-[0.97] transition-transform duration-[140ms] overflow-hidden"
       onClick={() => onClick(assessment)}
       role="button"
       tabIndex={0}
       aria-label={assessment.title}
       onKeyDown={(e) => e.key === "Enter" && onClick(assessment)}
     >
-      {/* Soften the pastel bg */}
-      <div className="absolute inset-0 bg-white/35 rounded-[20px] pointer-events-none" />
-
-      {/* Header: glyph tile + title + chevron */}
-      <div className="flex items-start gap-3 relative z-10">
-        <div className="w-11 h-11 bg-white/60 backdrop-blur-sm rounded-[12px] flex items-center justify-center flex-shrink-0">
-          <Icon className={`w-5 h-5 ${textColor}`} />
-        </div>
+      {/* Header: GlyphTile + title + chevron */}
+      <div className="flex items-start gap-3">
+        <GlyphTile icon={Icon} tint={tint} />
         <div className="flex-1 min-w-0 pt-0.5">
-          <p className="text-[14px] font-bold text-[#0E1726] leading-snug">{assessment.title}</p>
+          <p className="text-[14px] font-bold text-foreground leading-snug">{assessment.title}</p>
           {hintCategory && (
             <span
-              className={`inline-block text-[10px] font-semibold ${textColor} bg-white/50 px-2 py-0.5 rounded-full mt-1`}
+              className="inline-block text-[10px] font-semibold px-2 py-0.5 rounded-full mt-1"
+              style={{ background: bg, color: fg }}
             >
               {hintCategory}
             </span>
           )}
         </div>
-        <ChevronRight className={`w-4 h-4 ${textColor} opacity-50 flex-shrink-0 mt-0.5`} />
+        <ChevronRight className="w-4 h-4 text-muted-foreground flex-shrink-0 mt-0.5" />
       </div>
 
       {/* Description */}
       {description && (
-        <p className="text-[12px] text-[#0E1726]/65 mt-3 leading-relaxed line-clamp-3 relative z-10">
+        <p className="text-[12px] text-muted-foreground mt-3 leading-relaxed line-clamp-3">
           {description}
         </p>
       )}
 
       {/* Footer */}
-      <div
-        className="flex items-center gap-3 mt-3 pt-3 relative z-10"
-        style={{ borderTop: "1px solid rgba(0,0,0,0.07)" }}
-      >
+      <div className="flex items-center gap-3 mt-3 pt-3 border-t border-border">
         {minutes != null && (
-          <span className={`flex items-center gap-1 text-[11px] font-medium ${textColor}`}>
+          <span className="flex items-center gap-1 text-[11px] font-medium text-muted-foreground">
             <Clock3 className="w-3 h-3" />
             {minutes} min
           </span>
         )}
         {questionCount && (
-          <span className={`flex items-center gap-1 text-[11px] font-medium ${textColor}`}>
+          <span className="flex items-center gap-1 text-[11px] font-medium text-muted-foreground">
             <HelpCircle className="w-3 h-3" />
             {questionCount} questions
           </span>
@@ -145,7 +136,8 @@ export function AssessmentGridCard({ assessment, onClick }: AssessmentCardProps)
           href={`/assessments/${assessment.id}/reports`}
           onClick={(e) => e.stopPropagation()}
           aria-label="View previous reports"
-          className={`ml-auto flex items-center gap-1 text-[11px] font-semibold ${textColor} bg-white/70 hover:bg-white px-2 py-1 rounded-full transition-colors`}
+          className="ml-auto flex items-center gap-1 text-[11px] font-semibold rounded-full px-2 py-1 transition-colors"
+          style={{ background: bg, color: fg }}
         >
           <FileText className="w-3 h-3" />
           Reports

@@ -21,7 +21,7 @@
  *   useAuth — user identity for lead_id and caller_name
  *   PageHeader — shared navigation header
  *
- * LAST UPDATED: 2026-04-23 — migrated custom header div to PageHeader; added file header
+ * LAST UPDATED: 2026-04-28 — Neo design system: shadow scale, color tokens, border radius
  */
 "use client";
 
@@ -206,7 +206,7 @@ function SelectedPackageContent() {
 
             <div className="flex items-center justify-between p-4 rounded-xl bg-muted">
               <div className="flex items-center gap-3">
-                <div className="p-2 bg-background rounded-lg">
+                <div className="p-2 bg-background rounded-xl">
                   <IndianRupee className="w-5 h-5 text-primary" />
                 </div>
                 <div>
@@ -219,7 +219,7 @@ function SelectedPackageContent() {
               </p>
             </div>
 
-            <div className="flex items-start gap-3 p-3 rounded-lg bg-muted/50">
+            <div className="flex items-start gap-3 p-3 rounded-3xl bg-muted/50">
               <Shield className="w-4 h-4 text-muted-foreground mt-0.5 shrink-0" />
               <div>
                 <p className="text-sm font-medium text-foreground">Secure Payment</p>
