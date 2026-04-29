@@ -20,18 +20,18 @@
  * DEPENDENCIES:
  *   lucide-react icons, shadcn Card / Skeleton / Separator
  *
- * LAST UPDATED: 2026-04-29 — match section header chip styling to the home
- *   growth widget's recent-item tiles: pastel bg-{color}-50 with text-{color}-700
- *   icon instead of solid fill + white icon.
+ * LAST UPDATED: 2026-04-29 — replaced inline icon chip with shared GlyphTile
+ *   (canonical brand-tinted tile) for section headers.
  */
 "use client";
 
+import { GlyphTile, type TintKey } from "@/components/shared/glyph-tile";
 import { Card, CardContent } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
 import type { GrowthDay } from "@/hooks/growth/use-growth";
-import { cn } from "@/lib/utils";
 import { ClipboardList, MapIcon, MessageSquare, NotebookPen } from "lucide-react";
+import type { ElementType } from "react";
 import ReactMarkdown, { type Components } from "react-markdown";
 
 /**
@@ -83,24 +83,20 @@ function formatTime(iso: string): string {
 
 function Section({
   title,
-  icon: Icon,
-  bg,
+  icon,
   tint,
   children,
 }: {
   title: string;
-  icon: React.ComponentType<{ className?: string; strokeWidth?: number }>;
-  bg: string;
-  tint: string;
+  icon: ElementType;
+  tint: TintKey;
   children: React.ReactNode;
 }) {
   return (
     <div className="px-4 mb-6">
       <div className="flex items-center gap-2 mb-3">
-        <div className={cn("w-8 h-8 rounded-lg flex items-center justify-center", bg)}>
-          <Icon className={cn("w-4 h-4", tint)} strokeWidth={2.5} />
-        </div>
-        <h3 className={cn("text-sm font-bold", tint)}>{title}</h3>
+        <GlyphTile icon={icon} tint={tint} size="sm" />
+        <h3 className="text-sm font-bold text-foreground">{title}</h3>
       </div>
       <Card>
         <CardContent className="py-0 px-3">{children}</CardContent>
@@ -172,7 +168,7 @@ export function DayFeed({ day, isLoading, onOpenItem }: Props) {
   return (
     <div className="pb-20">
       {day.journeys.length > 0 && (
-        <Section title="Journey activity" icon={MapIcon} bg="bg-emerald-50" tint="text-emerald-700">
+        <Section title="Journey activity" icon={MapIcon} tint="green">
           {day.journeys.map((item, i) => {
             // Journey day rows render like the legacy app: journey name as
             // the title, "Self-Reflection (Day N)" as a small subtitle, no
@@ -205,7 +201,7 @@ export function DayFeed({ day, isLoading, onOpenItem }: Props) {
       )}
 
       {day.journals.length > 0 && (
-        <Section title="Journals" icon={NotebookPen} bg="bg-sky-50" tint="text-sky-700">
+        <Section title="Journals" icon={NotebookPen} tint="blue">
           {day.journals.map((item, i) => {
             // Build Q&A pairs from prompts when present. The legacy
             // /self-journalings shape stores `entryText` as the prompt
@@ -250,12 +246,7 @@ export function DayFeed({ day, isLoading, onOpenItem }: Props) {
       )}
 
       {day.assessments.length > 0 && (
-        <Section
-          title="Assessments & mood"
-          icon={ClipboardList}
-          bg="bg-violet-50"
-          tint="text-violet-700"
-        >
+        <Section title="Assessments & mood" icon={ClipboardList} tint="purple">
           {day.assessments.map((item, i) => (
             // Match legacy /growth — assessment modal renders only the LLM
             // analysis markdown. Raw Q&A pairs aren't useful here because
@@ -288,7 +279,7 @@ export function DayFeed({ day, isLoading, onOpenItem }: Props) {
       )}
 
       {day.chatSummaries.length > 0 && (
-        <Section title="Chat summary" icon={MessageSquare} bg="bg-indigo-50" tint="text-indigo-700">
+        <Section title="Chat summary" icon={MessageSquare} tint="peach">
           {day.chatSummaries.map((item, i) => (
             <Row
               key={item.id}
