@@ -25,7 +25,7 @@
  *   useBooking — BookingContext for saving selection before checkout
  *   PageHeader — shared navigation header
  *
- * LAST UPDATED: 2026-04-28 — Neo design system: shadow scale, color tokens, border radius
+ * LAST UPDATED: 2026-04-29 — Pass consultation_type_ids to crmControllerGetSlots so online/offline toggle actually filters slots by type
  */
 "use client";
 
@@ -186,6 +186,7 @@ function BookingContent() {
           query: {
             doctor_id: Number(doctor_id),
             availability: "open",
+            consultation_type_ids: consultTypeId,
           },
         });
         setSlots(Array.isArray(res.data) ? (res.data as SlotResponseDto[]) : []);
