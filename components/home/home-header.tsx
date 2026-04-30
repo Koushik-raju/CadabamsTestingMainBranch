@@ -9,8 +9,8 @@
  *   1. Derives firstName and profileImage from the auth session.
  *   2. Renders a coral→orange gradient banner (--mt-gradient-greeting) with the
  *      greeting text (sentence case, mt-h2 + display name), mood row, and AI bar.
- *   3. Mood selector: 5 emoji faces in a frosted pill. Active mood = orange filled
- *      circle. Tapping fires onMoodClick with the mood index (1-5).
+ *   3. Mood selector: 5 emoji faces in a frosted pill. Tapping a face navigates
+ *      to /mood-tracker?mood=<1-5> so the tracker pre-selects that mood.
  *   4. AI input bar: white floating card overlapping the content below. Empty =
  *      mic icon; typed text = orange send icon. Enter or tap send opens /chat/thread.
  *   5. The banner uses rounded-b-[32px] so the card section below sits flush.
@@ -18,16 +18,15 @@
  * KEY VARIABLES / PROPS / EXPORTS:
  *   firstName        — first word of user.name, or "There" as fallback
  *   profileImage     — user profile image URL (may be absent)
- *   currentMoodId    — active mood index from moodTracker API (1–5)
  *   inputText        — controlled state for the Dr. Riya input bar
  *   handleSend       — creates UUID thread and navigates to /chat/thread/<id>?q=
  *
  * DEPENDENCIES:
  *   useAuth() — provides user.name and profile_image
- *   useRouter() — navigation on send
+ *   useRouter() — navigation on send and mood pill tap
  *
- * LAST UPDATED: 2026-04-28 — Full redesign: coral-orange gradient, design-system
- *   type scale, mood row with orange active state, correct AI bar styling
+ * LAST UPDATED: 2026-04-30 — Mood pill now navigates to /sleep-tracker; removed
+ *   per-mood selection state and onMoodClick prop.
  */
 
 "use client";
@@ -38,15 +37,10 @@ import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 
-interface Props {
-  moodTracker?: Array<{ simily?: { id: number } }>;
-  onMoodClick?: (moodId: number) => void;
-}
-
 /* Mood faces per design system spec — emoji only in the mood-faces selector */
 const MOODS = ["😣", "😔", "😀", "😊", "😄"];
 
-export function HomeHeader({ moodTracker, onMoodClick }: Props) {
+export function HomeHeader() {
   const router = useRouter();
   const { user } = useAuth();
   const [inputText, setInputText] = useState("");
@@ -54,7 +48,6 @@ export function HomeHeader({ moodTracker, onMoodClick }: Props) {
   const name = (user?.name as string | undefined) ?? "There";
   const firstName = name.split(" ")[0];
   const profileImage = user?.profile_image as string | undefined;
-  const currentMoodId = moodTracker?.[0]?.simily?.id;
 
   /* Navigate to a fresh thread and pass the typed question as ?q= so the
    * thread page can auto-send it as the first message. */
@@ -136,35 +129,28 @@ export function HomeHeader({ moodTracker, onMoodClick }: Props) {
           </p>
         </div>
 
-        {/* ── Mood emoji row — active mood = orange filled circle ── */}
-        <button
-          onClick={() => onMoodClick?.(currentMoodId ?? 3)}
-          className="flex items-center gap-3 bg-white/15 backdrop-blur-md rounded-full px-4 py-2.5 border border-white/10 w-fit hover:bg-white/22 transition-colors duration-[140ms]"
-          aria-label="Select your mood"
-        >
+        {/* ── Mood emoji row — each emoji navigates to /sleep-tracker with its mood id ── */}
+        <div className="flex items-center gap-3 bg-white/15 backdrop-blur-md rounded-full px-4 py-2.5 border border-white/10 w-fit">
           <span className="text-[10px] font-bold text-white/80 uppercase tracking-widest whitespace-nowrap">
             Tap your mood
           </span>
           <div className="flex gap-2">
             {MOODS.map((emoji, i) => {
               const moodId = i + 1;
-              const isSelected = currentMoodId === moodId;
               return (
-                <span
+                <button
                   key={i}
-                  className={[
-                    "text-xl transition-all duration-[220ms] select-none",
-                    isSelected
-                      ? "bg-[#F97316] rounded-full w-8 h-8 flex items-center justify-center scale-110 shadow-[0_4px_10px_rgba(249,115,22,0.4)]"
-                      : "opacity-80 hover:opacity-100 hover:scale-110",
-                  ].join(" ")}
+                  type="button"
+                  onClick={() => router.push(`/mood-tracker?mood=${moodId}`)}
+                  aria-label={`Log mood ${moodId}`}
+                  className="text-xl opacity-80 transition-all duration-[220ms] select-none hover:opacity-100 hover:scale-110 active:scale-95"
                 >
                   {emoji}
-                </span>
+                </button>
               );
             })}
           </div>
-        </button>
+        </div>
 
         {/* ── AI input bar — floats down over the card section below ── */}
         <div className="mt-1 mb-[-28px] z-50">

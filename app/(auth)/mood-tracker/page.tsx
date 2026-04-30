@@ -24,8 +24,8 @@
  *   useMoodTrackerAssessment, submitMoodEntry, SmileySelector, DotChooser,
  *   PageHeader, Button, Skeleton, Textarea.
  *
- * LAST UPDATED: 2026-04-28 — wire SmileySelector + DotChooser using live CMS
- *   questions for assessment id avym73d4x6258t3ligurl56r.
+ * LAST UPDATED: 2026-04-30 — read ?mood=<1-5> query param to pre-select the
+ *   smiley when navigated from the home hero mood pill.
  */
 "use client";
 
@@ -36,19 +36,29 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { submitMoodEntry, useMoodTrackerAssessment } from "@/hooks/mood-tracker/use-mood-tracker";
 import { BarChart3 } from "lucide-react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useMemo, useState } from "react";
 
 const MAX_FEELINGS = 5;
 
 export default function MoodTrackerPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { smileyQuestion, bubbleQuestion, isLoading } = useMoodTrackerAssessment();
+
+  /* Pre-select a smiley if the home hero pill linked here with ?mood=<1-5>.
+   * Mood 1-5 maps to SmileySelector's 0-4 index. Out-of-range or missing
+   * values fall back to -1 (no selection required). */
+  const initialSmileyIndex = useMemo(() => {
+    const raw = searchParams.get("mood");
+    const n = raw ? parseInt(raw, 10) : NaN;
+    return Number.isFinite(n) && n >= 1 && n <= 5 ? n - 1 : -1;
+  }, [searchParams]);
 
   const [step, setStep] = useState<1 | 2>(1);
   // SmileySelector contract: selected is a 0..4 index, defaults internally to 2.
   // -1 means "not yet picked" so we can require an explicit choice before continuing.
-  const [smileyIndex, setSmileyIndex] = useState<number>(-1);
+  const [smileyIndex, setSmileyIndex] = useState<number>(initialSmileyIndex);
   const [feelings, setFeelings] = useState<string[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
