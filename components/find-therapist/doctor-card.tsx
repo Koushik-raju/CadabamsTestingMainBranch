@@ -94,7 +94,7 @@ export function DoctorCard({ doctor, onBook }: DoctorCardProps) {
 
   return (
     <div
-      className="bg-white rounded-[20px] p-4 mb-3"
+      className="bg-white rounded-[20px] p-4 mb-3 border shadow-sm"
       style={{ boxShadow: "0 2px 6px rgba(15,23,42,0.05),0 6px_16px rgba(15,23,42,0.04)" }}
     >
       <div className="flex gap-3">

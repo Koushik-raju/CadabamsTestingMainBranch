@@ -244,6 +244,12 @@ export function ListView() {
             </button>
           )}
 
+          {/* Location */}
+          <button className={chipClass(city !== null)} onClick={() => setShowLocation(true)}>
+            {locationLabel}
+            <ChevronDown className="w-3.5 h-3.5 opacity-70" />
+          </button>
+
           {/* Consultation mode */}
           <button className={chipClass(mode !== null)} onClick={() => setShowMode(true)}>
             {modeLabel}
@@ -262,12 +268,6 @@ export function ListView() {
             onClick={() => setShowExperiencing(true)}
           >
             {experiencingLabel}
-            <ChevronDown className="w-3.5 h-3.5 opacity-70" />
-          </button>
-
-          {/* Location */}
-          <button className={chipClass(city !== null)} onClick={() => setShowLocation(true)}>
-            {locationLabel}
             <ChevronDown className="w-3.5 h-3.5 opacity-70" />
           </button>
         </div>
@@ -291,10 +291,10 @@ export function ListView() {
       </div>
 
       {/* Filter sheets */}
+      {showLocation && <LocationSheet onClose={() => setShowLocation(false)} />}
       {showMode && <ModeSheet onClose={() => setShowMode(false)} />}
       {showLang && <LangSheet onClose={() => setShowLang(false)} />}
       {showExperiencing && <ExperiencingSheet onClose={() => setShowExperiencing(false)} />}
-      {showLocation && <LocationSheet onClose={() => setShowLocation(false)} />}
     </div>
   );
 }
