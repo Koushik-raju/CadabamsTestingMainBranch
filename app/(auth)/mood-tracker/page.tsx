@@ -16,16 +16,18 @@
  *     report screen without a value→label lookup table.
  *   - Submit POSTs to /:campus/mood-tracker via submitMoodEntry, then routes
  *     to /mood-tracker/report.
+ *   - MoodTrackerContent is wrapped in <Suspense> by the default export so
+ *     useSearchParams() satisfies Next.js SSR/prerender requirements.
  *
  * KEY VARIABLES / EXPORTS:
- *   MoodTrackerPage — default export.
+ *   MoodTrackerPage — default export (Suspense wrapper).
+ *   MoodTrackerContent — inner client component with all form logic.
  *
  * DEPENDENCIES:
  *   useMoodTrackerAssessment, submitMoodEntry, SmileySelector, DotChooser,
  *   PageHeader, Button, Skeleton, Textarea.
  *
- * LAST UPDATED: 2026-04-30 — read ?mood=<1-5> query param to pre-select the
- *   smiley when navigated from the home hero mood pill.
+ * LAST UPDATED: 2026-04-30 — wrap in Suspense to fix useSearchParams() prerender error.
  */
 "use client";
 
@@ -37,11 +39,11 @@ import { submitMoodEntry, useMoodTrackerAssessment } from "@/hooks/mood-tracker/
 import { BarChart3 } from "lucide-react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useMemo, useState } from "react";
+import { Suspense, useMemo, useState } from "react";
 
 const MAX_FEELINGS = 5;
 
-export default function MoodTrackerPage() {
+function MoodTrackerContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { smileyQuestion, bubbleQuestion, isLoading } = useMoodTrackerAssessment();
@@ -245,5 +247,13 @@ export default function MoodTrackerPage() {
         )}
       </div>
     </div>
+  );
+}
+
+export default function MoodTrackerPage() {
+  return (
+    <Suspense>
+      <MoodTrackerContent />
+    </Suspense>
   );
 }
