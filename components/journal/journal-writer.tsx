@@ -15,10 +15,12 @@
  *      mount so the user lands on a question. Free-flow mode: no auto prompt —
  *      the user starts with a blank page and must tap "Prompt Me" to opt in.
  *   3. Bottom action area:
- *        - Empty state (no prompt, no saved prompts, no content) → single
- *          "Prompt Me" button that fetches the first AI prompt.
- *        - Otherwise (a prompt exists OR the user has typed/saved content) →
- *          two buttons: "Go Deeper" (fetch next prompt) and "Finish" (save).
+ *        - Single "Prompt Me" button when no content is typed AND no saved
+ *          prompts exist (an auto-fetched currentHeading alone still shows
+ *          "Prompt Me" — only typed content or a saved chain flips the CTA).
+ *        - Otherwise (user typed ≥1 char OR savedPrompts.length ≥ 1) → two
+ *          buttons: "Go Deeper" (fetch next prompt) and "Finish" (save).
+ *          When Finish is visible, the primary CTA is always "Go Deeper".
  *   4. Toolbar: Mic triggers Web Speech API transcription (appended to textarea);
  *      Smile opens an emoji picker popover (selection appended at cursor).
  *   5. "Finish" saves everything and navigates back to /self-journaling.
@@ -41,7 +43,7 @@
  *   emoji-picker-react          — emoji picker UI
  *   Web Speech API              — browser-native mic transcription
  *
- * LAST UPDATED: 2026-04-30 — reverted Neo design system styling (skeleton radius, popover shadow) back to pre-migration values; .question DTO extraction preserved
+ * LAST UPDATED: 2026-04-30 — bottom CTA now stays as "Prompt Me" while only an auto-fetched prompt exists with no typed content; flips to "Go Deeper" + "Finish" once user types or savedPrompts has entries
  */
 "use client";
 
@@ -577,14 +579,16 @@ export function JournalWriter({ slug }: JournalWriterProps) {
 
       {/* ── Fixed bottom actions ── */}
       {/*
-       * Empty state (no AI prompt yet, nothing typed, no saved prompts) shows a
-       * single "Prompt Me" CTA — this is the free-flow entrypoint where the
-       * user opts into AI prompts. Once a prompt exists OR the user has typed
-       * or saved any content, we switch to "Go Deeper" (fetch next prompt) +
-       * "Finish" (save and exit).
+       * Show single "Prompt Me" CTA whenever the user has typed nothing AND no
+       * saved prompts exist — even if guided mode has auto-fetched a first
+       * currentHeading. The presence of an unanswered AI question alone is not
+       * enough to flip the CTA; we wait for actual user input or a completed
+       * Q/A pair. Once either condition is met, switch to "Go Deeper" (fetch
+       * next prompt) + "Finish" (save and exit). Rule: when Finish is visible,
+       * the primary button is always "Go Deeper", never "Prompt Me".
        */}
       <div className="fixed bottom-0 left-0 right-0 px-5 pb-10 pt-3 bg-background/95 backdrop-blur-sm">
-        {!currentHeading && !hasContent && savedPrompts.length === 0 ? (
+        {!hasContent && savedPrompts.length === 0 ? (
           <Button
             className="w-full rounded-full gap-2 h-14 text-base font-semibold"
             onClick={handlePromptMe}
