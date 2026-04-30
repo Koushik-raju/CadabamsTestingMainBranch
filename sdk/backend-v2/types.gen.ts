@@ -2441,7 +2441,10 @@ export type PresignUploadDto = {
     contextType: string;
     fileName?: string;
     contentType?: string;
-    languageCode?: 'en' | 'hi' | 'kn' | 'ta';
+    /**
+     * BCP-47 or short code (en, hi, kn-IN, …). Stored on the job for provider routing.
+     */
+    languageCode?: string;
 };
 
 export type PresignUploadResponseDto = {
@@ -2472,7 +2475,10 @@ export type PresignUploadResponseDto = {
 };
 
 export type StartTranscriptionJobDto = {
-    languageCode?: 'en' | 'hi' | 'kn' | 'ta';
+    /**
+     * Language for STT routing: en → AssemblyAI; hi, kn, ta, te, mr, bn, gu, pa, od/or, … or locale (e.g. te-IN) → Sarvam.
+     */
+    languageCode?: string;
 };
 
 export type StartJobResponseDto = {
@@ -2748,6 +2754,86 @@ export type MoodTrackerReportDto = {
         [key: string]: number;
     };
     topFeelings: Array<MoodTrackerFeelingCountDto>;
+    from?: string;
+    to?: string;
+};
+
+export type CreateSleepEntryDto = {
+    /**
+     * Sleep-quality score, 1 (worst) – 5 (best)
+     */
+    sleepScore: number;
+    /**
+     * Human-readable label for sleepScore
+     */
+    sleepLabel?: string;
+    /**
+     * Bubble-selected factors (free-form labels sourced from CMS)
+     */
+    factors?: Array<string>;
+    note?: string;
+    /**
+     * CmsAssessment.id whose questions drove this submission
+     */
+    cmsAssessmentId?: string;
+    loggedAt?: string;
+};
+
+export type SleepEntryResponseDto = {
+    id: string;
+    crmLeadId?: {
+        [key: string]: unknown;
+    };
+    patientRef?: {
+        [key: string]: unknown;
+    };
+    campus: string;
+    sleepScore: number;
+    sleepLabel?: {
+        [key: string]: unknown;
+    };
+    factors: Array<string>;
+    note?: {
+        [key: string]: unknown;
+    };
+    cmsAssessmentId?: {
+        [key: string]: unknown;
+    };
+    loggedAt: string;
+    createdAt: string;
+    updatedAt: string;
+};
+
+export type SleepEntryListResponseDto = {
+    items: Array<SleepEntryResponseDto>;
+    total: number;
+    limit: number;
+    offset: number;
+};
+
+export type SleepTrackerFactorCountDto = {
+    label: string;
+    count: number;
+};
+
+export type SleepTrackerReportDto = {
+    /**
+     * Number of sleep entries in the window
+     */
+    count: number;
+    /**
+     * Mean of sleepScore across the window (null when count = 0)
+     */
+    averageScore: {
+        [key: string]: unknown;
+    } | null;
+    /**
+     * Count of entries at each score (1–5)
+     */
+    scoreBuckets: {
+        [key: string]: number;
+    };
+    topFactors: Array<SleepTrackerFactorCountDto>;
     from?: string;
     to?: string;
 };
@@ -3564,6 +3650,18 @@ export type GrowthWeekDayDto = {
      * True if a chat summary exists for this date
      */
     hasChatSummary: boolean;
+    /**
+     * True if a mood entry exists on this date
+     */
+    hasMood: boolean;
+    /**
+     * True if a stress entry exists on this date
+     */
+    hasStress: boolean;
+    /**
+     * True if a sleep entry exists on this date
+     */
+    hasSleep: boolean;
 };
 
 export type GrowthWeekResponseDto = {
@@ -3742,6 +3840,69 @@ export type GrowthChatSummaryItemDto = {
     createdAt: string;
 };
 
+export type GrowthMoodItemDto = {
+    id: string;
+    /**
+     * 1–5 smiley score
+     */
+    moodScore: number;
+    moodLabel: {
+        [key: string]: unknown;
+    } | null;
+    /**
+     * Bubble feelings selected
+     */
+    feelings: Array<string>;
+    note: {
+        [key: string]: unknown;
+    } | null;
+    /**
+     * ISO timestamp the mood was logged
+     */
+    loggedAt: string;
+};
+
+export type GrowthStressItemDto = {
+    id: string;
+    /**
+     * 1–5 stress level (1 = Very Low, 5 = Very High)
+     */
+    stressLevel: number;
+    stressLevelLabel: {
+        [key: string]: unknown;
+    } | null;
+    /**
+     * Stressor labels selected
+     */
+    stressReasons: Array<string>;
+    /**
+     * ISO timestamp the stress entry was logged
+     */
+    loggedAt: string;
+};
+
+export type GrowthSleepItemDto = {
+    id: string;
+    /**
+     * 1–5 sleep-quality score
+     */
+    sleepScore: number;
+    sleepLabel: {
+        [key: string]: unknown;
+    } | null;
+    /**
+     * Sleep factors selected
+     */
+    factors: Array<string>;
+    note: {
+        [key: string]: unknown;
+    } | null;
+    /**
+     * ISO timestamp the sleep entry was logged
+     */
+    loggedAt: string;
+};
+
 export type GrowthDayResponseDto = {
     /**
      * ISO date this response covers
@@ -3751,6 +3912,9 @@ export type GrowthDayResponseDto = {
     journals: Array<GrowthJournalItemDto>;
     assessments: Array<GrowthAssessmentItemDto>;
     chatSummaries: Array<GrowthChatSummaryItemDto>;
+    moods: Array<GrowthMoodItemDto>;
+    stress: Array<GrowthStressItemDto>;
+    sleep: Array<GrowthSleepItemDto>;
 };
 
 export type CreateAssessmentLandingPagePointDto = {
@@ -4565,7 +4729,7 @@ export type SubJournalingListResponseDto = {
     /**
      * List of SubJournaling records
      */
-    data: Array<SubJournalingResponseDto>;
+    items: Array<SubJournalingResponseDto>;
     /**
      * Total count
      */
@@ -4631,7 +4795,7 @@ export type JournalingListResponseDto = {
     /**
      * List of Journaling records
      */
-    data: Array<JournalingResponseDto>;
+    items: Array<JournalingResponseDto>;
     /**
      * Total count
      */
@@ -6457,6 +6621,39 @@ export type PatientsControllerGetPaymentsResponses = {
 };
 
 export type PatientsControllerGetPaymentsResponse = PatientsControllerGetPaymentsResponses[keyof PatientsControllerGetPaymentsResponses];
+
+export type PatientsControllerGetOdooPatientDocumentsData = {
+    body?: never;
+    path: {
+        /**
+         * Campus slug
+         */
+        campus: 'cadabams' | 'whitefield' | 'mysore' | 'mindtalk';
+        /**
+         * oeh.medical.patient id
+         */
+        patientId: string;
+    };
+    query?: {
+        /**
+         * Page number (1-indexed)
+         */
+        page?: number;
+        /**
+         * Items per page
+         */
+        per_page?: number;
+        /**
+         * JSON array string of Odoo fields (optional)
+         */
+        fields?: string;
+    };
+    url: '/api/v1/{campus}/patients/{patientId}/odoo-documents';
+};
+
+export type PatientsControllerGetOdooPatientDocumentsResponses = {
+    200: unknown;
+};
 
 export type PatientsControllerGetDocumentUrlData = {
     body?: never;
@@ -9805,6 +10002,89 @@ export type MoodTrackerControllerFindOneResponses = {
 
 export type MoodTrackerControllerFindOneResponse = MoodTrackerControllerFindOneResponses[keyof MoodTrackerControllerFindOneResponses];
 
+export type SleepTrackerControllerListData = {
+    body?: never;
+    path: {
+        /**
+         * Campus slug
+         */
+        campus: 'cadabams' | 'whitefield' | 'mysore' | 'mindtalk';
+    };
+    query?: {
+        from?: string;
+        to?: string;
+        limit?: number;
+        offset?: number;
+    };
+    url: '/api/v1/{campus}/sleep-tracker';
+};
+
+export type SleepTrackerControllerListResponses = {
+    200: SleepEntryListResponseDto;
+};
+
+export type SleepTrackerControllerListResponse = SleepTrackerControllerListResponses[keyof SleepTrackerControllerListResponses];
+
+export type SleepTrackerControllerCreateData = {
+    body: CreateSleepEntryDto;
+    path: {
+        /**
+         * Campus slug
+         */
+        campus: 'cadabams' | 'whitefield' | 'mysore' | 'mindtalk';
+    };
+    query?: never;
+    url: '/api/v1/{campus}/sleep-tracker';
+};
+
+export type SleepTrackerControllerCreateResponses = {
+    201: SleepEntryResponseDto;
+};
+
+export type SleepTrackerControllerCreateResponse = SleepTrackerControllerCreateResponses[keyof SleepTrackerControllerCreateResponses];
+
+export type SleepTrackerControllerReportData = {
+    body?: never;
+    path: {
+        /**
+         * Campus slug
+         */
+        campus: 'cadabams' | 'whitefield' | 'mysore' | 'mindtalk';
+    };
+    query?: {
+        from?: string;
+        to?: string;
+        limit?: number;
+        offset?: number;
+    };
+    url: '/api/v1/{campus}/sleep-tracker/report';
+};
+
+export type SleepTrackerControllerReportResponses = {
+    200: SleepTrackerReportDto;
+};
+
+export type SleepTrackerControllerReportResponse = SleepTrackerControllerReportResponses[keyof SleepTrackerControllerReportResponses];
+
+export type SleepTrackerControllerFindOneData = {
+    body?: never;
+    path: {
+        /**
+         * Campus slug
+         */
+        campus: 'cadabams' | 'whitefield' | 'mysore' | 'mindtalk';
+        id: string;
+    };
+    query?: never;
+    url: '/api/v1/{campus}/sleep-tracker/{id}';
+};
+
+export type SleepTrackerControllerFindOneResponses = {
+    200: SleepEntryResponseDto;
+};
+
+export type SleepTrackerControllerFindOneResponse = SleepTrackerControllerFindOneResponses[keyof SleepTrackerControllerFindOneResponses];
+
 export type StressTrackerControllerListData = {
     body?: never;
     path: {
@@ -11775,86 +12055,3 @@ export type NotificationsControllerGetLogResponses = {
 };
 
 export type NotificationsControllerGetLogResponse = NotificationsControllerGetLogResponses[keyof NotificationsControllerGetLogResponses];
-
-// ─── Sleep Tracker (hand-stubbed pending next SDK regen) ──────────────────
-
-export type CreateSleepEntryDto = {
-    sleepScore: number;
-    sleepLabel?: string;
-    factors?: Array<string>;
-    note?: string;
-    cmsAssessmentId?: string;
-    loggedAt?: string;
-};
-
-export type SleepEntryResponseDto = {
-    id: string;
-    crmLeadId?: { [key: string]: unknown } | null;
-    patientRef?: { [key: string]: unknown } | null;
-    campus: string;
-    sleepScore: number;
-    sleepLabel?: { [key: string]: unknown } | null;
-    factors: Array<string>;
-    note?: { [key: string]: unknown } | null;
-    cmsAssessmentId?: { [key: string]: unknown } | null;
-    loggedAt: string;
-    createdAt: string;
-    updatedAt: string;
-};
-
-export type SleepEntryListResponseDto = {
-    items: Array<SleepEntryResponseDto>;
-    total: number;
-    limit: number;
-    offset: number;
-};
-
-export type SleepTrackerFactorCountDto = {
-    label: string;
-    count: number;
-};
-
-export type SleepTrackerReportDto = {
-    count: number;
-    averageScore: { [key: string]: unknown } | null;
-    scoreBuckets: { [key: string]: number };
-    topFactors: Array<SleepTrackerFactorCountDto>;
-    from?: string;
-    to?: string;
-};
-
-export type SleepTrackerControllerListData = {
-    body?: never;
-    path: { campus: 'cadabams' | 'whitefield' | 'mysore' | 'mindtalk' };
-    query?: { from?: string; to?: string; limit?: number; offset?: number };
-    url: '/api/v1/{campus}/sleep-tracker';
-};
-export type SleepTrackerControllerListResponses = { 200: SleepEntryListResponseDto };
-export type SleepTrackerControllerListResponse = SleepTrackerControllerListResponses[keyof SleepTrackerControllerListResponses];
-
-export type SleepTrackerControllerCreateData = {
-    body: CreateSleepEntryDto;
-    path: { campus: 'cadabams' | 'whitefield' | 'mysore' | 'mindtalk' };
-    query?: never;
-    url: '/api/v1/{campus}/sleep-tracker';
-};
-export type SleepTrackerControllerCreateResponses = { 201: SleepEntryResponseDto };
-export type SleepTrackerControllerCreateResponse = SleepTrackerControllerCreateResponses[keyof SleepTrackerControllerCreateResponses];
-
-export type SleepTrackerControllerReportData = {
-    body?: never;
-    path: { campus: 'cadabams' | 'whitefield' | 'mysore' | 'mindtalk' };
-    query?: { from?: string; to?: string; limit?: number; offset?: number };
-    url: '/api/v1/{campus}/sleep-tracker/report';
-};
-export type SleepTrackerControllerReportResponses = { 200: SleepTrackerReportDto };
-export type SleepTrackerControllerReportResponse = SleepTrackerControllerReportResponses[keyof SleepTrackerControllerReportResponses];
-
-export type SleepTrackerControllerFindOneData = {
-    body?: never;
-    path: { campus: 'cadabams' | 'whitefield' | 'mysore' | 'mindtalk'; id: string };
-    query?: never;
-    url: '/api/v1/{campus}/sleep-tracker/{id}';
-};
-export type SleepTrackerControllerFindOneResponses = { 200: SleepEntryResponseDto };
-export type SleepTrackerControllerFindOneResponse = SleepTrackerControllerFindOneResponses[keyof SleepTrackerControllerFindOneResponses];

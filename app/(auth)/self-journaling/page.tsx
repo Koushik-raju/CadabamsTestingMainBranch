@@ -16,7 +16,7 @@
  * KEY VARIABLES / PROPS / EXPORTS:
  *   selectedDate        — local ISO date string for active day
  *   weekOffset          — how many days back the strip window starts
- *   publishedCategories — categories with ≥1 PUBLISHED sub-journaling
+ *   publishedCategories — categories whose own status is PUBLISHED
  *
  * DEPENDENCIES:
  *   useSelfJournaling()           — hooks/self-journaling/use-self-journaling.ts
@@ -26,7 +26,7 @@
  *   DateEntriesCard               — components/journal/date-entries-card.tsx
  *   buildWeekBaseDays, toLocalDateStr — lib/journal-utils.ts
  *
- * LAST UPDATED: 2026-04-28 — Neo design system: shadow scale, color tokens, border radius
+ * LAST UPDATED: 2026-04-30 — restore Guided Reflection by filtering on parent status === PUBLISHED
  */
 "use client";
 
@@ -294,7 +294,7 @@ export default function JournalHomePage() {
         <div className="px-4">
           <button
             onClick={() => router.push("/self-journaling/new")}
-            className="w-full bg-primary text-primary-foreground rounded-full overflow-hidden text-left shadow-[var(--sh-glow-orange)] hover:shadow-[var(--sh-3)] transition-all duration-300 hover:-translate-y-1 active:scale-[0.98]"
+            className="w-full bg-primary text-primary-foreground rounded-4xl overflow-hidden text-left shadow-[var(--sh-glow-orange)] hover:shadow-[var(--sh-3)] transition-all duration-300 hover:-translate-y-1 active:scale-[0.98]"
           >
             <div className="p-5 flex items-center justify-between min-h-[100px] relative overflow-hidden">
               <div className="z-10">

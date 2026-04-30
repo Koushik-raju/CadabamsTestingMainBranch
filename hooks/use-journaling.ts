@@ -99,7 +99,7 @@ export function useJournalingCategories() {
         query: { limit: 50, status: "PUBLISHED" },
       });
       if (res.error) throw new Error(JSON.stringify(res.error));
-      return (res.data as JournalingListResponseDto | undefined)?.data ?? [];
+      return (res.data as JournalingListResponseDto | undefined)?.items ?? [];
     },
     { ...swrConfig },
   );
