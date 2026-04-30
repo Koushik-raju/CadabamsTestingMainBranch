@@ -23,7 +23,7 @@ import type { JourneyItem } from "@/types/journey";
  *   cmsJourneysControllerList   — SDK call
  *   SWR
  *
- * LAST UPDATED: 2026-04-16 — map extraTaskDescription and explicit ID arrays (audioIds, assessmentIds, worksheetIds, videoIds, subJournalingIds)
+ * LAST UPDATED: 2026-04-30 — read typed task relation arrays (audios/videos/assessments/worksheets/subJournalings) directly from regenerated SDK; backend DTO + service now populate them, so no runtime casting needed
  */
 import useSWR from "swr";
 
@@ -81,17 +81,17 @@ export function mapV2Journey(dto: JourneyResponseDto): JourneyItem {
         moodCheckIn: task.moodCheckIn,
         extraTaskTitle: extractStringFromObj(task.extraTaskTitle),
         extraTaskDescription: (task.extraTaskDescription ?? []) as never,
-        audioIdsOrder: task.audioIds,
+        audioIdsOrder: task.audioIdsOrder ?? task.audioIds,
         audioIds: task.audioIds ?? [],
         assessmentIds: task.assessmentIds ?? [],
         worksheetIds: task.worksheetIds ?? [],
         videoIds: task.videoIds ?? [],
         subJournalingIds: task.subJournalingIds ?? [],
-        assessments: [],
-        worksheets: [],
-        audios: [],
-        subJournalings: [],
-        videos: [],
+        assessments: (task.assessments ?? []) as never,
+        worksheets: (task.worksheets ?? []) as never,
+        audios: (task.audios ?? []) as never,
+        subJournalings: (task.subJournalings ?? []) as never,
+        videos: (task.videos ?? []) as never,
       })),
     })),
   };

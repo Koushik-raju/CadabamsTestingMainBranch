@@ -41,7 +41,7 @@
  *   globalMutate (swr) — revalidates enrollment key on return
  *   journeyEnrollmentKey — lib/swr-keys
  *
- * LAST UPDATED: 2026-04-28 — Neo design system: shadow scale, color tokens, border radius
+ * LAST UPDATED: 2026-04-30 — action sheet treats "available" tasks as actionable; markNodeDone falls back to OTHER proof when CMS lacks audio/video relation IDs
  */
 "use client";
 
@@ -639,7 +639,13 @@ export function JourneyPathView({ journey, progress, journeyId }: JourneyPathVie
     }
 
     hapticLight();
-    setActionSheetData({ node, isActive: node.variant === "active" });
+    // Treat both "active" (current task) and "default" (available, not yet
+    // current) as actionable — the secondary "Mark as Done" CTA gates on this
+    // flag and locked/completed variants never reach here.
+    setActionSheetData({
+      node,
+      isActive: node.variant === "active" || node.variant === "default",
+    });
     setActionSheetOpen(true);
   }
 

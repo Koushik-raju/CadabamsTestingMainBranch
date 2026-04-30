@@ -4936,6 +4936,59 @@ export type JourneyAchievementResponseDto = {
     } | null;
 };
 
+export type JourneyTaskAudioRefDto = {
+    id: string;
+    title: {
+        [key: string]: unknown;
+    } | null;
+    audioUrl: {
+        [key: string]: unknown;
+    } | null;
+    backgroundVisualUrl: {
+        [key: string]: unknown;
+    } | null;
+    mindfulMinuteId: {
+        [key: string]: unknown;
+    } | null;
+};
+
+export type JourneyTaskVideoRefDto = {
+    id: string;
+    title: {
+        [key: string]: unknown;
+    } | null;
+    videoUrl: {
+        [key: string]: unknown;
+    } | null;
+};
+
+export type JourneyTaskAssessmentRefDto = {
+    id: string;
+    title: {
+        [key: string]: unknown;
+    } | null;
+    description: {
+        [key: string]: unknown;
+    } | null;
+};
+
+export type JourneyTaskWorksheetRefDto = {
+    id: string;
+    title: {
+        [key: string]: unknown;
+    } | null;
+};
+
+export type JourneyTaskSubJournalingRefDto = {
+    id: string;
+    title: {
+        [key: string]: unknown;
+    } | null;
+    slug: {
+        [key: string]: unknown;
+    } | null;
+};
+
 export type JourneyStepTaskResponseDto = {
     id: string;
     strapiId: {
@@ -4965,6 +5018,11 @@ export type JourneyStepTaskResponseDto = {
     postAudioAssessmentId: {
         [key: string]: unknown;
     } | null;
+    audios: Array<JourneyTaskAudioRefDto>;
+    videos: Array<JourneyTaskVideoRefDto>;
+    assessments: Array<JourneyTaskAssessmentRefDto>;
+    worksheets: Array<JourneyTaskWorksheetRefDto>;
+    subJournalings: Array<JourneyTaskSubJournalingRefDto>;
 };
 
 export type JourneyStepResponseDto = {
