@@ -2133,6 +2133,335 @@ export type ConfirmOpVisitBodyDto = {
     };
 };
 
+export type CreateBaselineAssessmentDto = {
+    /**
+     * Whether the user is seeking help for themselves (true) or for someone else (false).
+     */
+    serviceForSelf?: boolean;
+    /**
+     * First name of the patient when serviceForSelf is false.
+     */
+    patientFirstName?: string;
+    /**
+     * Last name of the patient when serviceForSelf is false.
+     */
+    patientLastName?: string;
+    /**
+     * Submitter's relationship to the patient (e.g. Parent, Sibling, Spouse).
+     */
+    relationship?: string;
+    /**
+     * Date of birth in ISO 8601 format (YYYY-MM-DD).
+     */
+    dateOfBirth?: string;
+    /**
+     * Age in years (must be between 13 and 100).
+     */
+    age?: number;
+    /**
+     * Gender identity selected on the age-gender step (e.g. male, female, non-binary).
+     */
+    gender?: string;
+    /**
+     * Overall feeling for the past week selected on the feeling step.
+     */
+    overallFeeling?: 'distressed' | 'bad' | 'okay' | 'good' | 'great';
+    /**
+     * Free-text answer to the struggles question. Maximum 200 characters.
+     */
+    struggles?: string;
+    /**
+     * Multi-select interest or topic tags chosen during onboarding.
+     */
+    tags?: Array<string>;
+    /**
+     * Multi-select support system options the user has access to.
+     */
+    supportSystem?: Array<string>;
+    /**
+     * Self-reported stress level on a 0–10 scale from the slider step.
+     */
+    stressLevel?: number;
+    /**
+     * How often the user experienced low motivation or energy in the past 2 weeks.
+     */
+    motivationFrequency?: 'Not during the past 2 weeks' | 'Less than once a week' | 'Once or twice a week' | 'Three or more times a week' | 'Nearly every day';
+    /**
+     * How often the user felt anxious, nervous, or worried in the past 2 weeks.
+     */
+    anxietyFrequency?: 'Not during the past 2 weeks' | 'Less than once a week' | 'Once or twice a week' | 'Three or more times a week' | 'Nearly every day';
+    /**
+     * How often the user had trouble sleeping in the past 2 weeks.
+     */
+    sleepFrequency?: 'Not during the past 2 weeks' | 'Less than once a week' | 'Once or twice a week' | 'Three or more times a week' | 'Nearly every day';
+    /**
+     * How often the user felt down, sad, or hopeless in the past 2 weeks.
+     */
+    hopelessnessFrequency?: 'Not at all' | 'A few times a week' | '2 to 3 times a week' | 'Several times a week' | 'Nearly every day';
+    /**
+     * How often the user had thoughts of self-harm or being better off dead in the past 2 weeks.
+     */
+    selfHarmFrequency?: 'Not at all' | 'A few times a week' | '2 to 3 times a week' | 'Several times a week' | 'Nearly every day';
+    /**
+     * Whether the user is currently taking prescribed medication.
+     */
+    takingMedication?: boolean;
+    /**
+     * Whether the user is currently managing chronic pain or physical discomfort.
+     */
+    hasChronicPain?: boolean;
+    /**
+     * Whether the user opted in to phone / SMS notifications.
+     */
+    notificationPhone?: boolean;
+    /**
+     * Whether the user opted in to email notifications.
+     */
+    notificationEmail?: boolean;
+    /**
+     * Whether the user opted in to WhatsApp notifications.
+     */
+    notificationWhatsapp?: boolean;
+};
+
+export type BaselineAssessmentDto = {
+    /**
+     * Unique CUID identifier for this assessment record.
+     */
+    id: string;
+    /**
+     * CRM lead ID of the patient who submitted this assessment.
+     */
+    crmLeadId: string;
+    /**
+     * Whether the assessment was submitted for the user themselves (true) or for someone else (false).
+     */
+    serviceForSelf: boolean;
+    /**
+     * First name of the patient when serviceForSelf is false.
+     */
+    patientFirstName?: {
+        [key: string]: unknown;
+    };
+    /**
+     * Last name of the patient when serviceForSelf is false.
+     */
+    patientLastName?: {
+        [key: string]: unknown;
+    };
+    /**
+     * Submitter's relationship to the patient.
+     */
+    relationship?: {
+        [key: string]: unknown;
+    };
+    /**
+     * Date of birth in ISO 8601 format (YYYY-MM-DD).
+     */
+    dateOfBirth?: {
+        [key: string]: unknown;
+    };
+    /**
+     * Age in years.
+     */
+    age?: {
+        [key: string]: unknown;
+    };
+    /**
+     * Gender identity (e.g. male, female, non-binary).
+     */
+    gender?: {
+        [key: string]: unknown;
+    };
+    /**
+     * Overall feeling for the past week (distressed / bad / okay / good / great).
+     */
+    overallFeeling?: {
+        [key: string]: unknown;
+    };
+    /**
+     * Free-text answer to the struggles question.
+     */
+    struggles?: {
+        [key: string]: unknown;
+    };
+    /**
+     * Multi-select interest or topic tags.
+     */
+    tags: Array<string>;
+    /**
+     * Multi-select support system options.
+     */
+    supportSystem: Array<string>;
+    /**
+     * Self-reported stress level on a 0–10 scale.
+     */
+    stressLevel?: {
+        [key: string]: unknown;
+    };
+    /**
+     * Frequency of low motivation / energy in the past 2 weeks.
+     */
+    motivationFrequency?: {
+        [key: string]: unknown;
+    };
+    /**
+     * Frequency of anxiety or worry in the past 2 weeks.
+     */
+    anxietyFrequency?: {
+        [key: string]: unknown;
+    };
+    /**
+     * Frequency of sleep trouble in the past 2 weeks.
+     */
+    sleepFrequency?: {
+        [key: string]: unknown;
+    };
+    /**
+     * Frequency of feeling hopeless or down in the past 2 weeks.
+     */
+    hopelessnessFrequency?: {
+        [key: string]: unknown;
+    };
+    /**
+     * Frequency of self-harm thoughts in the past 2 weeks.
+     */
+    selfHarmFrequency?: {
+        [key: string]: unknown;
+    };
+    /**
+     * Whether the user is currently taking prescribed medication.
+     */
+    takingMedication?: {
+        [key: string]: unknown;
+    };
+    /**
+     * Whether the user is currently managing chronic pain or physical discomfort.
+     */
+    hasChronicPain?: {
+        [key: string]: unknown;
+    };
+    /**
+     * Whether the user opted in to phone / SMS notifications.
+     */
+    notificationPhone: boolean;
+    /**
+     * Whether the user opted in to email notifications.
+     */
+    notificationEmail: boolean;
+    /**
+     * Whether the user opted in to WhatsApp notifications.
+     */
+    notificationWhatsapp: boolean;
+    /**
+     * ISO 8601 timestamp when the record was created.
+     */
+    createdAt: string;
+    /**
+     * ISO 8601 timestamp when the record was last updated.
+     */
+    updatedAt: string;
+};
+
+export type UpdateBaselineAssessmentDto = {
+    /**
+     * Whether the user is seeking help for themselves (true) or for someone else (false).
+     */
+    serviceForSelf?: boolean;
+    /**
+     * First name of the patient when serviceForSelf is false.
+     */
+    patientFirstName?: string;
+    /**
+     * Last name of the patient when serviceForSelf is false.
+     */
+    patientLastName?: string;
+    /**
+     * Submitter's relationship to the patient (e.g. Parent, Sibling, Spouse).
+     */
+    relationship?: string;
+    /**
+     * Date of birth in ISO 8601 format (YYYY-MM-DD).
+     */
+    dateOfBirth?: string;
+    /**
+     * Age in years (must be between 13 and 100).
+     */
+    age?: number;
+    /**
+     * Gender identity selected on the age-gender step (e.g. male, female, non-binary).
+     */
+    gender?: string;
+    /**
+     * Overall feeling for the past week selected on the feeling step.
+     */
+    overallFeeling?: 'distressed' | 'bad' | 'okay' | 'good' | 'great';
+    /**
+     * Free-text answer to the struggles question. Maximum 200 characters.
+     */
+    struggles?: string;
+    /**
+     * Multi-select interest or topic tags chosen during onboarding.
+     */
+    tags?: Array<string>;
+    /**
+     * Multi-select support system options the user has access to.
+     */
+    supportSystem?: Array<string>;
+    /**
+     * Self-reported stress level on a 0–10 scale from the slider step.
+     */
+    stressLevel?: number;
+    /**
+     * How often the user experienced low motivation or energy in the past 2 weeks.
+     */
+    motivationFrequency?: 'Not during the past 2 weeks' | 'Less than once a week' | 'Once or twice a week' | 'Three or more times a week' | 'Nearly every day';
+    /**
+     * How often the user felt anxious, nervous, or worried in the past 2 weeks.
+     */
+    anxietyFrequency?: 'Not during the past 2 weeks' | 'Less than once a week' | 'Once or twice a week' | 'Three or more times a week' | 'Nearly every day';
+    /**
+     * How often the user had trouble sleeping in the past 2 weeks.
+     */
+    sleepFrequency?: 'Not during the past 2 weeks' | 'Less than once a week' | 'Once or twice a week' | 'Three or more times a week' | 'Nearly every day';
+    /**
+     * How often the user felt down, sad, or hopeless in the past 2 weeks.
+     */
+    hopelessnessFrequency?: 'Not at all' | 'A few times a week' | '2 to 3 times a week' | 'Several times a week' | 'Nearly every day';
+    /**
+     * How often the user had thoughts of self-harm or being better off dead in the past 2 weeks.
+     */
+    selfHarmFrequency?: 'Not at all' | 'A few times a week' | '2 to 3 times a week' | 'Several times a week' | 'Nearly every day';
+    /**
+     * Whether the user is currently taking prescribed medication.
+     */
+    takingMedication?: boolean;
+    /**
+     * Whether the user is currently managing chronic pain or physical discomfort.
+     */
+    hasChronicPain?: boolean;
+    /**
+     * Whether the user opted in to phone / SMS notifications.
+     */
+    notificationPhone?: boolean;
+    /**
+     * Whether the user opted in to email notifications.
+     */
+    notificationEmail?: boolean;
+    /**
+     * Whether the user opted in to WhatsApp notifications.
+     */
+    notificationWhatsapp?: boolean;
+};
+
+export type BaselineAssessmentListResponseDto = {
+    items: Array<BaselineAssessmentDto>;
+    /**
+     * Total number of records matching the query.
+     */
+    total: number;
+};
+
 export type EditPackageDto = {
     /**
      * Package edit data to be sent to ERP
@@ -7634,6 +7963,126 @@ export type AppointmentsControllerConfirmOpVisitResponses = {
 };
 
 export type AppointmentsControllerConfirmOpVisitResponse = AppointmentsControllerConfirmOpVisitResponses[keyof AppointmentsControllerConfirmOpVisitResponses];
+
+export type BaselineAssessmentMeControllerFindAllForUserData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/api/v1/me/baseline-assessment';
+};
+
+export type BaselineAssessmentMeControllerFindAllForUserResponses = {
+    200: Array<BaselineAssessmentDto>;
+};
+
+export type BaselineAssessmentMeControllerFindAllForUserResponse = BaselineAssessmentMeControllerFindAllForUserResponses[keyof BaselineAssessmentMeControllerFindAllForUserResponses];
+
+export type BaselineAssessmentMeControllerCreateData = {
+    body: CreateBaselineAssessmentDto;
+    path?: never;
+    query?: never;
+    url: '/api/v1/me/baseline-assessment';
+};
+
+export type BaselineAssessmentMeControllerCreateResponses = {
+    201: BaselineAssessmentDto;
+};
+
+export type BaselineAssessmentMeControllerCreateResponse = BaselineAssessmentMeControllerCreateResponses[keyof BaselineAssessmentMeControllerCreateResponses];
+
+export type BaselineAssessmentMeControllerFindOneData = {
+    body?: never;
+    path: {
+        id: string;
+    };
+    query?: never;
+    url: '/api/v1/me/baseline-assessment/{id}';
+};
+
+export type BaselineAssessmentMeControllerFindOneResponses = {
+    200: BaselineAssessmentDto;
+};
+
+export type BaselineAssessmentMeControllerFindOneResponse = BaselineAssessmentMeControllerFindOneResponses[keyof BaselineAssessmentMeControllerFindOneResponses];
+
+export type BaselineAssessmentMeControllerUpdateData = {
+    body: UpdateBaselineAssessmentDto;
+    path: {
+        id: string;
+    };
+    query?: never;
+    url: '/api/v1/me/baseline-assessment/{id}';
+};
+
+export type BaselineAssessmentMeControllerUpdateResponses = {
+    200: BaselineAssessmentDto;
+};
+
+export type BaselineAssessmentMeControllerUpdateResponse = BaselineAssessmentMeControllerUpdateResponses[keyof BaselineAssessmentMeControllerUpdateResponses];
+
+export type BaselineAssessmentStaffControllerListAllData = {
+    body?: never;
+    path?: never;
+    query?: {
+        offset?: number;
+        limit?: number;
+    };
+    url: '/api/v1/baseline-assessment';
+};
+
+export type BaselineAssessmentStaffControllerListAllResponses = {
+    200: BaselineAssessmentListResponseDto;
+};
+
+export type BaselineAssessmentStaffControllerListAllResponse = BaselineAssessmentStaffControllerListAllResponses[keyof BaselineAssessmentStaffControllerListAllResponses];
+
+export type BaselineAssessmentStaffControllerRemoveData = {
+    body?: never;
+    path: {
+        id: string;
+    };
+    query?: never;
+    url: '/api/v1/baseline-assessment/{id}';
+};
+
+export type BaselineAssessmentStaffControllerRemoveResponses = {
+    /**
+     * Record deleted.
+     */
+    204: void;
+};
+
+export type BaselineAssessmentStaffControllerRemoveResponse = BaselineAssessmentStaffControllerRemoveResponses[keyof BaselineAssessmentStaffControllerRemoveResponses];
+
+export type BaselineAssessmentStaffControllerFindOneData = {
+    body?: never;
+    path: {
+        id: string;
+    };
+    query?: never;
+    url: '/api/v1/baseline-assessment/{id}';
+};
+
+export type BaselineAssessmentStaffControllerFindOneResponses = {
+    200: BaselineAssessmentDto;
+};
+
+export type BaselineAssessmentStaffControllerFindOneResponse = BaselineAssessmentStaffControllerFindOneResponses[keyof BaselineAssessmentStaffControllerFindOneResponses];
+
+export type BaselineAssessmentStaffControllerUpdateData = {
+    body: UpdateBaselineAssessmentDto;
+    path: {
+        id: string;
+    };
+    query?: never;
+    url: '/api/v1/baseline-assessment/{id}';
+};
+
+export type BaselineAssessmentStaffControllerUpdateResponses = {
+    200: BaselineAssessmentDto;
+};
+
+export type BaselineAssessmentStaffControllerUpdateResponse = BaselineAssessmentStaffControllerUpdateResponses[keyof BaselineAssessmentStaffControllerUpdateResponses];
 
 export type MastersControllerGetFollowupTypesData = {
     body?: never;

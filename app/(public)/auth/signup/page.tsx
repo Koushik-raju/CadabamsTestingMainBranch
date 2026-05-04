@@ -2,359 +2,147 @@
  * FILE: app/(public)/auth/signup/page.tsx
  *
  * PURPOSE:
- *   Public signup page for new users. Implements two-step registration: step 1 collects
- *   user details (first name, last name, email, phone), step 2 verifies OTP sent to phone.
+ *   Shell page for the unified onboarding + signup flow. Renders the layout
+ *   (hero image on the first step, compact progress header on all others) and
+ *   delegates all logic and state to SignupContext.
  *
  * LOGIC OVERVIEW:
- *   Form state tracks "form" (initial details) and "otp" (verification) steps. Step 1 renders
- *   input fields for name, email, and phone with validation. On submission, sendOtp is called
- *   and step advances to "otp". Step 2 renders OTP input that auto-submits on completion.
- *   Successful verification calls verifySignup (includes first/last name, email, phone, country code),
- *   then login() and redirects to /home. If account exists (duplicate phone), redirects to /auth/login.
- *   Timer countdown allows resend after 30 sec. Search param "mobile" pre-fills the phone field.
+ *   SignupPage wraps everything in Suspense (required because SignupProvider calls
+ *   useSearchParams). SignupLayout reads `step` from context to decide which header
+ *   and which step component to render. The back arrow is integrated inline with the
+ *   progress bar — a small circular icon button on the left.
  *
- * KEY VARIABLES / PROPS / EXPORTS:
- *   step              — "form" | "otp"; controls which content is displayed
- *   otp               — String of digits (auto-verifies at length 4)
- *   timer             — Countdown in seconds until OTP resend is allowed
- *   country           — Selected Country object for calling code info
- *   form state        — Zod-validated firstName, lastName, email, phone
- *   mobileParam       — Search param that pre-fills phone field if provided
- *   onSendOtp         — Submits form data to sendOtp, advances to OTP step, starts timer
- *   handleSignup      — Submits OTP to verifySignup with form data, redirects on success
- *   SignupPage        — Page export; wraps SignupContent in Suspense
- *   SignupContent     — Main component rendering signup form
+ * KEY EXPORTS:
+ *   SignupPage — default export; Suspense + SignupProvider wrapper
  *
  * DEPENDENCIES:
- *   useAuth, useAuthActions hooks
- *   SWR hooks: sendOtp, verifySignup
- *   react-hook-form + zod for form validation
- *   react-toastify for notifications
- *   shadcn/ui primitives: Card, Button, Input, Label, Dialog, Separator, Skeleton
- *   lucide-react icons: ArrowLeft, Heart
+ *   SignupProvider / useSignupContext — context.tsx
+ *   Step components — step-*.tsx
+ *   CountryPicker — country-picker.tsx
+ *   next/image, shadcn Skeleton, lucide-react ArrowLeft
  *
- * LAST UPDATED: 2026-04-28 — Neo design system: file header added
+ * LAST UPDATED: 2026-05-04 — added 9 assessment steps (age/gender, feeling, struggles, calm-down, support, stress, clinical, thanks, safety)
  */
 
 "use client";
 
-import { OTPInput } from "@/components/common/otp-input";
-import { type Country, PhoneInput } from "@/components/common/phone-input";
-import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useAuth } from "@/hooks/use-auth";
-import { useAuthActions } from "@/hooks/use-auth-actions";
 import { cn } from "@/lib/utils";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { ArrowLeft, Heart } from "lucide-react";
-import Link from "next/link";
-import { useRouter, useSearchParams } from "next/navigation";
-import { Suspense, useCallback, useEffect, useRef, useState } from "react";
-import { Controller, useForm } from "react-hook-form";
-import { toast } from "react-toastify";
-import { z } from "zod";
+import { ArrowLeft } from "lucide-react";
+import Image from "next/image";
+import { Suspense } from "react";
+import { SignupProvider, useSignupContext } from "./context";
+import { CountryPicker } from "./country-picker";
+import { StepAgeGender } from "./step-age-gender";
+import { StepAssistance } from "./step-assistance";
+import { StepCalmDown } from "./step-calm-down";
+import { StepClinicalCheck } from "./step-clinical-check";
+import { StepDateOfBirth } from "./step-date-of-birth";
+import { StepFeeling } from "./step-feeling";
+import { StepNotification } from "./step-notification";
+import { StepPatientForm } from "./step-patient-form";
+import { StepPermissions } from "./step-permissions";
+import { StepSafetyAssessment } from "./step-safety-assessment";
+import { StepServiceFor } from "./step-service-for";
+import { StepSignupForm } from "./step-signup-form";
+import { StepSignupOtp } from "./step-signup-otp";
+import { StepStressLevel } from "./step-stress-level";
+import { StepStruggles } from "./step-struggles";
+import { StepSupportSystem } from "./step-support-system";
+import { StepThanksCheckIn } from "./step-thanks-check-in";
 
-const signupSchema = z.object({
-  firstName: z.string().min(1, "First name is required"),
-  lastName: z.string().optional(),
-  email: z
-    .string()
-    .refine((v) => !v || /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v), "Invalid email address")
-    .optional(),
-  phone: z.string().min(6, "Valid phone number required"),
-});
-type SignupForm = z.infer<typeof signupSchema>;
+// ─── Layout shell ─────────────────────────────────────────────────────────────
 
-function SignupContent() {
-  const router = useRouter();
-  const searchParams = useSearchParams();
-  const { login } = useAuth();
-  const { sendOtp, verifySignup, isSendingOtp, isVerifying } = useAuthActions();
-
-  const [country, setCountry] = useState<Country | null>(null);
-  const [step, setStep] = useState<"form" | "otp">("form");
-  const [otp, setOtp] = useState("");
-  const [timer, setTimer] = useState(0);
-  const verifyingRef = useRef(false);
-
-  const mobileParam = searchParams.get("mobile") ?? "";
-
-  const {
-    control,
-    register,
-    handleSubmit,
-    getValues,
-    setValue,
-    formState: { errors },
-  } = useForm<SignupForm>({
-    resolver: zodResolver(signupSchema),
-    defaultValues: { firstName: "", lastName: "", email: "", phone: mobileParam },
-  });
-
-  useEffect(() => {
-    if (mobileParam) setValue("phone", mobileParam);
-  }, [mobileParam, setValue]);
-
-  useEffect(() => {
-    if (timer <= 0) return;
-    const t = setTimeout(() => setTimer((p) => p - 1), 1000);
-    return () => clearTimeout(t);
-  }, [timer]);
-
-  const onSendOtp = async (data: SignupForm) => {
-    try {
-      await sendOtp(data.phone, "signup");
-      toast.success("OTP sent successfully");
-      setStep("otp");
-      setTimer(30);
-    } catch {
-      toast.error("Failed to send OTP. Try again.");
-    }
-  };
-
-  const handleSignup = useCallback(
-    async (code: string) => {
-      if (code.length < 4 || verifyingRef.current) return;
-      verifyingRef.current = true;
-      const { phone, firstName, lastName, email } = getValues();
-      try {
-        await verifySignup({
-          phone,
-          otp: code,
-          firstName,
-          lastName: lastName || undefined,
-          email: email || undefined,
-          countryCode: country?.callingCode ? Number(country.callingCode) : undefined,
-        });
-        toast.success("Account created! Welcome to Cadabams.");
-        login().catch(() => {});
-        router.replace("/home");
-      } catch (err: unknown) {
-        const e = err as { status?: number; error?: string };
-        if (e.error?.includes("already exists")) {
-          toast.error("Account already exists");
-          router.push("/auth/login");
-          return;
-        }
-        toast.error(e.error ?? "Signup failed. Try again.");
-        setOtp("");
-      } finally {
-        verifyingRef.current = false;
-      }
-    },
-    [verifySignup, getValues, country, login, router],
-  );
-
-  useEffect(() => {
-    if (otp.length === 4) handleSignup(otp);
-  }, [otp]); // eslint-disable-line react-hooks/exhaustive-deps
+function SignupLayout() {
+  const { step, visibleSteps, currentIndex, isFirst, goBack } = useSignupContext();
 
   return (
     <div className="min-h-screen flex flex-col bg-background">
-      {/* Gradient hero */}
-      <div className="home-header-gradient px-6 pt-14 pb-12 flex flex-col gap-3">
-        <div className="flex items-center gap-3">
-          <div className="size-10 rounded-2xl bg-primary-foreground/20 flex items-center justify-center">
-            <Heart className="size-5 text-primary-foreground fill-primary-foreground" />
+      {/* ── Hero (first step only) ────────────────────────────────────── */}
+      {step === "service-for" ? (
+        <div className="relative h-72 shrink-0 overflow-hidden">
+          <Image
+            src="/assets/auth/auth-bg.png"
+            alt=""
+            fill
+            className="object-cover object-center"
+            priority
+          />
+          <div className="absolute bottom-0 left-0 right-0 h-28 bg-linear-to-t from-background to-transparent" />
+          <div
+            className="absolute bottom-8 left-6 w-11 h-11 rounded-2xl flex items-center justify-center shadow-sm"
+            style={{ background: "linear-gradient(135deg, #e06050, #f4a07a)" }}
+          >
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+              <path
+                d="M12 3 L13.8 8.8 H20 L14.7 12.4 L16.5 18.2 L12 14.8 L7.5 18.2 L9.3 12.4 L4 8.8 H10.2 Z"
+                fill="white"
+              />
+            </svg>
           </div>
-          <span className="text-xs font-bold text-primary-foreground/80 tracking-widest uppercase">
-            Cadabams
-          </span>
         </div>
-        <div>
-          <h1 className="text-2xl font-black text-primary-foreground leading-tight">
-            {step === "form" ? "Start your journey." : "Verify your number."}
-          </h1>
-          <p className="text-sm text-primary-foreground/70 mt-1">Mental health care, simplified.</p>
+      ) : (
+        /* ── Compact progress header — back arrow inline with progress bar ── */
+        <div className="px-5 pt-12 pb-4">
+          <div className="flex items-center gap-3">
+            {!isFirst && (
+              <button
+                type="button"
+                onClick={goBack}
+                aria-label="Go back"
+                className="shrink-0 w-8 h-8 rounded-full flex items-center justify-center bg-black/5 hover:bg-black/10 active:scale-95 transition-all"
+              >
+                <ArrowLeft className="w-4 h-4 text-foreground" />
+              </button>
+            )}
+            <div className="flex gap-1.5 flex-1">
+              {visibleSteps.map((s, i) => (
+                <div
+                  key={s}
+                  className={cn(
+                    "h-1 flex-1 rounded-full transition-all duration-500",
+                    i <= currentIndex ? "bg-primary" : "bg-black/10",
+                  )}
+                />
+              ))}
+            </div>
+          </div>
         </div>
+      )}
+
+      {/* ── Step content ─────────────────────────────────────────────── */}
+      <div className="flex flex-col flex-1 px-5 pb-8 overflow-y-auto">
+        {step === "service-for" && <StepServiceFor />}
+        {step === "patient-form" && <StepPatientForm />}
+        {step === "date-of-birth" && <StepDateOfBirth />}
+        {step === "age-gender" && <StepAgeGender />}
+        {step === "feeling" && <StepFeeling />}
+        {step === "struggles" && <StepStruggles />}
+        {step === "calm-down" && <StepCalmDown />}
+        {step === "assistance-selection" && <StepAssistance />}
+        {step === "support-system" && <StepSupportSystem />}
+        {step === "stress-level" && <StepStressLevel />}
+        {step === "clinical-check" && <StepClinicalCheck />}
+        {step === "thanks-check-in" && <StepThanksCheckIn />}
+        {step === "safety-assessment" && <StepSafetyAssessment />}
+        {step === "notification" && <StepNotification />}
+        {step === "permissions" && <StepPermissions />}
+        {step === "signup-form" && <StepSignupForm />}
+        {step === "signup-otp" && <StepSignupOtp />}
       </div>
 
-      {/* Card — overlaps hero */}
-      <div className="flex-1 flex flex-col px-4 mt-[-16px] pb-8">
-        <Card className="w-full max-w-sm mx-auto">
-          {/* Step progress */}
-          <div className="flex gap-1 px-4 pt-4">
-            <div className="h-1 flex-1 rounded-full bg-primary" />
-            <div
-              className={cn(
-                "h-1 flex-1 rounded-full transition-colors duration-300",
-                step === "otp" ? "bg-primary" : "bg-border",
-              )}
-            />
-          </div>
-
-          {step === "form" ? (
-            <>
-              <CardHeader>
-                <CardTitle>Create account</CardTitle>
-                <CardDescription>A few quick details to get you started</CardDescription>
-              </CardHeader>
-
-              <CardContent>
-                <form onSubmit={handleSubmit(onSendOtp)} className="flex flex-col gap-4">
-                  <div className="grid grid-cols-2 gap-3">
-                    <div className="flex flex-col gap-1.5">
-                      <Label htmlFor="firstName">
-                        First name <span className="text-destructive">*</span>
-                      </Label>
-                      <Input
-                        id="firstName"
-                        placeholder="First"
-                        autoComplete="given-name"
-                        {...register("firstName")}
-                        aria-invalid={!!errors.firstName}
-                      />
-                      {errors.firstName && (
-                        <p className="text-xs text-destructive">{errors.firstName.message}</p>
-                      )}
-                    </div>
-                    <div className="flex flex-col gap-1.5">
-                      <Label htmlFor="lastName">Last name</Label>
-                      <Input
-                        id="lastName"
-                        placeholder="Last"
-                        autoComplete="family-name"
-                        {...register("lastName")}
-                      />
-                    </div>
-                  </div>
-
-                  <div className="flex flex-col gap-1.5">
-                    <Label htmlFor="email">
-                      Email <span className="text-muted-foreground font-normal">(optional)</span>
-                    </Label>
-                    <Input
-                      id="email"
-                      type="email"
-                      placeholder="you@example.com"
-                      autoComplete="email"
-                      {...register("email")}
-                      aria-invalid={!!errors.email}
-                    />
-                    {errors.email && (
-                      <p className="text-xs text-destructive">{errors.email.message}</p>
-                    )}
-                  </div>
-
-                  <Controller
-                    name="phone"
-                    control={control}
-                    render={({ field, fieldState }) => (
-                      <div className="flex flex-col gap-1.5">
-                        <PhoneInput
-                          value={field.value}
-                          onChange={(e) => field.onChange(e.target.value)}
-                          selectedCountry={country}
-                          onCountryChange={setCountry}
-                        />
-                        {fieldState.error && (
-                          <p className="text-xs text-destructive">{fieldState.error.message}</p>
-                        )}
-                      </div>
-                    )}
-                  />
-
-                  <Button type="submit" size="lg" disabled={isSendingOtp} className="w-full">
-                    {isSendingOtp ? "Sending…" : "Continue"}
-                  </Button>
-                </form>
-              </CardContent>
-
-              <CardFooter className="flex-col gap-3 text-sm">
-                <p className="text-muted-foreground">
-                  Already have an account?{" "}
-                  <Button variant="link" asChild className="p-0 h-auto text-sm">
-                    <Link href="/auth/login">Log in</Link>
-                  </Button>
-                </p>
-                <Separator />
-                <div className="flex gap-4">
-                  <Button
-                    variant="link"
-                    asChild
-                    className="p-0 h-auto text-xs text-muted-foreground"
-                  >
-                    <Link href="/privacy-policy">Privacy Policy</Link>
-                  </Button>
-                  <Button
-                    variant="link"
-                    asChild
-                    className="p-0 h-auto text-xs text-muted-foreground"
-                  >
-                    <Link href="/term-and-condition">Terms &amp; Conditions</Link>
-                  </Button>
-                </div>
-              </CardFooter>
-            </>
-          ) : (
-            <>
-              <CardHeader>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="-ml-1 mb-1 w-fit text-muted-foreground"
-                  onClick={() => {
-                    setStep("form");
-                    setOtp("");
-                  }}
-                >
-                  <ArrowLeft className="size-4" />
-                  Go back
-                </Button>
-                <CardTitle>Verify your number</CardTitle>
-                <CardDescription>
-                  Code sent to{" "}
-                  <span className="font-medium text-foreground">
-                    +{country?.callingCode ?? "91"} {getValues("phone")}
-                  </span>
-                </CardDescription>
-              </CardHeader>
-
-              <CardContent className="flex flex-col gap-4">
-                <OTPInput value={otp} onChange={setOtp} />
-                <Button
-                  type="button"
-                  size="lg"
-                  className="w-full"
-                  onClick={() => handleSignup(otp)}
-                  disabled={isVerifying || otp.length < 4}
-                >
-                  {isVerifying ? "Verifying…" : "Verify & Create Account"}
-                </Button>
-              </CardContent>
-
-              <CardFooter className="justify-center">
-                {timer > 0 ? (
-                  <p className="text-sm text-muted-foreground">
-                    Resend in{" "}
-                    <span className="tabular-nums font-medium text-foreground">{timer}s</span>
-                  </p>
-                ) : (
-                  <Button
-                    variant="link"
-                    className="p-0 h-auto text-sm"
-                    onClick={handleSubmit(onSendOtp)}
-                  >
-                    Resend OTP
-                  </Button>
-                )}
-              </CardFooter>
-            </>
-          )}
-        </Card>
-      </div>
+      <CountryPicker />
     </div>
+  );
+}
+
+// ─── Page export ──────────────────────────────────────────────────────────────
+
+function SignupFlow() {
+  return (
+    <SignupProvider>
+      <SignupLayout />
+    </SignupProvider>
   );
 }
 
@@ -362,12 +150,12 @@ export default function SignupPage() {
   return (
     <Suspense
       fallback={
-        <div className="min-h-screen bg-background flex items-center justify-center">
-          <Skeleton className="h-96 w-80 rounded-xl" />
+        <div className="min-h-screen bg-white flex items-center justify-center">
+          <Skeleton className="h-80 w-full max-w-sm rounded-3xl mx-6" />
         </div>
       }
     >
-      <SignupContent />
+      <SignupFlow />
     </Suspense>
   );
 }

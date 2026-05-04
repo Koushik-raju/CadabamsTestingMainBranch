@@ -12,6 +12,7 @@
  *   embed IDs so separate resources get separate cache slots.
  *
  * KEY VARIABLES / PROPS / EXPORTS:
+ *   baselineAssessmentMyKey() — key for the current user's baseline assessment list
  *   enrolledJourneysKey()    — key for the current user's journey enrollments list
  *   availablePackagesKey()   — key for the browsable package catalogue
  *   managedPackagesKey()     — key for the user's purchased packages
@@ -181,6 +182,10 @@ export function journalStreakKey(slug: string): string {
 
 export function journalSubEntriesKey(slug: string): string {
   return `/journaling/sub-journalings/${slug}/entries`;
+}
+
+export function baselineAssessmentMyKey(): string {
+  return "/me/baseline-assessment";
 }
 
 export function growthWeekKey(date: string): readonly ["growth-week", string] {
