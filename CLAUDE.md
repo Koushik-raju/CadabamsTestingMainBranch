@@ -107,6 +107,24 @@ If you open or create a file without a header: STOP — add the header first, re
 
 ---
 
+## ⛔ NON-BREAKABLE RULE — ICON TILES MUST USE GlyphTile
+
+**Never write an inline gradient or tinted icon tile.** The canonical component is:
+
+```tsx
+import { GlyphTile } from "@/components/shared/glyph-tile";
+
+<GlyphTile icon={SomeLucideIcon} tint="purple" size="md" />
+```
+
+- **File**: `components/shared/glyph-tile.tsx`
+- **Tints**: `blue | purple | green | pink | peach | orange` (resolves `--mt-tint-*` CSS vars)
+- **Sizes**: `sm` (w-10) · `md` (w-11, default) · `lg` (w-12)
+- **When you find an inline tile** (a `div` with `bg-gradient-to-br from-* to-*` or a hardcoded tinted bg used as an icon container) during **any** edit, replace it with `<GlyphTile>` in the same PR — do not defer.
+- **Loading skeletons** must use the matching GlyphTile dimensions: `sm → w-10 h-10 rounded-[10px]`, `md → w-11 h-11 rounded-[12px]`, `lg → w-12 h-12 rounded-[14px]`.
+
+---
+
 ## Data Fetching (SWR)
 
 - All data fetching goes through SWR hooks in `hooks/`. Pages consume hooks; never call the SDK directly from a page.

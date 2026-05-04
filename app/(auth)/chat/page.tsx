@@ -13,6 +13,8 @@
  *      or ThreadList with the thread cards.
  *   4. handleNewChat navigates to a fresh UUID thread; handleThreadClick opens
  *      an existing thread.
+ *   5. New Chat shortcut exposed in the PageHeader right slot so it is always
+ *      reachable regardless of scroll position.
  *
  * KEY VARIABLES / PROPS / EXPORTS:
  *   resource_id     — user identity from mastraDataContext
@@ -21,9 +23,9 @@
  *
  * DEPENDENCIES:
  *   useThreads, mastraDataContext, ThreadList, LoadingState, EmptyState,
- *   PageHeader
+ *   PageHeader, Button
  *
- * LAST UPDATED: 2026-04-23 — migrated custom header div to PageHeader
+ * LAST UPDATED: 2026-05-04 — design system alignment: pb-24, New Chat in header
  */
 "use client";
 
@@ -31,8 +33,10 @@ import { EmptyState } from "@/components/chat/history/empty-state";
 import { LoadingState } from "@/components/chat/history/loading-state";
 import { ThreadList } from "@/components/chat/history/thread-list";
 import { PageHeader } from "@/components/shared/navigation/page-header";
+import { Button } from "@/components/ui/button";
 import { mastraDataContext } from "@/contexts/mastra-data-context";
 import { useThreads } from "@/hooks/use-threads";
+import { Plus } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useContext } from "react";
 
@@ -50,13 +54,27 @@ export default function ChatHistoryPage() {
   };
 
   return (
-    <main className="flex flex-col min-h-screen bg-background">
+    <main className="flex flex-col min-h-screen bg-background pb-24">
       {/* Safe-area top */}
       <div className="pt-[max(env(safe-area-inset-top,0px),1rem)]" />
 
-      <PageHeader title="My AI Chats" fallback="/ai-therapy" />
+      <PageHeader
+        title="My AI Chats"
+        fallback="/ai-therapy"
+        right={
+          <Button
+            size="sm"
+            variant="outline"
+            className="rounded-xl gap-1.5 text-xs"
+            onClick={handleNewChat}
+            aria-label="Start a new chat"
+          >
+            <Plus className="w-3.5 h-3.5" />
+            New Chat
+          </Button>
+        }
+      />
 
-      {/* Content */}
       {isLoading ? (
         <LoadingState />
       ) : !threads || threads.length === 0 ? (
