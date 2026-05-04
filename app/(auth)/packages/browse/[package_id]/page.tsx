@@ -2,31 +2,34 @@
  * FILE: app/(auth)/packages/browse/[package_id]/page.tsx
  *
  * PURPOSE:
- *   Detail page for an available (purchasable) package. Shows the package
- *   hero, pricing, session count, and an expandable list of included services
- *   grouped by product name. Provides a Proceed CTA that saves the package
- *   to sessionStorage and navigates to the booking flow.
+ *   Detail page for an available (purchasable) package. Shows a journey image
+ *   hero (with gradient fallback), pricing, session count, included services list,
+ *   an "Included Journey" card when a journey is linked, and a Proceed CTA.
  *
  * LOGIC OVERVIEW:
  *   - Reads :package_id from useParams(); matches against useAvailablePackages().
  *   - usePackageProductDetails(numericId) fetches product lines for this package.
- *   - Product line service names are read from many2one product_id tuple via odooTuple.
- *   - Lines are grouped by product name with session counts.
+ *   - Hero: renders pkg.journey_icon_url as a cover image with dark overlay when
+ *     available; falls back to palette gradient when no image is present.
+ *   - Journey section: when pkg.cms_journey_id is non-null, renders a clickable
+ *     "Included Journey" card showing journey_name and journey_icon_url (thumbnail + name);
+ *     tapping navigates to /journeys/:cms_journey_id.
+ *   - Product lines grouped by product name with session counts.
  *   - handleProceed() serialises the package to sessionStorage then routes to /packages/book/:id.
- *   - Hero gradient is derived from getPackagePalette(pkg.id).
  *
  * KEY VARIABLES / PROPS / EXPORTS:
- *   packageId   — string from useParams
- *   pkg         — PackageResponseDto found from useAvailablePackages
- *   lines       — PackageProductLineDto[] from usePackageProductDetails
+ *   packageId       — string from useParams
+ *   pkg             — PackageResponseDto (includes journey_icon_url, journey_name, journey_id)
+ *   lines           — PackageProductLineDto[] from usePackageProductDetails
+ *   hasJourneyImage — boolean; true when pkg.journey_icon_url is set
  *   PackageBrowsePage — default exported page
  *
  * DEPENDENCIES:
  *   useAvailablePackages, usePackageProductDetails  — from @/hooks/use-packages
- *   odooTuple                                       — from @/lib/odoo (safe many2one tuple access)
+ *   odooTuple                                       — from @/lib/odoo
  *   PackageResponseDto                              — from @/sdk/backend-v2
  *
- * LAST UPDATED: 2026-04-28 — Neo design system: shadow scale, color tokens, border radius
+ * LAST UPDATED: 2026-05-04 — Journey image hero and included-journey section added
  */
 "use client";
 
@@ -41,11 +44,13 @@ import { cn } from "@/lib/utils";
 import type { PackageResponseDto } from "@/sdk/backend-v2";
 import {
   AlertCircle,
+  ArrowRight,
   CheckCircle2,
   ChevronRight,
   IndianRupee,
   Layers,
   Package,
+  Sparkles,
 } from "lucide-react";
 import { useParams, useRouter } from "next/navigation";
 import { Suspense } from "react";
@@ -111,31 +116,41 @@ function PackageDetailContent({ packageId }: { packageId: string }) {
   };
 
   const palette = getPackagePalette(pkg.id);
+  const hasJourneyImage = Boolean(pkg.journey_icon_url);
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
       <PageHeader title="" fallback="/packages" />
 
       <div className="flex-1 overflow-y-auto pb-32">
-        {/* Hero banner */}
-        <div
-          className={cn(
-            "w-full h-52 bg-gradient-to-br relative overflow-hidden flex items-end",
-            palette.gradient,
+        {/* Hero banner — journey image when available, gradient fallback otherwise */}
+        <div className="w-full h-52 relative overflow-hidden flex items-end">
+          {hasJourneyImage ? (
+            <>
+              <img
+                src={pkg.journey_icon_url!}
+                alt=""
+                className="absolute inset-0 w-full h-full object-cover"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent" />
+            </>
+          ) : (
+            <>
+              <div className={cn("absolute inset-0 bg-gradient-to-br", palette.gradient)} />
+              <div className="absolute inset-0 opacity-10 bg-[radial-gradient(circle_at_70%_20%,white,transparent_60%)]" />
+              <div className="absolute -top-6 -right-6 w-32 h-32 rounded-full bg-white/10" />
+              <div className="absolute top-4 left-5">
+                <div
+                  className={cn(
+                    "w-12 h-12 rounded-2xl backdrop-blur-sm flex items-center justify-center",
+                    palette.iconBg,
+                  )}
+                >
+                  <Package className="w-6 h-6 text-white" />
+                </div>
+              </div>
+            </>
           )}
-        >
-          <div className="absolute inset-0 opacity-10 bg-[radial-gradient(circle_at_70%_20%,white,transparent_60%)]" />
-          <div className="absolute -top-6 -right-6 w-32 h-32 rounded-full bg-white/10" />
-          <div className="absolute top-4 left-5">
-            <div
-              className={cn(
-                "w-12 h-12 rounded-2xl backdrop-blur-sm flex items-center justify-center",
-                palette.iconBg,
-              )}
-            >
-              <Package className="w-6 h-6 text-white" />
-            </div>
-          </div>
           <div className="relative p-5 w-full">
             <p className="text-white/70 text-sm font-semibold mb-1">
               ₹{pkg.amount_total.toLocaleString("en-IN")}
@@ -202,6 +217,46 @@ function PackageDetailContent({ packageId }: { packageId: string }) {
                 </ul>
               );
             })()}
+          {/* Included Journey — only rendered when this package links to a CMS journey */}
+          {pkg.cms_journey_id && (
+            <div>
+              <h2 className="text-sm font-bold text-foreground mb-3 flex items-center gap-1.5">
+                <Sparkles className="w-4 h-4 text-primary" />
+                Included Journey
+              </h2>
+              <div
+                className="flex items-center gap-3 rounded-2xl border border-border overflow-hidden shadow-[var(--sh-1)] cursor-pointer active:scale-[0.98] transition-transform"
+                onClick={() => router.push(`/journeys/${pkg.cms_journey_id}`)}
+              >
+                {/* Journey thumbnail */}
+                <div className="w-20 h-20 flex-shrink-0 relative overflow-hidden bg-muted">
+                  {pkg.journey_icon_url ? (
+                    <img
+                      src={pkg.journey_icon_url}
+                      alt={pkg.journey_name ?? "Journey"}
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <div
+                      className={cn(
+                        "w-full h-full bg-gradient-to-br flex items-center justify-center",
+                        palette.gradient,
+                      )}
+                    >
+                      <Sparkles className="w-6 h-6 text-white/80" />
+                    </div>
+                  )}
+                </div>
+                <div className="flex-1 py-3 pr-3">
+                  <p className="text-xs text-primary font-semibold mb-0.5">Wellness Journey</p>
+                  <p className="text-sm font-bold text-foreground leading-snug line-clamp-2">
+                    {pkg.journey_name ?? "Journey included"}
+                  </p>
+                </div>
+                <ArrowRight className="w-4 h-4 text-muted-foreground mr-3 flex-shrink-0" />
+              </div>
+            </div>
+          )}
         </div>
       </div>
 

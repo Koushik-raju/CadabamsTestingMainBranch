@@ -885,6 +885,18 @@ export type PackageResponseDto = {
      */
     amount_total: number;
     /**
+     * CmsJourney.id (cuid) of the journey linked to this package via CmsJourney.packageId. Use for frontend navigation to /journeys/:id. Null when no published journey is linked.
+     */
+    cms_journey_id: string | null;
+    /**
+     * Image URL for the journey associated with this package (from CmsJourney.mediaIcon). Null when no journey is linked or the journey has no media icon.
+     */
+    journey_icon_url: string | null;
+    /**
+     * Name of the CmsJourney linked to this package. Null when no journey is linked.
+     */
+    journey_name: string | null;
+    /**
      * Service relation. Odoo many2one [id, display_name] tuple, or false if not set
      */
     service_id: [
