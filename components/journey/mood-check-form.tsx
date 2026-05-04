@@ -2,36 +2,38 @@
  * FILE: components/journey/mood-check-form.tsx
  *
  * PURPOSE:
- *   Mobile-first mood check-in form. Renders a hero gradient card as the
- *   intro, then one grouped card per question with a 5-step emoji selector.
- *   Follows the Compact Card UI language in docs/DESIGN_GUIDELINES.md.
+ *   Mobile-first mood check-in form. One question at a time with a large
+ *   swipeable mood card via SwipeCardSelector — flick left/right or tap arrow
+ *   buttons to cycle through 5 moods. No small emoji grid anywhere.
  *
  * LOGIC OVERVIEW:
- *   - Each question maps to a numeric value in state (1–10 scale, but the
- *     UI exposes 5 discrete steps mapped to values 2, 4, 6, 8, 10).
- *   - User taps an emoji to select a mood; tapping updates answers state.
- *   - Submit delegates to parent onSubmit(answers).
+ *   - currentQ tracks which question (0-indexed) is shown.
+ *   - moodIndices maps question index → MOOD_STEPS index (0..4), default 2 (Okay).
+ *   - SwipeCardSelector owns the drag/dot/arrow UI; this form owns question
+ *     progression, answer accumulation, and submit.
+ *   - answers are written on every mood change so the final submit just reads them.
+ *   - q_0 pre-seeded from defaultMoodValue when caller provides one.
  *
  * KEY VARIABLES / PROPS / EXPORTS:
- *   questions     — optional list of { question, value }; defaults provided.
- *   onSubmit      — async callback receiving answers keyed by q_<i>.
- *   isSubmitting  — disables the submit CTA and shows a saving label.
- *   title/subtitle/submitLabel — customisable copy for the hero + CTA.
- *   MoodCheckForm — exported form component.
+ *   currentQ     — which question is active (0..questions.length-1)
+ *   moodIndices  — per-question MOOD_STEPS index
+ *   MoodCheckForm — exported form component
  *
  * DEPENDENCIES:
- *   shadcn: Card, CardContent, Button. lucide-react: Sparkles, Check.
- *   lib/utils: cn.
+ *   SwipeCardSelector, framer-motion, shadcn Button.
+ *   lucide-react: ChevronLeft, ChevronRight, Sparkles.
+ *   lib/haptics: hapticMedium, hapticSuccess.
  *
- * LAST UPDATED: 2026-04-28 — Neo design system: shadow scale, color tokens, border radius
+ * LAST UPDATED: 2026-05-04 — toned-down gradients (300-400 range)
  */
 "use client";
 
-import { Check, Sparkles } from "lucide-react";
+import { AnimatePresence, motion } from "framer-motion";
+import { ChevronLeft, ChevronRight, Sparkles } from "lucide-react";
 import { useState } from "react";
+import { SwipeCardSelector } from "@/components/shared/swipe-card-selector";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
-import { cn } from "@/lib/utils";
+import { hapticMedium, hapticSuccess } from "@/lib/haptics";
 
 interface MoodQuestion {
   question: string;
@@ -45,17 +47,64 @@ interface MoodCheckFormProps {
   title?: string;
   subtitle?: string;
   submitLabel?: string;
-  /** Pre-selected mood value (2–10) from the home header selection. Overrides q_0's default. */
   defaultMoodValue?: number;
 }
 
-const MOOD_STEPS: { value: number; emoji: string; label: string; gradient: string }[] = [
-  { value: 2, emoji: "😟", label: "Very Low", gradient: "from-red-500 to-rose-600" },
-  { value: 4, emoji: "😐", label: "Low", gradient: "from-orange-500 to-amber-500" },
-  { value: 6, emoji: "😊", label: "Neutral", gradient: "from-amber-400 to-yellow-500" },
-  { value: 8, emoji: "😄", label: "Good", gradient: "from-emerald-500 to-teal-600" },
-  { value: 10, emoji: "🤩", label: "Great", gradient: "from-violet-500 to-purple-600" },
+const MOOD_OPTIONS = [
+  {
+    value: 2,
+    emoji: "😔",
+    label: "Very Low",
+    sublabel: "Feeling really down",
+    gradient: "from-rose-400 via-red-400 to-orange-400",
+    dot: "bg-rose-300",
+  },
+  {
+    value: 4,
+    emoji: "😕",
+    label: "Low",
+    sublabel: "Not at my best",
+    gradient: "from-orange-300 via-amber-400 to-yellow-400",
+    dot: "bg-orange-300",
+  },
+  {
+    value: 6,
+    emoji: "😌",
+    label: "Okay",
+    sublabel: "Holding steady",
+    gradient: "from-yellow-300 via-lime-300 to-green-400",
+    dot: "bg-yellow-300",
+  },
+  {
+    value: 8,
+    emoji: "😊",
+    label: "Good",
+    sublabel: "Feeling pretty great",
+    gradient: "from-teal-300 via-emerald-400 to-green-400",
+    dot: "bg-teal-300",
+  },
+  {
+    value: 10,
+    emoji: "🤩",
+    label: "Amazing",
+    sublabel: "On top of the world!",
+    gradient: "from-violet-400 via-purple-400 to-fuchsia-400",
+    dot: "bg-violet-300",
+  },
 ];
+
+function snapIndex(value: number): number {
+  let best = 0;
+  let bestDist = Infinity;
+  MOOD_OPTIONS.forEach((o, i) => {
+    const d = Math.abs(o.value - value);
+    if (d < bestDist) {
+      bestDist = d;
+      best = i;
+    }
+  });
+  return best;
+}
 
 const DEFAULT_QUESTIONS: MoodQuestion[] = [
   { question: "How are you feeling right now?", value: 6 },
@@ -63,129 +112,142 @@ const DEFAULT_QUESTIONS: MoodQuestion[] = [
   { question: "How energetic do you feel?", value: 6 },
 ];
 
-function snapToStep(value: number) {
-  return MOOD_STEPS.reduce((prev, curr) =>
-    Math.abs(curr.value - value) < Math.abs(prev.value - value) ? curr : prev,
-  );
-}
-
 export function MoodCheckForm({
   questions = DEFAULT_QUESTIONS,
   onSubmit,
   isSubmitting = false,
   title = "How are you feeling?",
-  subtitle = "Take a moment to reflect and log your current mood.",
   submitLabel = "Save Mood",
   defaultMoodValue,
 }: MoodCheckFormProps) {
-  /* Only seed q_0 when the caller explicitly passes a defaultMoodValue (i.e. user
-   * tapped a mood chip on the home screen). All other questions — and q_0 itself
-   * when no value is passed — start empty so nothing is pre-selected. */
-  const [answers, setAnswers] = useState<Record<string, number | undefined>>(() => {
-    if (defaultMoodValue != null) {
-      return { q_0: snapToStep(defaultMoodValue).value };
-    }
-    return {};
-  });
+  const [currentQ, setCurrentQ] = useState(0);
+  const [questionDir, setQuestionDir] = useState(1);
 
-  const handleSelect = (key: string, value: number) => {
-    setAnswers((prev) => ({ ...prev, [key]: value }));
+  const initial0 = defaultMoodValue != null ? snapIndex(defaultMoodValue) : 2;
+  const [moodIndices, setMoodIndices] = useState<Record<number, number>>(
+    Object.fromEntries(questions.map((_, i) => [i, i === 0 ? initial0 : 2])),
+  );
+
+  const [answers, setAnswers] = useState<Record<string, number>>(
+    Object.fromEntries(
+      questions.map((_, i) => [`q_${i}`, MOOD_OPTIONS[i === 0 ? initial0 : 2].value]),
+    ),
+  );
+
+  const moodIndex = moodIndices[currentQ] ?? 2;
+  const isLast = currentQ === questions.length - 1;
+
+  const handleMoodChange = (newIndex: number) => {
+    setMoodIndices((prev) => ({ ...prev, [currentQ]: newIndex }));
+    setAnswers((prev) => ({ ...prev, [`q_${currentQ}`]: MOOD_OPTIONS[newIndex].value }));
   };
 
-  const handleSubmit = async () => {
-    /* Strip undefined entries before handing to parent — state allows undefined
-     * so nothing is pre-selected, but onSubmit contract requires number values. */
-    const defined = Object.fromEntries(
-      Object.entries(answers).filter((entry): entry is [string, number] => entry[1] !== undefined),
-    );
-    await onSubmit(defined);
+  const handleNext = async () => {
+    if (!isLast) {
+      hapticMedium();
+      setQuestionDir(1);
+      setCurrentQ((q) => q + 1);
+    } else {
+      hapticSuccess();
+      await onSubmit(answers);
+    }
+  };
+
+  const handlePrev = () => {
+    if (currentQ === 0) return;
+    hapticMedium();
+    setQuestionDir(-1);
+    setCurrentQ((q) => q - 1);
+  };
+
+  const qVariants = {
+    enter: (d: number) => ({ opacity: 0, y: d * 10, filter: "blur(3px)" }),
+    center: { opacity: 1, y: 0, filter: "blur(0px)" },
+    exit: (d: number) => ({ opacity: 0, y: d * -10, filter: "blur(3px)" }),
   };
 
   return (
     <div className="flex flex-col gap-5">
-      {/* Hero card */}
-      <Card className="relative w-full overflow-hidden border-0 shadow-[var(--sh-3)]">
-        <div className="absolute inset-0 bg-gradient-to-br from-violet-500 to-purple-600" />
-        <div className="absolute -top-8 -right-8 w-40 h-40 rounded-full bg-white/10" />
-        <div className="absolute -bottom-12 -left-6 w-52 h-52 rounded-full bg-white/5" />
-        <div className="relative p-5">
-          <div className="inline-flex items-center gap-1.5 rounded-full bg-white/15 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wide text-white">
-            <Sparkles className="w-3 h-3" />
-            Daily check-in
-          </div>
-          <h2 className="mt-3 text-xl font-bold text-white">{title}</h2>
-          <p className="mt-1 text-sm text-white/85">{subtitle}</p>
+      {/* Header */}
+      <motion.div
+        initial={{ opacity: 0, y: -10 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="flex items-center justify-between px-1"
+      >
+        <div className="inline-flex items-center gap-1.5 rounded-full bg-violet-100 px-3 py-1 text-[11px] font-semibold text-violet-700">
+          <Sparkles className="w-3 h-3" />
+          {title}
         </div>
-      </Card>
+        <div className="flex items-center gap-1">
+          {questions.map((_, i) => (
+            <motion.div
+              key={i}
+              animate={{
+                width: i === currentQ ? 20 : 6,
+                backgroundColor: i < currentQ ? "#7c3aed" : i === currentQ ? "#6d28d9" : "#e5e7eb",
+              }}
+              transition={{ type: "spring", stiffness: 400, damping: 28 }}
+              className="h-1.5 rounded-full"
+            />
+          ))}
+        </div>
+      </motion.div>
 
-      {/* Questions — one grouped card */}
-      <Card>
-        <CardContent className="py-0 px-3">
-          {questions.map((q, i) => {
-            const key = `q_${i}`;
-            const val = answers[key];
-            const selected = val != null ? snapToStep(val) : null;
-            const isLast = i === questions.length - 1;
+      {/* Question text */}
+      <div className="overflow-hidden min-h-[28px]">
+        <AnimatePresence custom={questionDir} mode="wait" initial={false}>
+          <motion.p
+            key={currentQ}
+            custom={questionDir}
+            variants={qVariants}
+            initial="enter"
+            animate="center"
+            exit="exit"
+            transition={{ duration: 0.2, ease: "easeInOut" }}
+            className="text-lg font-bold text-foreground px-1 leading-snug"
+          >
+            {questions[currentQ].question}
+          </motion.p>
+        </AnimatePresence>
+      </div>
 
-            return (
-              <div key={key} className={cn("py-4", !isLast && "border-b border-border")}>
-                <div className="flex items-start justify-between gap-3 mb-3">
-                  <p className="text-sm font-medium text-foreground flex-1 min-w-0">{q.question}</p>
-                  {selected && (
-                    <span
-                      className={cn(
-                        "flex-shrink-0 rounded-full px-2 py-0.5 text-[10px] font-semibold text-white bg-gradient-to-br",
-                        selected.gradient,
-                      )}
-                    >
-                      {selected.label}
-                    </span>
-                  )}
-                </div>
+      {/* Swipe card */}
+      <SwipeCardSelector
+        options={MOOD_OPTIONS}
+        selectedIndex={moodIndex}
+        onChange={handleMoodChange}
+      />
 
-                <div className="flex items-center justify-between gap-1.5">
-                  {MOOD_STEPS.map((step) => {
-                    const isSelected = step.value === val;
-                    return (
-                      <button
-                        key={step.value}
-                        type="button"
-                        onClick={() => handleSelect(key, step.value)}
-                        aria-label={step.label}
-                        aria-pressed={isSelected}
-                        className={cn(
-                          "relative flex-1 aspect-square rounded-2xl flex items-center justify-center transition-all active:scale-95",
-                          isSelected
-                            ? cn("bg-gradient-to-br shadow-[var(--sh-2)]", step.gradient)
-                            : "bg-muted hover:bg-muted/70",
-                        )}
-                      >
-                        {isSelected && (
-                          <div className="absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full bg-white shadow flex items-center justify-center">
-                            <Check className="w-3 h-3 text-foreground" strokeWidth={3} />
-                          </div>
-                        )}
-                        <span
-                          className={cn(
-                            "text-2xl transition-transform",
-                            isSelected ? "scale-110" : "opacity-70",
-                          )}
-                        >
-                          {step.emoji}
-                        </span>
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-            );
-          })}
-        </CardContent>
-      </Card>
-
-      <Button className="w-full rounded-xl h-11" onClick={handleSubmit} disabled={isSubmitting}>
-        {isSubmitting ? "Saving…" : submitLabel}
-      </Button>
+      {/* Navigation */}
+      <div className="flex gap-2 pt-1">
+        {currentQ > 0 && (
+          <Button
+            variant="outline"
+            size="lg"
+            className="px-4 rounded-2xl"
+            onClick={handlePrev}
+            disabled={isSubmitting}
+          >
+            <ChevronLeft className="w-4 h-4" />
+          </Button>
+        )}
+        <Button
+          className="flex-1 h-12 rounded-2xl text-base font-semibold"
+          size="lg"
+          onClick={handleNext}
+          disabled={isSubmitting}
+        >
+          {isSubmitting ? (
+            "Saving…"
+          ) : isLast ? (
+            submitLabel
+          ) : (
+            <span className="flex items-center gap-1.5">
+              Next <ChevronRight className="w-4 h-4" />
+            </span>
+          )}
+        </Button>
+      </div>
     </div>
   );
 }
