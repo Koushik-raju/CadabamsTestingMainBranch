@@ -24,7 +24,7 @@
  *   FeaturedPackageCard, PackageDiscoveryCard — from @/components/package/
  *   odooTuple                                 — from @/lib/odoo (safe many2one tuple access)
  *
- * LAST UPDATED: 2026-04-28 — Neo design system: shadow scale, color tokens, border radius
+ * LAST UPDATED: 2026-05-04 — Show journey_icon_url image instead of gradient in PurchasedPackageCard when available
  */
 "use client";
 
@@ -94,7 +94,13 @@ function fallbackConfig(stage: string) {
   );
 }
 
-function PurchasedPackageCard({ pkg }: { pkg: BookedPackageDto }) {
+function PurchasedPackageCard({
+  pkg,
+  imageUrl,
+}: {
+  pkg: BookedPackageDto;
+  imageUrl: string | null;
+}) {
   const router = useRouter();
   const packageName = String(odooTuple(pkg.package_id, 1) ?? "Package");
   const initials = packageName
@@ -112,30 +118,54 @@ function PurchasedPackageCard({ pkg }: { pkg: BookedPackageDto }) {
       onClick={() => router.push(`/packages/${pkg.booked_package_id}`)}
     >
       <CardContent className="p-0">
-        <div className={cn("bg-gradient-to-br p-4 relative overflow-hidden", cardGradient)}>
-          <div className="absolute -top-4 -right-4 w-20 h-20 rounded-full bg-white/10" />
-          {/* Top row: initials + stage badge */}
-          <div className="flex items-start justify-between gap-2">
-            <div className="w-8 h-8 rounded-xl bg-white/20 flex items-center justify-center font-bold text-xs text-white shrink-0">
-              {initials}
-            </div>
-            <Badge className={cn("text-[10px] gap-1 shrink-0", badgeCn)}>
+        {/* When a journey image is available show it; otherwise fall back to the stage gradient */}
+        {imageUrl ? (
+          <div className="relative overflow-hidden h-[100px]">
+            <img src={imageUrl} alt={packageName} className="w-full h-full object-cover" />
+            {/* Semi-transparent overlay so the badge stays readable */}
+            <div className="absolute inset-0 bg-black/30" />
+            <Badge
+              className={cn(
+                "absolute top-2 right-2 text-[10px] gap-1",
+                "bg-black/40 text-white border-0 backdrop-blur-sm",
+              )}
+            >
               <Icon className="w-3 h-3" />
               {label}
             </Badge>
           </div>
-          {/* Package name */}
-          <p className="text-white font-semibold text-sm leading-snug line-clamp-2 mt-3">
-            {packageName}
-          </p>
-        </div>
-        {/* Footer */}
-        <div className="px-3 py-2.5 flex items-center justify-between">
-          <div className="flex items-center gap-0.5 text-sm font-bold text-foreground">
-            <IndianRupee className="w-3.5 h-3.5" />
-            {pkg.package_cost.toLocaleString("en-IN")}
+        ) : (
+          <div className={cn("bg-gradient-to-br p-4 relative overflow-hidden", cardGradient)}>
+            <div className="absolute -top-4 -right-4 w-20 h-20 rounded-full bg-white/10" />
+            {/* Top row: initials + stage badge */}
+            <div className="flex items-start justify-between gap-2">
+              <div className="w-8 h-8 rounded-xl bg-white/20 flex items-center justify-center font-bold text-xs text-white shrink-0">
+                {initials}
+              </div>
+              <Badge className={cn("text-[10px] gap-1 shrink-0", badgeCn)}>
+                <Icon className="w-3 h-3" />
+                {label}
+              </Badge>
+            </div>
+            {/* Package name */}
+            <p className="text-white font-semibold text-sm leading-snug line-clamp-2 mt-3">
+              {packageName}
+            </p>
           </div>
-          <div className="flex items-center gap-1 text-xs text-muted-foreground">
+        )}
+        {/* Footer: when image shown, display name + price; when gradient, price only (name is in gradient) */}
+        <div className="px-3 py-2.5 flex items-center justify-between gap-2">
+          {imageUrl ? (
+            <p className="text-foreground font-semibold text-xs leading-snug line-clamp-1 flex-1">
+              {packageName}
+            </p>
+          ) : (
+            <div className="flex items-center gap-0.5 text-sm font-bold text-foreground">
+              <IndianRupee className="w-3.5 h-3.5" />
+              {pkg.package_cost.toLocaleString("en-IN")}
+            </div>
+          )}
+          <div className="flex items-center gap-1 text-xs text-muted-foreground shrink-0">
             <span>{pkg.package_stage === "booked" ? "Pay now" : "Details"}</span>
             <ArrowRight className="w-3 h-3" />
           </div>
@@ -162,6 +192,16 @@ function PackagesInner() {
       ),
     [managed],
   );
+
+  /* Build a map from package numeric ID → journey_icon_url so PurchasedPackageCard
+     can show the journey image instead of the stage gradient. */
+  const packageImageMap = useMemo(() => {
+    const map = new Map<number, string | null>();
+    for (const p of available) {
+      map.set(p.id, p.journey_icon_url ?? null);
+    }
+    return map;
+  }, [available]);
 
   const filtered = useMemo(
     () =>
@@ -211,9 +251,17 @@ function PackagesInner() {
               </div>
             ) : (
               <div className="flex gap-3 overflow-x-auto pb-1 -mx-4 px-4 scrollbar-none">
-                {sortedManaged.map((pkg, i) => (
-                  <PurchasedPackageCard key={pkg.booked_package_id ?? i} pkg={pkg} />
-                ))}
+                {sortedManaged.map((pkg, i) => {
+                  const pkgId = Number(odooTuple(pkg.package_id, 0));
+                  const imageUrl = packageImageMap.get(pkgId) ?? null;
+                  return (
+                    <PurchasedPackageCard
+                      key={pkg.booked_package_id ?? i}
+                      pkg={pkg}
+                      imageUrl={imageUrl}
+                    />
+                  );
+                })}
               </div>
             )}
           </section>
