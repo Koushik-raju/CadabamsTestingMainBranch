@@ -20,15 +20,13 @@
  *   lucide-react   — icons
  *   shadcn Card, Badge
  *
- * LAST UPDATED: 2026-04-28 — Migrated to --mt-tint-* colors, sentence-case copy,
- *   MTGlyphTile glyph style, updated badge variants to mt-* tints
+ * LAST UPDATED: 2026-05-04 — removed mood/stress/sleep trackers; moved to TrackerBar component
  */
 
 import { GlyphTile } from "@/components/shared/glyph-tile";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import {
-  Activity,
   BookOpen,
   CalendarCheck,
   ClipboardList,
@@ -36,10 +34,8 @@ import {
   LucideIcon,
   Map,
   MessageCircle,
-  Moon,
   Package,
   Pill,
-  Smile,
   Wind,
 } from "lucide-react";
 
@@ -64,33 +60,6 @@ const ACTIONS: Action[] = [
     badgeVariant: "mt-green",
     icon: CalendarCheck,
     tint: "green",
-  },
-  {
-    key: "mood-tracker",
-    title: "Mood Tracker",
-    description: "Log your mood & view your report.",
-    badge: "Daily check-in",
-    badgeVariant: "mt-pink",
-    icon: Smile,
-    tint: "pink",
-  },
-  {
-    key: "stress-tracker",
-    title: "Stress Tracker",
-    description: "Track your stress level & stressors.",
-    badge: "Quick log",
-    badgeVariant: "mt-orange",
-    icon: Activity,
-    tint: "orange",
-  },
-  {
-    key: "sleep-tracker",
-    title: "Sleep Tracker",
-    description: "Log your sleep & spot patterns.",
-    badge: "Nightly check-in",
-    badgeVariant: "mt-blue",
-    icon: Moon,
-    tint: "blue",
   },
   {
     key: "assessment",

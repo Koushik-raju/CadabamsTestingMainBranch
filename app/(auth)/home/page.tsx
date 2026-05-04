@@ -28,7 +28,7 @@
  *   QuickActions           — 2-column grid of feature shortcuts
  *   JourneySection         — active enrolled journey list with progress
  *
- * LAST UPDATED: 2026-04-24 — thread icon field from enrollment into homeEnrollments for JourneySection
+ * LAST UPDATED: 2026-05-04 — added TrackerBar (mood/stress/sleep) above QuickActions
  */
 
 "use client";
@@ -38,6 +38,7 @@ import { HomeHeader } from "@/components/home/home-header";
 import { JourneySection } from "@/components/home/journey-section";
 import { QuickActions } from "@/components/home/quick-actions";
 import { SupportSection } from "@/components/home/support-section";
+import { TrackerBar } from "@/components/home/tracker-bar";
 import { UpcomingSession } from "@/components/home/upcoming-session";
 import { useHomePage } from "@/hooks/home/use-home-page";
 import { useEnrolledJourneys, useGamification } from "@/hooks/journeys/use-journey-detail";
@@ -139,6 +140,8 @@ export default function HomePage() {
           onTalk={() => handleAction("quick_action", "therapist")}
           onMatch={() => handleAction("quick_action", "match")}
         />
+
+        <TrackerBar onTrackerClick={(key) => handleAction("quick_action", key)} />
 
         <QuickActions onActionClick={(type) => handleAction("quick_action", type)} />
 
