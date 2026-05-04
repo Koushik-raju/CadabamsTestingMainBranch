@@ -29,7 +29,7 @@
  *   baselineAssessmentMeControllerCreate
  *   country-codes-list, react-toastify, next/navigation
  *
- * LAST UPDATED: 2026-05-04 — pass email to sendOtp so it reaches the backend OTP endpoint
+ * LAST UPDATED: 2026-05-04 — removed permissions/notification steps and all permission handlers
  */
 
 "use client";
@@ -97,9 +97,6 @@ export interface SignupContextValue {
   mobileParam: string;
 
   // ── Handlers ──────────────────────────────────────────────────────────────
-  handleLocationToggle: (checked: boolean) => Promise<void>;
-  handleBluetoothToggle: (checked: boolean) => Promise<void>;
-  handleTrackingToggle: (checked: boolean) => Promise<void>;
   onSendOtp: (form: SignupFormValues) => Promise<void>;
   handleResendOtp: () => Promise<void>;
   handleSignup: (code: string) => Promise<void>;
@@ -192,9 +189,6 @@ export function SignupProvider({ children }: { children: ReactNode }) {
     notifPhone: true,
     notifEmail: true,
     notifWhatsapp: false,
-    locationPermission: false,
-    bluetoothPermission: false,
-    trackingPermission: false,
   });
 
   const updateData = useCallback((patch: Partial<OnboardingData>) => {
@@ -256,7 +250,7 @@ export function SignupProvider({ children }: { children: ReactNode }) {
 
   const goNext = useCallback(() => {
     /* Persist onboarding data before entering the signup form. */
-    if (step === "permissions") {
+    if (step === "safety-assessment") {
       localStorage.setItem("onboarding_data", JSON.stringify(data));
     }
     const next = visibleSteps[currentIndex + 1];
@@ -275,68 +269,6 @@ export function SignupProvider({ children }: { children: ReactNode }) {
     const t = setTimeout(() => setTimer((p) => p - 1), 1000);
     return () => clearTimeout(t);
   }, [timer]);
-
-  // ── Permission handlers ───────────────────────────────────────────────────
-
-  const handleLocationToggle = async (checked: boolean) => {
-    if (!checked) {
-      updateData({ locationPermission: false });
-      return;
-    }
-    if (!navigator.geolocation) {
-      toast.error("Geolocation not supported on this device");
-      return;
-    }
-    try {
-      await new Promise<void>((resolve, reject) => {
-        navigator.geolocation.getCurrentPosition(() => resolve(), reject, { timeout: 10000 });
-      });
-      updateData({ locationPermission: true });
-    } catch {
-      toast.error("Location permission was denied");
-      updateData({ locationPermission: false });
-    }
-  };
-
-  const handleBluetoothToggle = async (checked: boolean) => {
-    if (!checked) {
-      updateData({ bluetoothPermission: false });
-      return;
-    }
-    /* Web Bluetooth: opens the browser's device-picker dialog. */
-    const bt = (
-      navigator as unknown as { bluetooth?: { requestDevice(o: unknown): Promise<unknown> } }
-    ).bluetooth;
-    if (!bt) {
-      toast.error("Bluetooth is not supported on this browser");
-      return;
-    }
-    try {
-      await bt.requestDevice({ acceptAllDevices: true });
-      updateData({ bluetoothPermission: true });
-    } catch {
-      /* User dismissed the device picker — treated as denied. */
-      updateData({ bluetoothPermission: false });
-    }
-  };
-
-  const handleTrackingToggle = async (checked: boolean) => {
-    if (!checked) {
-      updateData({ trackingPermission: false });
-      return;
-    }
-    if (!("Notification" in window)) {
-      toast.error("Notifications not supported on this device");
-      return;
-    }
-    try {
-      const result = await Notification.requestPermission();
-      updateData({ trackingPermission: result === "granted" });
-      if (result !== "granted") toast.error("Notification permission was denied");
-    } catch {
-      updateData({ trackingPermission: false });
-    }
-  };
 
   // ── Signup handlers ───────────────────────────────────────────────────────
 
@@ -452,9 +384,6 @@ export function SignupProvider({ children }: { children: ReactNode }) {
     isVerifying,
     submittedPhone,
     mobileParam,
-    handleLocationToggle,
-    handleBluetoothToggle,
-    handleTrackingToggle,
     onSendOtp,
     handleResendOtp,
     handleSignup,

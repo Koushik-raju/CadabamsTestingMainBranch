@@ -21,7 +21,7 @@
  *   CountryPicker — country-picker.tsx
  *   next/image, shadcn Skeleton, lucide-react ArrowLeft
  *
- * LAST UPDATED: 2026-05-04 — added 9 assessment steps (age/gender, feeling, struggles, calm-down, support, stress, clinical, thanks, safety)
+ * LAST UPDATED: 2026-05-04 — removed notification and permissions steps; MCQ steps use bottom sheet for options
  */
 
 "use client";
@@ -39,9 +39,7 @@ import { StepCalmDown } from "./step-calm-down";
 import { StepClinicalCheck } from "./step-clinical-check";
 import { StepDateOfBirth } from "./step-date-of-birth";
 import { StepFeeling } from "./step-feeling";
-import { StepNotification } from "./step-notification";
 import { StepPatientForm } from "./step-patient-form";
-import { StepPermissions } from "./step-permissions";
 import { StepSafetyAssessment } from "./step-safety-assessment";
 import { StepServiceFor } from "./step-service-for";
 import { StepSignupForm } from "./step-signup-form";
@@ -125,8 +123,6 @@ function SignupLayout() {
         {step === "clinical-check" && <StepClinicalCheck />}
         {step === "thanks-check-in" && <StepThanksCheckIn />}
         {step === "safety-assessment" && <StepSafetyAssessment />}
-        {step === "notification" && <StepNotification />}
-        {step === "permissions" && <StepPermissions />}
         {step === "signup-form" && <StepSignupForm />}
         {step === "signup-otp" && <StepSignupOtp />}
       </div>

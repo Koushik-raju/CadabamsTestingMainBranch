@@ -20,7 +20,7 @@
  *   coralBtnCls            — Tailwind class string for coral buttons
  *   flag(code)             — ISO-2 → Unicode flag emoji
  *
- * LAST UPDATED: 2026-05-04 — added assessment steps (age/gender, feeling, struggles, calm-down, support, stress, clinical, thanks, safety)
+ * LAST UPDATED: 2026-05-04 — removed notification and permissions steps; removed permission fields from OnboardingData
  */
 
 export type Step =
@@ -37,8 +37,6 @@ export type Step =
   | "clinical-check"
   | "thanks-check-in"
   | "safety-assessment"
-  | "notification"
-  | "permissions"
   | "signup-form"
   | "signup-otp";
 
@@ -73,13 +71,10 @@ export interface OnboardingData {
   selfHarmFreq: string;
   takingMedication: string;
   chronicPain: string;
-  /* Notification + permission preferences */
+  /* Notification preferences (sent to backend with sensible defaults) */
   notifPhone: boolean;
   notifEmail: boolean;
   notifWhatsapp: boolean;
-  locationPermission: boolean;
-  bluetoothPermission: boolean;
-  trackingPermission: boolean;
 }
 
 export const ALL_STEPS: Step[] = [
@@ -96,8 +91,6 @@ export const ALL_STEPS: Step[] = [
   "clinical-check",
   "thanks-check-in",
   "safety-assessment",
-  "notification",
-  "permissions",
   "signup-form",
   "signup-otp",
 ];

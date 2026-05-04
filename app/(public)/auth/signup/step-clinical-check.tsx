@@ -2,22 +2,24 @@
  * FILE: app/(public)/auth/signup/step-clinical-check.tsx
  *
  * PURPOSE:
- *   Shows 3 clinical frequency questions on one scrollable page.
- *   Each question is a styled card with 5 single-select radio-style frequency options.
+ *   Shows 3 clinical frequency questions. Each question shows the current selection
+ *   (or a placeholder) and opens a bottom sheet with the 5 frequency options on tap.
  *
  * LOGIC OVERVIEW:
- *   Three questions (motivation, anxiety, sleep) each map to a context data field.
- *   Continue is enabled once all 3 are answered; a faint "Skip for now" sits below.
- *   Answers write directly to context via updateData on each tap.
- *   The parent page container scrolls so all 3 cards are reachable.
+ *   activeQuestion tracks which question key currently has the bottom sheet open.
+ *   Tapping a question row sets activeQuestion; picking an option writes to context
+ *   and closes the sheet. Continue is enabled once all 3 are answered.
  *
- * DEPENDENCIES: useSignupContext, CLINICAL_FREQ_OPTIONS, coralGrad/coralBtnCls
+ * DEPENDENCIES: useSignupContext, CLINICAL_FREQ_OPTIONS, shadcn Sheet, lucide-react ChevronDown
  *
- * LAST UPDATED: 2026-05-04 — initial creation
+ * LAST UPDATED: 2026-05-04 — MCQ options moved to bottom sheet
  */
 
 "use client";
 
+import { Check, ChevronDown } from "lucide-react";
+import { useState } from "react";
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { useSignupContext } from "./context";
 import { CLINICAL_FREQ_OPTIONS, coralBtnCls, coralGrad, type OnboardingData } from "./types";
 
@@ -32,7 +34,17 @@ const CLINICAL_QUESTIONS: {
 
 export function StepClinicalCheck() {
   const { data, updateData, goNext, currentIndex, visibleSteps } = useSignupContext();
+  const [activeQuestion, setActiveQuestion] = useState<string | null>(null);
   const allAnswered = CLINICAL_QUESTIONS.every(({ key }) => !!data[key]);
+
+  const activeLabel = CLINICAL_QUESTIONS.find((q) => q.key === activeQuestion)?.label;
+
+  const handleSelect = (opt: string) => {
+    if (activeQuestion) {
+      updateData({ [activeQuestion]: opt });
+      setActiveQuestion(null);
+    }
+  };
 
   return (
     <div className="flex flex-col flex-1">
@@ -48,42 +60,36 @@ export function StepClinicalCheck() {
         </p>
       </div>
 
-      <div className="flex flex-col gap-4">
-        {CLINICAL_QUESTIONS.map(({ key, label }) => (
-          <div key={key} className="bg-white rounded-2xl border border-border p-4">
-            <p className="text-[14px] font-semibold text-foreground mb-3">{label}</p>
-            <div className="flex flex-col gap-1.5">
-              {CLINICAL_FREQ_OPTIONS.map((opt) => {
-                const isSelected = data[key] === opt;
-                return (
-                  <button
-                    key={opt}
-                    type="button"
-                    onClick={() => updateData({ [key]: opt })}
-                    className={`flex items-center gap-3 px-3 py-2.5 rounded-xl border transition-all active:scale-[0.98] text-left ${
-                      isSelected ? "border-primary bg-primary/10" : "border-border bg-transparent"
-                    }`}
-                  >
-                    <div
-                      className={`shrink-0 w-4 h-4 rounded-full border-2 flex items-center justify-center transition-all ${
-                        isSelected ? "border-primary" : "border-border"
-                      }`}
-                    >
-                      {isSelected && <div className="w-2 h-2 rounded-full bg-primary" />}
-                    </div>
-                    <span
-                      className={`text-[12.5px] leading-snug ${
-                        isSelected ? "font-semibold text-primary" : "text-foreground/70"
-                      }`}
-                    >
-                      {opt}
-                    </span>
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-        ))}
+      <div className="flex flex-col gap-3">
+        {CLINICAL_QUESTIONS.map(({ key, label }) => {
+          const selected = data[key];
+          return (
+            <button
+              key={key}
+              type="button"
+              onClick={() => setActiveQuestion(key)}
+              className="w-full bg-white rounded-2xl border border-border p-4 text-left active:scale-[0.98] transition-all"
+            >
+              <p className="text-[13px] font-semibold text-foreground mb-2 leading-snug">{label}</p>
+              <div
+                className={`flex items-center justify-between gap-2 px-3 py-2.5 rounded-xl border ${
+                  selected ? "border-primary bg-primary/10" : "border-border bg-background"
+                }`}
+              >
+                <span
+                  className={`text-[13px] leading-snug flex-1 ${
+                    selected ? "font-semibold text-primary" : "text-muted-foreground"
+                  }`}
+                >
+                  {selected || "Select an answer"}
+                </span>
+                <ChevronDown
+                  className={`w-4 h-4 shrink-0 transition-colors ${selected ? "text-primary" : "text-muted-foreground"}`}
+                />
+              </div>
+            </button>
+          );
+        })}
       </div>
 
       <button
@@ -102,6 +108,49 @@ export function StepClinicalCheck() {
       >
         Skip for now
       </button>
+
+      {/* Bottom sheet for frequency options */}
+      <Sheet open={!!activeQuestion} onOpenChange={(open) => !open && setActiveQuestion(null)}>
+        <SheetContent side="bottom" showCloseButton={false} className="rounded-t-3xl pb-8">
+          <SheetHeader className="pb-2">
+            <SheetTitle className="text-[15px] font-bold text-foreground leading-snug">
+              {activeLabel}
+            </SheetTitle>
+          </SheetHeader>
+          <div className="flex flex-col gap-2 px-4">
+            {CLINICAL_FREQ_OPTIONS.map((opt) => {
+              const isSelected = activeQuestion
+                ? data[activeQuestion as keyof typeof data] === opt
+                : false;
+              return (
+                <button
+                  key={opt}
+                  type="button"
+                  onClick={() => handleSelect(opt)}
+                  className={`flex items-center gap-3 px-4 py-3 rounded-xl border-2 text-left transition-all active:scale-[0.98] ${
+                    isSelected ? "border-primary bg-primary/10" : "border-border bg-white"
+                  }`}
+                >
+                  <div
+                    className={`shrink-0 w-5 h-5 rounded-full border-2 flex items-center justify-center transition-all ${
+                      isSelected ? "border-primary bg-primary" : "border-border"
+                    }`}
+                  >
+                    {isSelected && <Check className="w-3 h-3 text-white" strokeWidth={3} />}
+                  </div>
+                  <span
+                    className={`text-[13.5px] leading-snug flex-1 ${
+                      isSelected ? "font-semibold text-primary" : "text-foreground/75"
+                    }`}
+                  >
+                    {opt}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+        </SheetContent>
+      </Sheet>
     </div>
   );
 }
