@@ -11,6 +11,7 @@ const PUBLIC_ROUTES = [
   "/term-and-condition",
   "/worksheet",
   "/assessment",
+  "/onboarding",
 ];
 
 function isPublicRoute(pathname: string): boolean {
