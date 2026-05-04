@@ -36,7 +36,7 @@
  *   useAgentChat, mastraDataContext, ChatHeader, MessageList, ChatInput,
  *   HistoryDrawer
  *
- * LAST UPDATED: 2026-05-04 — load thread history on mount; fix mobile keyboard sticky input
+ * LAST UPDATED: 2026-05-04 — add new-chat FAB (SquarePen, bottom-right above input)
  */
 "use client";
 

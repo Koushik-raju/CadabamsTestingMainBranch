@@ -42,7 +42,7 @@
  *   createMastraClient — authenticated Mastra client factory (lib/mastra-client)
  *   UIMessage          — from "ai" package (shape expected by MessageList)
  *
- * LAST UPDATED: 2026-05-04 — fix toUIMessage for Mastra format-2 content object; paginated history
+ * LAST UPDATED: 2026-05-04 — silence 404 on new threads (thread not yet in Mastra memory)
  */
 "use client";
 
@@ -131,8 +131,12 @@ export function useAgentChat({ threadId, resourceId }: UseAgentChatProps) {
 
         setMessages(uiMessages);
         setHasMore(false);
-      } catch (err) {
-        console.error("[useAgentChat] failed to load history:", err);
+      } catch (err: any) {
+        /* 404 means the thread hasn't been created in Mastra memory yet (new
+         * conversation). Treat it as empty history — not a real error. */
+        if (!err?.message?.includes("404")) {
+          console.error("[useAgentChat] failed to load history:", err);
+        }
       } finally {
         if (!cancelled) setIsLoadingHistory(false);
       }

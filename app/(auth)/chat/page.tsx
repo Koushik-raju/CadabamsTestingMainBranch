@@ -13,8 +13,9 @@
  *      or ThreadList with the thread cards.
  *   4. handleNewChat navigates to a fresh UUID thread; handleThreadClick opens
  *      an existing thread.
- *   5. New Chat shortcut exposed in the PageHeader right slot so it is always
- *      reachable regardless of scroll position.
+ *   5. A FAB (SquarePen icon, bottom-right) is the primary "new chat" CTA —
+ *      always reachable regardless of scroll position. PageHeader keeps no
+ *      right-slot button so the header stays clean.
  *
  * KEY VARIABLES / PROPS / EXPORTS:
  *   resource_id     — user identity from mastraDataContext
@@ -23,20 +24,19 @@
  *
  * DEPENDENCIES:
  *   useThreads, mastraDataContext, ThreadList, LoadingState, EmptyState,
- *   PageHeader, Button
+ *   PageHeader
  *
- * LAST UPDATED: 2026-05-04 — design system alignment: pb-24, New Chat in header
+ * LAST UPDATED: 2026-05-04 — replace header button with bottom-right FAB for new chat
  */
 "use client";
 
-import { Plus } from "lucide-react";
+import { SquarePen } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useContext } from "react";
 import { EmptyState } from "@/components/chat/history/empty-state";
 import { LoadingState } from "@/components/chat/history/loading-state";
 import { ThreadList } from "@/components/chat/history/thread-list";
 import { PageHeader } from "@/components/shared/navigation/page-header";
-import { Button } from "@/components/ui/button";
 import { mastraDataContext } from "@/contexts/mastra-data-context";
 import { useThreads } from "@/hooks/use-threads";
 
@@ -54,27 +54,11 @@ export default function ChatHistoryPage() {
   };
 
   return (
-    <main className="flex flex-col min-h-screen bg-background pb-24">
+    <main className="relative flex flex-col min-h-screen bg-background">
       {/* Safe-area top */}
       <div className="pt-[max(env(safe-area-inset-top,0px),1rem)]" />
 
-      <PageHeader
-        title="My AI Chats"
-        fallback="/home"
-        hardBack="/home"
-        right={
-          <Button
-            size="sm"
-            variant="outline"
-            className="rounded-xl gap-1.5 text-xs"
-            onClick={handleNewChat}
-            aria-label="Start a new chat"
-          >
-            <Plus className="w-3.5 h-3.5" />
-            New Chat
-          </Button>
-        }
-      />
+      <PageHeader title="My AI Chats" fallback="/home" hardBack="/home" />
 
       {isLoading ? (
         <LoadingState />
@@ -87,6 +71,18 @@ export default function ChatHistoryPage() {
           onNewChat={handleNewChat}
         />
       )}
+
+      {/* FAB — primary CTA for starting a new chat. Fixed to bottom-right so
+          it stays above the bottom nav bar (pb-24 on main handles the gap). */}
+      <button
+        type="button"
+        onClick={handleNewChat}
+        aria-label="New chat"
+        className="fixed bottom-24 right-5 z-20 flex items-center gap-2 rounded-full bg-primary px-5 py-3 shadow-lg shadow-primary/30 active:scale-95 transition-transform"
+      >
+        <SquarePen className="size-4 text-white" />
+        <span className="text-sm font-semibold text-white">New Chat</span>
+      </button>
     </main>
   );
 }

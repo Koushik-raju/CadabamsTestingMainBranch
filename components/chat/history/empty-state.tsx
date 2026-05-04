@@ -18,18 +18,17 @@
  *   Button    — shadcn/ui button primitive
  *   lucide-react — MessageSquare, Plus
  *
- * LAST UPDATED: 2026-05-04 — GlyphTile orange tint (brand primary); bigger CTA
+ * LAST UPDATED: 2026-05-04 — remove CTA button; FAB on parent page handles new chat
  */
 
-import { MessageSquare, Plus } from "lucide-react";
+import { MessageSquare } from "lucide-react";
 import { GlyphTile } from "@/components/shared/glyph-tile";
-import { Button } from "@/components/ui/button";
 
 interface EmptyStateProps {
   onNewChat: () => void;
 }
 
-export function EmptyState({ onNewChat }: EmptyStateProps) {
+export function EmptyState({ onNewChat: _ }: EmptyStateProps) {
   return (
     <div className="flex flex-col items-center justify-center py-24 gap-4 text-center px-8">
       <GlyphTile icon={MessageSquare} tint="orange" size="lg" className="w-16 h-16 rounded-2xl" />
@@ -37,19 +36,9 @@ export function EmptyState({ onNewChat }: EmptyStateProps) {
       <div>
         <p className="font-semibold text-foreground">No chat history yet</p>
         <p className="text-sm text-muted-foreground mt-1 max-w-xs">
-          Start a conversation with Riya to create your first chat session.
+          Tap the button below to start a conversation with Riya.
         </p>
       </div>
-
-      <Button
-        size="lg"
-        className="rounded-full gap-2 px-8 shadow-[var(--sh-glow-orange)]"
-        onClick={onNewChat}
-        aria-label="Start a new chat"
-      >
-        <Plus className="w-5 h-5" />
-        Start New Chat
-      </Button>
     </div>
   );
 }
