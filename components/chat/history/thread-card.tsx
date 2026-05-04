@@ -35,7 +35,7 @@ interface ThreadCardProps {
 export function ThreadCard({ thread, onClick }: ThreadCardProps) {
   return (
     <div
-      className="flex items-center gap-3 py-3 cursor-pointer transition-colors hover:bg-muted/50 active:bg-muted rounded-xl -mx-1 px-1"
+      className="flex items-center gap-3 py-0 cursor-pointer transition-colors hover:bg-muted/50 active:bg-muted rounded-xl -mx-1 px-1"
       onClick={() => onClick(thread)}
       role="button"
       tabIndex={0}
