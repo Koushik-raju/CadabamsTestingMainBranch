@@ -35,6 +35,9 @@
  */
 "use client";
 
+import { Search } from "lucide-react";
+import { useSearchParams } from "next/navigation";
+import { Suspense, useMemo, useState } from "react";
 import { CategoryChips } from "@/components/journey/category-chips";
 import {
   FeaturedJourneyCarousel,
@@ -50,9 +53,6 @@ import { useJourneys } from "@/hooks/journeys/use-journeys-page";
 import { useAuth } from "@/hooks/shared/auth/use-auth";
 import { fixImageUrl } from "@/lib/utils";
 import { extractJourneyDescription, extractJourneyName } from "@/types/journey";
-import { Search } from "lucide-react";
-import { useSearchParams } from "next/navigation";
-import { Suspense, useMemo, useState } from "react";
 
 // Firebase-based assessment category lookup removed — now always returns null
 // until a backend-v2 equivalent is implemented

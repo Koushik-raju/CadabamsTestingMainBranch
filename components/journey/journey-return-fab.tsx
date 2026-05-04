@@ -33,10 +33,10 @@
  */
 "use client";
 
-import { Button } from "@/components/ui/button";
-import { useJourneyReturn } from "@/contexts/journey-return-context";
 import { ArrowRight, Sparkles, X } from "lucide-react";
 import { usePathname, useRouter } from "next/navigation";
+import { Button } from "@/components/ui/button";
+import { useJourneyReturn } from "@/contexts/journey-return-context";
 
 export function JourneyReturnFab() {
   const { state, hydrated, clear } = useJourneyReturn();

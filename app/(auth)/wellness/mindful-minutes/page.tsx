@@ -26,16 +26,16 @@
 
 "use client";
 
+import { ChevronRight, RefreshCw, Search } from "lucide-react";
+import Image from "next/image";
+import { useRouter } from "next/navigation";
+import { useMemo, useState } from "react";
 import { PageHeader } from "@/components/shared/navigation/page-header";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { CategoryFilter } from "@/components/wellness/category-filter";
 import { useMindfulMinutes } from "@/hooks/wellness/use-mindful-minutes";
-import { ChevronRight, RefreshCw, Search } from "lucide-react";
-import Image from "next/image";
-import { useRouter } from "next/navigation";
-import { useMemo, useState } from "react";
 
 export default function MindfulMinutesPage() {
   const router = useRouter();

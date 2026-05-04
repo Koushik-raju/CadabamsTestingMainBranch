@@ -27,9 +27,9 @@
  */
 "use client";
 
-import { Button } from "@/components/ui/button";
 import { Bot } from "lucide-react";
 import { useEffect } from "react";
+import { Button } from "@/components/ui/button";
 
 interface GenerateProps {
   title?: string;

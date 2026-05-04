@@ -23,11 +23,12 @@
  *
  * LAST UPDATED: 2026-05-04 — grouped-list card pattern, section heading, FAB glow
  */
+
+import { Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { MastraThread } from "@/lib/chat";
-import { Plus } from "lucide-react";
 import { ThreadCard } from "./thread-card";
 
 interface ThreadListProps {

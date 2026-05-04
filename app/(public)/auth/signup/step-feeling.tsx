@@ -21,7 +21,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useSignupContext } from "./context";
-import { FEELING_OPTIONS, coralGrad } from "./types";
+import { coralGrad, FEELING_OPTIONS } from "./types";
 
 export function StepFeeling() {
   const { data, updateData, goNext, currentIndex, visibleSteps } = useSignupContext();

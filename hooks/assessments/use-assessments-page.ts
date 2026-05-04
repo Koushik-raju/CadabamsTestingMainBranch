@@ -42,15 +42,15 @@
  *   (patient/assigned-content) so the data matches the reference frontned tab.
  */
 
+import useSWR from "swr";
+import useSWRInfinite from "swr/infinite";
 import { ASSESSMENT_CATEGORIES } from "@/components/assessment/assessment-category";
 import { assessmentsKey, assignedAssessmentsKey } from "@/lib/swr-keys";
+import type { AssessmentPaginationDto, AssessmentResponseDto } from "@/sdk/backend-v2";
 import {
   cmsAssessmentsControllerFindAll,
   patientAssignedContentControllerListAssigned,
 } from "@/sdk/backend-v2";
-import type { AssessmentPaginationDto, AssessmentResponseDto } from "@/sdk/backend-v2";
-import useSWR from "swr";
-import useSWRInfinite from "swr/infinite";
 
 // ---------------------------------------------------------------------------
 // Internal helpers — extract plain values from Strapi v5 JSON-like objects

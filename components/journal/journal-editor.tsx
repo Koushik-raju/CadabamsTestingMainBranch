@@ -1,10 +1,10 @@
 "use client";
 
+import { Loader2 } from "lucide-react";
+import { useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import type { JournalPromptDto } from "@/sdk/backend-v2";
-import { Loader2 } from "lucide-react";
-import { useRef } from "react";
 
 /**
  * FILE: components/journal/journal-editor.tsx

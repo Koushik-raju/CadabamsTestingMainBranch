@@ -1,8 +1,9 @@
 "use client";
 
+import { Building2, ChevronLeft, ChevronRight, Loader2, MapPin } from "lucide-react";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { cn } from "@/lib/utils";
-import { Building2, ChevronLeft, ChevronRight, Loader2, MapPin } from "lucide-react";
+
 type CampusItem = {
   id: number;
   name: string;

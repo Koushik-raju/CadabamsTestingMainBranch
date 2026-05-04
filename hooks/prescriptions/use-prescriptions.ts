@@ -24,10 +24,10 @@
 
 "use client";
 
-import { useAuth } from "@/hooks/shared/auth/use-auth";
-import { crmControllerGetPrescriptions } from "@/sdk/backend-v2";
-import type { PrescriptionItemDto } from "@/sdk/backend-v2";
 import useSWR from "swr";
+import { useAuth } from "@/hooks/shared/auth/use-auth";
+import type { PrescriptionItemDto } from "@/sdk/backend-v2";
+import { crmControllerGetPrescriptions } from "@/sdk/backend-v2";
 
 export function usePrescriptions() {
   const { user } = useAuth();

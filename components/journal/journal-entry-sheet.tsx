@@ -22,13 +22,14 @@
  *
  * LAST UPDATED: 2026-04-28 — Neo icon style: compact gradient tile row header (homepage pattern), removed full-width banner
  */
+
+import { BookOpen, Pencil } from "lucide-react";
+import Image from "next/image";
 import { GlyphTile } from "@/components/shared/glyph-tile";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { getJournalVisual } from "@/lib/journal-visual";
-import { BookOpen, Pencil } from "lucide-react";
-import Image from "next/image";
 
 export interface JournalEntrySheetProps {
   open: boolean;

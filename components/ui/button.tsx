@@ -26,7 +26,7 @@
  * LAST UPDATED: 2026-04-28 — Added full MindTalk variant set per design system migration
  */
 
-import { type VariantProps, cva } from "class-variance-authority";
+import { cva, type VariantProps } from "class-variance-authority";
 import { Slot } from "radix-ui";
 import * as React from "react";
 

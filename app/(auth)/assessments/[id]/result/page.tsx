@@ -33,6 +33,11 @@
  */
 "use client";
 
+import { AlertCircle, FileText, Loader2, RefreshCw } from "lucide-react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { use, useEffect, useRef } from "react";
+import Markdown from "react-markdown";
 import { AIDisclaimer, AIPill } from "@/components/shared/ai-pill";
 import { PageHeader } from "@/components/shared/navigation/page-header";
 import { Button } from "@/components/ui/button";
@@ -40,11 +45,6 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useLatestAssessmentResult } from "@/hooks/assessments/use-assessment-reports";
 import { useJourneyTaskContinuation } from "@/hooks/journeys/use-journey-task-continuation";
-import { AlertCircle, FileText, Loader2, RefreshCw } from "lucide-react";
-import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { use, useEffect, useRef } from "react";
-import Markdown from "react-markdown";
 
 function formatDate(iso: string): string {
   try {
@@ -60,11 +60,7 @@ function formatDate(iso: string): string {
   }
 }
 
-export default function AssessmentResultPage({
-  params,
-}: {
-  params: Promise<{ id: string }>;
-}) {
+export default function AssessmentResultPage({ params }: { params: Promise<{ id: string }> }) {
   const { id: assessmentId } = use(params);
   const router = useRouter();
   const { completion, report, regenerate, isRegenerating, regenerateError, isLoading, error } =

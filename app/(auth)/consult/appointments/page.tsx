@@ -23,14 +23,14 @@
  */
 "use client";
 
+import { AlertCircle, CalendarX, Plus } from "lucide-react";
+import Link from "next/link";
 import { AppointmentCard } from "@/components/appointments/appointment-card";
 import { PageHeader } from "@/components/shared/navigation/page-header";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useAppointments } from "@/hooks/appointments/use-appointments-page";
-import { AlertCircle, CalendarX, Plus } from "lucide-react";
-import Link from "next/link";
 
 export default function AppointmentsPage() {
   const { upcoming, past, isLoading, error } = useAppointments();

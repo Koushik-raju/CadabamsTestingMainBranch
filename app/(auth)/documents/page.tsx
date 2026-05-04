@@ -26,6 +26,10 @@
  */
 "use client";
 
+import { Capacitor } from "@capacitor/core";
+import { AlertCircle, FolderOpen, Upload } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { useCallback, useRef, useState } from "react";
 import { DocumentCard, type DocumentData } from "@/components/documents/document-card";
 import { PageHeader } from "@/components/shared/navigation/page-header";
 import { Button } from "@/components/ui/button";
@@ -33,10 +37,6 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useDocuments } from "@/hooks/documents/use-documents";
-import { Capacitor } from "@capacitor/core";
-import { AlertCircle, FolderOpen, Upload } from "lucide-react";
-import { useRouter } from "next/navigation";
-import { useCallback, useRef, useState } from "react";
 
 async function openDownloadUrl(url: string): Promise<void> {
   if (Capacitor.isNativePlatform()) {

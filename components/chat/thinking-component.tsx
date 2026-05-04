@@ -1,9 +1,9 @@
 "use client";
 
-import { Shimmer } from "@/components/ui/shimmer";
-import { CHAT_REMAINING_MESSAGES } from "@/lib/config";
 import { BrainIcon } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
+import { Shimmer } from "@/components/ui/shimmer";
+import { CHAT_REMAINING_MESSAGES } from "@/lib/config";
 
 const FIRST_MESSAGE = "Thinking";
 

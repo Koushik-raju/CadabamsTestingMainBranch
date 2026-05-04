@@ -1,9 +1,9 @@
-import { CapacitorInit } from "@/components/common/capacitor-init";
-import { siteConfig } from "@/config/site";
-import { AppProviders } from "@/providers/app-providers";
 import type { Metadata, Viewport } from "next";
 import { Urbanist } from "next/font/google";
 import Script from "next/script";
+import { CapacitorInit } from "@/components/common/capacitor-init";
+import { siteConfig } from "@/config/site";
+import { AppProviders } from "@/providers/app-providers";
 import "./globals.css";
 
 /* Inter is loaded via @font-face in globals.css (3 optical cuts bundled locally).

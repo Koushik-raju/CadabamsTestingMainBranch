@@ -35,20 +35,16 @@
  */
 "use client";
 
+import { AlertCircle, ChevronRight, Sparkles, X } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { use, useMemo } from "react";
 import { AIDisclaimer, AIPill } from "@/components/shared/ai-pill";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useAssessmentScoreSummary } from "@/hooks/assessments/use-assessment-detail";
 import { useAuth } from "@/hooks/shared/auth/use-auth";
-import { AlertCircle, ChevronRight, Sparkles, X } from "lucide-react";
-import { useRouter } from "next/navigation";
-import { use, useMemo } from "react";
 
-export default function AssessmentAnalysisPage({
-  params,
-}: {
-  params: Promise<{ id: string }>;
-}) {
+export default function AssessmentAnalysisPage({ params }: { params: Promise<{ id: string }> }) {
   const { id: assessmentId } = use(params);
   const router = useRouter();
   const { user } = useAuth();

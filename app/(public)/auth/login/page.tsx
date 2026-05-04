@@ -43,13 +43,6 @@
 
 "use client";
 
-import { OTPInput } from "@/components/common/otp-input";
-import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { Skeleton } from "@/components/ui/skeleton";
-import { useAuth } from "@/hooks/use-auth";
-import { useAuthActions } from "@/hooks/use-auth-actions";
 import { zodResolver } from "@hookform/resolvers/zod";
 import countryCodes from "country-codes-list";
 import { ArrowLeft, Check, ChevronDown, Search } from "lucide-react";
@@ -60,6 +53,13 @@ import { Suspense, useCallback, useEffect, useMemo, useRef, useState } from "rea
 import { Controller, useForm } from "react-hook-form";
 import { toast } from "react-toastify";
 import { z } from "zod";
+import { OTPInput } from "@/components/common/otp-input";
+import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Skeleton } from "@/components/ui/skeleton";
+import { useAuth } from "@/hooks/use-auth";
+import { useAuthActions } from "@/hooks/use-auth-actions";
 
 interface Country {
   name: string;

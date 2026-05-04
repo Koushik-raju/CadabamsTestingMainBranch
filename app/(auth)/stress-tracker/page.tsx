@@ -23,6 +23,10 @@
  */
 "use client";
 
+import { BarChart3 } from "lucide-react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useState } from "react";
 import { PageHeader } from "@/components/shared/navigation/page-header";
 import { Button } from "@/components/ui/button";
 import {
@@ -30,10 +34,6 @@ import {
   STRESS_REASONS,
   submitStressEntry,
 } from "@/hooks/stress-tracker/use-stress-tracker";
-import { BarChart3 } from "lucide-react";
-import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { useState } from "react";
 
 const LEVEL_TINTS: Record<number, { idle: string; active: string }> = {
   1: {

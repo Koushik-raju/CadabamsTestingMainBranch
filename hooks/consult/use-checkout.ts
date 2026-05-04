@@ -1,11 +1,11 @@
+import useSWR from "swr";
+import type { DoctorListingResponseDto, RazorpayPaymentResponseDto } from "@/sdk/backend-v2";
 import {
   crmControllerBookAppointment,
   crmControllerGetDoctorById,
   crmControllerGetSlotPrice,
   crmControllerRazorpayPayment,
 } from "@/sdk/backend-v2";
-import type { DoctorListingResponseDto, RazorpayPaymentResponseDto } from "@/sdk/backend-v2";
-import useSWR from "swr";
 
 export type { DoctorListingResponseDto, RazorpayPaymentResponseDto };
 

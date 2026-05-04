@@ -23,9 +23,6 @@
  * LAST UPDATED: 2026-05-04 — removed mood/stress/sleep trackers; moved to TrackerBar component
  */
 
-import { GlyphTile } from "@/components/shared/glyph-tile";
-import { Badge } from "@/components/ui/badge";
-import { Card, CardContent } from "@/components/ui/card";
 import {
   BookOpen,
   CalendarCheck,
@@ -38,8 +35,10 @@ import {
   Pill,
   Wind,
 } from "lucide-react";
-
 import type { TintKey } from "@/components/shared/glyph-tile";
+import { GlyphTile } from "@/components/shared/glyph-tile";
+import { Badge } from "@/components/ui/badge";
+import { Card, CardContent } from "@/components/ui/card";
 
 interface Action {
   key: string;

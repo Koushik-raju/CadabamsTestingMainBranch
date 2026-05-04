@@ -1,7 +1,7 @@
 "use client";
 
-import { Card, CardContent } from "@/components/ui/card";
 import { BarChart3, Search } from "lucide-react";
+import { Card, CardContent } from "@/components/ui/card";
 
 interface AssessmentEmptyStateProps {
   variant: "no-results" | "no-assignments";

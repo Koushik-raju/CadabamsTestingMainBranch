@@ -43,7 +43,9 @@
  *   CompletionDetailResponseDto removed from SDK, pending spec update for userResponse
  */
 
+import useSWR from "swr";
 import { assessmentByIdKey, assessmentSubmissionsKey, completionByIdKey } from "@/lib/swr-keys";
+import type { CompletionResponseDto } from "@/sdk/backend-v2";
 import {
   cmsAssessmentsControllerFindOne,
   patientAssessmentsAnalysisControllerAnalyze,
@@ -51,10 +53,8 @@ import {
   patientAssessmentsControllerGetCompletion,
   patientAssessmentsControllerListMine,
 } from "@/sdk/backend-v2";
-import type { CompletionResponseDto } from "@/sdk/backend-v2";
-import useSWR from "swr";
-import { mapAssessment } from "./use-assessments-page";
 import type { AssessmentItem } from "./use-assessments-page";
+import { mapAssessment } from "./use-assessments-page";
 
 export type { AssessmentItem };
 

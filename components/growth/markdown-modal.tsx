@@ -35,6 +35,8 @@
  */
 "use client";
 
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 import {
   Sheet,
   SheetContent,
@@ -42,8 +44,6 @@ import {
   SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet";
-import ReactMarkdown from "react-markdown";
-import remarkGfm from "remark-gfm";
 
 export interface QAPair {
   question: string;

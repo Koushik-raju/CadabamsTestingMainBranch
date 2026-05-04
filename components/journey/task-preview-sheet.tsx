@@ -32,9 +32,6 @@
  */
 "use client";
 
-import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
-import { cn } from "@/lib/utils";
-import type { JourneyTask } from "@/types/journey";
 import {
   BookOpen,
   Check,
@@ -46,6 +43,9 @@ import {
   Star,
   Zap,
 } from "lucide-react";
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
+import { cn } from "@/lib/utils";
+import type { JourneyTask } from "@/types/journey";
 import type { NodeTaskType, NodeVariant } from "./path-node";
 
 interface TaskPreviewSheetProps {

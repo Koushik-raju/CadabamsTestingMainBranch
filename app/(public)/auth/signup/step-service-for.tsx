@@ -18,9 +18,9 @@
 
 "use client";
 
-import { cn } from "@/lib/utils";
 import { User, Users } from "lucide-react";
 import Link from "next/link";
+import { cn } from "@/lib/utils";
 import { useSignupContext } from "./context";
 
 export function StepServiceFor() {

@@ -1,6 +1,6 @@
+import useSWR from "swr";
 import { slotPriceKey } from "@/lib/swr-keys";
 import { crmControllerGetSlotPrice } from "@/sdk/backend-v2";
-import useSWR from "swr";
 
 interface SlotPriceResult {
   price: number | null;

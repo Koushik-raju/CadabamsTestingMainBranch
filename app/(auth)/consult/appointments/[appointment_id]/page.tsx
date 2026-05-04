@@ -24,22 +24,6 @@
  */
 "use client";
 
-import { PageHeader } from "@/components/shared/navigation/page-header";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from "@/components/ui/alert-dialog";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { Button } from "@/components/ui/button";
-import { cancelAppointment, useAppointmentById } from "@/hooks/appointments/use-appointments-page";
-import type { SlotDetailDto } from "@/hooks/appointments/use-appointments-page";
 import {
   AlertCircle,
   BookOpen,
@@ -57,6 +41,22 @@ import {
 } from "lucide-react";
 import { useParams, useRouter } from "next/navigation";
 import { Suspense, useState } from "react";
+import { PageHeader } from "@/components/shared/navigation/page-header";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Button } from "@/components/ui/button";
+import type { SlotDetailDto } from "@/hooks/appointments/use-appointments-page";
+import { cancelAppointment, useAppointmentById } from "@/hooks/appointments/use-appointments-page";
 
 function getDoctorName(doctor: SlotDetailDto["doctor"]): string {
   if (Array.isArray(doctor) && doctor.length >= 2 && typeof doctor[1] === "string") {

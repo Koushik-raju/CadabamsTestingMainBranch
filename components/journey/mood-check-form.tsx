@@ -27,11 +27,11 @@
  */
 "use client";
 
+import { Check, Sparkles } from "lucide-react";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
-import { Check, Sparkles } from "lucide-react";
-import { useState } from "react";
 
 interface MoodQuestion {
   question: string;

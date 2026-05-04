@@ -29,11 +29,6 @@
  */
 "use client";
 
-import { Card, CardContent } from "@/components/ui/card";
-import { Skeleton } from "@/components/ui/skeleton";
-import { type GrowthDay, todayIso, useGrowthDay, useGrowthWeek } from "@/hooks/growth/use-growth";
-import { useAuth } from "@/hooks/use-auth";
-import { cn } from "@/lib/utils";
 import {
   Activity,
   ClipboardList,
@@ -45,6 +40,11 @@ import {
   Sparkles,
 } from "lucide-react";
 import Link from "next/link";
+import { Card, CardContent } from "@/components/ui/card";
+import { Skeleton } from "@/components/ui/skeleton";
+import { type GrowthDay, todayIso, useGrowthDay, useGrowthWeek } from "@/hooks/growth/use-growth";
+import { useAuth } from "@/hooks/use-auth";
+import { cn } from "@/lib/utils";
 
 const DOW_LABELS = ["M", "T", "W", "T", "F", "S", "S"];
 

@@ -29,13 +29,13 @@
  */
 "use client";
 
-import { Button } from "@/components/ui/button";
-import { assessmentReportsKey } from "@/lib/swr-keys";
-import { patientAssessmentsAnalysisControllerAnalyze } from "@/sdk/backend-v2";
 import { ArrowRight, Loader2, Sparkles, X } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { use, useEffect, useRef, useState } from "react";
 import { useSWRConfig } from "swr";
+import { Button } from "@/components/ui/button";
+import { assessmentReportsKey } from "@/lib/swr-keys";
+import { patientAssessmentsAnalysisControllerAnalyze } from "@/sdk/backend-v2";
 
 export default function AssessmentGeneratePage({
   params,

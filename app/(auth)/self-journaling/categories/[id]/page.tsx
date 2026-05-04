@@ -38,24 +38,24 @@
  */
 "use client";
 
+import { BookOpen, RotateCcw } from "lucide-react";
+import Image from "next/image";
+import { useParams, useRouter } from "next/navigation";
+import { useMemo } from "react";
 import { PageHeader } from "@/components/shared/navigation/page-header";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import type { JournalEntryResponseDto, JournalPromptDto } from "@/hooks/use-journaling";
 import {
   extractString,
   useJournalingCategories,
   useSelfJournalingEntries,
 } from "@/hooks/use-journaling";
-import type { JournalEntryResponseDto, JournalPromptDto } from "@/hooks/use-journaling";
 import { getJournalVisual } from "@/lib/journal-visual";
 import { cn } from "@/lib/utils";
-import { BookOpen, RotateCcw } from "lucide-react";
-import Image from "next/image";
-import { useParams, useRouter } from "next/navigation";
-import { useMemo } from "react";
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -134,7 +134,7 @@ export default function CategoryDetailPage() {
 
   const grouped = useMemo(() => groupByDate(categoryEntries), [categoryEntries]);
 
-  const isLoading = catLoading || entriesLoading;
+  const _isLoading = catLoading || entriesLoading;
 
   function handleStartWriting(sub: { slug: string }) {
     router.push(`/self-journaling/journal/${encodeURIComponent(sub.slug)}`);

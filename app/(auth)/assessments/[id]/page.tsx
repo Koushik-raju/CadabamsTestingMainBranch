@@ -49,17 +49,6 @@
 
 "use client";
 
-import { BackButton } from "@/components/shared/navigation/back-button";
-import {
-  type AnswerValue,
-  type Question,
-  QuestionRenderer,
-} from "@/components/shared/questions/question-renderer";
-import { Button } from "@/components/ui/button";
-import { Skeleton } from "@/components/ui/skeleton";
-import { submitAssessment, useAssessmentById } from "@/hooks/assessments/use-assessment-detail";
-import { useJourneyTaskContinuation } from "@/hooks/journeys/use-journey-task-continuation";
-import { useAuth } from "@/hooks/shared/auth/use-auth";
 import {
   AlertCircle,
   ArrowRight,
@@ -72,6 +61,17 @@ import {
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { use, useEffect, useMemo, useRef, useState } from "react";
+import { BackButton } from "@/components/shared/navigation/back-button";
+import {
+  type AnswerValue,
+  type Question,
+  QuestionRenderer,
+} from "@/components/shared/questions/question-renderer";
+import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
+import { submitAssessment, useAssessmentById } from "@/hooks/assessments/use-assessment-detail";
+import { useJourneyTaskContinuation } from "@/hooks/journeys/use-journey-task-continuation";
+import { useAuth } from "@/hooks/shared/auth/use-auth";
 
 export default function AssessmentFormPage({ params }: { params: Promise<{ id: string }> }) {
   const { id: assessmentId } = use(params);

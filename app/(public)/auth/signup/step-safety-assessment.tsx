@@ -18,7 +18,7 @@
 "use client";
 
 import { useSignupContext } from "./context";
-import { type OnboardingData, SAFETY_FREQ_OPTIONS, coralBtnCls, coralGrad } from "./types";
+import { coralBtnCls, coralGrad, type OnboardingData, SAFETY_FREQ_OPTIONS } from "./types";
 
 const FREQ_QUESTIONS: {
   key: keyof Pick<OnboardingData, "hopelessnessFreq" | "selfHarmFreq">;

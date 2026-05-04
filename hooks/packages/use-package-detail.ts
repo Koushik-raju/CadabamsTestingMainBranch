@@ -1,7 +1,7 @@
-import { packageByIdKey } from "@/lib/swr-keys";
-import { crmControllerGetPackageProductDetails } from "@/sdk/backend-v2";
-import type { PackageProductLineDto } from "@/sdk/backend-v2";
 import useSWR from "swr";
+import { packageByIdKey } from "@/lib/swr-keys";
+import type { PackageProductLineDto } from "@/sdk/backend-v2";
+import { crmControllerGetPackageProductDetails } from "@/sdk/backend-v2";
 
 export function usePackageDetail(packageId: number | string | null) {
   const { data, isLoading, error } = useSWR(

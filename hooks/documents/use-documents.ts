@@ -30,6 +30,7 @@
  */
 "use client";
 
+import useSWR from "swr";
 import type { DocumentData } from "@/components/documents/document-card";
 import { useAuth } from "@/hooks/shared/auth/use-auth";
 import {
@@ -38,7 +39,6 @@ import {
   userDocumentsControllerPresignUpload,
   userDocumentsControllerUploadComplete,
 } from "@/sdk/backend-v2";
-import useSWR from "swr";
 
 const CAMPUS = "cadabams" as const;
 

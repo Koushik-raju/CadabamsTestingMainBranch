@@ -1,13 +1,13 @@
 "use client";
 
+import { MessageSquare, Plus } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { useState } from "react";
 import { LoadingState } from "@/components/chat/history/loading-state";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { useThreads } from "@/hooks/use-threads";
 import { formatDate } from "@/lib/chat";
-import { MessageSquare, Plus } from "lucide-react";
-import { useRouter } from "next/navigation";
-import { useState } from "react";
 
 interface HistoryDrawerProps {
   open: boolean;

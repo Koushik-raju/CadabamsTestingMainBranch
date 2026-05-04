@@ -4,6 +4,8 @@
 // Use this in client components. Use the functions from @/lib/cookies directly
 // in server components, route handlers, and middleware.
 
+import { useCallback } from "react";
+import type { TokenPair } from "@/lib/cookies";
 import {
   clearAuthState,
   clearTokens,
@@ -23,9 +25,7 @@ import {
   setTokens,
   setUser,
 } from "@/lib/cookies";
-import type { TokenPair } from "@/lib/cookies";
 import type { User } from "@/types";
-import { useCallback } from "react";
 
 export function useAuthStorage() {
   return {

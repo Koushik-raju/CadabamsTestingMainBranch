@@ -19,8 +19,8 @@
 
 "use client";
 
-import { Switch } from "@/components/ui/switch";
 import { Bluetooth, Eye, MapPin } from "lucide-react";
+import { Switch } from "@/components/ui/switch";
 import { useSignupContext } from "./context";
 import { coralBtnCls, coralGrad } from "./types";
 

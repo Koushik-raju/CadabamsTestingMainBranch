@@ -18,7 +18,7 @@
 "use client";
 
 import { useSignupContext } from "./context";
-import { SUPPORT_SYSTEM_OPTIONS, coralBtnCls, coralGrad } from "./types";
+import { coralBtnCls, coralGrad, SUPPORT_SYSTEM_OPTIONS } from "./types";
 
 export function StepSupportSystem() {
   const { data, updateData, goNext, currentIndex, visibleSteps } = useSignupContext();

@@ -18,7 +18,7 @@
 
 import { cn } from "@/lib/utils";
 import { useSignupContext } from "./context";
-import { TAGS, coralBtnCls, coralGrad } from "./types";
+import { coralBtnCls, coralGrad, TAGS } from "./types";
 
 export function StepAssistance() {
   const { data, updateData, goNext, currentIndex, visibleSteps } = useSignupContext();

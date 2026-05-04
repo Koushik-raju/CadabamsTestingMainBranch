@@ -20,9 +20,10 @@
  *
  * LAST UPDATED: 2026-05-04 — GlyphTile orange tint (brand primary); bigger CTA
  */
+
+import { MessageSquare, Plus } from "lucide-react";
 import { GlyphTile } from "@/components/shared/glyph-tile";
 import { Button } from "@/components/ui/button";
-import { MessageSquare, Plus } from "lucide-react";
 
 interface EmptyStateProps {
   onNewChat: () => void;

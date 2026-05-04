@@ -19,7 +19,7 @@
 "use client";
 
 import { useSignupContext } from "./context";
-import { CLINICAL_FREQ_OPTIONS, type OnboardingData, coralBtnCls, coralGrad } from "./types";
+import { CLINICAL_FREQ_OPTIONS, coralBtnCls, coralGrad, type OnboardingData } from "./types";
 
 const CLINICAL_QUESTIONS: {
   key: keyof Pick<OnboardingData, "motivationFreq" | "anxietyFreq" | "sleepFreq">;

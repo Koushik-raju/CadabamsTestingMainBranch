@@ -25,12 +25,12 @@
  */
 "use client";
 
-import { Button } from "@/components/ui/button";
-import { Skeleton } from "@/components/ui/skeleton";
-import { useSelfJournalingEntries } from "@/hooks/use-journaling";
 import { Calendar, ChevronLeft } from "lucide-react";
 import { useParams, useRouter } from "next/navigation";
 import { useMemo } from "react";
+import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
+import { useSelfJournalingEntries } from "@/hooks/use-journaling";
 
 /*
  * SDK generates entryText, emotion, stressLevel as `{ [key: string]: unknown } | null`

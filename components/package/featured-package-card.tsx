@@ -29,14 +29,14 @@
 
 "use client";
 
+import { ArrowRight, Layers, Sparkles } from "lucide-react";
+import { useRouter } from "next/navigation";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { getPackagePalette } from "@/lib/package-colors";
 import { cn } from "@/lib/utils";
 import type { PackageResponseDto } from "@/sdk/backend-v2";
-import { ArrowRight, Layers, Sparkles } from "lucide-react";
-import { useRouter } from "next/navigation";
 
 interface FeaturedPackageCardProps {
   pkg: PackageResponseDto;

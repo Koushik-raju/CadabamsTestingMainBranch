@@ -26,18 +26,19 @@
  * LAST UPDATED: 2026-04-27 — removed custom JournalEntry/JournalPrompt types;
  *   returns SDK types directly; removed mapDtoToEntry conversion layer.
  */
+
+import useSWR from "swr";
 import { selfJournalingKey } from "@/lib/swr-keys";
 import {
   type CreateJournalEntryDto,
   type JournalEntryResponseDto,
   type JournalPromptDto,
-  type UpdateJournalEntryDto,
   journalingControllerCreateEntry,
   journalingControllerDeleteEntry,
   journalingControllerListMine,
   journalingControllerUpdateEntry,
+  type UpdateJournalEntryDto,
 } from "@/sdk/backend-v2";
-import useSWR from "swr";
 
 export type { JournalEntryResponseDto, JournalPromptDto };
 

@@ -30,6 +30,8 @@
  *
  * LAST UPDATED: 2026-04-29 — initial creation (cloned from mood-tracker hook).
  */
+
+import useSWR from "swr";
 import { useAssessmentById } from "@/hooks/assessments/use-assessment-detail";
 import {
   type CreateSleepEntryDto,
@@ -40,7 +42,6 @@ import {
   sleepTrackerControllerList,
   sleepTrackerControllerReport,
 } from "@/sdk/backend-v2";
-import useSWR from "swr";
 
 export type {
   CreateSleepEntryDto,

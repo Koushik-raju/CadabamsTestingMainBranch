@@ -1,12 +1,12 @@
 "use client";
 
+import useSWR from "swr";
 import { useAuth } from "@/hooks/shared/auth/use-auth";
+import type { NotificationSettingsResponseDto } from "@/sdk/backend-v2";
 import {
   crmControllerEnableNotifications,
   crmControllerGetNotificationSettings,
 } from "@/sdk/backend-v2";
-import type { NotificationSettingsResponseDto } from "@/sdk/backend-v2";
-import useSWR from "swr";
 
 // ─── Local notification storage (push notifications) ─────────────────────────
 

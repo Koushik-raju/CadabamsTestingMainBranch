@@ -25,6 +25,9 @@
  */
 "use client";
 
+import { BookOpen, CreditCard, IndianRupee, Loader2, Package, Shield } from "lucide-react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { Suspense, useEffect, useMemo, useState } from "react";
 import { PageHeader } from "@/components/shared/navigation/page-header";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -32,9 +35,6 @@ import { Separator } from "@/components/ui/separator";
 import { bookPackage, initiatePackagePayment } from "@/hooks/packages/use-packages";
 import { useAuth } from "@/hooks/shared/auth/use-auth";
 import type { PackageResponseDto } from "@/sdk/backend-v2";
-import { BookOpen, CreditCard, IndianRupee, Loader2, Package, Shield } from "lucide-react";
-import { useRouter, useSearchParams } from "next/navigation";
-import { Suspense, useEffect, useMemo, useState } from "react";
 
 const JOURNEY_BASE_URL = "https://mindtalkbuddy.com/api/mindful-journeys";
 

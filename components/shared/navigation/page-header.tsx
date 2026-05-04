@@ -30,9 +30,9 @@
 
 "use client";
 
+import { ReactNode } from "react";
 import { BackButton } from "@/components/shared/navigation/back-button";
 import { cn } from "@/lib/utils";
-import { ReactNode } from "react";
 
 interface PageHeaderProps {
   title: string;

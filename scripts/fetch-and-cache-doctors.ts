@@ -30,9 +30,9 @@
  *   `/get/doctors/testing` Bearer endpoint and iterate SPECIALTY ids.
  */
 import "dotenv/config";
+import axios from "axios";
 import { writeFileSync } from "fs";
 import { resolve } from "path";
-import axios from "axios";
 
 const BASE_URL = process.env.ERP_BASE_URL;
 const BEARER_TOKEN = process.env.ERP_BEARER_TOKEN;

@@ -23,10 +23,11 @@
 
 "use client";
 
+import useSWR from "swr";
 import { mindfulMinuteDetailKey } from "@/lib/swr-keys";
 import { cmsMindfulMinutesControllerFindBySlug } from "@/sdk/backend-v2";
-import useSWR from "swr";
 import type { MindfulMinute } from "./use-mindful-minutes";
+
 export type { MindfulMinute };
 
 export function useMindfulMinuteDetail(slugOrId: string) {

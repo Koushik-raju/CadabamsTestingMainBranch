@@ -1,8 +1,8 @@
 "use client";
 
+import { ChevronLeft, ChevronRight } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { SlotResponseDto as TimeSlot } from "@/sdk/backend-v2";
-import { ChevronLeft, ChevronRight } from "lucide-react";
 
 type AvailStatus = "available" | "few-left" | "no-slots" | "full";
 
@@ -166,5 +166,5 @@ export function DateStrip({
   );
 }
 
-export { toDateKey, getAvailStatus, AVAIL_CFG };
 export type { AvailStatus };
+export { AVAIL_CFG, getAvailStatus, toDateKey };

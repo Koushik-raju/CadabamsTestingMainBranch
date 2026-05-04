@@ -30,16 +30,20 @@
  */
 "use client";
 
-import { DateEntriesCard } from "@/components/journal/date-entries-card";
+import { Pencil } from "lucide-react";
+import Image from "next/image";
+import { useRouter } from "next/navigation";
+import { useCallback, useMemo, useState } from "react";
 import type { DisplayEntry } from "@/components/journal/date-entries-card";
+import { DateEntriesCard } from "@/components/journal/date-entries-card";
 import { JournalEntrySheet } from "@/components/journal/journal-entry-sheet";
 import { WeekDateStrip } from "@/components/journal/week-date-strip";
 import { PageHeader } from "@/components/shared/navigation/page-header";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useSelfJournaling } from "@/hooks/self-journaling/use-self-journaling";
 import type { JournalEntryResponseDto } from "@/hooks/self-journaling/use-self-journaling";
-import { extractString, useJournalingCategories } from "@/hooks/use-journaling";
+import { useSelfJournaling } from "@/hooks/self-journaling/use-self-journaling";
 import type { JournalingResponseDto } from "@/hooks/use-journaling";
+import { extractString, useJournalingCategories } from "@/hooks/use-journaling";
 import {
   type SubscriptionWithTitleResponseDto,
   useJournalingSubscriptions,
@@ -48,11 +52,6 @@ import {
 import { buildWeekBaseDays, toLocalDateStr } from "@/lib/journal-utils";
 import { getJournalVisual } from "@/lib/journal-visual";
 import { cn } from "@/lib/utils";
-import { Pencil } from "lucide-react";
-import Image from "next/image";
-import { useRouter } from "next/navigation";
-import { useCallback } from "react";
-import { useMemo, useState } from "react";
 
 // ---------------------------------------------------------------------------
 // Subscribed Journey Card
@@ -114,7 +113,10 @@ function JourneyCard({
 function CategoryCard({
   category,
   onClick,
-}: { category: JournalingResponseDto; onClick: () => void }) {
+}: {
+  category: JournalingResponseDto;
+  onClick: () => void;
+}) {
   const { gradient, Icon } = getJournalVisual(category.title);
   const subCount = category.subJournalings?.filter((s) => s.status === "PUBLISHED").length ?? 0;
 

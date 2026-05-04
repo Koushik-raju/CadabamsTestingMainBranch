@@ -1,7 +1,3 @@
-import { journeysKey } from "@/lib/swr-keys";
-import { cmsJourneysControllerList } from "@/sdk/backend-v2";
-import type { JourneyResponseDto } from "@/sdk/backend-v2";
-import type { JourneyItem } from "@/types/journey";
 /**
  * FILE: hooks/journeys/use-journeys-page.ts
  *
@@ -26,6 +22,10 @@ import type { JourneyItem } from "@/types/journey";
  * LAST UPDATED: 2026-04-30 — read typed task relation arrays (audios/videos/assessments/worksheets/subJournalings) directly from regenerated SDK; backend DTO + service now populate them, so no runtime casting needed
  */
 import useSWR from "swr";
+import { journeysKey } from "@/lib/swr-keys";
+import type { JourneyResponseDto } from "@/sdk/backend-v2";
+import { cmsJourneysControllerList } from "@/sdk/backend-v2";
+import type { JourneyItem } from "@/types/journey";
 
 // ---------------------------------------------------------------------------
 // Mapping helper

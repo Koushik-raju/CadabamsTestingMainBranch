@@ -1,3 +1,4 @@
+import useSWR from "swr";
 import { useAuth } from "@/hooks/shared/auth/use-auth";
 import {
   availablePackagesKey,
@@ -5,6 +6,7 @@ import {
   packageProductDetailsKey,
   packageProductLinesKey,
 } from "@/lib/swr-keys";
+import type { BookPackageResultDto, RazorpayPaymentEnvelopeDto } from "@/sdk/backend-v2";
 import {
   crmControllerBookPackage,
   crmControllerGetAllPackages,
@@ -13,8 +15,6 @@ import {
   crmControllerGetUserPackages,
   crmControllerRazorpayPackagePayment,
 } from "@/sdk/backend-v2";
-import type { BookPackageResultDto, RazorpayPaymentEnvelopeDto } from "@/sdk/backend-v2";
-import useSWR from "swr";
 
 // ── SWR hooks ──────────────────────────────────────────────────────────────
 

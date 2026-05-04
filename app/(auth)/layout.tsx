@@ -26,10 +26,10 @@
  */
 "use client";
 
+import { SWRConfig } from "swr";
 import { JourneyReturnFab } from "@/components/journey/journey-return-fab";
 import { BookingProvider } from "@/contexts/booking-context";
 import { JourneyReturnProvider } from "@/contexts/journey-return-context";
-import { SWRConfig } from "swr";
 
 const swrConfig = { revalidateOnFocus: false };
 const layoutStyle = {

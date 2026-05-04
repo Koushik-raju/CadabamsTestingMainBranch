@@ -29,11 +29,11 @@
 
 "use client";
 
+import { Pause, Play, RotateCcw, RotateCw, Volume2, VolumeX } from "lucide-react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
 import { cn } from "@/lib/utils";
-import { Pause, Play, RotateCcw, RotateCw, Volume2, VolumeX } from "lucide-react";
-import { useCallback, useEffect, useRef, useState } from "react";
 
 interface AudioPlayerProps {
   src: string;
@@ -122,7 +122,7 @@ export function AudioPlayer({ src, title, autoPlay = false, className }: AudioPl
     audio.currentTime = Math.min(Math.max(audio.currentTime + seconds, 0), audio.duration || 0);
   }, []);
 
-  const progress = duration > 0 ? (currentTime / duration) * 100 : 0;
+  const _progress = duration > 0 ? (currentTime / duration) * 100 : 0;
 
   return (
     <div className={cn("bg-card border border-border rounded-2xl p-5 space-y-4", className)}>

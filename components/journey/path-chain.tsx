@@ -27,8 +27,8 @@
  */
 "use client";
 
-import type { JourneyTask } from "@/types/journey";
 import { useRef } from "react";
+import type { JourneyTask } from "@/types/journey";
 import { type NodeTaskType, type NodeVariant, PathNode } from "./path-node";
 import { UnitHeaderBar } from "./unit-header-bar";
 

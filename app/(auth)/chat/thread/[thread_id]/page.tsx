@@ -3,43 +3,44 @@
  *
  * PURPOSE:
  *   Renders the active chat conversation for a given thread UUID.
- *   Handles both historical message display and real-time streaming replies.
+ *   Streams responses from the Mastra super-agent via the Mastra client SDK.
  *
  * LOGIC OVERVIEW:
  *   1. Reads thread_id from URL params and resource_id from mastraDataContext.
- *   2. Delegates all data-fetching and streaming state to useChatSession, which
- *      merges SWR-cached history with live @ai-sdk/react messages.
- *   3. Renders ChatHeader (with history drawer toggle), MessageList (merged
- *      messages + pagination), and ChatInput (send form).
+ *   2. Delegates streaming state and message management to useAgentChat, which
+ *      uses the Mastra client's agent.stream() + processDataStream internally.
+ *   3. Renders ChatHeader (with history drawer toggle), MessageList (messages
+ *      from useAgentChat), and ChatInput (bound to text/setText/sendMessage).
  *   4. HistoryDrawer slides in from the right for navigating past threads.
  *   5. If the URL contains a ?q= param (set by the home header "Ask Dr. Riya"
- *      input), auto-sends that text once as soon as initial loading finishes.
- *      A ref guards against double-sending on re-renders.
+ *      input), auto-sends that text once on mount via sendMessage().
+ *      A ref guards against double-sending on StrictMode double-renders.
  *
  * KEY VARIABLES / PROPS / EXPORTS:
  *   threadId        — UUID from URL, scopes the chat session
  *   resource_id     — user identity from mastraDataContext (JWT sub or UUID)
- *   allMessages     — merged historical + live messages from useChatSession
- *   isStreaming     — true while assistant is generating; disables send button
- *   handleSubmit    — form submit handler; calls useChatSession.sendMessage
- *   initialQ        — decoded ?q= value; auto-sent once on first load
+ *   messages        — UIMessage[] from useAgentChat (all turns in this session)
+ *   isStreaming     — true while agent is generating; disables send button
+ *   sendMessage     — triggers a new turn (appends user msg + streams reply)
+ *   initialQ        — decoded ?q= value; auto-sent once on first mount
  *
  * DEPENDENCIES:
- *   useChatSession, mastraDataContext, ChatHeader, MessageList, ChatInput,
+ *   useAgentChat, mastraDataContext, ChatHeader, MessageList, ChatInput,
  *   HistoryDrawer
  *
- * LAST UPDATED: 2026-04-28 — remove per-page bg; root layout now owns bg-background
+ * LAST UPDATED: 2026-05-04 — replace useChat/raw-fetch with useAgentChat
+ *   (Mastra client SDK via agent.stream + processDataStream)
  */
 "use client";
 
+import { useParams, useSearchParams } from "next/navigation";
+import { useCallback, useContext, useEffect, useRef, useState } from "react";
 import { ChatHeader } from "@/components/chat/chat-header";
 import { ChatInput } from "@/components/chat/chat-input";
 import { HistoryDrawer } from "@/components/chat/history-drawer";
 import { MessageList } from "@/components/chat/message-list";
 import { mastraDataContext } from "@/contexts/mastra-data-context";
-import { useChatSession } from "@/hooks/use-chat-session";
-import { useParams, useSearchParams } from "next/navigation";
-import { useCallback, useContext, useEffect, useRef, useState } from "react";
+import { useAgentChat } from "@/hooks/use-agent-chat";
 
 export default function ChatPage() {
   const params = useParams();
@@ -52,26 +53,19 @@ export default function ChatPage() {
   const [historyOpen, setHistoryOpen] = useState(false);
   const { resource_id } = useContext(mastraDataContext);
 
-  const {
-    allMessages,
-    sendMessage,
-    isStreaming,
-    loadMore,
-    hasMore,
-    isLoadingMore,
-    isInitialLoading,
-    text,
-    setText,
-  } = useChatSession({ threadId, resourceId: resource_id });
+  const { messages, text, setText, sendMessage, isStreaming } = useAgentChat({
+    threadId,
+    resourceId: resource_id,
+  });
 
-  /* Auto-send the initial question from the home input once loading is done.
+  /* Auto-send the initial question from the home input once on mount.
    * The ref prevents double-firing on StrictMode double-renders. */
   const sentRef = useRef(false);
   useEffect(() => {
-    if (!initialQ || isInitialLoading || sentRef.current) return;
+    if (!initialQ || sentRef.current) return;
     sentRef.current = true;
     sendMessage(initialQ);
-  }, [initialQ, isInitialLoading, sendMessage]);
+  }, [initialQ, sendMessage]);
 
   const handleSubmit = useCallback(
     (e: React.FormEvent) => {
@@ -86,11 +80,11 @@ export default function ChatPage() {
       <ChatHeader onHistoryClick={() => setHistoryOpen(true)} />
 
       <MessageList
-        messages={allMessages}
+        messages={messages}
         isStreaming={isStreaming}
-        onLoadMore={loadMore}
-        hasMore={hasMore}
-        isLoadingMore={isLoadingMore}
+        onLoadMore={() => {}}
+        hasMore={false}
+        isLoadingMore={false}
       />
 
       <ChatInput

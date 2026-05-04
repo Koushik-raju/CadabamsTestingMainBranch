@@ -45,33 +45,32 @@
  */
 "use client";
 
-import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet";
-import { type JourneyReturnTaskKind, useJourneyReturn } from "@/contexts/journey-return-context";
-import {
-  type JourneyProgress,
-  type TaskProof,
-  subscribeToJourney,
-  tickJourney,
-  updateNodeProgress,
-} from "@/hooks/journeys/use-journey-detail";
-import { hapticLight, hapticMedium, hapticSuccess, hapticWarning } from "@/lib/haptics";
-import { journeyEnrollmentKey } from "@/lib/swr-keys";
-import { cn } from "@/lib/utils";
-import { fixImageUrl } from "@/lib/utils";
-import type { EnrollmentTaskDto } from "@/sdk/backend-v2";
-import { extractJourneyDescription, extractJourneyName } from "@/types/journey";
-import type { JourneyItem, JourneyTask } from "@/types/journey";
 import { BarChart2, Clock, Flame, Lock, Sparkles, Timer, Zap } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "react-toastify";
 import { mutate as globalMutate } from "swr";
+import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet";
+import { type JourneyReturnTaskKind, useJourneyReturn } from "@/contexts/journey-return-context";
+import {
+  type JourneyProgress,
+  subscribeToJourney,
+  type TaskProof,
+  tickJourney,
+  updateNodeProgress,
+} from "@/hooks/journeys/use-journey-detail";
+import { hapticLight, hapticMedium, hapticSuccess, hapticWarning } from "@/lib/haptics";
+import { journeyEnrollmentKey } from "@/lib/swr-keys";
+import { cn, fixImageUrl } from "@/lib/utils";
+import type { EnrollmentTaskDto } from "@/sdk/backend-v2";
+import type { JourneyItem, JourneyTask } from "@/types/journey";
+import { extractJourneyDescription, extractJourneyName } from "@/types/journey";
 import { JourneyDaySummaryModal } from "./journey-day-summary-modal";
 import { JourneyDaySummarySheet } from "./journey-day-summary-sheet";
 import { JourneyPreviewSheet } from "./journey-preview-sheet";
 import { JourneyTaskActionSheet, type TaskActionSheetData } from "./journey-task-action-sheet";
 import { JourneyUnitTasksSheet, type UnitTask } from "./journey-unit-tasks-sheet";
-import { type ChainItem, PathChain, type PathChainNode, getTaskType } from "./path-chain";
+import { type ChainItem, getTaskType, PathChain, type PathChainNode } from "./path-chain";
 import type { NodeVariant } from "./path-node";
 import { XpFloat } from "./xp-float";
 
@@ -234,7 +233,7 @@ export function JourneyPathView({ journey, progress, journeyId }: JourneyPathVie
   const [daySummaryOpen, setDaySummaryOpen] = useState(false);
 
   // Pulse animation ref (scale effect on scroll-to node)
-  const [pulseNodeId, setPulseNodeId] = useState<string | null>(null);
+  const [_pulseNodeId, setPulseNodeId] = useState<string | null>(null);
 
   // Track previous todayDone to detect day completion in-session
   const prevTodayDoneRef = useRef<number>(-1);
@@ -791,7 +790,7 @@ export function JourneyPathView({ journey, progress, journeyId }: JourneyPathVie
 
   const imageUrl = fixImageUrl(journey.icon);
   const name = extractJourneyName(journey.name);
-  const ctaLabel = subscribing
+  const _ctaLabel = subscribing
     ? "Starting…"
     : journey.isPremium
       ? "Unlock Premium Journey"

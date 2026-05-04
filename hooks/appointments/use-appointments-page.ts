@@ -1,12 +1,12 @@
 "use client";
 
+import { useCallback, useEffect, useState } from "react";
 import { useAuth } from "@/hooks/shared/auth/use-auth";
 import {
-  type SlotDetailDto,
   crmControllerCancelAppointment,
   crmControllerFetchAppointmentDetails,
+  type SlotDetailDto,
 } from "@/sdk/backend-v2";
-import { useCallback, useEffect, useState } from "react";
 
 export type { SlotDetailDto };
 

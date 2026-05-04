@@ -29,8 +29,10 @@
  *   for refresh endpoint; use endsWith match because SDK pre-merges baseURL
  *   into the full URL before calling axios
  */
-import { getAccessToken } from "@/lib/cookies";
+
 import type { AxiosInstance } from "axios";
+import { getAccessToken } from "@/lib/cookies";
+
 /* refreshPatientToken is imported lazily inside the 401 handler to break the
    circular dep: api/backend-v2 → interceptors → auth → sdk → api/backend-v2 */
 

@@ -26,13 +26,13 @@
  */
 "use client";
 
-import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
-import { Skeleton } from "@/components/ui/skeleton";
-import { type DaySummaryResponseDto, journeysControllerGetDaySummary } from "@/sdk/backend-v2";
 import { Loader2, Sparkles } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
+import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
+import { Skeleton } from "@/components/ui/skeleton";
+import { type DaySummaryResponseDto, journeysControllerGetDaySummary } from "@/sdk/backend-v2";
 
 interface JourneyDaySummaryModalProps {
   open: boolean;

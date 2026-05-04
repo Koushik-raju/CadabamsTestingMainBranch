@@ -50,6 +50,9 @@
  */
 "use client";
 
+import { LayoutGrid, Search, X } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   AssessmentGridCard,
   RecommendedAssessmentCard,
@@ -71,9 +74,6 @@ import {
   useFilteredAssessments,
 } from "@/hooks/assessments/use-assessments-page";
 import { useAuth } from "@/hooks/shared/auth/use-auth";
-import { LayoutGrid, Search, X } from "lucide-react";
-import { useRouter } from "next/navigation";
-import { useCallback, useEffect, useMemo, useState } from "react";
 
 export default function AssessmentsPage() {
   const router = useRouter();

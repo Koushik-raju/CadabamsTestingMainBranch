@@ -1,7 +1,3 @@
-import { normalizeThread } from "@/lib/chat";
-import { createMastraClient } from "@/lib/mastra-client";
-import { swrConfig } from "@/lib/swr-config";
-import { threadsKey } from "@/lib/swr-keys";
 /**
  * FILE: hooks/use-threads.ts
  *
@@ -25,6 +21,10 @@ import { threadsKey } from "@/lib/swr-keys";
  * LAST UPDATED: 2026-04-16 — switched to threadsKey from swr-keys
  */
 import useSWR from "swr";
+import { normalizeThread } from "@/lib/chat";
+import { createMastraClient } from "@/lib/mastra-client";
+import { swrConfig } from "@/lib/swr-config";
+import { threadsKey } from "@/lib/swr-keys";
 
 export function useThreads(resourceId: string | undefined) {
   return useSWR(

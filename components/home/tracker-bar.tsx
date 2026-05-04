@@ -20,9 +20,9 @@
  * LAST UPDATED: 2026-05-04 — created; extracted trackers out of QuickActions into compact bar
  */
 
+import { Activity, Moon, Smile } from "lucide-react";
 import { GlyphTile } from "@/components/shared/glyph-tile";
 import { Card, CardContent } from "@/components/ui/card";
-import { Activity, Moon, Smile } from "lucide-react";
 
 const TRACKERS = [
   {

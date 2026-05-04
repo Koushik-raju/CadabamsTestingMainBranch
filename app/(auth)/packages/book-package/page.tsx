@@ -23,6 +23,9 @@
  */
 "use client";
 
+import { ChevronRight, Clock, PackageOpen } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { Suspense } from "react";
 import { PageHeader } from "@/components/shared/navigation/page-header";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -30,9 +33,6 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useAvailablePackages } from "@/hooks/use-packages";
 import type { PackageResponseDto } from "@/sdk/backend-v2";
-import { ChevronRight, Clock, PackageOpen } from "lucide-react";
-import { useRouter } from "next/navigation";
-import { Suspense } from "react";
 
 function storeSelectedPackage(pkg: PackageResponseDto) {
   if (typeof sessionStorage !== "undefined") {

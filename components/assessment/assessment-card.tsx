@@ -26,11 +26,10 @@
  */
 
 "use client";
-import { GlyphTile, TINTS } from "@/components/shared/glyph-tile";
-
-import type { AssessmentItem } from "@/hooks/use-assessments";
 import { CalendarClock, ChevronRight, Clock3, FileText, HelpCircle, Lock } from "lucide-react";
 import Link from "next/link";
+import { GlyphTile, TINTS } from "@/components/shared/glyph-tile";
+import type { AssessmentItem } from "@/hooks/use-assessments";
 import { getCategoryInfo } from "./assessment-category";
 
 interface AssessmentCardProps {

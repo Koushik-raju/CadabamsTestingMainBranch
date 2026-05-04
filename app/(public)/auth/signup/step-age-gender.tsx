@@ -20,7 +20,7 @@
 import { Minus, Plus } from "lucide-react";
 import { useState } from "react";
 import { useSignupContext } from "./context";
-import { GENDER_OPTIONS, coralBtnCls, coralGrad } from "./types";
+import { coralBtnCls, coralGrad, GENDER_OPTIONS } from "./types";
 
 export function StepAgeGender() {
   const { data, updateData, goNext, currentIndex, visibleSteps } = useSignupContext();

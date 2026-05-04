@@ -28,17 +28,6 @@
  */
 "use client";
 
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { Switch } from "@/components/ui/switch";
 import {
   ArrowLeft,
   Bluetooth,
@@ -54,6 +43,17 @@ import {
 } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useCallback, useEffect, useState } from "react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Switch } from "@/components/ui/switch";
 
 import { useAuth } from "@/hooks/use-auth";
 import { cn } from "@/lib/utils";
@@ -153,7 +153,7 @@ function OnboardingContent() {
   const visibleSteps = STEPS.filter((s) => s !== "patient-form" || !data.serviceForSelf);
   const currentIndex = visibleSteps.indexOf(step);
   const isFirst = currentIndex === 0;
-  const isLast = currentIndex === visibleSteps.length - 1;
+  const _isLast = currentIndex === visibleSteps.length - 1;
 
   const goBack = () => {
     const prev = visibleSteps[currentIndex - 1];

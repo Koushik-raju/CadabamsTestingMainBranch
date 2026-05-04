@@ -23,7 +23,6 @@
  */
 "use client";
 
-import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet";
 import {
   BookOpen,
   ClipboardList,
@@ -37,8 +36,9 @@ import {
   Trophy,
   Zap,
 } from "lucide-react";
-import { getTypeColor } from "./path-node";
+import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet";
 import type { NodeTaskType } from "./path-node";
+import { getTypeColor } from "./path-node";
 
 // ---------------------------------------------------------------------------
 // Helpers

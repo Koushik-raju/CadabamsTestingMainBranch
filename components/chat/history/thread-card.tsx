@@ -22,10 +22,10 @@
  *
  * LAST UPDATED: 2026-05-04 — swapped inline gradient tile for GlyphTile
  */
-import { GlyphTile } from "@/components/shared/glyph-tile";
-import { MastraThread } from "@/lib/chat";
-import { formatDate } from "@/lib/chat";
+
 import { ChevronRight, MessageSquare } from "lucide-react";
+import { GlyphTile } from "@/components/shared/glyph-tile";
+import { formatDate, MastraThread } from "@/lib/chat";
 
 interface ThreadCardProps {
   thread: MastraThread;

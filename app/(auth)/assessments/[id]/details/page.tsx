@@ -39,10 +39,6 @@
  */
 "use client";
 
-import { PageHeader } from "@/components/shared/navigation/page-header";
-import { Button } from "@/components/ui/button";
-import { Skeleton } from "@/components/ui/skeleton";
-import { useAssessmentById } from "@/hooks/assessments/use-assessment-detail";
 import {
   AlertCircle,
   CheckCircle2,
@@ -53,12 +49,12 @@ import {
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { use, useMemo } from "react";
+import { PageHeader } from "@/components/shared/navigation/page-header";
+import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
+import { useAssessmentById } from "@/hooks/assessments/use-assessment-detail";
 
-export default function AssessmentDetailsPage({
-  params,
-}: {
-  params: Promise<{ id: string }>;
-}) {
+export default function AssessmentDetailsPage({ params }: { params: Promise<{ id: string }> }) {
   const { id: assessmentId } = use(params);
   const router = useRouter();
 

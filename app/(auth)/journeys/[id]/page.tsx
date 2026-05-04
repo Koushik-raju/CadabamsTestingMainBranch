@@ -34,19 +34,6 @@
 
 "use client";
 
-import { PageHeader } from "@/components/shared/navigation/page-header";
-import { Button } from "@/components/ui/button";
-import { Separator } from "@/components/ui/separator";
-import { Skeleton } from "@/components/ui/skeleton";
-import {
-  subscribeToJourney,
-  useJourneyDetail,
-  useJourneyProgress,
-} from "@/hooks/journeys/use-journey-detail";
-import { useAuth } from "@/hooks/shared/auth/use-auth";
-import { hapticMedium } from "@/lib/haptics";
-import { fixImageUrl } from "@/lib/utils";
-import { extractJourneyName } from "@/types/journey";
 import { type BlocksContent, BlocksRenderer } from "@strapi/blocks-react-renderer";
 import {
   AlertCircle,
@@ -60,6 +47,19 @@ import {
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { Suspense, use, useEffect, useState } from "react";
+import { PageHeader } from "@/components/shared/navigation/page-header";
+import { Button } from "@/components/ui/button";
+import { Separator } from "@/components/ui/separator";
+import { Skeleton } from "@/components/ui/skeleton";
+import {
+  subscribeToJourney,
+  useJourneyDetail,
+  useJourneyProgress,
+} from "@/hooks/journeys/use-journey-detail";
+import { useAuth } from "@/hooks/shared/auth/use-auth";
+import { hapticMedium } from "@/lib/haptics";
+import { fixImageUrl } from "@/lib/utils";
+import { extractJourneyName } from "@/types/journey";
 
 interface PageProps {
   params: Promise<{ id: string }>;

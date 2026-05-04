@@ -23,12 +23,12 @@
  */
 "use client";
 
+import { useRouter, useSearchParams } from "next/navigation";
+import { Suspense, useState } from "react";
 import { MoodCheckForm } from "@/components/journey/mood-check-form";
 import { PageHeader } from "@/components/shared/navigation/page-header";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useJourneyTaskContinuation } from "@/hooks/journeys/use-journey-task-continuation";
-import { useRouter, useSearchParams } from "next/navigation";
-import { Suspense, useState } from "react";
 
 function MoodCheckContent() {
   const router = useRouter();

@@ -28,8 +28,6 @@
  */
 "use client";
 
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import {
   Building2,
   Check,
@@ -42,6 +40,8 @@ import {
   X,
 } from "lucide-react";
 import { useState } from "react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import {
   ALL_ISSUES,
   CENTERS_BY_CITY,
@@ -65,13 +65,7 @@ interface SheetProps {
 // Shared shell
 // ---------------------------------------------------------------------------
 
-function SheetShell({
-  onClose,
-  children,
-}: {
-  onClose: () => void;
-  children: React.ReactNode;
-}) {
+function SheetShell({ onClose, children }: { onClose: () => void; children: React.ReactNode }) {
   return (
     <div className="fixed inset-0 z-50 bg-black/40 flex items-end" onClick={onClose}>
       <div

@@ -29,6 +29,9 @@
  */
 "use client";
 
+import { AlertCircle, Building2, Loader2, Video } from "lucide-react";
+import { useParams, useRouter, useSearchParams } from "next/navigation";
+import { Suspense, useCallback, useEffect, useMemo, useState } from "react";
 import { CampusSheet } from "@/components/booking/campus-sheet";
 import { DateStrip, toDateKey } from "@/components/booking/date-strip";
 import { SlotSection } from "@/components/booking/slot-section";
@@ -48,6 +51,7 @@ import { Button } from "@/components/ui/button";
 import { useBooking } from "@/contexts/booking-context";
 import { useAuth } from "@/hooks/shared/auth/use-auth";
 import { cn } from "@/lib/utils";
+import type { DoctorBasicResponseDto, SlotResponseDto } from "@/sdk/backend-v2";
 import {
   crmControllerGetCampuses,
   crmControllerGetDoctorById,
@@ -55,10 +59,6 @@ import {
   crmControllerGetSlots,
   crmControllerRescheduleAppointment,
 } from "@/sdk/backend-v2";
-import type { DoctorBasicResponseDto, SlotResponseDto } from "@/sdk/backend-v2";
-import { AlertCircle, Building2, Loader2, Video } from "lucide-react";
-import { useParams, useRouter, useSearchParams } from "next/navigation";
-import { Suspense, useCallback, useEffect, useMemo, useState } from "react";
 
 // The API returns additional fields not yet in the generated DTO
 type DoctorResponseDto = DoctorBasicResponseDto & {
@@ -179,7 +179,7 @@ function BookingContent() {
       setSlotPrice(null);
       setError(null);
       try {
-        const start = new Date(dates[0]);
+        const _start = new Date(dates[0]);
         const end = new Date(dates[dates.length - 1]);
         end.setHours(23, 59, 59, 999);
         const res = await crmControllerGetSlots({

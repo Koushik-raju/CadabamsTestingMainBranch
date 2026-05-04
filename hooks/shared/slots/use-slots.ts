@@ -1,7 +1,7 @@
-import { slotsKey } from "@/lib/swr-keys";
-import { crmControllerGetSlots } from "@/sdk/backend-v2";
-import type { SlotResponseDto } from "@/sdk/backend-v2";
 import useSWR from "swr";
+import { slotsKey } from "@/lib/swr-keys";
+import type { SlotResponseDto } from "@/sdk/backend-v2";
+import { crmControllerGetSlots } from "@/sdk/backend-v2";
 
 interface UseSlotsResult {
   slots: SlotResponseDto[];

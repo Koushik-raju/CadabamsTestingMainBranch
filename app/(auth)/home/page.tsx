@@ -33,6 +33,8 @@
 
 "use client";
 
+import { useRouter } from "next/navigation";
+import { useMemo } from "react";
 import { GrowthWidget } from "@/components/home/growth-widget";
 import { HomeHeader } from "@/components/home/home-header";
 import { JourneySection } from "@/components/home/journey-section";
@@ -42,8 +44,6 @@ import { TrackerBar } from "@/components/home/tracker-bar";
 import { UpcomingSession } from "@/components/home/upcoming-session";
 import { useHomePage } from "@/hooks/home/use-home-page";
 import { useEnrolledJourneys, useGamification } from "@/hooks/journeys/use-journey-detail";
-import { useRouter } from "next/navigation";
-import { useMemo } from "react";
 
 export default function HomePage() {
   const router = useRouter();

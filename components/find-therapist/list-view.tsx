@@ -28,12 +28,12 @@
  */
 "use client";
 
+import { ArrowRight, ChevronDown, Search } from "lucide-react";
+import { useMemo, useState } from "react";
 import { DoctorCard } from "@/components/find-therapist/doctor-card";
 import { BackButton } from "@/components/shared/navigation/back-button";
 import { Input } from "@/components/ui/input";
 import { DOCTORS } from "@/data/doctors";
-import { ArrowRight, ChevronDown, Search } from "lucide-react";
-import { useMemo, useState } from "react";
 import { PROFESSION_OPTIONS, useFindTherapist } from "./context";
 import { ExperiencingSheet, LangSheet, LocationSheet, ModeSheet } from "./filter-sheets";
 

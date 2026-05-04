@@ -21,9 +21,10 @@
  *
  * LAST UPDATED: 2026-04-28 — add file header; replace hardcoded #f6f4f2 with var(--mt-cream-bg)
  */
+
+import { Send } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Send } from "lucide-react";
 
 interface ChatInputProps {
   text: string;

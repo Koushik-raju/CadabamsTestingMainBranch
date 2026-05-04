@@ -20,8 +20,9 @@
  *
  * LAST UPDATED: 2026-04-28 — initial creation.
  */
-import { apiClient } from "@/api/backend-v2";
+
 import useSWR from "swr";
+import { apiClient } from "@/api/backend-v2";
 
 const CAMPUS = "cadabams";
 

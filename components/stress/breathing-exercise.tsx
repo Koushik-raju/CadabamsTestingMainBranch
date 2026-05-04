@@ -28,8 +28,8 @@
 
 "use client";
 
-import { Button } from "@/components/ui/button";
 import { useCallback, useEffect, useState } from "react";
+import { Button } from "@/components/ui/button";
 
 type Phase = "inhale" | "hold-in" | "exhale" | "hold-out" | "idle";
 

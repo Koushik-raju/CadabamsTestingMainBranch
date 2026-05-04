@@ -22,8 +22,8 @@
 
 "use client";
 
-import { logoutPatient, sendPatientOtp, verifyPatientLogin, verifyPatientSignup } from "@/lib/auth";
 import { useState } from "react";
+import { logoutPatient, sendPatientOtp, verifyPatientLogin, verifyPatientSignup } from "@/lib/auth";
 
 export interface SignupPayload {
   phone: string;

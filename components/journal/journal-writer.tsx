@@ -47,6 +47,12 @@
  */
 "use client";
 
+import type { EmojiClickData } from "emoji-picker-react";
+import { Hash, ImageIcon, Loader2, Mic, MicOff, Smile, Sparkles, X } from "lucide-react";
+import dynamic from "next/dynamic";
+import { useRouter } from "next/navigation";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { mutate as globalMutate } from "swr";
 import { Button } from "@/components/ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -58,12 +64,6 @@ import { type ConversationTurnDto, generateJournalPrompt } from "@/hooks/use-jou
 import { useSubJournalDetail } from "@/hooks/use-journaling-subscriptions";
 import { journalStreakKey, journalSubEntriesKey, selfJournalingKey } from "@/lib/swr-keys";
 import type { JournalPromptDto } from "@/sdk/backend-v2";
-import type { EmojiClickData } from "emoji-picker-react";
-import { Hash, ImageIcon, Loader2, Mic, MicOff, Smile, Sparkles, X } from "lucide-react";
-import dynamic from "next/dynamic";
-import { useRouter } from "next/navigation";
-import { useCallback, useEffect, useRef, useState } from "react";
-import { mutate as globalMutate } from "swr";
 
 const EmojiPicker = dynamic(() => import("emoji-picker-react"), { ssr: false });
 

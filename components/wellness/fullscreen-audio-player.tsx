@@ -27,10 +27,6 @@
  */
 "use client";
 
-import { Button } from "@/components/ui/button";
-import { Slider } from "@/components/ui/slider";
-import type { MindfulMinuteAudio } from "@/hooks/wellness/use-mindful-minutes";
-import { cn } from "@/lib/utils";
 import {
   ChevronDown,
   Pause,
@@ -45,6 +41,10 @@ import {
 import Image from "next/image";
 import { useCallback, useEffect, useRef, useState } from "react";
 import ReactDOM from "react-dom";
+import { Button } from "@/components/ui/button";
+import { Slider } from "@/components/ui/slider";
+import type { MindfulMinuteAudio } from "@/hooks/wellness/use-mindful-minutes";
+import { cn } from "@/lib/utils";
 
 interface FullscreenAudioPlayerProps {
   audios: MindfulMinuteAudio[];
@@ -222,7 +222,7 @@ export function FullscreenAudioPlayer({
     setTimeout(onClose, 280);
   }, [onClose]);
 
-  const progress = duration > 0 ? (currentTime / duration) * 100 : 0;
+  const _progress = duration > 0 ? (currentTime / duration) * 100 : 0;
   const bgUrl = currentTrack?.backgroundVisualUrl;
   const hasBg = !!bgUrl;
   const bgIsVideo = isVideoUrl(bgUrl);

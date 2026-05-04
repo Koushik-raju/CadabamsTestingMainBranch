@@ -25,11 +25,6 @@
  */
 "use client";
 
-import { GlyphTile, type TintKey } from "@/components/shared/glyph-tile";
-import { Card, CardContent } from "@/components/ui/card";
-import { Separator } from "@/components/ui/separator";
-import { Skeleton } from "@/components/ui/skeleton";
-import type { GrowthDay } from "@/hooks/growth/use-growth";
 import {
   Activity,
   ClipboardList,
@@ -41,6 +36,11 @@ import {
 } from "lucide-react";
 import type { ElementType } from "react";
 import ReactMarkdown, { type Components } from "react-markdown";
+import { GlyphTile, type TintKey } from "@/components/shared/glyph-tile";
+import { Card, CardContent } from "@/components/ui/card";
+import { Separator } from "@/components/ui/separator";
+import { Skeleton } from "@/components/ui/skeleton";
+import type { GrowthDay } from "@/hooks/growth/use-growth";
 
 /**
  * Preview markdown components — collapse every block-level element (paragraph,

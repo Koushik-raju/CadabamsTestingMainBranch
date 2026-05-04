@@ -41,32 +41,33 @@
  * LAST UPDATED: 2026-04-28 — added generateJournalPrompt and ConversationTurnDto
  *   re-export to fix journal-writer.tsx build error.
  */
+
+import useSWR, { mutate as globalMutate } from "swr";
 import { swrConfig } from "@/lib/swr-config";
 import { journalingCategoriesKey, selfJournalingEntryKey, selfJournalingKey } from "@/lib/swr-keys";
 import {
   type ConversationTurnDto,
   type CreateJournalEntryDto,
+  cmsJournalingControllerGetJournalings,
   type GeneratedJournalPromptResponseDto,
   type JournalEntryResponseDto,
-  type JournalPromptDto,
   type JournalingListResponseDto,
   type JournalingResponseDto,
-  type SubJournalingResponseDto,
-  cmsJournalingControllerGetJournalings,
+  type JournalPromptDto,
   journalingControllerCreateEntry,
   journalingControllerDeleteEntry,
   journalingControllerGetEntry,
   journalingControllerListMine,
   journalingControllerPromptMe,
+  type SubJournalingResponseDto,
 } from "@/sdk/backend-v2";
-import useSWR, { mutate as globalMutate } from "swr";
 
 export type {
   ConversationTurnDto,
   CreateJournalEntryDto,
   JournalEntryResponseDto,
-  JournalPromptDto,
   JournalingResponseDto,
+  JournalPromptDto,
   SubJournalingResponseDto,
 };
 

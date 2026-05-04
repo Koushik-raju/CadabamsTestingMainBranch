@@ -19,8 +19,9 @@
  *
  * LAST UPDATED: 2026-04-28 — Neo design system: shadow scale, color tokens, border radius
  */
-import { GlyphTile } from "@/components/shared/glyph-tile";
+
 import { BookOpen } from "lucide-react";
+import { GlyphTile } from "@/components/shared/glyph-tile";
 
 export interface JournalEntryRowProps {
   title?: string | null;

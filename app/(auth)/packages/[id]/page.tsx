@@ -32,17 +32,6 @@
  */
 "use client";
 
-import { BackButton } from "@/components/shared/navigation/back-button";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
-import { Separator } from "@/components/ui/separator";
-import { Skeleton } from "@/components/ui/skeleton";
-import { useAuth } from "@/hooks/use-auth";
-import { initiatePackagePayment, useManagedPackages } from "@/hooks/use-packages";
-import { odooTuple } from "@/lib/odoo";
-import { getPackagePalette } from "@/lib/package-colors";
-import type { BookedPackageLineDto } from "@/sdk/backend-v2";
 import {
   AlertCircle,
   Calendar,
@@ -62,6 +51,17 @@ import {
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { use, useState } from "react";
+import { BackButton } from "@/components/shared/navigation/back-button";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { Separator } from "@/components/ui/separator";
+import { Skeleton } from "@/components/ui/skeleton";
+import { useAuth } from "@/hooks/use-auth";
+import { initiatePackagePayment, useManagedPackages } from "@/hooks/use-packages";
+import { odooTuple } from "@/lib/odoo";
+import { getPackagePalette } from "@/lib/package-colors";
+import type { BookedPackageLineDto } from "@/sdk/backend-v2";
 
 function getStageMeta(stage: string): { label: string; Icon: React.ElementType } {
   switch (stage) {

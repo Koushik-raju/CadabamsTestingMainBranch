@@ -26,10 +26,10 @@
 
 "use client";
 
-import { type NavItem, navigationMenuItems } from "@/config/navigation";
-import { cn } from "@/lib/utils";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { type NavItem, navigationMenuItems } from "@/config/navigation";
+import { cn } from "@/lib/utils";
 
 /* Brand sparkle — 4-pointed star used on the AI tab and AI surfaces */
 function SparkleIcon({ size = 24, color = "#fff" }: { size?: number; color?: string }) {

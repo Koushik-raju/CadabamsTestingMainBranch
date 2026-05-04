@@ -34,15 +34,11 @@
 
 "use client";
 
-import { useAuth } from "@/hooks/use-auth";
-import { useAuthActions } from "@/hooks/use-auth-actions";
-import { baselineAssessmentMeControllerCreate, crmControllerCreateLead } from "@/sdk/backend-v2";
-import type { CreateBaselineAssessmentDto } from "@/sdk/backend-v2";
 import countryCodes from "country-codes-list";
 import { useRouter, useSearchParams } from "next/navigation";
 import {
-  type ReactNode,
   createContext,
+  type ReactNode,
   useCallback,
   useContext,
   useEffect,
@@ -51,6 +47,10 @@ import {
   useState,
 } from "react";
 import { toast } from "react-toastify";
+import { useAuth } from "@/hooks/use-auth";
+import { useAuthActions } from "@/hooks/use-auth-actions";
+import type { CreateBaselineAssessmentDto } from "@/sdk/backend-v2";
+import { baselineAssessmentMeControllerCreate, crmControllerCreateLead } from "@/sdk/backend-v2";
 import { ALL_STEPS, type Country, type OnboardingData, type Step } from "./types";
 
 // ─── Public types ─────────────────────────────────────────────────────────────

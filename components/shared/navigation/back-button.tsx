@@ -26,10 +26,10 @@
 
 "use client";
 
-import { Button } from "@/components/ui/button";
-import { useSafeBack } from "@/hooks/use-safe-back";
 import { ChevronLeft } from "lucide-react";
 import { useRouter } from "next/navigation";
+import { Button } from "@/components/ui/button";
+import { useSafeBack } from "@/hooks/use-safe-back";
 
 interface BackButtonProps {
   fallback?: string;

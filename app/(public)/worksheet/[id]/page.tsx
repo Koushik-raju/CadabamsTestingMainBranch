@@ -36,6 +36,9 @@
 
 "use client";
 
+import { AlertCircle, CheckCircle2, ChevronLeft, ChevronRight } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { use, useEffect, useState } from "react";
 import { BackButton } from "@/components/shared/navigation/back-button";
 import {
   type AnswerValue,
@@ -47,9 +50,6 @@ import { Progress } from "@/components/ui/progress";
 import { Skeleton } from "@/components/ui/skeleton";
 import { getUser } from "@/lib/cookies";
 import { cmsWorksheetsControllerFindOne } from "@/sdk/backend-v2";
-import { AlertCircle, CheckCircle2, ChevronLeft, ChevronRight } from "lucide-react";
-import { useRouter } from "next/navigation";
-import { use, useEffect, useState } from "react";
 
 interface WorksheetData {
   title?: string;
@@ -156,7 +156,7 @@ export default function WorksheetFormPage({ params }: { params: Promise<{ id: st
     setSubmitting(true);
     try {
       const user = await getUser();
-      const leadId = String(user?.lead_id || "");
+      const _leadId = String(user?.lead_id || "");
 
       // Build payload
       const payload: Record<string, unknown> = { date: new Date().toISOString() };

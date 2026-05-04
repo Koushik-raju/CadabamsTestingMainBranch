@@ -1,25 +1,3 @@
-import {
-  enrolledJourneysKey,
-  gamificationKey,
-  journeyDetailKey,
-  journeyEnrollmentKey,
-} from "@/lib/swr-keys";
-import {
-  cmsJourneysControllerGetById,
-  journeysControllerCompleteDay,
-  journeysControllerCompleteTask,
-  journeysControllerGetByJourneyId,
-  journeysControllerGetDaySummary,
-  journeysControllerGetMyGamification,
-  journeysControllerListMine,
-  journeysControllerTick,
-} from "@/sdk/backend-v2";
-import type {
-  DaySummaryResponseDto,
-  GamificationDto,
-  PatientJourneyResponseDto,
-} from "@/sdk/backend-v2";
-import type { JourneyItem } from "@/types/journey";
 /**
  * FILE: hooks/journeys/use-journey-detail.ts
  *
@@ -60,6 +38,28 @@ import type { JourneyItem } from "@/types/journey";
  *   helper so the day-summary sheet can persist mood + summary on Day Done.
  */
 import useSWR, { mutate as globalMutate } from "swr";
+import {
+  enrolledJourneysKey,
+  gamificationKey,
+  journeyDetailKey,
+  journeyEnrollmentKey,
+} from "@/lib/swr-keys";
+import type {
+  DaySummaryResponseDto,
+  GamificationDto,
+  PatientJourneyResponseDto,
+} from "@/sdk/backend-v2";
+import {
+  cmsJourneysControllerGetById,
+  journeysControllerCompleteDay,
+  journeysControllerCompleteTask,
+  journeysControllerGetByJourneyId,
+  journeysControllerGetDaySummary,
+  journeysControllerGetMyGamification,
+  journeysControllerListMine,
+  journeysControllerTick,
+} from "@/sdk/backend-v2";
+import type { JourneyItem } from "@/types/journey";
 import { mapV2Journey } from "./use-journeys-page";
 
 export type JourneyProgress = PatientJourneyResponseDto;

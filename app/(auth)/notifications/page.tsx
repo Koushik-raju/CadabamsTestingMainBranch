@@ -23,6 +23,17 @@
  */
 "use client";
 
+import {
+  Bell,
+  CalendarCheck,
+  ChevronRight,
+  Megaphone,
+  Route,
+  Stethoscope,
+  Trash2,
+} from "lucide-react";
+import { useRouter } from "next/navigation";
+import { useCallback, useEffect, useState } from "react";
 import { PageHeader } from "@/components/shared/navigation/page-header";
 import {
   AlertDialog,
@@ -40,23 +51,12 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
-  type LocalNotification,
   clearAllNotifications,
   getStoredNotifications,
+  type LocalNotification,
   markNotificationAsRead,
 } from "@/hooks/notifications/use-notifications";
 import { cn } from "@/lib/utils";
-import {
-  Bell,
-  CalendarCheck,
-  ChevronRight,
-  Megaphone,
-  Route,
-  Stethoscope,
-  Trash2,
-} from "lucide-react";
-import { useRouter } from "next/navigation";
-import { useCallback, useEffect, useState } from "react";
 
 function formatTime(iso: string) {
   const date = new Date(iso);

@@ -26,11 +26,11 @@
 
 "use client";
 
-import { Skeleton } from "@/components/ui/skeleton";
-import { cn } from "@/lib/utils";
 import { ArrowLeft } from "lucide-react";
 import Image from "next/image";
 import { Suspense } from "react";
+import { Skeleton } from "@/components/ui/skeleton";
+import { cn } from "@/lib/utils";
 import { SignupProvider, useSignupContext } from "./context";
 import { CountryPicker } from "./country-picker";
 import { StepAgeGender } from "./step-age-gender";

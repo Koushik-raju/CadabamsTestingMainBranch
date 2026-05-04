@@ -24,11 +24,11 @@
  */
 "use client";
 
+import { ChevronRight, ClipboardList } from "lucide-react";
 import { GlyphTile } from "@/components/shared/glyph-tile";
 import { Card, CardContent } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import type { AssignedAssessmentItem } from "@/hooks/assessments/use-assessments-page";
-import { ChevronRight, ClipboardList } from "lucide-react";
 
 interface AssignmentsListProps {
   items: AssignedAssessmentItem[];

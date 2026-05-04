@@ -28,17 +28,6 @@
  */
 "use client";
 
-import { FeaturedPackageCard } from "@/components/package/featured-package-card";
-import { PackageDiscoveryCard } from "@/components/package/package-discovery-card";
-import { PageHeader } from "@/components/shared/navigation/page-header";
-import { Badge } from "@/components/ui/badge";
-import { Card, CardContent } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Skeleton } from "@/components/ui/skeleton";
-import { useAvailablePackages, useManagedPackages } from "@/hooks/use-packages";
-import { odooTuple } from "@/lib/odoo";
-import { cn } from "@/lib/utils";
-import type { BookedPackageDto } from "@/sdk/backend-v2";
 import {
   ArrowRight,
   CheckCircle,
@@ -51,6 +40,17 @@ import {
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { Suspense, useMemo, useState } from "react";
+import { FeaturedPackageCard } from "@/components/package/featured-package-card";
+import { PackageDiscoveryCard } from "@/components/package/package-discovery-card";
+import { PageHeader } from "@/components/shared/navigation/page-header";
+import { Badge } from "@/components/ui/badge";
+import { Card, CardContent } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Skeleton } from "@/components/ui/skeleton";
+import { useAvailablePackages, useManagedPackages } from "@/hooks/use-packages";
+import { odooTuple } from "@/lib/odoo";
+import { cn } from "@/lib/utils";
+import type { BookedPackageDto } from "@/sdk/backend-v2";
 
 // Per-stage visual config
 const STAGE_CONFIG: Record<

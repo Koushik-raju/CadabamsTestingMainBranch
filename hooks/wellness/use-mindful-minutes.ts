@@ -25,10 +25,10 @@
 
 "use client";
 
-import { mindfulMinutesKey } from "@/lib/swr-keys";
-import { cmsMindfulMinutesControllerFindAll } from "@/sdk/backend-v2";
-import type { AudioResponseDto, MindfulMinuteResponseDto } from "@/sdk/backend-v2";
 import useSWR from "swr";
+import { mindfulMinutesKey } from "@/lib/swr-keys";
+import type { AudioResponseDto, MindfulMinuteResponseDto } from "@/sdk/backend-v2";
+import { cmsMindfulMinutesControllerFindAll } from "@/sdk/backend-v2";
 
 // NOTE: AudioResponseDto has no `duration` or `category` fields (SDK gap).
 // Those fields have been removed from this type. Use createdAt for ordering.

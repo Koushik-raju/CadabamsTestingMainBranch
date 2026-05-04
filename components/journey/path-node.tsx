@@ -44,8 +44,6 @@
  */
 "use client";
 
-import { hapticLight } from "@/lib/haptics";
-import { cn } from "@/lib/utils";
 import {
   BookOpen,
   Check,
@@ -60,6 +58,8 @@ import {
   Star,
   Trophy,
 } from "lucide-react";
+import { hapticLight } from "@/lib/haptics";
+import { cn } from "@/lib/utils";
 
 export type NodeVariant = "completed" | "active" | "locked" | "default";
 export type NodeTaskType =
@@ -149,7 +149,7 @@ export function PathNode({
   const isCompleted = variant === "completed";
   const isLocked = variant === "locked";
   // "default" = available/unlocked but not the current active node
-  const isAvailable = !isActive && !isCompleted && !isLocked;
+  const _isAvailable = !isActive && !isCompleted && !isLocked;
 
   const color = getTypeColor(taskType);
   const bubbleLabel = taskTitle?.trim() || color.label;

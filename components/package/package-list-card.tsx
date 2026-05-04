@@ -24,12 +24,12 @@
  */
 "use client";
 
+import { Calendar, CheckCircle, Clock, IndianRupee, Package, PlayCircle } from "lucide-react";
+import { useRouter } from "next/navigation";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { odooTuple } from "@/lib/odoo";
 import type { BookedPackageDto } from "@/sdk/backend-v2";
-import { Calendar, CheckCircle, Clock, IndianRupee, Package, PlayCircle } from "lucide-react";
-import { useRouter } from "next/navigation";
 
 interface PackageListCardProps {
   pkg: BookedPackageDto;

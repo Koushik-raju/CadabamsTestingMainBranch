@@ -31,11 +31,11 @@
 
 "use client";
 
-import { useAuth } from "@/hooks/use-auth";
 import { Bell, Mic, SendHorizonal, Sparkles } from "lucide-react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { useAuth } from "@/hooks/use-auth";
 
 /* Mood faces per design system spec — emoji only in the mood-faces selector */
 const MOODS = ["😣", "😔", "😀", "😊", "😄"];

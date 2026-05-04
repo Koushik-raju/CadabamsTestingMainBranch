@@ -1,7 +1,7 @@
 "use client";
 
-import type { JourneyProgress } from "@/hooks/journeys/use-journey-detail";
 import { Flame, Gem } from "lucide-react";
+import type { JourneyProgress } from "@/hooks/journeys/use-journey-detail";
 
 interface PathStatsRowProps {
   progress: JourneyProgress;

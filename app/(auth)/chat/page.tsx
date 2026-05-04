@@ -29,6 +29,9 @@
  */
 "use client";
 
+import { Plus } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { useContext } from "react";
 import { EmptyState } from "@/components/chat/history/empty-state";
 import { LoadingState } from "@/components/chat/history/loading-state";
 import { ThreadList } from "@/components/chat/history/thread-list";
@@ -36,9 +39,6 @@ import { PageHeader } from "@/components/shared/navigation/page-header";
 import { Button } from "@/components/ui/button";
 import { mastraDataContext } from "@/contexts/mastra-data-context";
 import { useThreads } from "@/hooks/use-threads";
-import { Plus } from "lucide-react";
-import { useRouter } from "next/navigation";
-import { useContext } from "react";
 
 export default function ChatHistoryPage() {
   const router = useRouter();
@@ -60,7 +60,8 @@ export default function ChatHistoryPage() {
 
       <PageHeader
         title="My AI Chats"
-        fallback="/ai-therapy"
+        fallback="/home"
+        hardBack="/home"
         right={
           <Button
             size="sm"

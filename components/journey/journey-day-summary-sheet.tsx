@@ -23,15 +23,15 @@
  */
 "use client";
 
-import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet";
-import { Skeleton } from "@/components/ui/skeleton";
-import { completeJourneyDay } from "@/hooks/journeys/use-journey-detail";
-import { type DaySummaryResponseDto, journeysControllerGetDaySummary } from "@/sdk/backend-v2";
 import { CheckCircle2, Flame, Trophy } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import ReactMarkdown from "react-markdown";
 import { toast } from "react-toastify";
 import remarkGfm from "remark-gfm";
+import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet";
+import { Skeleton } from "@/components/ui/skeleton";
+import { completeJourneyDay } from "@/hooks/journeys/use-journey-detail";
+import { type DaySummaryResponseDto, journeysControllerGetDaySummary } from "@/sdk/backend-v2";
 
 interface JourneyDaySummarySheetProps {
   open: boolean;

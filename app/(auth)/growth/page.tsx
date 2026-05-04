@@ -33,6 +33,8 @@
  */
 "use client";
 
+import { useSearchParams } from "next/navigation";
+import { Suspense, useEffect, useRef, useState } from "react";
 import { DayFeed, type ModalPayload } from "@/components/growth/day-feed";
 import { MarkdownModal } from "@/components/growth/markdown-modal";
 import { WeeklyCalendar } from "@/components/growth/weekly-calendar";
@@ -43,8 +45,6 @@ import {
   useGrowthLatestActiveDate,
   useGrowthWeek,
 } from "@/hooks/growth/use-growth";
-import { useSearchParams } from "next/navigation";
-import { Suspense, useEffect, useRef, useState } from "react";
 
 function shiftIso(iso: string, days: number): string {
   const d = new Date(`${iso}T00:00:00.000Z`);

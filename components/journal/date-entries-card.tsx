@@ -23,12 +23,13 @@
  *
  * LAST UPDATED: 2026-04-27 — created; extracted from home page; used on home + slug detail pages
  */
+
+import { BookOpen, Pencil } from "lucide-react";
 import { JournalEntryRow } from "@/components/journal/journal-entry-row";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
-import { BookOpen, Pencil } from "lucide-react";
 
 export interface DisplayEntry {
   id: string;

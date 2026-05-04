@@ -1,5 +1,7 @@
 "use client";
 
+import { useRouter } from "next/navigation";
+import { useContext, useEffect, useRef } from "react";
 import { AuthContext } from "@/hooks/use-auth";
 import { setupDeepLinks } from "@/lib/capacitor/deep-links";
 import { setupKeyboardListeners } from "@/lib/capacitor/keyboard";
@@ -8,8 +10,6 @@ import { initPushNotifications } from "@/lib/capacitor/push-notifications";
 import { applySafeAreaVars } from "@/lib/capacitor/safe-area";
 import { setStatusBarLight } from "@/lib/capacitor/status-bar";
 import { preventTextZoom } from "@/lib/capacitor/text-zoom";
-import { useRouter } from "next/navigation";
-import { useContext, useEffect, useRef } from "react";
 
 /**
  * CapacitorInit — rendered once in app/layout.tsx inside AppProviders.

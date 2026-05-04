@@ -1,10 +1,10 @@
 "use client";
 
+import { Building2, User as UserIcon, Video } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import type { CrmControllerGetDoctorByIdResponse } from "@/sdk/backend-v2";
-import { Building2, User as UserIcon, Video } from "lucide-react";
 
 function displayName(doctor: CrmControllerGetDoctorByIdResponse | null): string {
   if (!doctor) return "Doctor";

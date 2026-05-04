@@ -28,14 +28,12 @@
  */
 "use client";
 
-import { Badge } from "@/components/ui/badge";
-import { Card, CardContent, CardHeader } from "@/components/ui/card";
-import { cn } from "@/lib/utils";
-import { fixImageUrl } from "@/lib/utils";
-import type { JourneyRichText } from "@/types/journey";
-import type { JourneyItem } from "@/types/journey";
 import { Clock } from "lucide-react";
 import { useRouter } from "next/navigation";
+import { Badge } from "@/components/ui/badge";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import { cn, fixImageUrl } from "@/lib/utils";
+import type { JourneyItem, JourneyRichText } from "@/types/journey";
 import { PremiumBadge } from "./premium-badge";
 
 export type DiscoveryJourney = JourneyItem & {

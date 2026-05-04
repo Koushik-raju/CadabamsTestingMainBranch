@@ -28,18 +28,18 @@
  */
 "use client";
 
+import { BookOpen, Search, X } from "lucide-react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { Suspense, useMemo, useState } from "react";
 import { PageHeader } from "@/components/shared/navigation/page-header";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
-import { extractString, useSelfJournalingEntries } from "@/hooks/use-journaling";
 import type { JournalEntryResponseDto, JournalPromptDto } from "@/hooks/use-journaling";
+import { extractString, useSelfJournalingEntries } from "@/hooks/use-journaling";
 import { cn } from "@/lib/utils";
-import { BookOpen, Search, X } from "lucide-react";
-import { useRouter, useSearchParams } from "next/navigation";
-import { Suspense, useMemo, useState } from "react";
 
 // ---------------------------------------------------------------------------
 // Helpers

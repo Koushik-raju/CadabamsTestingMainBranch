@@ -28,9 +28,9 @@
  */
 "use client";
 
-import { cn } from "@/lib/utils";
 import useEmblaCarousel from "embla-carousel-react";
 import { useCallback, useEffect, useRef, useState } from "react";
+import { cn } from "@/lib/utils";
 import { FeaturedJourneyCard } from "./featured-journey-card";
 
 export interface FeaturedSlide {

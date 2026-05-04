@@ -44,14 +44,14 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
+import { useChat } from "@ai-sdk/react";
+import type { UIMessage } from "ai";
+import { DefaultChatTransport } from "ai";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { useSWRConfig } from "swr";
 import { CONFIG } from "@/config/env";
 import { createMastraClient } from "@/lib/mastra-client";
 import { threadsKey } from "@/lib/swr-keys";
-import { useChat } from "@ai-sdk/react";
-import { DefaultChatTransport } from "ai";
-import type { UIMessage } from "ai";
-import { useCallback, useEffect, useRef, useState } from "react";
-import { useSWRConfig } from "swr";
 
 const PER_PAGE = 10;
 

@@ -1,12 +1,12 @@
 "use client";
 
+import { createContext, useCallback, useContext, useEffect, useState } from "react";
+import useSWR from "swr";
 import { logoutPatient } from "@/lib/auth";
 import { clearAuthState, getAccessToken, getUser, setUser } from "@/lib/cookies";
 import { authMeKey } from "@/lib/swr-keys";
 import { authControllerMe } from "@/sdk/backend-v2";
 import type { User } from "@/types";
-import { createContext, useCallback, useContext, useEffect, useState } from "react";
-import useSWR from "swr";
 
 function getSubFromToken(token: string): string | undefined {
   try {

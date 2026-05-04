@@ -23,6 +23,9 @@
 
 "use client";
 
+import dayjs from "dayjs";
+import { AlertCircle, ClipboardList } from "lucide-react";
+import { useRouter } from "next/navigation";
 import { PrescriptionCard } from "@/components/prescription/prescription-card";
 import { PageHeader } from "@/components/shared/navigation/page-header";
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -32,9 +35,6 @@ import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
 import { usePrescriptions } from "@/hooks/prescriptions/use-prescriptions";
 import type { PrescriptionItemDto } from "@/sdk/backend-v2";
-import dayjs from "dayjs";
-import { AlertCircle, ClipboardList } from "lucide-react";
-import { useRouter } from "next/navigation";
 
 export default function PrescriptionsPage() {
   const router = useRouter();

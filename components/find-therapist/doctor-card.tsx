@@ -30,10 +30,10 @@
  */
 "use client";
 
+import { Star } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { DoctorListing } from "@/data/doctors";
-import { Star } from "lucide-react";
 
 export type Doctor = DoctorListing;
 

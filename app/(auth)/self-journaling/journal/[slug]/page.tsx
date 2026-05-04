@@ -35,8 +35,12 @@
  */
 "use client";
 
-import { DateEntriesCard } from "@/components/journal/date-entries-card";
+import { BookOpen, CalendarDays, Clock, Flame, Pencil } from "lucide-react";
+import Image from "next/image";
+import { useRouter } from "next/navigation";
+import { use, useCallback, useMemo, useState } from "react";
 import type { DisplayEntry } from "@/components/journal/date-entries-card";
+import { DateEntriesCard } from "@/components/journal/date-entries-card";
 import { JournalEntrySheet } from "@/components/journal/journal-entry-sheet";
 import { WeekDateStrip } from "@/components/journal/week-date-strip";
 import { PageHeader } from "@/components/shared/navigation/page-header";
@@ -55,10 +59,6 @@ import {
 import { buildWeekBaseDays, toLocalDateStr } from "@/lib/journal-utils";
 import { getJournalVisual } from "@/lib/journal-visual";
 import { cn } from "@/lib/utils";
-import { BookOpen, CalendarDays, Clock, Flame, Pencil } from "lucide-react";
-import Image from "next/image";
-import { useRouter } from "next/navigation";
-import { use, useCallback, useMemo, useState } from "react";
 
 // ---------------------------------------------------------------------------
 // Adapter: SubJournalEntryDto → DisplayEntry
@@ -156,7 +156,7 @@ export default function JournalDetailPage({ params }: { params: Promise<{ slug: 
     }
   };
 
-  const handleUnsubscribe = async () => {
+  const _handleUnsubscribe = async () => {
     setIsSubscribing(true);
     try {
       await unsubscribeFromJournal(slug);

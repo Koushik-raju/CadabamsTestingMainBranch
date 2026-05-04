@@ -23,10 +23,10 @@
  *   design-system type scale and tint colors
  */
 
-import { Button } from "@/components/ui/button";
-import type { SlotDetailDto } from "@/hooks/appointments/use-appointments-page";
 import { CalendarCheck, Video } from "lucide-react";
 import Link from "next/link";
+import { Button } from "@/components/ui/button";
+import type { SlotDetailDto } from "@/hooks/appointments/use-appointments-page";
 
 interface Props {
   appointments?: SlotDetailDto[];

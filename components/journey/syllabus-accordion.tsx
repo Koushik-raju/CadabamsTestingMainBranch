@@ -1,10 +1,10 @@
 "use client";
 
+import { ChevronDown, Lock } from "lucide-react";
+import { useState } from "react";
 import { cn } from "@/lib/utils";
 import type { JourneyStep } from "@/types/journey";
 import { extractJourneyName } from "@/types/journey";
-import { ChevronDown, Lock } from "lucide-react";
-import { useState } from "react";
 
 interface SyllabusAccordionProps {
   steps: JourneyStep[];

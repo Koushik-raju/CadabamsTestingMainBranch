@@ -1,6 +1,6 @@
+import useSWR from "swr";
 import { campusesKey } from "@/lib/swr-keys";
 import { crmControllerGetCampuses } from "@/sdk/backend-v2";
-import useSWR from "swr";
 
 interface UseCampusesResult {
   campuses: Array<{ [key: string]: unknown }>;

@@ -26,6 +26,9 @@
  */
 "use client";
 
+import { AlertCircle, ClipboardList, FileText, Sparkles } from "lucide-react";
+import Link from "next/link";
+import { use, useEffect, useRef } from "react";
 import { PageHeader } from "@/components/shared/navigation/page-header";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -35,9 +38,6 @@ import { useCompletionById } from "@/hooks/assessments/use-assessment-detail";
 import { useJourneyTaskContinuation } from "@/hooks/journeys/use-journey-task-continuation";
 import { cn } from "@/lib/utils";
 import type { CompletionResponseDto } from "@/sdk/backend-v2";
-import { AlertCircle, ClipboardList, FileText, Sparkles } from "lucide-react";
-import Link from "next/link";
-import { use, useEffect, useRef } from "react";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 

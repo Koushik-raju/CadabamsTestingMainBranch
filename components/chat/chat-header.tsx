@@ -20,9 +20,9 @@
  * LAST UPDATED: 2026-05-04 — replaced custom layout with PageHeader shared component
  */
 
+import { History } from "lucide-react";
 import { PageHeader } from "@/components/shared/navigation/page-header";
 import { Button } from "@/components/ui/button";
-import { History } from "lucide-react";
 
 interface ChatHeaderProps {
   onHistoryClick: () => void;

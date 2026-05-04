@@ -31,6 +31,10 @@
 
 "use client";
 
+import { ChevronDown, ChevronUp, Play, Search } from "lucide-react";
+import Link from "next/link";
+import { useParams, useSearchParams } from "next/navigation";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { PageHeader } from "@/components/shared/navigation/page-header";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -42,11 +46,6 @@ import {
 import { useJourneyTaskContinuation } from "@/hooks/journeys/use-journey-task-continuation";
 import { useMindfulMinuteDetail } from "@/hooks/wellness/use-mindful-minute-detail";
 import type { MindfulMinuteAudio } from "@/hooks/wellness/use-mindful-minutes";
-import { ChevronDown, ChevronUp, Play } from "lucide-react";
-import { Search } from "lucide-react";
-import Link from "next/link";
-import { useParams, useSearchParams } from "next/navigation";
-import { useEffect, useMemo, useRef, useState } from "react";
 
 type SortOrder = "asc" | "desc";
 

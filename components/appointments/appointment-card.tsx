@@ -22,11 +22,11 @@
  */
 "use client";
 
+import { Building2, Calendar, Clock, Video } from "lucide-react";
+import { useRouter } from "next/navigation";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import type { SlotDetailDto } from "@/hooks/appointments/use-appointments-page";
-import { Building2, Calendar, Clock, Video } from "lucide-react";
-import { useRouter } from "next/navigation";
 
 interface AppointmentCardProps {
   appointment: SlotDetailDto;

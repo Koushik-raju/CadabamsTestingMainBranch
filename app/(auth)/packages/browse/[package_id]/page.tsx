@@ -33,15 +33,6 @@
  */
 "use client";
 
-import { PageHeader } from "@/components/shared/navigation/page-header";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Skeleton } from "@/components/ui/skeleton";
-import { useAvailablePackages, usePackageProductDetails } from "@/hooks/use-packages";
-import { odooTuple } from "@/lib/odoo";
-import { getPackagePalette } from "@/lib/package-colors";
-import { cn } from "@/lib/utils";
-import type { PackageResponseDto } from "@/sdk/backend-v2";
 import {
   AlertCircle,
   ArrowRight,
@@ -54,6 +45,15 @@ import {
 } from "lucide-react";
 import { useParams, useRouter } from "next/navigation";
 import { Suspense } from "react";
+import { PageHeader } from "@/components/shared/navigation/page-header";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
+import { useAvailablePackages, usePackageProductDetails } from "@/hooks/use-packages";
+import { odooTuple } from "@/lib/odoo";
+import { getPackagePalette } from "@/lib/package-colors";
+import { cn } from "@/lib/utils";
+import type { PackageResponseDto } from "@/sdk/backend-v2";
 
 function storeSelectedPackage(pkg: PackageResponseDto) {
   if (typeof sessionStorage !== "undefined") {

@@ -31,6 +31,8 @@
  * LAST UPDATED: 2026-04-28 — replaced apiClient axios calls with SDK functions;
  *   removed custom types in favour of SDK types.
  */
+
+import useSWR from "swr";
 import { useAssessmentById } from "@/hooks/assessments/use-assessment-detail";
 import {
   type CreateMoodEntryDto,
@@ -41,7 +43,6 @@ import {
   moodTrackerControllerList,
   moodTrackerControllerReport,
 } from "@/sdk/backend-v2";
-import useSWR from "swr";
 
 export type {
   CreateMoodEntryDto,

@@ -1,5 +1,3 @@
-import { apiClient } from "@/api/backend-v2";
-import { growthDayKey, growthWeekKey } from "@/lib/swr-keys";
 /**
  * FILE: hooks/growth/use-growth.ts
  *
@@ -25,6 +23,8 @@ import { growthDayKey, growthWeekKey } from "@/lib/swr-keys";
  * LAST UPDATED: 2026-04-23 — initial scaffold
  */
 import useSWR from "swr";
+import { apiClient } from "@/api/backend-v2";
+import { growthDayKey, growthWeekKey } from "@/lib/swr-keys";
 
 export interface GrowthWeekDay {
   date: string;

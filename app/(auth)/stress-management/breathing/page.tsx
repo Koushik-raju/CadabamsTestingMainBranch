@@ -22,10 +22,10 @@
 
 "use client";
 
-import { BreathingExercise } from "@/components/stress/breathing-exercise";
-import { Button } from "@/components/ui/button";
 import { ChevronLeft } from "lucide-react";
 import { useRouter } from "next/navigation";
+import { BreathingExercise } from "@/components/stress/breathing-exercise";
+import { Button } from "@/components/ui/button";
 
 export default function BreathingPage() {
   const router = useRouter();

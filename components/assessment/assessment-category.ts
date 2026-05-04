@@ -1,7 +1,5 @@
 "use client";
 
-import { type TintKey } from "@/components/shared/glyph-tile";
-import type { AssessmentItem } from "@/hooks/use-assessments";
 import {
   Activity,
   AlertTriangle,
@@ -38,6 +36,8 @@ import {
   Wine,
   Zap,
 } from "lucide-react";
+import { type TintKey } from "@/components/shared/glyph-tile";
+import type { AssessmentItem } from "@/hooks/use-assessments";
 
 type CategoryInfo = {
   icon: React.ElementType;

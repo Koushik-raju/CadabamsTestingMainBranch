@@ -24,16 +24,16 @@
  */
 "use client";
 
-import { PageHeader } from "@/components/shared/navigation/page-header";
-import { Skeleton } from "@/components/ui/skeleton";
-import { extractString, useJournalingCategories } from "@/hooks/use-journaling";
-import type { JournalingResponseDto } from "@/hooks/use-journaling";
-import { getJournalVisual } from "@/lib/journal-visual";
-import { cn } from "@/lib/utils";
 import { BookOpen } from "lucide-react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useMemo } from "react";
+import { PageHeader } from "@/components/shared/navigation/page-header";
+import { Skeleton } from "@/components/ui/skeleton";
+import type { JournalingResponseDto } from "@/hooks/use-journaling";
+import { extractString, useJournalingCategories } from "@/hooks/use-journaling";
+import { getJournalVisual } from "@/lib/journal-visual";
+import { cn } from "@/lib/utils";
 
 // ---------------------------------------------------------------------------
 // Grid Card

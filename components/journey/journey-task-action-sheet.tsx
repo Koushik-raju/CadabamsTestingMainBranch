@@ -25,8 +25,6 @@
  */
 "use client";
 
-import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet";
-import type { JourneyRichText, JourneyTask } from "@/types/journey";
 import { type BlocksContent, BlocksRenderer } from "@strapi/blocks-react-renderer";
 import {
   BookOpen,
@@ -42,6 +40,8 @@ import {
   Trophy,
   Zap,
 } from "lucide-react";
+import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet";
+import type { JourneyRichText, JourneyTask } from "@/types/journey";
 import type { PathChainNode } from "./path-chain";
 import { getTypeColor } from "./path-node";
 
@@ -212,7 +212,7 @@ export function JourneyTaskActionSheet({
   const meta = getTypeMeta(taskType);
   const title = node.taskTitle || color.label;
   const descText = rtToPlain(task.extraTaskDescription);
-  const showMarkDone = meta.canMarkDone && !isCompleted && isActive;
+  const _showMarkDone = meta.canMarkDone && !isCompleted && isActive;
 
   return (
     <Sheet open={open} onOpenChange={(v) => !v && onClose()}>

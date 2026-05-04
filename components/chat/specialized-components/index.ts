@@ -1,2 +1,2 @@
-export { YoutubeEmbed } from "./youtube-embed";
 export { MessageEnrichments } from "./message-enrichments";
+export { YoutubeEmbed } from "./youtube-embed";

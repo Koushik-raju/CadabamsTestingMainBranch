@@ -16,8 +16,8 @@
 
 "use client";
 
-import { Switch } from "@/components/ui/switch";
 import { Mail, MessageSquare, Phone } from "lucide-react";
+import { Switch } from "@/components/ui/switch";
 import { useSignupContext } from "./context";
 import { coralBtnCls, coralGrad } from "./types";
 

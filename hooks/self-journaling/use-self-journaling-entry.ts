@@ -20,9 +20,10 @@
  * LAST UPDATED: 2026-04-27 — returns JournalEntryResponseDto directly from SDK;
  *   removed JournalEntry custom type re-export and mapDtoToEntry mapping.
  */
+
+import useSWR from "swr";
 import { selfJournalingEntryKey } from "@/lib/swr-keys";
 import { type JournalEntryResponseDto, journalingControllerGetEntry } from "@/sdk/backend-v2";
-import useSWR from "swr";
 
 export type { JournalEntryResponseDto };
 

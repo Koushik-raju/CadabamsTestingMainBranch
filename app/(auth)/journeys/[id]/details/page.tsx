@@ -25,6 +25,9 @@
  */
 "use client";
 
+import { Crown, MoreVertical, Sparkles } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { Suspense, use, useState } from "react";
 import { JourneyPathView } from "@/components/journey/journey-path-view";
 import { PageHeader } from "@/components/shared/navigation/page-header";
 import { Button } from "@/components/ui/button";
@@ -36,9 +39,6 @@ import {
 } from "@/hooks/journeys/use-journey-detail";
 import { hapticMedium } from "@/lib/haptics";
 import { extractJourneyName } from "@/types/journey";
-import { Crown, MoreVertical, Sparkles } from "lucide-react";
-import { useRouter } from "next/navigation";
-import { Suspense, use, useState } from "react";
 
 interface PageProps {
   params: Promise<{ id: string }>;

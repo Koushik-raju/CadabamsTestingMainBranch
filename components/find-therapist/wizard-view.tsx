@@ -1,7 +1,5 @@
 "use client";
 
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import {
   Building2,
   ChevronLeft,
@@ -12,6 +10,8 @@ import {
   Stethoscope,
   Users,
 } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import {
   CITIES,
   PROFESSION_OPTIONS,

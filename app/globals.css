@@ -1267,7 +1267,9 @@
 }
 /* Tabular + lining figures for stats, day counts, percentages */
 .mt-numeric {
-  font-feature-settings: "tnum" 1, "lnum" 1;
+  font-feature-settings:
+    "tnum" 1,
+    "lnum" 1;
 }
 
 /* bg-background maps to --background which is now set to --mt-cream-bg (#FAF7F4) in :root */

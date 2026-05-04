@@ -24,11 +24,12 @@
  * LAST UPDATED: 2026-04-28 — Added AI pill above assistant messages, design-system
  *   bubble colors (#FFE4D2 user, plain text assistant), ink text colors
  */
+
+import type { UIMessage } from "ai";
+import { Streamdown } from "streamdown";
 import { MessageEnrichments } from "@/components/chat/specialized-components/message-enrichments";
 import { ThinkingComponent } from "@/components/chat/thinking-component";
 import { AIPill } from "@/components/shared/ai-pill";
-import type { UIMessage } from "ai";
-import { Streamdown } from "streamdown";
 
 interface MessageBubbleProps {
   message: UIMessage;

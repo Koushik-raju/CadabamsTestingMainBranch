@@ -28,6 +28,9 @@
  */
 "use client";
 
+import { BookOpen } from "lucide-react";
+import Image from "next/image";
+import { useRouter } from "next/navigation";
 import { PageHeader } from "@/components/shared/navigation/page-header";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
@@ -37,9 +40,6 @@ import {
 } from "@/hooks/use-journaling-subscriptions";
 import { getJournalVisual } from "@/lib/journal-visual";
 import { cn } from "@/lib/utils";
-import { BookOpen } from "lucide-react";
-import Image from "next/image";
-import { useRouter } from "next/navigation";
 
 // ---------------------------------------------------------------------------
 // Grid Card — fetches its own detail to resolve the icon URL

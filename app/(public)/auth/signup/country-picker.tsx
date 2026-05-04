@@ -22,9 +22,9 @@
 
 "use client";
 
+import { Check, Search } from "lucide-react";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Check, Search } from "lucide-react";
 import { useSignupContext } from "./context";
 import { flag } from "./types";
 

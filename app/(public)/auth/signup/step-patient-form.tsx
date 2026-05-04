@@ -20,7 +20,7 @@
 
 import { cn } from "@/lib/utils";
 import { useSignupContext } from "./context";
-import { RELATIONSHIPS, coralBtnCls, coralGrad } from "./types";
+import { coralBtnCls, coralGrad, RELATIONSHIPS } from "./types";
 
 export function StepPatientForm() {
   const { data, updateData, goNext, currentIndex, visibleSteps } = useSignupContext();

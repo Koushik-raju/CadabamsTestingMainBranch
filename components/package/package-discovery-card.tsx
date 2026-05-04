@@ -31,12 +31,12 @@
 
 "use client";
 
+import { ArrowRight, Layers } from "lucide-react";
+import { useRouter } from "next/navigation";
 import { Card, CardContent } from "@/components/ui/card";
 import { getPackagePalette } from "@/lib/package-colors";
 import { cn } from "@/lib/utils";
 import type { PackageResponseDto } from "@/sdk/backend-v2";
-import { ArrowRight, Layers } from "lucide-react";
-import { useRouter } from "next/navigation";
 
 interface PackageDiscoveryCardProps {
   pkg: PackageResponseDto;

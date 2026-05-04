@@ -29,25 +29,6 @@
  */
 "use client";
 
-import { BookingSummaryCard } from "@/components/checkout/booking-summary-card";
-import { PaymentSummaryCard } from "@/components/checkout/payment-summary-card";
-import { PageHeader } from "@/components/shared/navigation/page-header";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Separator } from "@/components/ui/separator";
-import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
-import { Skeleton } from "@/components/ui/skeleton";
-import { useBooking } from "@/contexts/booking-context";
-import { useAuth } from "@/hooks/shared/auth/use-auth";
-import {
-  crmControllerBookAppointment,
-  crmControllerGetDoctorById,
-  crmControllerGetRelationships,
-  crmControllerGetSlotPrice,
-  crmControllerRazorpayPayment,
-} from "@/sdk/backend-v2";
-import type { CrmControllerGetDoctorByIdResponse, RelationshipResponseDto } from "@/sdk/backend-v2";
 import {
   AlertCircle,
   Check,
@@ -59,8 +40,27 @@ import {
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { Suspense, useEffect, useState } from "react";
+import { BookingSummaryCard } from "@/components/checkout/booking-summary-card";
+import { PaymentSummaryCard } from "@/components/checkout/payment-summary-card";
+import { PageHeader } from "@/components/shared/navigation/page-header";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Separator } from "@/components/ui/separator";
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
+import { Skeleton } from "@/components/ui/skeleton";
+import { useBooking } from "@/contexts/booking-context";
+import { useAuth } from "@/hooks/shared/auth/use-auth";
+import type { CrmControllerGetDoctorByIdResponse, RelationshipResponseDto } from "@/sdk/backend-v2";
+import {
+  crmControllerBookAppointment,
+  crmControllerGetDoctorById,
+  crmControllerGetRelationships,
+  crmControllerGetSlotPrice,
+  crmControllerRazorpayPayment,
+} from "@/sdk/backend-v2";
 
-function displayName(doctor: CrmControllerGetDoctorByIdResponse | null): string {
+function _displayName(doctor: CrmControllerGetDoctorByIdResponse | null): string {
   if (!doctor) return "Doctor";
   const raw = (doctor.name || "").trim();
   const name = raw.includes(",") ? raw.split(",").pop()!.trim() : raw;

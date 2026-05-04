@@ -29,11 +29,11 @@
  */
 "use client";
 
+import { ArrowLeft, ChevronRight, Clock, ShieldCheck, Sparkles } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import type { AssessmentItem } from "@/hooks/assessments/use-assessments-page";
-import { ArrowLeft, ChevronRight, Clock, ShieldCheck, Sparkles } from "lucide-react";
 
 function extractTextFromRich(val: unknown): string {
   if (!val) return "";

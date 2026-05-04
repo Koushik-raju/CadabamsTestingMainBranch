@@ -1,3 +1,9 @@
+import useSWR from "swr";
+import type {
+  CampusMasterResponseDto,
+  DoctorListingResponseDto,
+  SlotResponseDto,
+} from "@/sdk/backend-v2";
 import {
   crmControllerBookAppointment,
   crmControllerGetCampuses,
@@ -5,12 +11,6 @@ import {
   crmControllerGetSlotPrice,
   crmControllerGetSlots,
 } from "@/sdk/backend-v2";
-import type {
-  CampusMasterResponseDto,
-  DoctorListingResponseDto,
-  SlotResponseDto,
-} from "@/sdk/backend-v2";
-import useSWR from "swr";
 
 export type { DoctorListingResponseDto, SlotResponseDto };
 

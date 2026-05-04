@@ -1,8 +1,8 @@
 "use client";
 
+import useSWR from "swr";
 import { CONFIG } from "@/config/env";
 import { getAccessToken } from "@/lib/cookies";
-import useSWR from "swr";
 
 async function fetchLeaderboard(params?: Record<string, unknown>) {
   const token = await getAccessToken();

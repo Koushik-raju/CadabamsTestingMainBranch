@@ -36,6 +36,20 @@
 
 "use client";
 
+import {
+  CalendarCheck2,
+  CalendarClock,
+  CheckCircle2,
+  CreditCard,
+  Hash,
+  LogOut,
+  Mail,
+  Phone,
+  User,
+} from "lucide-react";
+import { useRouter } from "next/navigation";
+import { toast } from "react-toastify";
+import useSWR from "swr";
 import { PackageListCard } from "@/components/package/package-list-card";
 import { GlyphTile, type TintKey } from "@/components/shared/glyph-tile";
 import { BackButton } from "@/components/shared/navigation/back-button";
@@ -57,23 +71,12 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useManagedPackages } from "@/hooks/packages/use-packages";
 import { useAuthMe } from "@/hooks/shared/auth/use-auth";
 import { useAuth } from "@/hooks/use-auth";
+import type {
+  AppointmentDashboardResponseDto,
+  BookedPackageDto,
+  LeadResponseDto,
+} from "@/sdk/backend-v2";
 import { crmControllerGetAppointmentDashboard } from "@/sdk/backend-v2";
-import type { AppointmentDashboardResponseDto, LeadResponseDto } from "@/sdk/backend-v2";
-import type { BookedPackageDto } from "@/sdk/backend-v2";
-import {
-  CalendarCheck2,
-  CalendarClock,
-  CheckCircle2,
-  CreditCard,
-  Hash,
-  LogOut,
-  Mail,
-  Phone,
-  User,
-} from "lucide-react";
-import { useRouter } from "next/navigation";
-import { toast } from "react-toastify";
-import useSWR from "swr";
 
 /* ------------------------------------------------------------------
  * InfoRow — a single row inside the contact info grouped card.

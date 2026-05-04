@@ -1,10 +1,3 @@
-import { assessmentReportsKey } from "@/lib/swr-keys";
-import {
-  patientAssessmentsAnalysisControllerAnalyze,
-  patientAssessmentsAnalysisControllerList,
-  patientAssessmentsControllerListMine,
-} from "@/sdk/backend-v2";
-import type { AssessmentAnalysisDto, CompletionResponseDto } from "@/sdk/backend-v2";
 /**
  * FILE: hooks/assessments/use-assessment-reports.ts
  *
@@ -41,6 +34,13 @@ import type { AssessmentAnalysisDto, CompletionResponseDto } from "@/sdk/backend
  */
 import { useState } from "react";
 import useSWR from "swr";
+import { assessmentReportsKey } from "@/lib/swr-keys";
+import type { AssessmentAnalysisDto, CompletionResponseDto } from "@/sdk/backend-v2";
+import {
+  patientAssessmentsAnalysisControllerAnalyze,
+  patientAssessmentsAnalysisControllerList,
+  patientAssessmentsControllerListMine,
+} from "@/sdk/backend-v2";
 
 export interface AssessmentReport extends AssessmentAnalysisDto {
   completion?: CompletionResponseDto;

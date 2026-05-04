@@ -29,6 +29,10 @@
  */
 "use client";
 
+import { AlertCircle, ChevronDown, ChevronUp, FileText, Sparkles } from "lucide-react";
+import Link from "next/link";
+import { use, useState } from "react";
+import Markdown from "react-markdown";
 import { PageHeader } from "@/components/shared/navigation/page-header";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -38,10 +42,6 @@ import {
   type AssessmentReport,
   useAssessmentReports,
 } from "@/hooks/assessments/use-assessment-reports";
-import { AlertCircle, ChevronDown, ChevronUp, FileText, Sparkles } from "lucide-react";
-import Link from "next/link";
-import { use, useState } from "react";
-import Markdown from "react-markdown";
 
 function formatDate(iso: string): string {
   try {
@@ -65,11 +65,7 @@ function excerpt(md: string, max = 140): string {
   return stripped.length > max ? `${stripped.slice(0, max)}…` : stripped;
 }
 
-export default function AssessmentReportsPage({
-  params,
-}: {
-  params: Promise<{ id: string }>;
-}) {
+export default function AssessmentReportsPage({ params }: { params: Promise<{ id: string }> }) {
   const { id: assessmentId } = use(params);
   const { reports, isLoading, error } = useAssessmentReports(assessmentId);
   const [expandedId, setExpandedId] = useState<string | null>(null);

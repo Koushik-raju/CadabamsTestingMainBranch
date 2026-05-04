@@ -21,9 +21,9 @@
  */
 "use client";
 
+import { Download, File, FileCode, FileImage, FileText, Trash2 } from "lucide-react";
 import { GlyphTile, type TintKey } from "@/components/shared/glyph-tile";
 import { Button } from "@/components/ui/button";
-import { Download, File, FileCode, FileImage, FileText, Trash2 } from "lucide-react";
 
 export interface DocumentData {
   id: string;

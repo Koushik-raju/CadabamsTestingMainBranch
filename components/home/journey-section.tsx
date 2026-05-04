@@ -27,10 +27,10 @@
  *   mt-* type scale, soft-land streak language, purple gradient fallback tile
  */
 
-import { Card, CardContent } from "@/components/ui/card";
-import { Skeleton } from "@/components/ui/skeleton";
 import { Flame, Route } from "lucide-react";
 import Link from "next/link";
+import { Card, CardContent } from "@/components/ui/card";
+import { Skeleton } from "@/components/ui/skeleton";
 
 export interface HomeEnrollment {
   enrollmentId: string;

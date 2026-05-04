@@ -1,7 +1,7 @@
 "use client";
 
-import type { DevicePlatform, SafeAreaInsets } from "@/types";
 import { createContext, useContext, useEffect, useState } from "react";
+import type { DevicePlatform, SafeAreaInsets } from "@/types";
 
 interface DeviceContextValue {
   platform: DevicePlatform;
@@ -17,7 +17,7 @@ export const DeviceContext = createContext<DeviceContextValue>({
 
 export function useDeviceProvider(): DeviceContextValue {
   const [platform, setPlatform] = useState<DevicePlatform>("web");
-  const [safeArea, setSafeArea] = useState<SafeAreaInsets>({
+  const [safeArea, _setSafeArea] = useState<SafeAreaInsets>({
     top: 0,
     bottom: 0,
     left: 0,

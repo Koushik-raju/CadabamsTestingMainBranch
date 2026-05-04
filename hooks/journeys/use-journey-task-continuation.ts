@@ -38,10 +38,10 @@
  */
 "use client";
 
-import { type JourneyReturnTaskKind, useJourneyReturn } from "@/contexts/journey-return-context";
-import { type TaskProof, updateNodeProgress } from "@/hooks/journeys/use-journey-detail";
 import { useRouter } from "next/navigation";
 import { useCallback, useMemo } from "react";
+import { type JourneyReturnTaskKind, useJourneyReturn } from "@/contexts/journey-return-context";
+import { type TaskProof, updateNodeProgress } from "@/hooks/journeys/use-journey-detail";
 
 export function useJourneyTaskContinuation(expectedKind?: JourneyReturnTaskKind) {
   const router = useRouter();

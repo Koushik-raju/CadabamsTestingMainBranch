@@ -1,7 +1,7 @@
 "use client";
 
-import { cn } from "@/lib/utils";
 import { CheckCircle, Lock, Play } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 export interface JourneyDayItem {
   dayNumber: number;

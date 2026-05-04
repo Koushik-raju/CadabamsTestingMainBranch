@@ -30,9 +30,9 @@
 
 "use client";
 
-import type { DoctorListing as Doctor } from "@/data/doctors";
 import { useRouter, useSearchParams } from "next/navigation";
 import { createContext, useCallback, useContext, useMemo, useState } from "react";
+import type { DoctorListing as Doctor } from "@/data/doctors";
 
 // ── Types ──────────────────────────────────────────────────────────────────────
 
@@ -221,11 +221,7 @@ export function useFindTherapist() {
 
 // ── Provider ──────────────────────────────────────────────────────────────────
 
-export function FindTherapistProvider({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+export function FindTherapistProvider({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const searchParams = useSearchParams();
 
