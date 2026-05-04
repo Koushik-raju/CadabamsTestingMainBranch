@@ -14,7 +14,7 @@
  *
  * DEPENDENCIES: useSignupContext, FEELING_OPTIONS, coralGrad
  *
- * LAST UPDATED: 2026-05-04 — initial creation with auto-advance
+ * LAST UPDATED: 2026-05-04 — fix useRef missing initialValue TS error
  */
 
 "use client";
@@ -28,7 +28,7 @@ export function StepFeeling() {
   const [selected, setSelected] = useState(data.overallFeeling);
   /* true only after the user taps in THIS render — prevents auto-advance on back-navigation */
   const [justSelected, setJustSelected] = useState(false);
-  const timerRef = useRef<ReturnType<typeof setTimeout>>();
+  const timerRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
 
   const handleSelect = (value: string) => {
     clearTimeout(timerRef.current);
