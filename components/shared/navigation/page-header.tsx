@@ -11,6 +11,7 @@
  *   Pass sticky={false} to opt out, or override with className if needed.
  *   Back behaviour is delegated entirely to BackButton — pass fallback, hardBack,
  *   or onBack and BackButton resolves the priority internally.
+ *   A menu (hamburger) button on the right opens the shared Sidebar drawer.
  *
  * KEY VARIABLES / PROPS / EXPORTS:
  *   title       — main heading text (required)
@@ -21,17 +22,21 @@
  *   right       — ReactNode rendered flush-right (optional, e.g. filter button)
  *   sticky      — whether the header sticks to the top on scroll (default: true)
  *   className   — extra classes on the outer wrapper
+ *   sidebarOpen — local state controlling Sidebar visibility
  *
  * DEPENDENCIES:
  *   BackButton — components/shared/navigation/back-button.tsx
+ *   Sidebar    — components/shared/navigation/sidebar.tsx
  *
- * LAST UPDATED: 2026-04-27 — added sticky prop (default true); fixed WebKit overflow-x ancestor bug
+ * LAST UPDATED: 2026-05-04 — added hamburger menu button wired to shared Sidebar
  */
 
 "use client";
 
-import { ReactNode } from "react";
+import { Menu } from "lucide-react";
+import { ReactNode, useState } from "react";
 import { BackButton } from "@/components/shared/navigation/back-button";
+import { Sidebar } from "@/components/shared/navigation/sidebar";
 import { cn } from "@/lib/utils";
 
 interface PageHeaderProps {
@@ -57,29 +62,44 @@ export function PageHeader({
   sticky = true,
   className,
 }: PageHeaderProps) {
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+
   return (
-    <div
-      className={cn(
-        "flex items-center gap-2 px-5 pt-5 pb-1",
-        sticky && "sticky top-0 z-10",
-        className,
-      )}
-      style={{ background: "#FAF7F4" }}
-    >
-      <BackButton fallback={fallback} hardBack={hardBack} onClick={onBack} />
+    <>
+      <Sidebar open={sidebarOpen} onClose={() => setSidebarOpen(false)} />
 
-      <div className="flex-1 min-w-0">
-        <h1 className="text-[18px] font-bold leading-tight" style={{ color: "#0E1726" }}>
-          {title}
-        </h1>
-        {subtitle && (
-          <p className="text-[12px] mt-0.5" style={{ color: "#6B7280" }}>
-            {subtitle}
-          </p>
+      <div
+        className={cn(
+          "flex items-center gap-2 px-5 pt-5 pb-1",
+          sticky && "sticky top-0 z-10",
+          className,
         )}
-      </div>
+        style={{ background: "#FAF7F4" }}
+      >
+        <BackButton fallback={fallback} hardBack={hardBack} onClick={onBack} />
 
-      {right && <div className="flex-shrink-0 flex items-center gap-1">{right}</div>}
-    </div>
+        <div className="flex-1 min-w-0">
+          <h1 className="text-[18px] font-bold leading-tight" style={{ color: "#0E1726" }}>
+            {title}
+          </h1>
+          {subtitle && (
+            <p className="text-[12px] mt-0.5" style={{ color: "#6B7280" }}>
+              {subtitle}
+            </p>
+          )}
+        </div>
+
+        <div className="flex-shrink-0 flex items-center gap-1">
+          {right}
+          <button
+            onClick={() => setSidebarOpen(true)}
+            className="w-9 h-9 rounded-full flex items-center justify-center hover:bg-[#F0ECE8] transition-colors duration-[140ms] active:scale-95"
+            aria-label="Open navigation menu"
+          >
+            <Menu className="w-5 h-5" style={{ color: "#6B7280" }} />
+          </button>
+        </div>
+      </div>
+    </>
   );
 }
