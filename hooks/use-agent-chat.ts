@@ -32,7 +32,7 @@
  *   createMastraClient — authenticated Mastra client factory (lib/mastra-client)
  *   UIMessage          — from "ai" package (shape expected by MessageList)
  *
- * LAST UPDATED: 2026-05-04 — initial implementation using Mastra client stream
+ * LAST UPDATED: 2026-05-04 — fix UIMessage type (no content field), fix onChunk ChunkType
  */
 "use client";
 
@@ -67,7 +67,6 @@ export function useAgentChat({ threadId, resourceId }: UseAgentChatProps) {
         id: crypto.randomUUID(),
         role: "user",
         parts: [{ type: "text", text: trimmed }],
-        content: trimmed,
       };
 
       const assistantId = crypto.randomUUID();
@@ -75,7 +74,6 @@ export function useAgentChat({ threadId, resourceId }: UseAgentChatProps) {
         id: assistantId,
         role: "assistant",
         parts: [{ type: "text", text: "" }],
-        content: "",
       };
 
       setMessages((prev) => [...prev, userMsg, assistantPlaceholder]);
@@ -86,12 +84,10 @@ export function useAgentChat({ threadId, resourceId }: UseAgentChatProps) {
        * agent — includes full history so the agent has conversation context. */
       const history = messagesRef.current.map((m) => ({
         role: m.role as "user" | "assistant",
-        content:
-          m.parts
-            .filter((p) => p.type === "text")
-            /* @ts-expect-error — text field exists on text parts */
-            .map((p) => p.text as string)
-            .join("") || m.content,
+        content: m.parts
+          .filter((p) => p.type === "text")
+          .map((p) => (p as { type: "text"; text: string }).text)
+          .join(""),
       }));
 
       try {
@@ -108,21 +104,20 @@ export function useAgentChat({ threadId, resourceId }: UseAgentChatProps) {
         let accumulated = "";
 
         await response.processDataStream({
-          onChunk: async (chunk: { type: string; payload: { text?: string } }) => {
-            if (chunk.type === "text-delta" && chunk.payload?.text) {
-              accumulated += chunk.payload.text;
-              /* Update the assistant placeholder in-place using its stable ID. */
-              setMessages((prev) =>
-                prev.map((m) =>
-                  m.id === assistantId
-                    ? {
-                        ...m,
-                        content: accumulated,
-                        parts: [{ type: "text", text: accumulated }],
-                      }
-                    : m,
-                ),
-              );
+          onChunk: async (chunk) => {
+            if (chunk.type === "text-delta") {
+              const text = (chunk.payload as { text?: string })?.text;
+              if (text) {
+                accumulated += text;
+                /* Update the assistant placeholder in-place using its stable ID. */
+                setMessages((prev) =>
+                  prev.map((m) =>
+                    m.id === assistantId
+                      ? { ...m, parts: [{ type: "text", text: accumulated }] }
+                      : m,
+                  ),
+                );
+              }
             }
           },
         });
