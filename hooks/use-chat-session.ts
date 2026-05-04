@@ -183,7 +183,7 @@ export function useChatSession({ threadId, resourceId }: UseChatSessionProps) {
     transport: new DefaultChatTransport({
       api: CONFIG.MASTRA_BACKEND_URL,
       /* Fetch token on every request so a refreshed token is always used. */
-      headers: async () => {
+      headers: async (): Promise<Record<string, string>> => {
         const token = await getAccessToken();
         return token ? { Authorization: `Bearer ${token}` } : {};
       },

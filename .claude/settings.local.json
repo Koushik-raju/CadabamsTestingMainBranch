@@ -4,7 +4,8 @@
       "Bash(npx tsc *)",
       "Bash(pnpm tsc *)",
       "Bash(npx ctx7@latest library \"@mastra/client-js\" \"agent stream method processDataStream onChunk\")",
-      "Bash(find /Users/cadabamscreativeteam/Desktop/cadabams-all/frontend-neo/node_modules/.pnpm/@mastra+core@*/node_modules/@mastra/core/dist -name \"stream.d.ts\")"
+      "Bash(find /Users/cadabamscreativeteam/Desktop/cadabams-all/frontend-neo/node_modules/.pnpm/@mastra+core@*/node_modules/@mastra/core/dist -name \"stream.d.ts\")",
+      "Bash(pnpm run *)"
     ]
   },
   "enableAllProjectMcpServers": true,
