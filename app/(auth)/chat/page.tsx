@@ -78,7 +78,7 @@ export default function ChatHistoryPage() {
         type="button"
         onClick={handleNewChat}
         aria-label="New chat"
-        className="fixed bottom-24 right-5 z-20 flex items-center gap-2 rounded-full bg-primary px-5 py-3 shadow-lg shadow-primary/30 active:scale-95 transition-transform"
+        className="fixed bottom-8 right-5 z-20 flex items-center gap-2 rounded-full bg-primary px-5 py-3 shadow-lg shadow-primary/30 active:scale-95 transition-transform"
       >
         <SquarePen className="size-4 text-white" />
         <span className="text-sm font-semibold text-white">New Chat</span>
