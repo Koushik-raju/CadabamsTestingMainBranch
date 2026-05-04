@@ -95,7 +95,7 @@ export function useAgentChat({ threadId, resourceId }: UseAgentChatProps) {
   const [text, setText] = useState("");
   const [isStreaming, setIsStreaming] = useState(false);
   const [isLoadingHistory, setIsLoadingHistory] = useState(true);
-  const [isLoadingMore, setIsLoadingMore] = useState(false);
+  const [isLoadingMore, _setIsLoadingMore] = useState(false);
   const [hasMore, setHasMore] = useState(false);
   /* Next page index to fetch when the user scrolls up. */
   const nextPageRef = useRef(1);
