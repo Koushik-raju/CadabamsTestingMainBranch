@@ -29,7 +29,7 @@
  *   baselineAssessmentMeControllerCreate
  *   country-codes-list, react-toastify, next/navigation
  *
- * LAST UPDATED: 2026-05-04 — submit onboarding data as baseline assessment after signup
+ * LAST UPDATED: 2026-05-04 — pass email to sendOtp so it reaches the backend OTP endpoint
  */
 
 "use client";
@@ -342,7 +342,7 @@ export function SignupProvider({ children }: { children: ReactNode }) {
 
   const onSendOtp = async (form: SignupFormValues) => {
     try {
-      await sendOtp(form.phone, "signup");
+      await sendOtp(form.phone, "signup", form.email || undefined);
       toast.success("OTP sent successfully");
       setSubmittedForm(form);
       setSubmittedPhone(form.phone);
