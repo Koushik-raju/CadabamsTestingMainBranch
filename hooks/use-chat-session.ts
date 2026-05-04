@@ -36,10 +36,10 @@
  *
  * DEPENDENCIES:
  *   swr (useSWRConfig only), @ai-sdk/react (useChat), ai (DefaultChatTransport,
- *   UIMessage), createMastraClient, CONFIG.MASTRA_BACKEND_URL, CONFIG.MASTRA_AGENT_ID,
- *   threadsKey
+ *   UIMessage), createMastraClient, getAccessToken, CONFIG.MASTRA_BACKEND_URL,
+ *   CONFIG.MASTRA_AGENT_ID, threadsKey
  *
- * LAST UPDATED: 2026-04-16 — removed SWR caching for messages (always fetch fresh)
+ * LAST UPDATED: 2026-05-04 — send bearer token in DefaultChatTransport headers
  */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
@@ -50,6 +50,7 @@ import { DefaultChatTransport } from "ai";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useSWRConfig } from "swr";
 import { CONFIG } from "@/config/env";
+import { getAccessToken } from "@/lib/cookies";
 import { createMastraClient } from "@/lib/mastra-client";
 import { threadsKey } from "@/lib/swr-keys";
 
@@ -181,6 +182,11 @@ export function useChatSession({ threadId, resourceId }: UseChatSessionProps) {
   } = useChat({
     transport: new DefaultChatTransport({
       api: CONFIG.MASTRA_BACKEND_URL,
+      /* Fetch token on every request so a refreshed token is always used. */
+      headers: async () => {
+        const token = await getAccessToken();
+        return token ? { Authorization: `Bearer ${token}` } : {};
+      },
     }),
   });
 
