@@ -34,7 +34,7 @@ interface MainLayoutProps {
 export function MainLayout({ children, hideNav = false }: MainLayoutProps) {
   return (
     <div
-      className="flex flex-col min-h-screen bg-[#FAF7F4]"
+      className="flex flex-col min-h-screen bg-background"
       style={{ paddingTop: "var(--safe-area-inset-top)" }}
     >
       {/* pb-28 gives clearance for the floating pill nav (≈72px) + safe-area */}

@@ -1,6 +1,33 @@
+/**
+ * FILE: components/leaderboard/leaderboard-entry.tsx
+ *
+ * PURPOSE:
+ *   A single row in the leaderboard list showing user rank, avatar, name, level, and score.
+ *   Highlights the current user with a primary background and border.
+ *
+ * LOGIC OVERVIEW:
+ *   1. Extracts initials from user name for avatar fallback.
+ *   2. Renders rank badge with icon for top 3 (crown, silver, bronze) or number.
+ *   3. Shows user avatar, name + level, and score.
+ *   4. Highlights current user with primary bg/border and "(You)" label.
+ *   5. Wrapped in React.memo to prevent re-renders in scrolling leaderboard lists.
+ *
+ * KEY VARIABLES / PROPS / EXPORTS:
+ *   entry               — LeaderboardEntryData with rank, name, score, level, etc.
+ *   LeaderboardEntry    — default export component (memoized)
+ *   RankIcon            — helper to render icon for top 3 ranks
+ *   rankBadgeClass      — helper to style rank badge
+ *
+ * DEPENDENCIES:
+ *   Avatar, AvatarFallback, AvatarImage — @/components/ui/avatar
+ *   lucide-react icons, React.memo
+ *
+ * LAST UPDATED: 2026-05-05 — Phase 7: Added header comment and React.memo wrapper
+ */
 "use client";
 
 import { Award, Crown, Medal } from "lucide-react";
+import { memo } from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { cn } from "@/lib/utils";
 
@@ -32,7 +59,7 @@ function rankBadgeClass(rank: number): string {
   return "bg-muted text-muted-foreground";
 }
 
-export function LeaderboardEntry({ entry }: LeaderboardEntryProps) {
+function LeaderboardEntryComponent({ entry }: LeaderboardEntryProps) {
   const initials = entry.name
     ? entry.name
         .split(" ")
@@ -100,3 +127,5 @@ export function LeaderboardEntry({ entry }: LeaderboardEntryProps) {
     </div>
   );
 }
+
+export const LeaderboardEntry = memo(LeaderboardEntryComponent);

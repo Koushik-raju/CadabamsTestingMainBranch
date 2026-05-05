@@ -1,3 +1,30 @@
+/**
+ * FILE: hooks/leaderboard/use-leaderboard.ts
+ *
+ * PURPOSE:
+ *   SWR hook for fetching leaderboard data with optional filter parameters.
+ *
+ * LOGIC OVERVIEW:
+ *   - Uses SWR with a composite key (array) so different param combinations
+ *     get separate cache slots. When params change, SWR automatically refetches.
+ *   - fetchLeaderboard builds the query URL and adds auth headers.
+ *   - Hook returns data, loading, error, and a mutate function for manual
+ *     cache invalidation.
+ *
+ * KEY VARIABLES / PROPS / EXPORTS:
+ *   params          — optional filters (e.g., { doctorId: 123 })
+ *   fetchLeaderboard — async function that builds the request and throws on error
+ *   data            — array of leaderboard items
+ *   mutate          — function to manually revalidate/invalidate cache
+ *
+ * DEPENDENCIES:
+ *   SWR
+ *   getAccessToken — from @/lib/cookies
+ *   CONFIG.BACKEND_URL
+ *
+ * LAST UPDATED: 2026-05-05 — Fixed SWR key collision: changed static key to array key
+ *   so different params get separate cache slots; prevents results overwriting
+ */
 "use client";
 
 import useSWR from "swr";
@@ -23,9 +50,16 @@ async function fetchLeaderboard(params?: Record<string, unknown>) {
 }
 
 export function useLeaderboard(params?: Record<string, unknown>) {
-  const { data, isLoading, error, mutate } = useSWR("leaderboard", () => fetchLeaderboard(params), {
-    revalidateOnFocus: false,
-  });
+  // Use array key so SWR deeply compares params and creates separate cache
+  // slots for different filter combinations. Static key would cause all calls
+  // to share one cache entry, overwriting results.
+  const { data, isLoading, error, mutate } = useSWR(
+    ["leaderboard", params ?? {}],
+    () => fetchLeaderboard(params),
+    {
+      revalidateOnFocus: false,
+    },
+  );
 
   return { data, isLoading, error, mutate };
 }

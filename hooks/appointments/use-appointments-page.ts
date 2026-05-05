@@ -1,7 +1,46 @@
+/**
+ * FILE: hooks/appointments/use-appointments-page.ts
+ *
+ * PURPOSE:
+ *   SWR hooks for fetching and managing appointment data. Provides upcoming
+ *   and past appointments separated by status, plus cancellation actions.
+ *
+ * LOGIC OVERVIEW:
+ *   useAppointments()    — SWR hook that fetches appointments with a 1-year
+ *                          lookback. Disables fetch when leadId is missing.
+ *                          Derives upcoming and past arrays via filtering
+ *                          and sorting server-side results. Returns mutate
+ *                          for manual cache invalidation.
+ *   useAppointmentById() — SWR hook for a single appointment lookup; uses
+ *                          global fetch but filters client-side.
+ *   cancelAppointment    — async action that calls the cancel SDK function.
+ *                          Caller is responsible for calling mutate() to
+ *                          invalidate caches.
+ *
+ * KEY VARIABLES / PROPS / EXPORTS:
+ *   ONE_YEAR_AGO        — module-level date string; fixed so SWR key doesn't
+ *                         change on every render
+ *   isUpcoming()        — predicate: not cancelled/completed AND in future
+ *   appointmentsKey()   — from @/lib/swr-keys; cache key factory
+ *
+ * DEPENDENCIES:
+ *   SWR (useSWR, useSWRConfig)
+ *   crmControllerFetchAppointmentDetails, crmControllerCancelAppointment
+ *   appointmentsKey — from @/lib/swr-keys
+ *   useAuth — for leadId
+ *
+ * LAST UPDATED: 2026-05-05 — Converted from useState+useEffect to SWR.
+ *   Removed manual fetch callback; SWR now handles caching, deduplication,
+ *   and conditional fetching. Key stays stable so it won't thrash cache.
+ *   cancelAppointment now uses useSWRConfig internally to access global
+ *   mutate function for cache invalidation.
+ */
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback } from "react";
+import useSWR, { useSWRConfig } from "swr";
 import { useAuth } from "@/hooks/shared/auth/use-auth";
+import { appointmentsKey } from "@/lib/swr-keys";
 import {
   crmControllerCancelAppointment,
   crmControllerFetchAppointmentDetails,
@@ -10,6 +49,9 @@ import {
 
 export type { SlotDetailDto };
 
+// Fixed at module level so SWR key never changes between renders.
+// Changing the key on each render would cause SWR to think the resource changed
+// and re-fetch unnecessarily.
 const ONE_YEAR_AGO = new Date(Date.now() - 365 * 24 * 60 * 60 * 1000).toISOString();
 
 function isUpcoming(apt: SlotDetailDto): boolean {
@@ -22,29 +64,20 @@ export function useAppointments() {
   const { user } = useAuth();
   const leadId = user?.lead_id ? Number(user.lead_id) : null;
 
-  const [all, setAll] = useState<SlotDetailDto[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<Error | null>(null);
-
-  const fetch = useCallback(async () => {
-    if (!leadId) return;
-    setIsLoading(true);
-    setError(null);
-    try {
+  // When leadId is null, SWR key becomes null which disables fetching.
+  const { data, isLoading, error, mutate } = useSWR(
+    leadId ? appointmentsKey() : null,
+    async () => {
       const res = await crmControllerFetchAppointmentDetails({
-        query: { leadId, startDatetime: ONE_YEAR_AGO },
+        query: { leadId: leadId!, startDatetime: ONE_YEAR_AGO },
       });
-      setAll(res.data ?? []);
-    } catch (err) {
-      setError(err instanceof Error ? err : new Error("Failed to load appointments"));
-    } finally {
-      setIsLoading(false);
-    }
-  }, [leadId]);
+      if (res.error) throw new Error(JSON.stringify(res.error));
+      return res.data ?? [];
+    },
+    { revalidateOnFocus: false },
+  );
 
-  useEffect(() => {
-    fetch();
-  }, [fetch]);
+  const all = data ?? [];
 
   return {
     upcoming: all
@@ -55,7 +88,7 @@ export function useAppointments() {
       .sort((a, b) => new Date(b.start_datetime).getTime() - new Date(a.start_datetime).getTime()),
     isLoading,
     error,
-    refetch: fetch,
+    refetch: mutate,
   };
 }
 
@@ -63,33 +96,47 @@ export function useAppointmentById(id: number | null) {
   const { user } = useAuth();
   const leadId = user?.lead_id ? Number(user.lead_id) : null;
 
-  const [appointment, setAppointment] = useState<SlotDetailDto | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<Error | null>(null);
-
-  const fetch = useCallback(async () => {
-    if (!leadId || !id) return;
-    setIsLoading(true);
-    setError(null);
-    try {
+  // Fetch all appointments; filter to the target ID on the client.
+  const { data, isLoading, error, mutate } = useSWR(
+    leadId && id ? appointmentsKey() : null,
+    async () => {
       const res = await crmControllerFetchAppointmentDetails({
-        query: { leadId, startDatetime: ONE_YEAR_AGO },
+        query: { leadId: leadId!, startDatetime: ONE_YEAR_AGO },
       });
-      setAppointment((res.data ?? []).find((a) => a.id === id) ?? null);
-    } catch (err) {
-      setError(err instanceof Error ? err : new Error("Failed to load appointment"));
-    } finally {
-      setIsLoading(false);
-    }
-  }, [leadId, id]);
+      if (res.error) throw new Error(JSON.stringify(res.error));
+      return res.data ?? [];
+    },
+    { revalidateOnFocus: false },
+  );
 
-  useEffect(() => {
-    fetch();
-  }, [fetch]);
+  const appointment = (data ?? []).find((a) => a.id === id) ?? null;
 
-  return { appointment, isLoading, error, refetch: fetch };
+  return { appointment, isLoading, error, refetch: mutate };
 }
 
+/** Hook that returns a bound cancel function. */
+export function useAppointmentMutations() {
+  const { mutate } = useSWRConfig();
+
+  const cancelAppointmentAndRefresh = useCallback(
+    async (appointmentId: number, reason: string): Promise<void> => {
+      await crmControllerCancelAppointment({
+        body: {
+          appointment_id: appointmentId,
+          medium_id: 5,
+          cancel_reason: reason,
+        },
+      });
+      // Invalidate the appointments cache so the UI refetches.
+      await mutate(appointmentsKey());
+    },
+    [mutate],
+  );
+
+  return { cancelAppointment: cancelAppointmentAndRefresh };
+}
+
+/** Legacy function for backward compatibility. Use useAppointmentMutations() instead. */
 export async function cancelAppointment(appointmentId: number, reason: string): Promise<void> {
   await crmControllerCancelAppointment({
     body: {

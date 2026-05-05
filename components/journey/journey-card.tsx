@@ -10,21 +10,22 @@
  *   2. Streak chip uses "keep going" language (never "broke" per design system rule).
  *   3. Orange filled progress bar with percentage shown in --mt-orange-500.
  *   4. Clicking the card navigates to /journeys/[id]/details.
+ *   5. Wrapped in React.memo to prevent re-renders when parent updates don't change props.
  *
  * KEY VARIABLES / PROPS / EXPORTS:
  *   journey — ActiveJourney shape with id, name, icon, currentDay, totalDays, streak, isPremium
  *
  * DEPENDENCIES:
- *   PremiumBadge, lucide-react, useRouter
+ *   PremiumBadge, lucide-react, useRouter, React.memo
  *
- * LAST UPDATED: 2026-04-28 — Design system migration: orange progress bar, tint tile,
- *   soft-land streak, sentence-case labels, removed border/ring from card
+ * LAST UPDATED: 2026-05-05 — Phase 7: Added React.memo wrapper for list optimization
  */
 
 "use client";
 
 import { ChevronRight, Flame } from "lucide-react";
 import { useRouter } from "next/navigation";
+import { memo } from "react";
 import { PremiumBadge } from "./premium-badge";
 
 export interface ActiveJourney {
@@ -44,7 +45,7 @@ interface JourneyCardProps {
   className?: string;
 }
 
-export function JourneyCard({ journey, className }: JourneyCardProps) {
+function JourneyCardComponent({ journey, className }: JourneyCardProps) {
   const router = useRouter();
 
   const progressPercent =
@@ -109,3 +110,5 @@ export function JourneyCard({ journey, className }: JourneyCardProps) {
     </div>
   );
 }
+
+export const JourneyCard = memo(JourneyCardComponent);

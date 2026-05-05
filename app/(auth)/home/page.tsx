@@ -4,14 +4,13 @@
  * PURPOSE:
  *   Root home screen shown after authentication. Composes all home section
  *   components and routes quick-action taps to their respective pages.
+ *   Sets status bar color to match the orange gradient header.
  *
  * LOGIC OVERVIEW:
  *   1. Fetches upcoming appointments via useHomePage().
- *   2. Fetches user's enrolled journeys (useEnrolledJourneys) and gamification
- *      streak (useGamification) to feed real data into JourneySection.
+ *   2. Fetches enrolled journeys (useEnrolledJourneys) and gamification streak (useGamification).
  *   3. handleAction dispatches router.push based on action type + subtype.
- *   4. Renders HomeHeader (gradient), then main content pulled up over the
- *      header with a negative top margin and rounded corners.
+ *   4. Renders HomeHeader (gradient), then main content pulled up with negative margin + rounded corners.
  *
  * KEY VARIABLES / PROPS / EXPORTS:
  *   appointments        — upcoming appointment list from useHomePage
@@ -19,16 +18,13 @@
  *   handleAction        — central router dispatcher for all home interactions
  *
  * DEPENDENCIES:
- *   useHomePage            — provides upcoming appointments
- *   useEnrolledJourneys    — lists user's active journey enrollments
- *   useGamification        — provides daily streak count
- *   HomeHeader             — gradient hero header with mood CTA
- *   UpcomingSession        — next appointment card
- *   SupportSection         — talk-to-therapist / match-me CTAs
- *   QuickActions           — 2-column grid of feature shortcuts
- *   JourneySection         — active enrolled journey list with progress
+ *   useMemo                           — react
+ *   useRouter                         — next/navigation
+ *   useHomePage                       — hooks/home/use-home-page
+ *   useEnrolledJourneys, useGamification — hooks/journeys/use-journey-detail
+ *   HomeHeader, UpcomingSession, SupportSection, QuickActions, JourneySection, TrackerBar, GrowthWidget — home components
  *
- * LAST UPDATED: 2026-05-04 — added TrackerBar (mood/stress/sleep) above QuickActions
+ * LAST UPDATED: 2026-05-05 — drop orange status-bar override; bar stays cream (default) on home
  */
 
 "use client";
@@ -47,6 +43,7 @@ import { useEnrolledJourneys, useGamification } from "@/hooks/journeys/use-journ
 
 export default function HomePage() {
   const router = useRouter();
+
   const { upcoming: appointments } = useHomePage();
   const { enrollments, isLoading: enrollmentsLoading } = useEnrolledJourneys();
   const { gamification } = useGamification();

@@ -1273,3 +1273,31 @@
 }
 
 /* bg-background maps to --background which is now set to --mt-cream-bg (#FAF7F4) in :root */
+
+/* ── Capacitor WebView Performance ─────────────────────────────────────────── */
+
+/*
+ * Removes 300ms tap delay on Android WebView.
+ * 'manipulation' disables double-tap zoom (keeps single-tap zoom) and removes delay.
+ */
+* {
+  touch-action: manipulation;
+}
+
+/*
+ * Prevents the Android overscroll glow effect and elastic scroll bounce.
+ * Matches the native app feel where the UI doesn't rubber-band.
+ */
+body {
+  overscroll-behavior: none;
+}
+
+/*
+ * GPU-promote the bottom navigation floating pill so it composites on its own layer.
+ * This prevents it from being redrawn every time scroll content updates above it.
+ * Target: the fixed bottom-0 wrapper containing the nav element.
+ */
+div[style*="max(var(--safe-area-inset-bottom)"] {
+  will-change: transform;
+  transform: translateZ(0);
+}

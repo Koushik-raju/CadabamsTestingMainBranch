@@ -21,7 +21,7 @@
  *   useAuth — user identity
  *   PageHeader — shared navigation header
  *
- * LAST UPDATED: 2026-04-28 — Neo design system: shadow scale, color tokens, border radius
+ * LAST UPDATED: 2026-05-05 — Added cache invalidation after bookPackage mutation
  */
 "use client";
 
@@ -33,7 +33,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { useAuth } from "@/hooks/use-auth";
-import { bookPackage, initiatePackagePayment } from "@/hooks/use-packages";
+import { bookPackage, initiatePackagePayment, useManagedPackages } from "@/hooks/use-packages";
 import type { PackageResponseDto } from "@/sdk/backend-v2";
 
 const JOURNEY_BASE_URL = "https://mindtalkbuddy.com/api/mindful-journeys";
@@ -140,6 +140,8 @@ function BookPackageContent({ packageId }: { packageId: string }) {
     };
   }, [journeyId]);
 
+  const { mutate: refetchPackages } = useManagedPackages();
+
   const description = useMemo(() => extractDescription(journeyData), [journeyData]);
 
   const handleCheckout = async () => {
@@ -163,6 +165,7 @@ function BookPackageContent({ packageId }: { packageId: string }) {
         leadBookedPackageId: booking_id,
         leadId: Number(user.lead_id),
       });
+      await refetchPackages();
       window.location.href = payData.result.short_url;
     } catch (err: unknown) {
       setError((err as { message?: string })?.message ?? "Failed to process payment");

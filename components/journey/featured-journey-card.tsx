@@ -11,6 +11,7 @@
  *   3. Meta row: total days + progress chip (Day X/Y when enrolled, "Beginner" otherwise).
  *   4. Title + optional description + orange mt-primary CTA button.
  *   5. Clicking card or CTA routes to /journeys/[id].
+ *   6. Wrapped in React.memo to prevent re-renders when carousel props don't change.
  *
  * KEY VARIABLES / PROPS / EXPORTS:
  *   id           — journey id used for routing
@@ -23,15 +24,15 @@
  *   progress     — when supplied, shows Day X/Y in meta row
  *
  * DEPENDENCIES:
- *   next/navigation useRouter, lucide-react
+ *   next/navigation useRouter, lucide-react, React.memo
  *
- * LAST UPDATED: 2026-04-28 — Design system migration: orange CTA button, 28px radius,
- *   white-on-dark text, sentence-case labels, removed teal gradient
+ * LAST UPDATED: 2026-05-05 — Phase 7: Added React.memo wrapper for carousel optimization
  */
 "use client";
 
 import { BarChart2, Clock, TrendingUp } from "lucide-react";
 import { useRouter } from "next/navigation";
+import { memo } from "react";
 
 interface FeaturedJourneyCardProps {
   id: string;
@@ -44,7 +45,7 @@ interface FeaturedJourneyCardProps {
   progress?: { currentDay: number; totalDays: number };
 }
 
-export function FeaturedJourneyCard({
+function FeaturedJourneyCardComponent({
   id,
   name,
   description,
@@ -120,3 +121,5 @@ export function FeaturedJourneyCard({
     </div>
   );
 }
+
+export const FeaturedJourneyCard = memo(FeaturedJourneyCardComponent);

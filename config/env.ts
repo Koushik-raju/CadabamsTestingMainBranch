@@ -28,7 +28,7 @@
  *
  * LAST UPDATED: 2026-04-17 — export single CONFIG object; rename zegoCloudUrl → ZEGO_CLOUD_URL
  */
-
+import "dotenv/config"
 const ENV =
   (process.env.NEXT_PUBLIC_ENV as "development" | "production") ?? "production";
 

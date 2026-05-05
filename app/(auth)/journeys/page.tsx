@@ -236,7 +236,12 @@ function JourneysInner() {
               ) : (
                 <div className="grid grid-cols-2 gap-3 space-x-1">
                   {quickPicks.map((journey) => (
-                    <JourneyDiscoveryCard key={journey.id} journey={journey} />
+                    <div
+                      key={journey.id}
+                      style={{ contentVisibility: "auto", containIntrinsicSize: "0 180px" }}
+                    >
+                      <JourneyDiscoveryCard journey={journey} />
+                    </div>
                   ))}
                 </div>
               )}

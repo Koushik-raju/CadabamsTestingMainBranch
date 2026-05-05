@@ -13,26 +13,28 @@
  *     back to the assessment detail page, and a grouped list card of reports.
  *   - Each card row shows completedAt, optional score/severity (from completion),
  *     a short excerpt, and toggles a full markdown view when tapped.
- *   - Expanded report rows show a "Book Appointment" CTA linking to /consult/find-therapist.
+ *   - Expanded report rows render dynamically imported Markdown to view the full
+ *     analysis and show a "Book Appointment" CTA linking to /consult/find-therapist.
  *
  * KEY VARIABLES / PROPS / EXPORTS:
  *   assessmentId — route param
  *   reports      — AssessmentReport[] from useAssessmentReports
  *   expandedId   — id of the currently expanded report row (or null)
+ *   Markdown — dynamically imported markdown renderer
  *
  * DEPENDENCIES:
  *   useAssessmentReports   — wraps patientAssessmentsAnalysisControllerList + list-mine
  *   PageHeader             — shared navigation header
- *   react-markdown         — renders analysis.result markdown
+ *   react-markdown (dynamic) — renders analysis.result markdown on accordion expansion
  *
- * LAST UPDATED: 2026-04-28 — Neo design system: shadow scale, color tokens, border radius
+ * LAST UPDATED: 2026-05-05 — Phase 2: dynamically imported react-markdown for accordion-expanded reports
  */
 "use client";
 
 import { AlertCircle, ChevronDown, ChevronUp, FileText, Sparkles } from "lucide-react";
+import dynamic from "next/dynamic";
 import Link from "next/link";
 import { use, useState } from "react";
-import Markdown from "react-markdown";
 import { PageHeader } from "@/components/shared/navigation/page-header";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -42,6 +44,8 @@ import {
   type AssessmentReport,
   useAssessmentReports,
 } from "@/hooks/assessments/use-assessment-reports";
+
+const Markdown = dynamic(() => import("react-markdown"), { ssr: false });
 
 function formatDate(iso: string): string {
   try {

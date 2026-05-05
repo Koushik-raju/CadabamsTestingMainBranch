@@ -86,10 +86,9 @@ export function Sidebar({ open, onClose }: SidebarProps) {
         aria-modal="true"
         aria-label="Navigation menu"
         className={cn(
-          "fixed left-0 top-0 bottom-0 z-50 w-[280px] flex flex-col transition-transform duration-300 ease-out",
+          "fixed left-0 top-0 bottom-0 z-50 w-[280px] flex flex-col bg-background transition-transform duration-300 ease-out",
           open ? "translate-x-0" : "-translate-x-full",
         )}
-        style={{ background: "#FAF7F4" }}
       >
         {/* ── Header: avatar + name + close button ── */}
         <div className="flex items-center justify-between px-5 pt-12 pb-6">

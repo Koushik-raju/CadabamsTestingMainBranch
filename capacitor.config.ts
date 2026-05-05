@@ -30,8 +30,9 @@
  *   @capacitor/cli               — CapacitorConfig type
  *   @capacitor/keyboard          — KeyboardResize enum
  *
- * LAST UPDATED: 2026-04-23 — remote-only mode; app uses Next.js middleware
- *   and cannot be statically exported, so bundled builds are disabled.
+ * LAST UPDATED: 2026-05-05 — StatusBar.overlaysWebView set to false: iOS
+ *   reserves the status bar area natively, the WebView never extends into the
+ *   notch. setStatusBarColor() controls the bar background per-route.
  */
 import type { CapacitorConfig } from '@capacitor/cli';
 import { KeyboardResize } from '@capacitor/keyboard';
@@ -43,7 +44,11 @@ const isDev = process.env.NODE_ENV !== 'production';
  * CAP_REMOTE_URL only to aim a native build at a different origin (e.g.
  * prod, ngrok). Never set to empty — the app has no standalone mode.
  */
-const remoteUrl = process.env.CAP_REMOTE_URL || 'https://www.dev-x3.cadabams.com/';
+// Switch to https://www.dev-x3.cadabams.com/ (or prod URL) when building for staging/release.
+// iOS Simulator: localhost resolves to the host Mac directly — use it as-is.
+// Android emulator: needs 10.0.2.2 instead of localhost.
+// Real device: use Mac's local network IP or ngrok.
+const remoteUrl = process.env.CAP_REMOTE_URL || 'http://localhost:3001/';
 
 const config: CapacitorConfig = {
   appId: 'com.mindtalk.com',
@@ -66,14 +71,24 @@ const config: CapacitorConfig = {
     captureInput: true,
   },
   plugins: {
-    // Native HTTP client — bypasses WebView CORS and lets us add cert pinning later.
+    // Native HTTP client — DISABLED. When enabled, intercepts every fetch() and
+    // routes through native URLSession, which silently fails on iOS Simulator
+    // (CapacitorUrlRequestError error 0) and bypasses WebView cookie storage.
+    // Keeping disabled: WebView fetch handles HTTPS + cookies correctly.
+    // Re-enable only if/when CORS becomes a hard blocker.
     CapacitorHttp: {
-      enabled: true,
+      enabled: false,
     },
     StatusBar: {
+      // overlaysWebView: false — iOS reserves the status bar space natively so
+      // the WebView never extends into the notch / status bar area. No
+      // full-bleed; the native bar background (set per-route via
+      // setStatusBarColor) sits above the WebView. Simpler and bulletproof.
+      // Note: ignored on Android 16+ (always edge-to-edge there).
       overlaysWebView: false,
       style: 'LIGHT',
-      backgroundColor: '#FFFFFF',
+      // Matches --mt-cream-bg / --background token (app/globals.css).
+      backgroundColor: '#faf7f4',
     },
     Keyboard: {
       resize: KeyboardResize.Body,
