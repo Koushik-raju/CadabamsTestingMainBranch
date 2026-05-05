@@ -13,7 +13,7 @@ function extractString(val: unknown): string | null {
   if (typeof val === "string") return val.trim() || null;
   if (typeof val === "object") {
     const obj = val as Record<string, unknown>;
-    for (const key of ["en", "value", "text"]) {
+    for (const key of ["en", "value", "text", "url", "href"]) {
       if (typeof obj[key] === "string") return (obj[key] as string).trim() || null;
     }
   }
@@ -269,9 +269,13 @@ function mapAssignedWorksheet(raw: unknown): AssignedWorksheetItem | null {
   if (!raw || typeof raw !== "object") return null;
   const obj = raw as Record<string, unknown>;
   const meta = getAssignmentMetadata(obj);
+  /** Prefer Prisma CMS worksheet id for /cms/worksheets/:id when Strapi documentId is absent on the row. */
   const documentId =
-    (typeof meta?.documentId === "string" && meta.documentId.trim()) ||
+    (typeof obj.worksheetId === "string" && obj.worksheetId.trim()) ||
     (typeof obj.cmsWorksheetId === "string" && obj.cmsWorksheetId.trim()) ||
+    (typeof meta?.worksheetId === "string" && meta.worksheetId.trim()) ||
+    (typeof meta?.cmsWorksheetId === "string" && meta.cmsWorksheetId.trim()) ||
+    (typeof meta?.documentId === "string" && meta.documentId.trim()) ||
     (typeof obj.documentId === "string" && obj.documentId.trim()) ||
     (typeof obj.id === "string" && obj.id) ||
     (obj.id != null ? String(obj.id) : "");

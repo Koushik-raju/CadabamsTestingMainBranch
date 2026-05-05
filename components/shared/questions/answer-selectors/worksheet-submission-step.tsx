@@ -7,12 +7,16 @@ import { presignWorksheetUpload, summarizeWorksheetUpload } from "@/lib/patient-
 
 const MAX_BYTES = 15 * 1024 * 1024;
 
-/** CMS stores the printable worksheet URL on `question.text` (often a signed PDF link). */
+/** True when `text` is an absolute http(s) URL (CMS template file, often S3 without “.pdf” in the path). */
 export function isWorksheetTemplateUrl(text?: string): boolean {
   if (!text || !text.trim()) return false;
   const t = text.trim();
-  if (!/^https?:\/\//i.test(t)) return false;
-  return /\.pdf(\?|$|#)/i.test(t) || t.toLowerCase().includes(".pdf");
+  try {
+    const u = new URL(t);
+    return u.protocol === "http:" || u.protocol === "https:";
+  } catch {
+    return false;
+  }
 }
 
 interface WorksheetSubmissionStepProps {

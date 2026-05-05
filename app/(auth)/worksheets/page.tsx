@@ -94,8 +94,11 @@ export default function WorksheetsPage() {
     };
   }, [activeTab, isLoadingBrowse, hasMore, setSize]);
 
-  const handleOpenAssigned = (item: AssignedWorksheetItem) =>
-    router.push(`/worksheets/${item.documentId}/details`);
+  const handleOpenAssigned = (item: AssignedWorksheetItem) => {
+    const routeId = (item.documentId || item.id || "").trim();
+    if (!routeId) return;
+    router.push(`/worksheets/${encodeURIComponent(routeId)}/details`);
+  };
 
   const handleBrowseWorksheet = (worksheet: WorksheetItem) =>
     router.push(`/worksheets/${worksheet.id}/details`);

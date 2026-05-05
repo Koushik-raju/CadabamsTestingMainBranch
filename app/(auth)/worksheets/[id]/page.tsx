@@ -61,6 +61,7 @@ import {
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { use, useEffect, useMemo, useRef, useState } from "react";
+import { mutate } from "swr";
 import { BackButton } from "@/components/shared/navigation/back-button";
 import {
   type AnswerValue,
@@ -72,6 +73,8 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { submitWorksheet, useWorksheetById, type WorksheetItem } from "@/hooks/use-worksheets";
 import { useJourneyTaskContinuation } from "@/hooks/journeys/use-journey-task-continuation";
+import { useAuth } from "@/hooks/shared/auth/use-auth";
+import { assignedWorksheetsKey } from "@/lib/swr-keys";
 
 type WorksheetQuestion = WorksheetItem["Questions"][number];
 
@@ -90,6 +93,7 @@ export default function WorksheetFormPage({ params }: { params: Promise<{ id: st
   const submittedSubmissionIdRef = useRef<string | null>(null);
 
   const continuation = useJourneyTaskContinuation("WORKSHEET");
+  const { user } = useAuth();
 
   const { data: worksheetData, isLoading, error: fetchError } = useWorksheetById(worksheetId);
 
@@ -296,6 +300,8 @@ export default function WorksheetFormPage({ params }: { params: Promise<{ id: st
     });
     const id = await submitWorksheet(submissionDocumentId, formattedAnswers);
     submittedSubmissionIdRef.current = id;
+    const lead = user?.lead_id != null ? String(user.lead_id) : null;
+    if (lead) void mutate(assignedWorksheetsKey(lead));
     return id;
   };
 
