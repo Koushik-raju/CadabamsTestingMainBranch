@@ -15,7 +15,7 @@
  *
  * KEY VARIABLES / PROPS / EXPORTS:
  *   metadata — Metadata object (title, description)
- *   viewport — Viewport config (width, initialScale, viewportFit, interactiveWidget)
+ *   viewport — Viewport config (width, initialScale, maximumScale, userScalable, viewportFit, interactiveWidget)
  *   RootLayout — Default export, accepts children ReactNode
  *
  * DEPENDENCIES:
@@ -26,7 +26,7 @@
  *   @/providers/app-providers
  *   globals.css
  *
- * LAST UPDATED: 2026-05-05 — Removed hardcoded manifest line; manifest now auto-discovered from app/manifest.ts
+ * LAST UPDATED: 2026-05-05 — Added maximumScale:1 + userScalable:false to viewport to prevent pinch/double-tap zoom in Capacitor WebView
  */
 import type { Metadata, Viewport } from "next";
 import { Urbanist } from "next/font/google";
@@ -48,6 +48,8 @@ export const metadata: Metadata = {
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
+  maximumScale: 1,
+  userScalable: false,
   viewportFit: "cover",
   interactiveWidget: "resizes-content",
 };
