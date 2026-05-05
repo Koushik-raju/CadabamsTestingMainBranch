@@ -187,7 +187,12 @@ export default function LeaderboardPage() {
                 <h2 className="text-sm font-semibold text-muted-foreground mb-2 px-1">Rankings</h2>
                 <div className="space-y-2" role="list">
                   {rest.map((entry) => (
-                    <LeaderboardEntry key={entry.rank} entry={entry} />
+                    <div
+                      key={entry.rank}
+                      style={{ contentVisibility: "auto", containIntrinsicSize: "0 68px" }}
+                    >
+                      <LeaderboardEntry entry={entry} />
+                    </div>
                   ))}
                 </div>
               </section>

@@ -13,7 +13,8 @@
  *   Controlled by parent via `open`/`onOpenChange`. When `qa` is non-empty
  *   we render a Q&A list; the `body` markdown renders below as an
  *   "Analysis" block when both are present. Empty content falls back to
- *   "No details recorded".
+ *   "No details recorded". ReactMarkdown is dynamically imported to avoid
+ *   loading the library until the sheet actually opens.
  *
  *   Bottom sheet sizing:
  *     - max-h-[88dvh] caps the height so a tap above the sheet can still
@@ -26,16 +27,16 @@
  *
  * KEY VARIABLES / PROPS / EXPORTS:
  *   title, subtitle, body, qa, open, onOpenChange
+ *   ReactMarkdown — dynamically imported markdown renderer
  *
  * DEPENDENCIES:
- *   react-markdown + remark-gfm, shadcn Sheet
+ *   react-markdown (dynamic) + remark-gfm, shadcn Sheet
  *
- * LAST UPDATED: 2026-04-27 — switched from centered Dialog to bottom Sheet
- *   + bottom padding for the scroll area so content has breathing room.
+ * LAST UPDATED: 2026-05-05 — Phase 2: dynamically imported react-markdown for on-demand sheet rendering
  */
 "use client";
 
-import ReactMarkdown from "react-markdown";
+import dynamic from "next/dynamic";
 import remarkGfm from "remark-gfm";
 import {
   Sheet,
@@ -44,6 +45,8 @@ import {
   SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet";
+
+const ReactMarkdown = dynamic(() => import("react-markdown"), { ssr: false });
 
 export interface QAPair {
   question: string;

@@ -10,29 +10,33 @@
  * LOGIC OVERVIEW:
  *   On open, calls journeysControllerGetDaySummary. While loading, shows a
  *   skeleton. On success, renders summary.summary through ReactMarkdown with
- *   remark-gfm. If no summary is present (e.g. all tasks not yet complete),
- *   renders a neutral fallback. Errors fall back to the same neutral copy.
+ *   remark-gfm (dynamically imported). If no summary is present (e.g. all tasks
+ *   not yet complete), renders a neutral fallback. Errors fall back to the same
+ *   neutral copy.
  *
  * KEY VARIABLES / PROPS / EXPORTS:
  *   JourneyDaySummaryModalProps — props shape
  *   JourneyDaySummaryModal      — default export component
+ *   ReactMarkdown — dynamically imported react-markdown component
  *
  * DEPENDENCIES:
  *   journeysControllerGetDaySummary, DaySummaryResponseDto — @/sdk/backend-v2
  *   Dialog, DialogContent, DialogTitle — @/components/ui/dialog
- *   ReactMarkdown, remarkGfm
+ *   react-markdown (dynamic), remark-gfm
  *
- * LAST UPDATED: 2026-04-28 — Neo design system: shadow scale, color tokens, border radius
+ * LAST UPDATED: 2026-05-05 — Phase 2: dynamically imported react-markdown for on-demand modal rendering
  */
 "use client";
 
 import { Loader2, Sparkles } from "lucide-react";
+import dynamic from "next/dynamic";
 import { useCallback, useEffect, useRef, useState } from "react";
-import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { Skeleton } from "@/components/ui/skeleton";
 import { type DaySummaryResponseDto, journeysControllerGetDaySummary } from "@/sdk/backend-v2";
+
+const ReactMarkdown = dynamic(() => import("react-markdown"), { ssr: false });
 
 interface JourneyDaySummaryModalProps {
   open: boolean;

@@ -30,8 +30,8 @@
  *   @capacitor/cli               — CapacitorConfig type
  *   @capacitor/keyboard          — KeyboardResize enum
  *
- * LAST UPDATED: 2026-04-23 — remote-only mode; app uses Next.js middleware
- *   and cannot be statically exported, so bundled builds are disabled.
+ * LAST UPDATED: 2026-05-05 — overlaysWebView: true for iOS (Phase 3.5 status bar blending)
+ *   and default backgroundColor for Android consistency.
  */
 import type { CapacitorConfig } from '@capacitor/cli';
 import { KeyboardResize } from '@capacitor/keyboard';
@@ -71,9 +71,9 @@ const config: CapacitorConfig = {
       enabled: true,
     },
     StatusBar: {
-      overlaysWebView: false,
+      overlaysWebView: true,
       style: 'LIGHT',
-      backgroundColor: '#FFFFFF',
+      backgroundColor: '#fffdf9',
     },
     Keyboard: {
       resize: KeyboardResize.Body,

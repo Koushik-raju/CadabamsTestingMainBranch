@@ -10,11 +10,12 @@
  *   (extracts text from rich text blocks), day count from steps, media type by
  *   checking for audio/worksheet/interactive tasks, and image URL from icon or
  *   banner. Renders as a clickable Card that navigates to the journey detail.
+ *   Wrapped in React.memo to prevent re-renders when parent updates don't change props.
  *
  * KEY VARIABLES / PROPS / EXPORTS:
  *   journey          — discovery journey item with name, steps, icon, isPremium
  *   className        — optional additional Card classes
- *   JourneyDiscoveryCard — default export component
+ *   JourneyDiscoveryCard — default export component (memoized)
  *   getSafeString    — helper to extract text from rich text blocks
  *   getMediaType     — helper to classify task content (audio/journal/interactive)
  *
@@ -23,13 +24,15 @@
  *   Badge — @/components/ui/badge
  *   PremiumBadge — components/journey/premium-badge
  *   lucide-react Clock icon
+ *   React.memo — for re-render optimization
  *
- * LAST UPDATED: 2026-04-28 — Neo design system: shadow scale, color tokens, border radius
+ * LAST UPDATED: 2026-05-05 — Phase 7: Added React.memo wrapper for list optimization
  */
 "use client";
 
 import { Clock } from "lucide-react";
 import { useRouter } from "next/navigation";
+import { memo } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { cn, fixImageUrl } from "@/lib/utils";
@@ -78,7 +81,7 @@ function getMediaType(journey: DiscoveryJourney): string {
   return "Interactive";
 }
 
-export function JourneyDiscoveryCard({ journey, className }: JourneyDiscoveryCardProps) {
+function JourneyDiscoveryCardComponent({ journey, className }: JourneyDiscoveryCardProps) {
   const router = useRouter();
   const journeyId = journey.id;
   const name = getSafeString(journey.name);
@@ -123,3 +126,5 @@ export function JourneyDiscoveryCard({ journey, className }: JourneyDiscoveryCar
     </Card>
   );
 }
+
+export const JourneyDiscoveryCard = memo(JourneyDiscoveryCardComponent);

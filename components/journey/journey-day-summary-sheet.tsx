@@ -8,30 +8,35 @@
  * LOGIC OVERVIEW:
  *   On open, calls journeysControllerGetDaySummary with enrollmentId + dayNumber.
  *   Shows loading skeleton, then renders summary text, task count, and a
- *   "Next Day →" CTA. Falls back to a static message on API error.
+ *   "Next Day →" CTA via dynamically imported ReactMarkdown. Falls back to
+ *   a static message on API error.
  *
  * KEY VARIABLES / PROPS / EXPORTS:
  *   JourneyDaySummarySheetProps  — props
  *   JourneyDaySummarySheet       — exported component
+ *   ReactMarkdown — dynamically imported markdown renderer
  *
  * DEPENDENCIES:
  *   journeysControllerGetDaySummary, DaySummaryResponseDto — @/sdk/backend-v2
  *   Sheet, SheetContent, SheetTitle — @/components/ui/sheet
  *   Skeleton — @/components/ui/skeleton
+ *   react-markdown (dynamic), remark-gfm
  *
- * LAST UPDATED: 2026-04-28 — Neo design system: shadow scale, color tokens, border radius
+ * LAST UPDATED: 2026-05-05 — Phase 2: dynamically imported react-markdown for on-demand sheet rendering
  */
 "use client";
 
 import { CheckCircle2, Flame, Trophy } from "lucide-react";
+import dynamic from "next/dynamic";
 import { useEffect, useRef, useState } from "react";
-import ReactMarkdown from "react-markdown";
 import { toast } from "react-toastify";
 import remarkGfm from "remark-gfm";
 import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet";
 import { Skeleton } from "@/components/ui/skeleton";
 import { completeJourneyDay } from "@/hooks/journeys/use-journey-detail";
 import { type DaySummaryResponseDto, journeysControllerGetDaySummary } from "@/sdk/backend-v2";
+
+const ReactMarkdown = dynamic(() => import("react-markdown"), { ssr: false });
 
 interface JourneyDaySummarySheetProps {
   open: boolean;

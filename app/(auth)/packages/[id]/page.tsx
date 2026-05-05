@@ -28,7 +28,7 @@
  *   odooTuple                                   — from @/lib/odoo (safe many2one tuple access)
  *   BookedPackageLineDto                        — from @/sdk/backend-v2
  *
- * LAST UPDATED: 2026-04-28 — Neo design system: shadow scale, color tokens, border radius
+ * LAST UPDATED: 2026-05-05 — Added cache invalidation after initiatePackagePayment
  */
 "use client";
 
@@ -121,7 +121,7 @@ export default function PackageDetailPage({ params }: { params: Promise<{ id: st
   const router = useRouter();
   const { user } = useAuth();
 
-  const { packages, isLoading } = useManagedPackages();
+  const { packages, isLoading, mutate: refetchPackages } = useManagedPackages();
   const [payLoading, setPayLoading] = useState(false);
   const [payError, setPayError] = useState<string | null>(null);
 
@@ -137,6 +137,7 @@ export default function PackageDetailPage({ params }: { params: Promise<{ id: st
         leadId: Number(user.lead_id),
         campusId: Number(odooTuple(pkg.campus_id, 0) ?? 0),
       });
+      await refetchPackages();
       window.location.href = payData.result.short_url;
     } catch (err: unknown) {
       setPayError((err as { message?: string })?.message ?? "Failed to process payment");

@@ -1,3 +1,33 @@
+/**
+ * FILE: app/layout.tsx
+ *
+ * PURPOSE:
+ *   Root layout for the Next.js app. Sets up global metadata, fonts, providers, and GTM/GA scripts.
+ *   Wraps all pages with AppProviders (SWR, theme, etc.) and CapacitorInit for mobile shell support.
+ *
+ * LOGIC OVERVIEW:
+ *   - Load fonts (Urbanist as legacy, Inter via @font-face in globals.css)
+ *   - Define root metadata (title, description) — manifest auto-discovered from app/manifest.ts
+ *   - Configure viewport for mobile/Capacitor
+ *   - Inject GTM and GA scripts at afterInteractive
+ *   - Wrap HTML with AppProviders and CapacitorInit
+ *   - Use overflow-x-clip (not hidden) to avoid breaking position:sticky in WebKit/Capacitor
+ *
+ * KEY VARIABLES / PROPS / EXPORTS:
+ *   metadata — Metadata object (title, description)
+ *   viewport — Viewport config (width, initialScale, viewportFit, interactiveWidget)
+ *   RootLayout — Default export, accepts children ReactNode
+ *
+ * DEPENDENCIES:
+ *   next/font/google (Urbanist)
+ *   next/script (GTM/GA)
+ *   @/components/common/capacitor-init
+ *   @/config/site (siteConfig.name, .description, .gtmId, .gaId)
+ *   @/providers/app-providers
+ *   globals.css
+ *
+ * LAST UPDATED: 2026-05-05 — Removed hardcoded manifest line; manifest now auto-discovered from app/manifest.ts
+ */
 import type { Metadata, Viewport } from "next";
 import { Urbanist } from "next/font/google";
 import Script from "next/script";
@@ -13,7 +43,6 @@ const urbanist = Urbanist({ variable: "--font-urbanist", subsets: ["latin"] });
 export const metadata: Metadata = {
   title: siteConfig.name,
   description: siteConfig.description,
-  manifest: "/manifest.json",
 };
 
 export const viewport: Viewport = {

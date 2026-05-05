@@ -256,12 +256,16 @@ export default function NotificationsPage() {
                 <Card>
                   <CardContent className="py-0 px-3">
                     {unread.map((n, i) => (
-                      <NotificationRow
+                      <div
                         key={n.id}
-                        n={n}
-                        onClick={() => handleClick(n)}
-                        isLast={i === unread.length - 1}
-                      />
+                        style={{ contentVisibility: "auto", containIntrinsicSize: "0 88px" }}
+                      >
+                        <NotificationRow
+                          n={n}
+                          onClick={() => handleClick(n)}
+                          isLast={i === unread.length - 1}
+                        />
+                      </div>
                     ))}
                   </CardContent>
                 </Card>
@@ -275,12 +279,16 @@ export default function NotificationsPage() {
                 <Card>
                   <CardContent className="py-0 px-3">
                     {read.map((n, i) => (
-                      <NotificationRow
+                      <div
                         key={n.id}
-                        n={n}
-                        onClick={() => handleClick(n)}
-                        isLast={i === read.length - 1}
-                      />
+                        style={{ contentVisibility: "auto", containIntrinsicSize: "0 88px" }}
+                      >
+                        <NotificationRow
+                          n={n}
+                          onClick={() => handleClick(n)}
+                          isLast={i === read.length - 1}
+                        />
+                      </div>
                     ))}
                   </CardContent>
                 </Card>
