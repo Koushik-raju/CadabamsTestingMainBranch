@@ -66,6 +66,15 @@ export function attachRefreshInterceptor(axiosInstance: AxiosInstance) {
     (response) => response,
     async (error) => {
       const original = error.config;
+      if (!original) {
+        return Promise.reject(error);
+      }
+
+      if (error.response?.status === 401 && isRefreshUrl(original.url)) {
+        const { clearTokens } = await import("./cookies");
+        await clearTokens();
+        return Promise.reject(error);
+      }
 
       /* Skip retry if: already retried, or the failing request IS the refresh
          endpoint (a 401 on refresh means the refresh token is expired/invalid). */
@@ -81,6 +90,8 @@ export function attachRefreshInterceptor(axiosInstance: AxiosInstance) {
           };
           return axiosInstance(original);
         } catch {
+          const { clearTokens } = await import("./cookies");
+          await clearTokens();
           return Promise.reject(error);
         }
       }

@@ -31,6 +31,7 @@ import {
   LucideIcon,
   Map,
   MessageCircle,
+  NotebookPen,
   Package,
   Pill,
   Wind,
@@ -68,6 +69,15 @@ const ACTIONS: Action[] = [
     badgeVariant: "mt-purple",
     icon: ClipboardList,
     tint: "purple",
+  },
+  {
+    key: "worksheet",
+    title: "Worksheets",
+    description: "Structured exercises from your care team.",
+    badge: "Explore",
+    badgeVariant: "mt-blue",
+    icon: NotebookPen,
+    tint: "blue",
   },
   {
     key: "journey",

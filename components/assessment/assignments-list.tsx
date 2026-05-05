@@ -29,10 +29,13 @@ import { GlyphTile } from "@/components/shared/glyph-tile";
 import { Card, CardContent } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import type { AssignedAssessmentItem } from "@/hooks/assessments/use-assessments-page";
+import type { AssignedWorksheetItem } from "@/hooks/use-worksheets";
+
+export type AssignmentsListItem = AssignedAssessmentItem | AssignedWorksheetItem;
 
 interface AssignmentsListProps {
-  items: AssignedAssessmentItem[];
-  onItemClick: (item: AssignedAssessmentItem) => void;
+  items: AssignmentsListItem[];
+  onItemClick: (item: AssignmentsListItem) => void;
 }
 
 function formatDate(iso: string | null): string {

@@ -39,6 +39,8 @@ import {
 import { type TintKey } from "@/components/shared/glyph-tile";
 import type { AssessmentItem } from "@/hooks/use-assessments";
 
+type CategorySource = Pick<AssessmentItem, "id" | "title" | "category" | "hint">;
+
 type CategoryInfo = {
   icon: React.ElementType;
   tint: TintKey;
@@ -296,7 +298,7 @@ const PRIORITY_CATEGORY_ORDER = [
   "love",
 ];
 
-export function getCategoryInfo(assessment: AssessmentItem): CategoryInfo {
+export function getCategoryInfo(assessment: CategorySource): CategoryInfo {
   const DEFAULT: CategoryInfo = {
     icon: BarChart3,
     tint: "blue",

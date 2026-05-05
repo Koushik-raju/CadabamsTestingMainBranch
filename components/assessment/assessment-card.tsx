@@ -30,11 +30,16 @@ import { CalendarClock, ChevronRight, Clock3, FileText, HelpCircle, Lock } from 
 import Link from "next/link";
 import { GlyphTile, TINTS } from "@/components/shared/glyph-tile";
 import type { AssessmentItem } from "@/hooks/use-assessments";
+import type { WorksheetItem } from "@/hooks/use-worksheets";
 import { getCategoryInfo } from "./assessment-category";
 
-interface AssessmentCardProps {
-  assessment: AssessmentItem;
-  onClick: (assessment: AssessmentItem) => void;
+type BrowseCardItem = AssessmentItem | WorksheetItem;
+
+interface AssessmentCardProps<T extends BrowseCardItem = AssessmentItem> {
+  assessment: T;
+  onClick: (assessment: T) => void;
+  /** When set, replaces the default “Reports” link (assessments only). */
+  browseFooterLink?: { href: string; label: string };
 }
 
 function extractHintCategory(hint: string | null): string | null {
@@ -47,7 +52,10 @@ function extractHintCategory(hint: string | null): string | null {
 }
 
 /* Plain row — used in search results list */
-export function AssessmentCard({ assessment, onClick }: AssessmentCardProps) {
+export function AssessmentCard<T extends BrowseCardItem = AssessmentItem>({
+  assessment,
+  onClick,
+}: AssessmentCardProps<T>) {
   const { icon: Icon, tint } = getCategoryInfo(assessment);
   const hintCategory = extractHintCategory(assessment.hint);
   const minutes = assessment.landingTitle?.minutes;
@@ -76,7 +84,11 @@ export function AssessmentCard({ assessment, onClick }: AssessmentCardProps) {
 }
 
 /* Grid tile — full-width card on the assessments screen */
-export function AssessmentGridCard({ assessment, onClick }: AssessmentCardProps) {
+export function AssessmentGridCard<T extends BrowseCardItem = AssessmentItem>({
+  assessment,
+  onClick,
+  browseFooterLink,
+}: AssessmentCardProps<T>) {
   const { icon: Icon, tint } = getCategoryInfo(assessment);
   const { bg, fg } = TINTS[tint];
   const hintCategory = extractHintCategory(assessment.hint);
@@ -132,14 +144,14 @@ export function AssessmentGridCard({ assessment, onClick }: AssessmentCardProps)
           </span>
         )}
         <Link
-          href={`/assessments/${assessment.id}/reports`}
+          href={browseFooterLink?.href ?? `/assessments/${assessment.id}/reports`}
           onClick={(e) => e.stopPropagation()}
-          aria-label="View previous reports"
+          aria-label={browseFooterLink?.label ?? "View previous reports"}
           className="ml-auto flex items-center gap-1 text-[11px] font-semibold rounded-full px-2 py-1 transition-colors"
           style={{ background: bg, color: fg }}
         >
           <FileText className="w-3 h-3" />
-          Reports
+          {browseFooterLink?.label ?? "Reports"}
         </Link>
       </div>
     </div>
@@ -147,12 +159,15 @@ export function AssessmentGridCard({ assessment, onClick }: AssessmentCardProps)
 }
 
 /* Hero recommended card — dark ink-800 bg, white text */
-interface RecommendedAssessmentCardProps {
-  assessment: AssessmentItem;
-  onClick: (assessment: AssessmentItem) => void;
+interface RecommendedAssessmentCardProps<T extends BrowseCardItem = AssessmentItem> {
+  assessment: T;
+  onClick: (assessment: T) => void;
 }
 
-export function RecommendedAssessmentCard({ assessment, onClick }: RecommendedAssessmentCardProps) {
+export function RecommendedAssessmentCard<T extends BrowseCardItem = AssessmentItem>({
+  assessment,
+  onClick,
+}: RecommendedAssessmentCardProps<T>) {
   const { icon: Icon, textColor } = getCategoryInfo(assessment);
   const hintCategory = extractHintCategory(assessment.hint);
   const minutes = assessment.landingTitle?.minutes;

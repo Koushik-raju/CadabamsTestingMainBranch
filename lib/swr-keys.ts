@@ -32,6 +32,26 @@ export function assessmentsKey(): string {
   return "/assessments";
 }
 
+export function worksheetsKey(): string {
+  return "/worksheets";
+}
+
+export function worksheetByIdKey(id: number | string): string {
+  return `/worksheets/${id}`;
+}
+
+export function worksheetSubmissionsKey(worksheetId: number | string): string {
+  return `/worksheet-submissions/me/${worksheetId}`;
+}
+
+export function worksheetSubmissionByIdKey(submissionId: string): string {
+  return `/worksheet-submission/${submissionId}`;
+}
+
+export function assignedWorksheetsKey(leadId: number | string): string {
+  return `/assigned-worksheets/${leadId}`;
+}
+
 export function assessmentByIdKey(id: number | string): string {
   return `/assessments/${id}`;
 }

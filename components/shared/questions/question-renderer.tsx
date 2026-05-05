@@ -13,6 +13,7 @@ import { MoodSelector } from "./answer-selectors/mood-selector";
 import { MultiDropdownSelector, type SubQuestion } from "./answer-selectors/multi-dropdown";
 import { SmileySelector } from "./answer-selectors/smiley";
 import { ViewText } from "./answer-selectors/view-text";
+import { WorksheetSubmissionStep } from "./answer-selectors/worksheet-submission-step";
 import { YesNoSelector } from "./answer-selectors/yes-no";
 
 export type QuestionType =
@@ -30,6 +31,7 @@ export type QuestionType =
   | "mood_selector"
   | "dot_chooser"
   | "generate"
+  | "worksheet_submission"
   | string;
 
 export interface QuestionOption {
@@ -118,6 +120,7 @@ function getQuestionType(q: Question): QuestionType {
     raw === "mood_selector" ||
     raw === "dot_chooser" ||
     raw === "generate" ||
+    raw === "worksheet_submission" ||
     raw === "qa"
   ) {
     return raw;
@@ -135,6 +138,8 @@ function getQuestionType(q: Question): QuestionType {
     return "mcq";
   if (raw.includes("multi") || raw.includes("dropdown")) return "multi_dropdown";
   if (raw.includes("view-text") || raw.includes("view_text")) return "view_text";
+  if (raw.includes("worksheet-submission") || raw.includes("worksheetsubmission"))
+    return "worksheet_submission";
   if (raw.includes("agreement")) return "agreement";
   if (raw.includes("generate")) return "generate";
   // assessment.qa with sub-questions + answers = multi_dropdown (Likert grid)
@@ -330,6 +335,20 @@ export function QuestionRenderer({
           text={question.text}
           description={question.description}
           onComplete={() => onComplete(true)}
+        />
+      );
+
+    case "worksheet_submission":
+      return (
+        <WorksheetSubmissionStep
+          title={qLabel}
+          description={question.description}
+          templateUrl={question.text}
+          answer={answer as Record<string, unknown>}
+          onChange={(next) => {
+            onChange(next as AnswerValue);
+          }}
+          onComplete={onComplete}
         />
       );
 

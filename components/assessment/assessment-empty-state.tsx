@@ -5,10 +5,12 @@ import { Card, CardContent } from "@/components/ui/card";
 
 interface AssessmentEmptyStateProps {
   variant: "no-results" | "no-assignments";
+  /** When `worksheet`, copy refers to worksheets instead of assessments. */
+  kind?: "assessment" | "worksheet";
   className?: string;
 }
 
-const content = {
+const assessmentContent = {
   "no-results": {
     icon: Search,
     title: "No assessments found",
@@ -21,8 +23,26 @@ const content = {
   },
 };
 
-export function AssessmentEmptyState({ variant, className = "" }: AssessmentEmptyStateProps) {
-  const { icon: Icon, title, description } = content[variant];
+const worksheetContent = {
+  "no-results": {
+    icon: Search,
+    title: "No worksheets found",
+    description: "Try a different search term or filter.",
+  },
+  "no-assignments": {
+    icon: BarChart3,
+    title: "No assigned worksheets",
+    description: "You don't have any assigned worksheets yet.",
+  },
+};
+
+export function AssessmentEmptyState({
+  variant,
+  kind = "assessment",
+  className = "",
+}: AssessmentEmptyStateProps) {
+  const table = kind === "worksheet" ? worksheetContent : assessmentContent;
+  const { icon: Icon, title, description } = table[variant];
 
   return (
     <Card className={`border-dashed border-border bg-transparent shadow-none ${className}`}>

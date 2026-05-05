@@ -45,6 +45,7 @@
 import useSWR from "swr";
 import useSWRInfinite from "swr/infinite";
 import { ASSESSMENT_CATEGORIES } from "@/components/assessment/assessment-category";
+import { getAssignedBucketItems, getAssignmentMetadata } from "@/lib/patient-assigned-content-buckets";
 import { assessmentsKey, assignedAssessmentsKey } from "@/lib/swr-keys";
 import type { AssessmentPaginationDto, AssessmentResponseDto } from "@/sdk/backend-v2";
 import {
@@ -345,25 +346,20 @@ export interface AssignedAssessmentItem {
 }
 
 type AssignedContentResponse = {
-  crmLeadId: number | string;
-  campus: string | null;
-  items: Array<{
-    id?: string;
-    crmLeadId?: number | string;
-    campus?: string | null;
-    assignments?: {
-      assessments?: unknown[];
-      worksheets?: unknown[];
-      [k: string]: unknown;
-    };
-  }>;
+  crmLeadId?: number | string;
+  campus?: string | null;
+  items?: unknown[];
+  buckets?: Record<string, unknown[]>;
 };
 
 function mapAssignedAssessment(raw: unknown): AssignedAssessmentItem | null {
   if (!raw || typeof raw !== "object") return null;
   const obj = raw as Record<string, unknown>;
+  const meta = getAssignmentMetadata(obj);
   const documentId =
-    (typeof obj.documentId === "string" && obj.documentId) ||
+    (typeof meta?.documentId === "string" && meta.documentId.trim()) ||
+    (typeof obj.cmsAssessmentId === "string" && obj.cmsAssessmentId.trim()) ||
+    (typeof obj.documentId === "string" && obj.documentId.trim()) ||
     (typeof obj.id === "string" && obj.id) ||
     (obj.id != null ? String(obj.id) : "");
   if (!documentId) return null;
@@ -371,7 +367,7 @@ function mapAssignedAssessment(raw: unknown): AssignedAssessmentItem | null {
   const titleRaw = obj.title ?? obj.label;
   const title = typeof titleRaw === "string" ? titleRaw : "Untitled Assessment";
   const description = typeof obj.description === "string" ? obj.description : null;
-  const categoryRaw = obj.category;
+  const categoryRaw = obj.category ?? meta?.category;
   const category = Array.isArray(categoryRaw)
     ? categoryRaw.filter((c): c is string => typeof c === "string")
     : typeof categoryRaw === "string"
@@ -386,9 +382,13 @@ function mapAssignedAssessment(raw: unknown): AssignedAssessmentItem | null {
     category,
     assignedAt: typeof obj.assignedAt === "string" ? obj.assignedAt : null,
     status: typeof obj.status === "string" ? obj.status : null,
-    forJourney: obj.forJourney === true,
-    hint: typeof obj.hint === "string" ? obj.hint : null,
-    image: typeof obj.image === "string" ? obj.image : null,
+    forJourney: obj.forJourney === true || meta?.forJourney === true,
+    hint:
+      (typeof obj.hint === "string" && obj.hint) ||
+      (typeof meta?.hint === "string" ? meta.hint : null),
+    image:
+      (typeof obj.image === "string" && obj.image) ||
+      (typeof meta?.image === "string" ? meta.image : null),
   };
 }
 
@@ -401,8 +401,7 @@ export function useAssignedAssessments(leadId: string | null) {
       });
       if (res.error) throw new Error(JSON.stringify(res.error));
       const data = res.data as AssignedContentResponse | undefined;
-      const row = data?.items?.[0];
-      const list = row?.assignments?.assessments ?? [];
+      const list = getAssignedBucketItems(data, "assessments");
       const seen = new Set<string>();
       const mapped: AssignedAssessmentItem[] = [];
       for (const it of list) {
