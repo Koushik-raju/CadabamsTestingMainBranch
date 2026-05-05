@@ -175,11 +175,9 @@ export default function AssessmentAnalysisPage({ params }: { params: Promise<{ i
       {/* Bottom CTA */}
       {hasSubmissions && (
         <div
-          className="fixed bottom-0 left-0 right-0 px-5 pt-4 space-y-2"
+          className="fixed bottom-0 left-0 right-0 px-5 pt-4 space-y-2 bg-background border-t border-border"
           style={{
             paddingBottom: "max(var(--safe-area-inset-bottom), 24px)",
-            background: "#FAF7F4",
-            borderTop: "1px solid #ECE6DE",
           }}
         >
           <Button

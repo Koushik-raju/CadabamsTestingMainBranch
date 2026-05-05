@@ -31,6 +31,7 @@
     "mobile:open:ios": "npx cap sync ios && npx cap open ios",
     "mobile:open:android": "npx cap sync android && npx cap open android",
     "mobile:run:ios": "npx cap sync ios && npx cap run ios",
+    "ios": "npx cap sync ios && npx cap run ios --target \"$(xcrun simctl list devices booted | grep -Eo '\\([0-9A-F-]{36}\\)' | head -1 | tr -d '()')\"",
     "mobile:run:android": "npx cap sync android && npx cap run android",
     "mobile:devices:android": "adb devices",
     "mobile:clean": "rimraf ios/App/App/public android/app/src/main/assets/public",

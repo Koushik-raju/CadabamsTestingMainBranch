@@ -70,11 +70,10 @@ export function PageHeader({
 
       <div
         className={cn(
-          "flex items-center gap-2 px-5 pt-5 pb-1",
+          "flex items-center gap-2 px-5 pt-2 pb-1 bg-background",
           sticky && "sticky top-0 z-10",
           className,
         )}
-        style={{ background: "#FAF7F4" }}
       >
         <BackButton fallback={fallback} hardBack={hardBack} onClick={onBack} />
 

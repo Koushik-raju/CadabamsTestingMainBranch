@@ -7,12 +7,10 @@
  *   Sets status bar color to match the orange gradient header.
  *
  * LOGIC OVERVIEW:
- *   1. useEffect on mount sets status bar to orange (#f97316) for home page visual cohesion.
- *   2. Cleanup restores default cream (#fffdf9) when navigating away.
- *   3. Fetches upcoming appointments via useHomePage().
- *   4. Fetches enrolled journeys (useEnrolledJourneys) and gamification streak (useGamification).
- *   5. handleAction dispatches router.push based on action type + subtype.
- *   6. Renders HomeHeader (gradient), then main content pulled up with negative margin + rounded corners.
+ *   1. Fetches upcoming appointments via useHomePage().
+ *   2. Fetches enrolled journeys (useEnrolledJourneys) and gamification streak (useGamification).
+ *   3. handleAction dispatches router.push based on action type + subtype.
+ *   4. Renders HomeHeader (gradient), then main content pulled up with negative margin + rounded corners.
  *
  * KEY VARIABLES / PROPS / EXPORTS:
  *   appointments        — upcoming appointment list from useHomePage
@@ -20,20 +18,19 @@
  *   handleAction        — central router dispatcher for all home interactions
  *
  * DEPENDENCIES:
- *   useEffect, useMemo                — react
+ *   useMemo                           — react
  *   useRouter                         — next/navigation
- *   setStatusBarColor                 — lib/capacitor/status-bar
  *   useHomePage                       — hooks/home/use-home-page
  *   useEnrolledJourneys, useGamification — hooks/journeys/use-journey-detail
  *   HomeHeader, UpcomingSession, SupportSection, QuickActions, JourneySection, TrackerBar, GrowthWidget — home components
  *
- * LAST UPDATED: 2026-05-05 — add status bar color override for orange header (Phase 3.5)
+ * LAST UPDATED: 2026-05-05 — drop orange status-bar override; bar stays cream (default) on home
  */
 
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useEffect, useMemo } from "react";
+import { useMemo } from "react";
 import { GrowthWidget } from "@/components/home/growth-widget";
 import { HomeHeader } from "@/components/home/home-header";
 import { JourneySection } from "@/components/home/journey-section";
@@ -43,22 +40,9 @@ import { TrackerBar } from "@/components/home/tracker-bar";
 import { UpcomingSession } from "@/components/home/upcoming-session";
 import { useHomePage } from "@/hooks/home/use-home-page";
 import { useEnrolledJourneys, useGamification } from "@/hooks/journeys/use-journey-detail";
-import { setStatusBarColor } from "@/lib/capacitor/status-bar";
 
 export default function HomePage() {
   const router = useRouter();
-
-  useEffect(() => {
-    /*
-     * Home page has a coral-orange gradient header.
-     * Override the default cream status bar to orange on mount,
-     * and restore cream when navigating away (cleanup).
-     */
-    setStatusBarColor("#f97316");
-    return () => {
-      setStatusBarColor("#fffdf9");
-    };
-  }, []);
 
   const { upcoming: appointments } = useHomePage();
   const { enrollments, isLoading: enrollmentsLoading } = useEnrolledJourneys();

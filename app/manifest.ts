@@ -27,7 +27,7 @@ export default function manifest(): MetadataRoute.Manifest {
     description: "Your mental health companion",
     start_url: "/",
     display: "standalone",
-    background_color: "#fffdf9",
+    background_color: "#faf7f4",
     theme_color: "#f97316",
     icons: [
       {

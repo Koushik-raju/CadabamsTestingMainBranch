@@ -30,8 +30,9 @@
  *   @capacitor/cli               — CapacitorConfig type
  *   @capacitor/keyboard          — KeyboardResize enum
  *
- * LAST UPDATED: 2026-05-05 — default server.url changed to localhost:3000 for local testing;
- *   set CAP_REMOTE_URL=https://www.dev-x3.cadabams.com/ for staging/release builds.
+ * LAST UPDATED: 2026-05-05 — StatusBar.overlaysWebView set to false: iOS
+ *   reserves the status bar area natively, the WebView never extends into the
+ *   notch. setStatusBarColor() controls the bar background per-route.
  */
 import type { CapacitorConfig } from '@capacitor/cli';
 import { KeyboardResize } from '@capacitor/keyboard';
@@ -79,9 +80,15 @@ const config: CapacitorConfig = {
       enabled: false,
     },
     StatusBar: {
-      overlaysWebView: true,
+      // overlaysWebView: false — iOS reserves the status bar space natively so
+      // the WebView never extends into the notch / status bar area. No
+      // full-bleed; the native bar background (set per-route via
+      // setStatusBarColor) sits above the WebView. Simpler and bulletproof.
+      // Note: ignored on Android 16+ (always edge-to-edge there).
+      overlaysWebView: false,
       style: 'LIGHT',
-      backgroundColor: '#fffdf9',
+      // Matches --mt-cream-bg / --background token (app/globals.css).
+      backgroundColor: '#faf7f4',
     },
     Keyboard: {
       resize: KeyboardResize.Body,
