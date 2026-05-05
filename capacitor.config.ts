@@ -13,7 +13,7 @@
  *      native logging level.
  *   2. `CAP_REMOTE_URL` env var overrides the default remote origin — use
  *      it to point a local native build at prod or at a local ngrok tunnel.
- *      Default is `https://www.dev-x3.cadabams.com/`.
+ *      Default is `https://dev-x3.cadabams.com/`.
  *   3. Plugin options (StatusBar, Keyboard, Razorpay, Push/Local Notifs,
  *      CapacitorHttp) are locked to sensible defaults tuned for this app.
  *   4. `webDir` points at `out/` where a minimal fallback HTML lives. The
@@ -44,7 +44,7 @@ const isDev = process.env.NODE_ENV !== 'production';
  * CAP_REMOTE_URL only to aim a native build at a different origin (e.g.
  * prod, ngrok). Never set to empty — the app has no standalone mode.
  */
-// Switch to https://www.dev-x3.cadabams.com/ (or prod URL) when building for staging/release.
+// Switch to https://dev-x3.cadabams.com/ (or prod URL) when building for staging/release.
 // iOS Simulator: localhost resolves to the host Mac directly — use it as-is.
 // Android emulator: needs 10.0.2.2 instead of localhost.
 // Real device: use Mac's local network IP or ngrok.

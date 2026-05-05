@@ -48,8 +48,8 @@ type Platform = "ios" | "android" | "both";
 type EnvKey = "staging" | "prod" | "localhost" | "custom";
 
 const ENVIRONMENTS: Record<Exclude<EnvKey, "custom">, string> = {
-  staging: "https://www.dev-x3.cadabams.com/",
-  prod: "https://www.cadabams.com/",
+  staging: "https://dev-x3.cadabams.com/",
+  prod: "https://cadabams.com/",
   localhost: "http://localhost:3001/",
 };
 
