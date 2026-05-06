@@ -121,7 +121,7 @@ export default function ChatPage() {
   }, []);
 
   return (
-    <div ref={containerRef} className="fixed inset-x-0 top-0 flex flex-col overflow-hidden">
+    <div ref={containerRef} className="fixed inset-x-0 flex flex-col overflow-hidden">
       <ChatHeader onHistoryClick={() => setHistoryOpen(true)} />
 
       <MessageList
