@@ -59,8 +59,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="en" suppressHydrationWarning className={`${urbanist.variable} light`}>
       <body
         suppressHydrationWarning
-        className="font-sans overflow-x-hidden mt-(--safe-area-inset-top) pl-(--safe-area-inset-left) pr-(--safe-area-inset-right)"
+        className="font-sans overflow-x-hidden  pl-(--safe-area-inset-left) pr-(--safe-area-inset-right)"
       >
+        <div className="pt-(--safe-area-inset-top)"></div>
         {/* Google Tag Manager */}
         <Script id="gtm-script" strategy="afterInteractive">{`
           (function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':new Date().getTime(),event:'gtm.js'});
