@@ -3,10 +3,16 @@ frontend:
   phases:
     preBuild:
       commands:
-        - npm install -g pnpm
-        - pnpm install --frozen-lockfile
-        # Write NEXT_PUBLIC_* vars into .env.production so Next.js bakes
-        # them into the client bundle at build time.
+        # corepack is built into Node 16.10+ — zero npm global install cost
+        - corepack enable
+        - corepack prepare pnpm@latest --activate
+        # Put the pnpm content-addressable store inside the project dir so
+        # Amplify's cache layer can snapshot it. On cache hit, --prefer-offline
+        # skips the registry entirely and just hard-links from the store.
+        - pnpm config set store-dir .pnpm-store
+        - pnpm install --frozen-lockfile --prefer-offline
+    build:
+      commands:
         - |
           cat > .env.production <<EOF
           NEXT_PUBLIC_ENV=${NEXT_PUBLIC_ENV}
@@ -16,8 +22,6 @@ frontend:
           NEXT_PUBLIC_MASTRA_BACKEND_URL=${NEXT_PUBLIC_MASTRA_BACKEND_URL}
           NEXT_PUBLIC_MASTRA_AGENT_ID=${NEXT_PUBLIC_MASTRA_AGENT_ID}
           EOF
-    build:
-      commands:
         - pnpm run build
   artifacts:
     baseDirectory: .next
@@ -25,5 +29,8 @@ frontend:
       - '**/*'
   cache:
     paths:
+      # pnpm store cache: much smaller than node_modules and shareable across
+      # branches. Combined with --prefer-offline this makes installs near-instant.
+      - .pnpm-store/**/*
+      # Next.js incremental compile cache: skips unchanged pages on rebuild.
       - .next/cache/**/*
-      - node_modules/**/*
