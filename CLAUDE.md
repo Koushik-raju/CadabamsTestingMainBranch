@@ -39,6 +39,45 @@ Biome's formatter treats `{/* ... */}` before the root JSX element as a syntax e
 
 ---
 
+# ⛔ NON-BREAKABLE RULE — SAFE-AREA INSET HANDLING
+
+**This rule is mandatory. Violating it makes content inaccessible on notch/home-indicator devices.**
+
+## How the safe-area system works in this app
+
+`app/layout.tsx` establishes the canonical pattern:
+- `<body>` has `pt-[env(safe-area-inset-top)] pb-[env(safe-area-inset-bottom)]` — content starts/ends clear of the notch and home indicator.
+- A `fixed top-0 z-100` div paints `bg-background` over the top safe zone so scrolled content doesn't bleed through.
+- A `fixed bottom-0 z-100` div does the same for the bottom.
+
+## Rules for sticky/fixed elements
+
+| Element | Correct offset | Wrong |
+|---|---|---|
+| Sticky page header (`PageHeader`) | `top-[env(safe-area-inset-top)]` (already built in) | `top-0` |
+| Sticky sub-bar below the header | `top-[calc(env(safe-area-inset-top)+<header-height>px)]` | `top-[<header-height>px]` |
+| Fixed bottom CTA / nav | `bottom-[env(safe-area-inset-bottom)]` or `pb-[env(safe-area-inset-bottom)]` | `bottom-0` |
+| Full-height drawer (Sheet) header | `pt-[calc(env(safe-area-inset-top)+<base>px)]` | `pt-<base>` |
+| Full-height drawer (Sheet) footer | `pb-[calc(env(safe-area-inset-bottom)+<base>px)]` | `pb-<base>` |
+
+## ⛔ Never pass `sticky top-0` via `className` to `PageHeader`
+
+`PageHeader` internally applies `sticky top-[env(safe-area-inset-top)]`. Passing `sticky top-0` (or just `top-0`) in the `className` prop overrides this via `tailwind-merge` (last class wins) and breaks the safe-area clearance, making the back button unreachable.
+
+```tsx
+// ✅ correct
+<PageHeader title="..." className="z-20 bg-card/70 backdrop-blur-sm" />
+
+// ⛔ wrong — top-0 overrides the internal safe-area offset
+<PageHeader title="..." className="sticky top-0 z-20 bg-card/70 backdrop-blur-sm" />
+```
+
+## Why
+
+The `fixed top-0 z-100` overlay intercepts touch events over the safe area height. Any interactive element (back button, close icon) that slides under it becomes permanently untappable on iPhone/Capacitor.
+
+---
+
 # ⛔ NON-BREAKABLE RULE — FILE HEADER COMMENTS
 
 **This rule is mandatory. It cannot be skipped, abbreviated, or deferred.**
