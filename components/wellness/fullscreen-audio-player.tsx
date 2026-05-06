@@ -23,7 +23,7 @@
  *   MindfulMinuteAudio (hooks/wellness/use-mindful-minutes)
  *   Slider, Button (shadcn/ui)
  *
- * LAST UPDATED: 2026-04-28 — Neo design system: shadow scale, color tokens, border radius
+ * LAST UPDATED: 2026-05-06 — z-[110] above safe-area overlays; pt-safe on content div; pb calc for home indicator
  */
 "use client";
 
@@ -232,7 +232,7 @@ export function FullscreenAudioPlayer({
   const content = (
     <div
       className={cn(
-        "fixed inset-0 z-50 flex flex-col transition-transform duration-300 ease-out",
+        "fixed inset-0 z-[110] flex flex-col transition-transform duration-300 ease-out",
         isVisible ? "translate-y-0" : "translate-y-full",
       )}
     >
@@ -260,7 +260,7 @@ export function FullscreenAudioPlayer({
       </div>
 
       {/* Content */}
-      <div className="relative z-10 flex flex-col h-full text-white safe-top safe-bottom">
+      <div className="relative z-10 flex flex-col h-full text-white pt-safe">
         {/* Top bar */}
         <div className="flex items-center justify-between px-5 pt-5 pb-2">
           <Button
@@ -345,7 +345,7 @@ export function FullscreenAudioPlayer({
         </div>
 
         {/* Controls */}
-        <div className="px-7 pb-8">
+        <div className="px-7 pb-[calc(var(--safe-area-inset-bottom)+2rem)]">
           <div className="flex items-center justify-between">
             {/* Prev */}
             <Button
