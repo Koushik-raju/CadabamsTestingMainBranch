@@ -26,7 +26,7 @@
  *   @/providers/app-providers
  *   globals.css
  *
- * LAST UPDATED: 2026-05-05 — Added maximumScale:1 + userScalable:false to viewport to prevent pinch/double-tap zoom in Capacitor WebView
+ * LAST UPDATED: 2026-05-06 — Added env(safe-area-inset-*) padding to body for notch/cutout devices (viewport-fit:cover already set)
  */
 import type { Metadata, Viewport } from "next";
 import { Urbanist } from "next/font/google";
@@ -57,7 +57,10 @@ export const viewport: Viewport = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en" suppressHydrationWarning className={urbanist.variable}>
-      <body suppressHydrationWarning className="font-sans overflow-x-hidden">
+      <body
+        suppressHydrationWarning
+        className="font-sans overflow-x-hidden pt-(--safe-area-inset-top) pl-(--safe-area-inset-left) pr-(--safe-area-inset-right)"
+      >
         {/* Google Tag Manager */}
         <Script id="gtm-script" strategy="afterInteractive">{`
           (function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':new Date().getTime(),event:'gtm.js'});
