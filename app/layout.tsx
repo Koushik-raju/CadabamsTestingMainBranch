@@ -26,7 +26,7 @@
  *   @/providers/app-providers
  *   globals.css
  *
- * LAST UPDATED: 2026-05-06 — mirror safe-area overlay pattern for bottom (pb + fixed bottom div)
+ * LAST UPDATED: 2026-05-06 — drop body safe-area padding (.auth-layout-wrapper handles it via --safe-area-inset-* vars set by the native plugin); overlay divs now read the same CSS vars so they cover the padded zone exactly
  */
 
 import { GoogleAnalytics, GoogleTagManager } from "@next/third-parties/google";
@@ -58,12 +58,17 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="en" suppressHydrationWarning className={inter.variable}>
       <body
         suppressHydrationWarning
-        className="font-sans pt-[env(safe-area-inset-top)] pb-[env(safe-area-inset-bottom)] pl-(--safe-area-inset-left) pr-(--safe-area-inset-right)"
+        className="font-sans pl-(--safe-area-inset-left) pr-(--safe-area-inset-right)"
       >
-        {/* Safe-area top — fixed so it stays pinned when content scrolls beneath it */}
-        <div className="fixed top-0 inset-x-0 h-[env(safe-area-inset-top)] bg-background z-100" />
-        {/* Safe-area bottom — mirrors the top pattern; blocks content bleeding into home-indicator zone */}
-        <div className="fixed bottom-0 inset-x-0 h-[env(safe-area-inset-bottom)] bg-background z-100" />
+        {/*
+          Safe-area top/bottom overlays — height matches --safe-area-inset-* so
+          they cover exactly the zone .auth-layout-wrapper pads. We use the CSS
+          var (not env()) because on Capacitor iOS with StatusBar.overlaysWebView
+          env(safe-area-inset-top) reports 0; capacitor-plugin-safe-area writes
+          the real notch value into --safe-area-inset-top.
+        */}
+        <div className="fixed top-0 inset-x-0 h-[var(--safe-area-inset-top)] bg-background z-100" />
+        <div className="fixed bottom-0 inset-x-0 h-[var(--safe-area-inset-bottom)] bg-background z-100" />
 
         <GoogleTagManager gtmId={siteConfig.gtmId} />
         <GoogleAnalytics gaId={siteConfig.gaId} />
