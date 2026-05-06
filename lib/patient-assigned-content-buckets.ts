@@ -5,10 +5,7 @@
 
 export type AssignedContentBucketKey = "assessments" | "worksheets";
 
-export function getAssignedBucketItems(
-  data: unknown,
-  bucket: AssignedContentBucketKey,
-): unknown[] {
+export function getAssignedBucketItems(data: unknown, bucket: AssignedContentBucketKey): unknown[] {
   if (!data || typeof data !== "object") return [];
   const root = data as Record<string, unknown>;
 
@@ -33,7 +30,9 @@ export function getAssignedBucketItems(
   return [];
 }
 
-export function getAssignmentMetadata(obj: Record<string, unknown>): Record<string, unknown> | null {
+export function getAssignmentMetadata(
+  obj: Record<string, unknown>,
+): Record<string, unknown> | null {
   const m = obj.metadata;
   if (m && typeof m === "object" && !Array.isArray(m)) return m as Record<string, unknown>;
   return null;

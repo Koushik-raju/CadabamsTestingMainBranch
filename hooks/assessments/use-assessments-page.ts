@@ -45,7 +45,10 @@
 import useSWR from "swr";
 import useSWRInfinite from "swr/infinite";
 import { ASSESSMENT_CATEGORIES } from "@/components/assessment/assessment-category";
-import { getAssignedBucketItems, getAssignmentMetadata } from "@/lib/patient-assigned-content-buckets";
+import {
+  getAssignedBucketItems,
+  getAssignmentMetadata,
+} from "@/lib/patient-assigned-content-buckets";
 import { assessmentsKey, assignedAssessmentsKey } from "@/lib/swr-keys";
 import type { AssessmentPaginationDto, AssessmentResponseDto } from "@/sdk/backend-v2";
 import {
