@@ -6,34 +6,41 @@
  *   to the five primary destinations: Home, Profile, Chat, Journeys, and Appointments.
  *
  * LOGIC OVERVIEW:
- *   1. Renders a fixed overlay backdrop (dismisses on tap) and a 280px panel that
- *      slides in from the left using CSS translate.
+ *   1. Renders a shadcn Sheet (left side) — open/close driven by the `open` prop;
+ *      onOpenChange calls `onClose` when Radix signals closure (overlay click, Esc).
  *   2. Active route is detected via usePathname — exact match for /home, prefix
  *      match for all other routes so nested pages (e.g. /chat/thread/...) stay highlighted.
  *   3. User name and avatar are sourced from useAuth, mirroring the HomeHeader pattern.
  *   4. Tapping a nav item calls router.push then onClose so the drawer closes before
  *      the new page mounts.
- *   5. Backdrop and panel transitions use duration-300 so open/close feel snappy on
- *      the Capacitor WebView without janking layout.
+ *   5. shadcn primitives used throughout: Sheet/SheetContent/SheetHeader/SheetFooter,
+ *      Avatar/AvatarImage/AvatarFallback, Button, Separator. GlyphTile for icon tiles
+ *      per the non-breakable project rule (never inline gradient/tinted icon divs).
  *
  * KEY VARIABLES / PROPS / EXPORTS:
  *   open      — controls whether the drawer is visible
- *   onClose   — called when the backdrop or close button is tapped
+ *   onClose   — called when the overlay, Esc, or close button dismisses the sheet
  *   NAV_ITEMS — static list of { label, icon, href } tuples for the five nav links
  *
  * DEPENDENCIES:
  *   useAuth()      — user.name, user.profile_image
  *   useRouter()    — navigation on item tap
  *   usePathname()  — active route detection
+ *   Sheet, Button, Avatar, Separator — shadcn/ui primitives
+ *   GlyphTile      — project canonical icon-tile component
  *
- * LAST UPDATED: 2026-05-04 — initial implementation
+ * LAST UPDATED: 2026-05-06 — Replaced raw HTML elements with shadcn primitives
  */
 
 "use client";
 
 import { Calendar, Home, Map, MessageCircle, User, X } from "lucide-react";
-import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
+import { GlyphTile } from "@/components/shared/glyph-tile";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Button } from "@/components/ui/button";
+import { Separator } from "@/components/ui/separator";
+import { Sheet, SheetContent, SheetFooter, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { useAuth } from "@/hooks/use-auth";
 import { cn } from "@/lib/utils";
 
@@ -69,128 +76,90 @@ export function Sidebar({ open, onClose }: SidebarProps) {
     href === "/home" ? pathname === "/home" : pathname.startsWith(href);
 
   return (
-    <>
-      {/* Backdrop — pointer-events toggled so it doesn't block interaction when closed */}
-      <div
-        className={cn(
-          "fixed inset-0 z-40 bg-black/30 backdrop-blur-sm transition-opacity duration-300",
-          open ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none",
-        )}
-        onClick={onClose}
-        aria-hidden="true"
-      />
-
-      {/* Drawer panel */}
-      <div
-        role="dialog"
-        aria-modal="true"
-        aria-label="Navigation menu"
-        className={cn(
-          "fixed left-0 top-0 bottom-0 z-50 w-[280px] flex flex-col bg-background transition-transform duration-300 ease-out",
-          open ? "translate-x-0" : "-translate-x-full",
-        )}
+    <Sheet open={open} onOpenChange={(isOpen) => !isOpen && onClose()}>
+      <SheetContent
+        side="left"
+        showCloseButton={false}
+        className="flex w-70 flex-col gap-0 p-0 sm:max-w-70"
       >
+        <SheetTitle className="sr-only">Navigation menu</SheetTitle>
+
         {/* ── Header: avatar + name + close button ── */}
-        <div className="flex items-center justify-between px-5 pt-12 pb-6">
+        <SheetHeader className="flex-row items-center justify-between px-5 pb-6 pt-6">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-full overflow-hidden border-2 border-[#F97316]/30 flex-shrink-0">
+            <Avatar size="lg" className="border-2 border-[#F97316]/30">
               {profileImage && profileImage !== "/profile.png" ? (
-                <Image
-                  src={profileImage}
-                  alt={firstName}
-                  width={40}
-                  height={40}
-                  className="object-cover h-full w-full"
-                />
+                <AvatarImage src={profileImage} alt={firstName} />
               ) : (
-                <div
-                  className="w-full h-full flex items-center justify-center"
+                <AvatarFallback
+                  className="text-base font-black text-white"
                   style={{ background: "linear-gradient(135deg, #FBB7BC, #F97316)" }}
                 >
-                  <span className="text-base font-black text-white select-none">
-                    {firstName[0]}
-                  </span>
-                </div>
+                  {firstName[0]}
+                </AvatarFallback>
               )}
-            </div>
+            </Avatar>
 
             <div className="min-w-0">
-              <p className="text-[12px] font-medium" style={{ color: "#6B7280" }}>
-                Welcome back,
-              </p>
-              <p
-                className="text-[16px] font-bold leading-tight truncate"
-                style={{ color: "#0E1726" }}
-              >
+              <p className="text-[12px] font-medium text-muted-foreground">Welcome back,</p>
+              <p className="truncate text-[16px] font-bold leading-tight text-foreground">
                 {firstName}
               </p>
             </div>
           </div>
 
-          <button
+          <Button
+            variant="ghost"
+            size="icon-sm"
             onClick={onClose}
-            className="w-8 h-8 rounded-full flex items-center justify-center bg-[#F0ECE8] active:scale-95 transition-transform duration-[140ms] flex-shrink-0"
             aria-label="Close menu"
+            className="shrink-0"
           >
-            <X className="w-4 h-4" style={{ color: "#6B7280" }} />
-          </button>
-        </div>
+            <X className="h-4 w-4" />
+          </Button>
+        </SheetHeader>
 
-        <div className="h-px mx-5 bg-[#E8E3DC]" />
+        <Separator className="mx-5" />
 
         {/* ── Nav items ── */}
-        <nav className="flex flex-col gap-1 px-3 pt-4 flex-1">
+        <nav className="flex flex-1 flex-col gap-1 px-3 pt-4">
           {NAV_ITEMS.map(({ label, icon: Icon, href }) => {
             const active = isActive(href);
             return (
-              <button
+              <Button
                 key={href}
+                variant="ghost"
                 onClick={() => navigate(href)}
                 className={cn(
-                  "flex items-center gap-3 px-3 py-3 rounded-[14px] w-full text-left transition-all duration-[140ms] active:scale-[0.98]",
-                  active ? "bg-[#F97316]/10" : "hover:bg-[#F0ECE8]",
+                  "h-auto w-full justify-start gap-3 rounded-[14px] px-3 py-3 transition-all duration-140 active:scale-[0.98]",
+                  active && "bg-[#F97316]/10 hover:bg-[#F97316]/10",
                 )}
               >
-                {/* Icon tile — gradient when active, neutral when idle */}
-                <div
-                  className={cn(
-                    "w-9 h-9 rounded-[10px] flex items-center justify-center flex-shrink-0",
-                    active && "shadow-[0_2px_8px_rgba(249,115,22,0.25)]",
-                  )}
-                  style={
-                    active
-                      ? { background: "linear-gradient(135deg, #FBB7BC, #F97316)" }
-                      : { background: "#E8E3DC" }
-                  }
-                >
-                  <Icon className="w-4 h-4" style={{ color: active ? "#fff" : "#6B7280" }} />
-                </div>
+                {/* GlyphTile required — never inline gradient/tinted icon divs */}
+                <GlyphTile icon={Icon} tint={active ? "orange" : "peach"} size="sm" />
 
                 <span
-                  className="text-[15px] font-semibold flex-1"
-                  style={{ color: active ? "#F97316" : "#0E1726" }}
+                  className={cn(
+                    "flex-1 text-left text-[15px] font-semibold",
+                    active ? "text-[#F97316]" : "text-foreground",
+                  )}
                 >
                   {label}
                 </span>
 
-                {active && (
-                  <div
-                    className="w-1.5 h-1.5 rounded-full flex-shrink-0"
-                    style={{ background: "#F97316" }}
-                  />
-                )}
-              </button>
+                {active && <div className="h-1.5 w-1.5 shrink-0 rounded-full bg-[#F97316]" />}
+              </Button>
             );
           })}
         </nav>
 
         {/* ── Footer branding ── */}
-        <div className="px-5 pb-10">
-          <p className="text-[11px] font-medium text-center" style={{ color: "#9AA0AB" }}>
+        <SheetFooter className="px-5 pb-10">
+          <p className="text-center text-[11px] font-medium text-muted-foreground">
             Cadabam&apos;s Mental Health
           </p>
-        </div>
-      </div>
-    </>
+        </SheetFooter>
+      </SheetContent>
+    </Sheet>
   );
 }
