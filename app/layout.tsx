@@ -60,7 +60,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         suppressHydrationWarning
         className="font-sans pl-(--safe-area-inset-left) pr-(--safe-area-inset-right)"
       >
-        <div className="pt-(--safe-area-inset-top)"></div>
+        <div className="pt-(--safe-area-inset-top) top-0 sticky"></div>
         <GoogleTagManager gtmId={siteConfig.gtmId} />
         <GoogleAnalytics gaId={siteConfig.gaId} />
 
