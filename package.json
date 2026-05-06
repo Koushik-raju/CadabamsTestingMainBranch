@@ -15,9 +15,32 @@
     "prepare": "husky",
     "mobile:debug:android": "npx cap sync android && cd android && ./gradlew assembleDebug",
     "mobile:release:android": "npx cap sync android && cd android && ./gradlew assembleRelease",
-    "mobile:release:ios": "npx cap sync ios && xcodebuild -workspace ios/App/App.xcworkspace -scheme App -configuration Release",
+    "mobile:release:ios": "npx cap sync ios && xcodebuild -project ios/App/App.xcodeproj -scheme App -configuration Release",
     "mobile:doctor": "node -e \"const e=process.env;const ok=(k,v)=>console.log((v?'\\u2713':'\\u2717')+' '+k+(v?' = '+v:' missing'));ok('ANDROID_HOME',e.ANDROID_HOME||e.ANDROID_SDK_ROOT);ok('JAVA_HOME',e.JAVA_HOME);console.log('If ANDROID_HOME is missing: add \\'export ANDROID_HOME=/opt/homebrew/share/android-commandlinetools\\' (mac brew) or your SDK path to ~/.zshrc');\"",
-    "cap:upgrade": "npm install @capacitor/core@latest @capacitor/cli@latest @capacitor/ios@latest @capacitor/android@latest && npx cap sync"
+    "cap:upgrade": "npm install @capacitor/core@latest @capacitor/cli@latest @capacitor/ios@latest @capacitor/android@latest && npx cap sync",
+    "cap:sync": "npx cap sync",
+    "cap:sync:android": "npx cap sync android",
+    "cap:sync:ios": "npx cap sync ios",
+    "cap:copy": "npx cap copy",
+    "cap:copy:android": "npx cap copy android",
+    "cap:copy:ios": "npx cap copy ios",
+    "cap:open:android": "npx cap open android",
+    "cap:open:ios": "npx cap open ios",
+    "cap:run:android": "npx cap run android",
+    "cap:run:ios": "npx cap run ios",
+    "cap:clean:android": "cd android && ./gradlew clean",
+    "cap:clean:ios": "cd ios/App && xcodebuild clean -project App.xcodeproj -scheme App",
+    "cap:build:android": "pnpm cap:build:android:debug",
+    "cap:build:android:debug": "npx cap sync android && cd android && ./gradlew assembleDebug",
+    "cap:build:android:release": "npx cap sync android && cd android && ./gradlew assembleRelease",
+    "cap:build:android:bundle": "npx cap sync android && cd android && ./gradlew bundleRelease",
+    "cap:build:ios": "pnpm cap:build:ios:debug",
+    "cap:build:ios:debug": "npx cap sync ios && xcodebuild -project ios/App/App.xcodeproj -scheme App -configuration Debug -sdk iphonesimulator",
+    "cap:build:ios:release": "npx cap sync ios && xcodebuild -project ios/App/App.xcodeproj -scheme App -configuration Release -sdk iphoneos",
+    "cap:build:ios:archive": "npx cap sync ios && xcodebuild -project ios/App/App.xcodeproj -scheme App -configuration Release archive -archivePath ios/build/App.xcarchive",
+    "cap:build": "pnpm cap:build:android:debug && pnpm cap:build:ios:debug",
+    "cap:doctor": "npx cap doctor",
+    "assets:gen": "node scripts/rasterize-capacitor-assets.mjs && capacitor-assets generate --iconBackgroundColor \"#D8670E\" --iconBackgroundColorDark \"#D8670E\" --splashBackgroundColor \"#fffdf9\" --splashBackgroundColorDark \"#fffdf9\""
   },
   "dependencies": {
     "@ai-sdk/react": "^3.0.176",
@@ -26,6 +49,7 @@
     "@capacitor/core": "^8.3.1",
     "@capacitor/haptics": "^8.0.2",
     "@capacitor/keyboard": "^8.0.3",
+    "@capacitor/splash-screen": "^8.0.1",
     "@capacitor/status-bar": "^8.0.2",
     "@capacitor/text-zoom": "^8.0.1",
     "@hookform/resolvers": "^5.2.2",
@@ -74,6 +98,7 @@
   "devDependencies": {
     "@biomejs/biome": "^2.4.14",
     "@capacitor/android": "^8.3.1",
+    "@capacitor/assets": "^3.0.5",
     "@capacitor/cli": "^8.3.1",
     "@capacitor/ios": "^8.3.1",
     "@hey-api/client-axios": "^0.9.1",
@@ -94,5 +119,10 @@
     "tailwindcss": "^4",
     "tsx": "^4.21.0",
     "typescript": "^6"
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "sharp"
+    ]
   }
 }
