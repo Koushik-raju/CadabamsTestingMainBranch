@@ -26,7 +26,7 @@
  *   useMindfulMinuteDetail(slug) — SWR hook for single collection
  *   FullscreenAudioPlayer        — fullscreen player overlay component
  *
- * LAST UPDATED: 2026-04-28 — Neo design system: shadow scale, color tokens, border radius
+ * LAST UPDATED: 2026-05-06 — remove sticky top-0 from PageHeader className (overrode safe-area fix)
  */
 
 "use client";
@@ -193,7 +193,7 @@ export default function MindfulMinuteDetailPage() {
         title={mindfulMinute.title}
         subtitle={`${filteredAudios.length} sessions available`}
         fallback="/wellness/mindful-minutes"
-        className="sticky top-0 z-10 bg-background border-b border-border px-4 py-3"
+        className="z-10 bg-background border-b border-border px-4 py-3"
         right={
           <div className="relative">
             <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
