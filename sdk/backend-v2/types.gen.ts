@@ -678,6 +678,19 @@ export type DoctorBasicResponseDto = {
     book_appointments: boolean;
 };
 
+/** CRM `/get/doctors/testing` campus row (backend DTO; add to OpenAPI when deployed). */
+export type DoctorListingTestingCampusDto = {
+    city: string;
+    campus_id: number;
+    name: string;
+    sub_campus_id: boolean | number;
+};
+
+/** Per-day availability hint from CRM listing (backend DTO; add to OpenAPI when deployed). */
+export type DoctorListingAvailabilityDayDto = {
+    available: boolean;
+};
+
 export type DoctorListingPageResponseDto = {
     /**
      * Total number of matching doctors
@@ -687,6 +700,20 @@ export type DoctorListingPageResponseDto = {
      * Paginated list of doctors with rich profiles
      */
     doctors: Array<DoctorListingResponseDto>;
+    /**
+     * Set on single-doctor CRM `/get/doctors/testing` responses
+     */
+    doctor_id?: number;
+    /**
+     * In-person centres from CRM (only when CRM includes `campuses`)
+     */
+    campuses?: Array<DoctorListingTestingCampusDto>;
+    /**
+     * Calendar hints from CRM: date key YYYY-MM-DD → { available }
+     */
+    availability?: {
+        [key: string]: DoctorListingAvailabilityDayDto;
+    };
 };
 
 export type AppointmentDashboardResponseDto = {
