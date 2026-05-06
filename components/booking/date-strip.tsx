@@ -2,15 +2,9 @@
 
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { cn } from "@/lib/utils";
-import type { DoctorListingPageResponseDto, SlotResponseDto as TimeSlot } from "@/sdk/backend-v2";
+import type { SlotResponseDto as TimeSlot } from "@/sdk/backend-v2";
 
-type AvailStatus =
-  | "available"
-  | "few-left"
-  | "no-slots"
-  | "full"
-  | "crm-unavailable"
-  | "crm-available";
+type AvailStatus = "available" | "few-left" | "no-slots" | "full";
 
 function getAvailStatus(count: number): AvailStatus {
   if (count === 0) return "no-slots";
@@ -18,19 +12,11 @@ function getAvailStatus(count: number): AvailStatus {
   return "available";
 }
 
-function resolveAvailStatus(slotCount: number, crmAvailable: boolean | undefined): AvailStatus {
-  if (crmAvailable === false) return "crm-unavailable";
-  if (crmAvailable === true && slotCount === 0) return "crm-available";
-  return getAvailStatus(slotCount);
-}
-
 const AVAIL_CFG: Record<AvailStatus, { label: string; cls: string }> = {
   available: { label: "Available", cls: "bg-green-100  text-green-700" },
   "few-left": { label: "Few left", cls: "bg-orange-100 text-orange-600" },
   "no-slots": { label: "No slots", cls: "bg-red-100    text-red-600" },
   full: { label: "Full", cls: "bg-red-100    text-red-600" },
-  "crm-unavailable": { label: "Not available", cls: "bg-red-100 text-red-600" },
-  "crm-available": { label: "Available", cls: "bg-green-100 text-green-700" },
 };
 
 function toDateKey(d: Date): string {
@@ -40,18 +26,15 @@ function toDateKey(d: Date): string {
 export function DateTile({
   date,
   slotCount,
-  crmAvailable,
   isSelected,
   onClick,
 }: {
   date: Date;
   slotCount: number;
-  /** From CRM `/get/doctors/testing` `availability` for this date (YYYY-MM-DD) */
-  crmAvailable?: boolean;
   isSelected: boolean;
   onClick: () => void;
 }) {
-  const status = resolveAvailStatus(slotCount, crmAvailable);
+  const status = getAvailStatus(slotCount);
   const { label, cls } = AVAIL_CFG[status];
   const dayName = date.toLocaleDateString("en-US", { weekday: "short" });
   const dayNum = date.getDate();
@@ -96,8 +79,6 @@ export function DateTile({
 export interface DateStripProps {
   dates: Date[];
   slotsByDate: Record<string, TimeSlot[]>;
-  /** Optional calendar hints from CRM `/get/doctors/testing` (same as legacy app) */
-  crmAvailability?: DoctorListingPageResponseDto["availability"];
   selectedDate: Date;
   datePage: number;
   maxPage: number;
@@ -109,7 +90,6 @@ export interface DateStripProps {
 export function DateStrip({
   dates,
   slotsByDate,
-  crmAvailability,
   selectedDate,
   datePage,
   maxPage,
@@ -151,15 +131,11 @@ export function DateStrip({
       <div className="flex gap-1">
         {dateRow1.map((date) => {
           const key = toDateKey(date);
-          const crmEntry = crmAvailability?.[key];
-          const crmAvailable =
-            crmEntry && typeof crmEntry.available === "boolean" ? crmEntry.available : undefined;
           return (
             <DateTile
               key={key}
               date={date}
               slotCount={loadingSlots ? 0 : (slotsByDate[key]?.length ?? 0)}
-              crmAvailable={crmAvailable}
               isSelected={selectedKey === key}
               onClick={() => onDateSelect(date)}
             />
@@ -171,15 +147,11 @@ export function DateStrip({
         <div className="flex gap-1 mt-1">
           {dateRow2.map((date) => {
             const key = toDateKey(date);
-            const crmEntry = crmAvailability?.[key];
-            const crmAvailable =
-              crmEntry && typeof crmEntry.available === "boolean" ? crmEntry.available : undefined;
             return (
               <DateTile
                 key={key}
                 date={date}
                 slotCount={loadingSlots ? 0 : (slotsByDate[key]?.length ?? 0)}
-                crmAvailable={crmAvailable}
                 isSelected={selectedKey === key}
                 onClick={() => onDateSelect(date)}
               />
@@ -195,4 +167,4 @@ export function DateStrip({
 }
 
 export type { AvailStatus };
-export { AVAIL_CFG, getAvailStatus, resolveAvailStatus, toDateKey };
+export { AVAIL_CFG, getAvailStatus, toDateKey };
