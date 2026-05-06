@@ -25,11 +25,11 @@
  *   useBooking — BookingContext for saving selection before checkout
  *   PageHeader — shared navigation header
  *
- * LAST UPDATED: 2026-04-29 — Pass consultation_type_ids to crmControllerGetSlots so online/offline toggle actually filters slots by type
+ * LAST UPDATED: 2026-05-06 — Add practice location chips to doctor card; locations sourced from static DOCTORS array (API DTO lacks area field)
  */
 "use client";
 
-import { AlertCircle, Building2, Loader2, Video } from "lucide-react";
+import { AlertCircle, Building2, Loader2, MapPin, Video } from "lucide-react";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useCallback, useEffect, useMemo, useState } from "react";
 import { CampusSheet } from "@/components/booking/campus-sheet";
@@ -49,6 +49,7 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { useBooking } from "@/contexts/booking-context";
+import { DOCTORS } from "@/data/doctors";
 import { useAuth } from "@/hooks/shared/auth/use-auth";
 import { cn } from "@/lib/utils";
 import type { DoctorBasicResponseDto, SlotResponseDto } from "@/sdk/backend-v2";
@@ -102,6 +103,13 @@ function BookingContent() {
   const existingSlotId = isReschedule ? Number(searchParams.get("appointment_id")) : null;
   const rescheduleAptType = searchParams.get("appointment_type") ?? "";
   const initMode = searchParams.get("mode") ?? "online";
+
+  // Practice locations — look up the static DOCTORS record by id to get the area field,
+  // which the API's DoctorBasicResponseDto does not expose.
+  const doctorLocations = useMemo(() => {
+    const staticDoc = DOCTORS.find((d) => d.id === Number(doctor_id));
+    return (staticDoc?.area ?? []).map(([name]: [string, number]) => name);
+  }, [doctor_id]);
 
   // ── doctor ──────────────────────────────────────────────────────────────────
   const [doctor, setDoctor] = useState<DoctorResponseDto | null>(null);
@@ -452,6 +460,24 @@ function BookingContent() {
                   .filter(Boolean)
                   .join(" · ")}
               </p>
+              {doctorLocations.length > 0 && (
+                <div className="flex flex-wrap gap-1 mt-1.5">
+                  {doctorLocations.slice(0, 2).map((loc, i) => (
+                    <span
+                      key={i}
+                      className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-medium border"
+                    >
+                      <MapPin className="h-2.5 w-2.5 shrink-0" />
+                      {loc}
+                    </span>
+                  ))}
+                  {doctorLocations.length > 2 && (
+                    <span className="px-2 py-0.5 rounded-full text-[11px] font-medium bg-muted text-muted-foreground">
+                      +{doctorLocations.length - 2} more
+                    </span>
+                  )}
+                </div>
+              )}
             </div>
           </div>
           <div className="shrink-0 bg-orange-50 rounded-xl p-2.5">

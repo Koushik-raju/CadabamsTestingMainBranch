@@ -3,8 +3,8 @@
  *
  * PURPOSE:
  *   Therapist trust card per the MindTalk design system — circular avatar with orange
- *   gradient fallback, name, credentials/speciality, specialty chips, star rating, and
- *   an mt-primary "Book now" CTA.
+ *   gradient fallback, name, credentials/speciality, specialty chips, star rating,
+ *   practice locations, and an mt-primary "Book now" CTA.
  *
  * LOGIC OVERVIEW:
  *   1. processDoctorImage() normalises the raw image field (data URI, JPEG/PNG base64,
@@ -13,27 +13,30 @@
  *   3. Avatar is 64×64px circular (rounded-full) with orange gradient fallback — matches
  *      the design system therapist trust card pattern.
  *   4. Tags show the first 2 illness_treated entries as --mt-tint-peach chips; excess shown as "+N".
- *   5. Star rating with yellow star. Fee shown if present.
- *   6. "Book now" is mt-primary variant (orange pill, glow shadow).
+ *   5. Locations: up to 2 area names from the `area` field, shown as blue chips with a MapPin icon.
+ *      Extra locations collapsed to "+N more".
+ *   7. "Book now" is mt-primary variant (orange pill, glow shadow).
  *
  * KEY VARIABLES / PROPS / EXPORTS:
  *   doctor    — DoctorListing object from the data layer
  *   onBook    — callback invoked with the selected doctor when user taps Book Now
  *   imgSrc    — processed image source string or null (falls back to initials avatar)
+ *   locations — area names extracted from doctor.area (up to 2 shown, rest collapsed)
  *
  * DEPENDENCIES:
  *   shadcn Avatar, Button
- *   lucide-react: Star, User
+ *   lucide-react: MapPin
  *
- * LAST UPDATED: 2026-04-28 — Design system migration: circular avatar, orange gradient
- *   fallback, mt-primary Book now button, --mt-tint-peach specialty chips
+ * LAST UPDATED: 2026-05-06 — add practice location chips from area field; remove hardcoded star rating
  */
 "use client";
 
-import { Star } from "lucide-react";
+import { MapPin } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { DoctorListing } from "@/data/doctors";
+
+type DoctorPreferenceTuple = [string, number];
 
 export type Doctor = DoctorListing;
 
@@ -74,15 +77,16 @@ export function DoctorCard({ doctor, onBook }: DoctorCardProps) {
   const name = displayName(doctor.name);
   const speciality =
     typeof doctor.speciality_id?.[1] === "string" ? doctor.speciality_id[1] : "Specialist";
-  const d = doctor as unknown as Record<string, unknown>;
-  const rating = d.rating ?? d.star_rating ?? "4.9";
-
   const tags = (doctor.illness_treated ?? []).map(
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     ([tagName]: any) => tagName as string,
   );
   const visibleTags = tags.slice(0, 2);
   const extraTags = tags.length > 2 ? tags.length - 2 : 0;
+
+  const locations = (doctor.area ?? []).map(([name]: DoctorPreferenceTuple) => name);
+  const visibleLocations = locations.slice(0, 2);
+  const extraLocations = locations.length > 2 ? locations.length - 2 : 0;
 
   const initials = name
     .replace(/^Dr\.?\s*/i, "")
@@ -139,13 +143,25 @@ export function DoctorCard({ doctor, onBook }: DoctorCardProps) {
             </div>
           )}
 
-          {/* Star rating */}
-          <div className="flex items-center gap-1 mt-2">
-            <Star className="h-3.5 w-3.5 fill-yellow-400 text-yellow-400" />
-            <span className="text-[12px] font-bold text-[#0E1726] mt-numeric">
-              {String(rating)}
-            </span>
-          </div>
+          {/* Practice locations */}
+          {visibleLocations.length > 0 && (
+            <div className="flex flex-wrap items-center gap-1.5 mt-2">
+              {visibleLocations.map((loc, i) => (
+                <span
+                  key={i}
+                  className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-medium border"
+                >
+                  <MapPin className="h-2.5 w-2.5 shrink-0" />
+                  {loc}
+                </span>
+              ))}
+              {extraLocations > 0 && (
+                <span className="px-2 py-0.5 rounded-full text-[11px] font-medium bg-muted text-muted-foreground">
+                  +{extraLocations} more
+                </span>
+              )}
+            </div>
+          )}
         </div>
       </div>
 
