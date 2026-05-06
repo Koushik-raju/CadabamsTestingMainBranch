@@ -2,114 +2,94 @@
  * FILE: capacitor.config.ts
  *
  * PURPOSE:
- *   Capacitor native shell configuration for the MindTalk (Cadabams Consult)
- *   mobile app. The native shell is REMOTE-ONLY — the WebView always loads
- *   the deployed web app (dev-x3 staging by default). We do NOT ship a
- *   bundled `out/` build because the Next.js app uses middleware running
- *   on serverless functions and cannot be statically exported.
+ *   Capacitor configuration for the MindTalk mobile shells (iOS + Android).
+ *   The native apps are thin WebView shells pointing at the hosted Next.js
+ *   site at https://www.dev-x3.cadabams.com/.
  *
  * LOGIC OVERVIEW:
- *   1. Detect build mode via `NODE_ENV` to toggle WebView debugging and
- *      native logging level.
- *   2. `CAP_REMOTE_URL` env var overrides the default remote origin — use
- *      it to point a local native build at prod or at a local ngrok tunnel.
- *      Default is `https://dev-x3.cadabams.com/`.
- *   3. Plugin options (StatusBar, Keyboard, Razorpay, Push/Local Notifs,
- *      CapacitorHttp) are locked to sensible defaults tuned for this app.
- *   4. `webDir` points at `out/` where a minimal fallback HTML lives. The
- *      WebView never renders it under normal conditions — `server.url`
- *      takes over at launch — but Capacitor CLI requires the directory to
- *      exist for `cap sync` to succeed.
+ *   - `server.url` makes the WebView load the remote Next.js site on every
+ *     launch, so JS/UI changes ship by deploying the web app — no store
+ *     resubmission needed.
+ *   - `webDir: 'out'` is the static-export fallback (used by `cap copy` and
+ *     required by the CLI even when `server.url` is set).
+ *   - `androidScheme: 'https'` + `cleartext: false` enforce HTTPS on Android.
+ *   - `allowNavigation` whitelists the cadabams.com domains so the WebView
+ *     can navigate within the app's surface but cannot wander off.
+ *   - iOS `limitsNavigationsToAppBoundDomains: true` mirrors that lock-down
+ *     and is required for Service Worker / WKWebView features on iOS 14+.
  *
- * KEY VARIABLES / EXPORTS:
- *   isDev        — true when NODE_ENV !== 'production'
- *   remoteUrl    — resolved remote origin for `server.url`
- *   config       — default export consumed by the Capacitor CLI
+ * KEY VARIABLES / PROPS / EXPORTS:
+ *   appId          — com.mindtalk.com (reverse-DNS, must match Play/App Store listings)
+ *   appName        — "MindTalk" (display name on the device springboard)
+ *   server.url     — Remote URL the WebView loads on launch
+ *   webDir         — Static fallback dir produced by `next build` (output: 'export')
  *
  * DEPENDENCIES:
- *   @capacitor/cli               — CapacitorConfig type
- *   @capacitor/keyboard          — KeyboardResize enum
+ *   @capacitor/cli, @capacitor/ios, @capacitor/android
  *
- * LAST UPDATED: 2026-05-05 — StatusBar.overlaysWebView set to false: iOS
- *   reserves the status bar area natively, the WebView never extends into the
- *   notch. setStatusBarColor() controls the bar background per-route.
+ * LAST UPDATED: 2026-05-06 — fresh remote-URL setup pointing at dev-x3.cadabams.com
  */
 import type { CapacitorConfig } from '@capacitor/cli';
-import { KeyboardResize } from '@capacitor/keyboard';
-
-const isDev = process.env.NODE_ENV !== 'production';
-
-/*
- * Remote URL: the WebView always loads the deployed web app. Override via
- * CAP_REMOTE_URL only to aim a native build at a different origin (e.g.
- * prod, ngrok). Never set to empty — the app has no standalone mode.
- */
-// Switch to https://dev-x3.cadabams.com/ (or prod URL) when building for staging/release.
-// iOS Simulator: localhost resolves to the host Mac directly — use it as-is.
-// Android emulator: needs 10.0.2.2 instead of localhost.
-// Real device: use Mac's local network IP or ngrok.
-const remoteUrl = process.env.CAP_REMOTE_URL || 'http://localhost:3001/';
 
 const config: CapacitorConfig = {
   appId: 'com.mindtalk.com',
-  appName: 'MindTalk',
-  // `out/` holds a minimal fallback page only — the WebView navigates to
-  // `server.url` on launch and never renders this under normal conditions.
+  appName: 'Cadabams Mindtalk',
   webDir: 'out',
+  loggingBehavior: 'none',
+
+  // Cream canvas (--mt-cream-bg from app/globals.css). Painted by the native
+  // shell *before* the WebView attaches and during any reflow — without this
+  // the user briefly sees white between splash and the remote site.
+  backgroundColor: '#fffdf9',
+
+  // Lets the backend distinguish in-app traffic from desktop web in logs / WAF.
+  appendUserAgent: 'MindTalkApp',
+
+  server: {
+    url: 'https://www.dev-x3.cadabams.com',
+    cleartext: false,
+    androidScheme: 'https',
+    allowNavigation: ['dev-x3.cadabams.com', '*.cadabams.com'],
+  },
+
   ios: {
-    preferredContentMode: 'mobile',
-    limitsNavigationsToAppBoundDomains: false,
-    // Only enable WebView debugging in dev — exposes the app to Safari/Chrome DevTools in prod otherwise
-    webContentsDebuggingEnabled: isDev,
+    contentInset: 'automatic',
     scrollEnabled: true,
+    limitsNavigationsToAppBoundDomains: true,
+    // Long-press link previews feel web-y; off for native polish.
     allowsLinkPreview: false,
   },
+
   android: {
-    webContentsDebuggingEnabled: isDev,
-    // HTTPS-only: every supported remote origin is HTTPS, so mixed content stays off.
     allowMixedContent: false,
-    captureInput: true,
+    captureInput: false,
+    webContentsDebuggingEnabled: false,
   },
+
   plugins: {
-    // Native HTTP client — DISABLED. When enabled, intercepts every fetch() and
-    // routes through native URLSession, which silently fails on iOS Simulator
-    // (CapacitorUrlRequestError error 0) and bypasses WebView cookie storage.
-    // Keeping disabled: WebView fetch handles HTTPS + cookies correctly.
-    // Re-enable only if/when CORS becomes a hard blocker.
-    CapacitorHttp: {
-      enabled: false,
+    SplashScreen: {
+      launchShowDuration: 1500,
+      launchAutoHide: true,
+      backgroundColor: '#fffdf9', // --mt-cream-bg
+      androidScaleType: 'CENTER_CROP',
+      splashFullScreen: true,
+      splashImmersive: true,
+      showSpinner: false,
     },
     StatusBar: {
-      // overlaysWebView: false — iOS reserves the status bar space natively so
-      // the WebView never extends into the notch / status bar area. No
-      // full-bleed; the native bar background (set per-route via
-      // setStatusBarColor) sits above the WebView. Simpler and bulletproof.
-      // Note: ignored on Android 16+ (always edge-to-edge there).
-      overlaysWebView: false,
+      // 'LIGHT' = dark text/icons on a light background — matches our cream canvas.
       style: 'LIGHT',
-      // Matches --mt-cream-bg / --background token (app/globals.css).
-      backgroundColor: '#faf7f4',
+      backgroundColor: '#fffdf9',
+      overlaysWebView: false,
     },
     Keyboard: {
-      resize: KeyboardResize.Body,
-    },
-    LocalNotifications: {
-      smallIcon: 'ic_stat_icon',
-      iconColor: '#E7590F',
-      sound: 'beep.wav',
-    },
-    RazorpayCheckout: {
-      enabled: true,
-    },
-    PushNotifications: {
-      presentationOptions: ['badge', 'sound', 'alert'],
+      // 'native' lets the OS resize the WebView; the safe-area listener in
+      // lib/capacitor/keyboard.ts updates --keyboard-height for layouts that
+      // need to react explicitly.
+      resize: 'native',
+      resizeOnFullScreen: true,
     },
   },
-  server: {
-    url: remoteUrl,
-    cleartext: false,
-  },
-  loggingBehavior: isDev ? 'debug' : 'none',
 };
 
 export default config;

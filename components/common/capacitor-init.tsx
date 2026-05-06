@@ -1,33 +1,26 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useContext, useEffect, useRef } from "react";
-import { AuthContext } from "@/hooks/use-auth";
+import { useEffect } from "react";
 import { setupDeepLinks } from "@/lib/capacitor/deep-links";
 import { setupKeyboardListeners } from "@/lib/capacitor/keyboard";
 import { isNative } from "@/lib/capacitor/platform";
-import { initPushNotifications } from "@/lib/capacitor/push-notifications";
 import { applySafeAreaVars } from "@/lib/capacitor/safe-area";
 import { setStatusBarLight } from "@/lib/capacitor/status-bar";
 import { preventTextZoom } from "@/lib/capacitor/text-zoom";
 
 /**
  * CapacitorInit — rendered once in app/layout.tsx inside AppProviders.
- * Orchestrates all Capacitor plugin initialisation on app start.
+ * Orchestrates Capacitor plugin initialisation on app start.
  * Returns null (no UI).
+ *
+ * Push / local notifications were intentionally removed for this release: they
+ * require APNs entitlements + permission prompts that App Store reviewers test,
+ * and the FCM/APNs pipeline isn't wired. Re-add when push is fully ready.
  */
 export function CapacitorInit() {
   const router = useRouter();
-  const { user } = useContext(AuthContext);
 
-  /*
-   * Guard so initPushNotifications runs exactly once per session.
-   * Without this, any SWR refetch that creates a new user object reference
-   * would retrigger the effect and re-request permissions + re-register listeners.
-   */
-  const pushInitialized = useRef(false);
-
-  // --- Core initialisation (runs once on mount) ---
   useEffect(() => {
     let cleanupKeyboard: (() => void) | undefined;
     let cleanupDeepLinks: (() => void) | undefined;
@@ -67,15 +60,6 @@ export function CapacitorInit() {
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
-
-  // --- Push notifications (runs once, when the user first logs in) ---
-  useEffect(() => {
-    if (!user || pushInitialized.current) return;
-    pushInitialized.current = true;
-    initPushNotifications().catch((e) => {
-      console.warn("[CapacitorInit] initPushNotifications failed:", e);
-    });
-  }, [user]);
 
   return null;
 }
