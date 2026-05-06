@@ -23,15 +23,16 @@
  *                        clearFilters, handleBook, startWizard
  *   PROFESSION_OPTIONS — specialist type options from context
  *   DOCTORS            — static doctor data
+ *   PageHeader         — shared navigation header with hamburger
  *
- * LAST UPDATED: 2026-04-28 — replace hardcoded #f6f4f2 with var(--mt-cream-bg) token
+ * LAST UPDATED: 2026-05-06 — replace custom BackButton header with PageHeader
  */
 "use client";
 
 import { ArrowRight, ChevronDown, Search } from "lucide-react";
 import { useMemo, useState } from "react";
 import { DoctorCard } from "@/components/find-therapist/doctor-card";
-import { BackButton } from "@/components/shared/navigation/back-button";
+import { PageHeader } from "@/components/shared/navigation/page-header";
 import { Input } from "@/components/ui/input";
 import { DOCTORS } from "@/data/doctors";
 import { PROFESSION_OPTIONS, useFindTherapist } from "./context";
@@ -159,21 +160,20 @@ export function ListView() {
   // ── Render ───────────────────────────────────────────────────────────────────
 
   return (
-    <div className="min-h-screen bg-[var(--mt-cream-bg)] flex flex-col">
-      {/* Header */}
-      <div className="px-5 pt-6 pb-3 flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <BackButton fallback="/home" />
-          <h1 className="text-2xl font-bold text-foreground leading-tight">Find your therapist</h1>
-        </div>
-        <button
-          onClick={() => setShowSearch((v) => !v)}
-          className="p-2 rounded-full hover:bg-black/5 transition-colors"
-          aria-label="Toggle search"
-        >
-          <Search className="w-5 h-5 text-foreground" />
-        </button>
-      </div>
+    <div className=" min-h-screen bg-(--mt-cream-bg) flex flex-col">
+      <PageHeader
+        title="Find your therapist"
+        fallback="/home"
+        right={
+          <button
+            onClick={() => setShowSearch((v) => !v)}
+            className="p-2 rounded-full hover:bg-black/5 transition-colors"
+            aria-label="Toggle search"
+          >
+            <Search className="w-5 h-5 text-foreground" />
+          </button>
+        }
+      />
 
       {/* Search input */}
       {showSearch && (
@@ -188,7 +188,7 @@ export function ListView() {
       )}
 
       {/* Scrollable content */}
-      <div className="px-5 pb-24 space-y-5 flex-1">
+      <div className="px-5 pb-24 space-y-5 flex-1 mt-4">
         {/* Orange banner */}
         <div className="bg-orange-500 rounded-2xl p-4 flex items-center justify-between gap-3">
           <p className="text-white font-semibold text-sm leading-snug flex-1">

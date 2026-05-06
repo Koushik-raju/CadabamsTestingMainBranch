@@ -1,15 +1,34 @@
+/**
+ * FILE: components/find-therapist/wizard-view.tsx
+ *
+ * PURPOSE:
+ *   Multi-step onboarding wizard for the find-therapist flow. Guides the user
+ *   through selecting profession, issues, mode, language, and location before
+ *   surfacing the therapist list.
+ *
+ * LOGIC OVERVIEW:
+ *   1. Reads step and all filter state from FindTherapistContext.
+ *   2. Renders the correct step panel (STEP_PROFESSION → STEP_ISSUES → STEP_MODE →
+ *      STEP_LANGUAGE → STEP_LOCATION) based on current step index.
+ *   3. A progress bar above the content reflects (step-1)/(totalSteps-1) as a %.
+ *   4. totalSteps is 5 for in-person mode (adds location step), otherwise 4.
+ *   5. handleBack (from context) decrements the step or exits the wizard to list view.
+ *
+ * KEY VARIABLES / PROPS / EXPORTS:
+ *   WizardView    — default export; full-screen wizard component
+ *   totalSteps    — 4 (online) or 5 (in-person)
+ *   progressPct   — percentage for the progress bar width
+ *
+ * DEPENDENCIES:
+ *   useFindTherapist() — step, handleBack, handleNext, canNext, all filter state
+ *   PageHeader         — shared navigation header with hamburger
+ *
+ * LAST UPDATED: 2026-05-06 — add file header; replace custom ChevronLeft header with PageHeader
+ */
 "use client";
 
-import {
-  Building2,
-  ChevronLeft,
-  HelpCircle,
-  MapPin,
-  Monitor,
-  Pill,
-  Stethoscope,
-  Users,
-} from "lucide-react";
+import { Building2, HelpCircle, MapPin, Monitor, Pill, Stethoscope, Users } from "lucide-react";
+import { PageHeader } from "@/components/shared/navigation/page-header";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -97,17 +116,7 @@ export function WizardView() {
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
-      {/* Header */}
-      <div className="flex items-center gap-3 px-5 pt-6 pb-3 border-b border-border shrink-0">
-        <button
-          type="button"
-          onClick={handleBack}
-          className="p-1 rounded-full hover:bg-muted transition-colors"
-        >
-          <ChevronLeft className="h-5 w-5" />
-        </button>
-        <h1 className="text-base font-semibold flex-1 text-foreground">Find your therapist</h1>
-      </div>
+      <PageHeader title="Find your therapist" onBack={handleBack} />
 
       {/* Progress bar */}
       <div className="h-1 bg-muted shrink-0">
