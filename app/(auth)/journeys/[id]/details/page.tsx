@@ -21,7 +21,7 @@
  *   JourneyPathView — components/journey/journey-path-view
  *   PageHeader — shared navigation header
  *
- * LAST UPDATED: 2026-04-28 — Neo design system: shadow scale, color tokens, border radius
+ * LAST UPDATED: 2026-05-06 — remove sticky top-0 from PageHeader className (overrode safe-area fix)
  */
 "use client";
 
@@ -124,7 +124,7 @@ function DetailsContent({ params }: PageProps) {
         title={name}
         subtitle={journey.isPremium ? "Premium Journey" : undefined}
         fallback="/journeys"
-        className="sticky top-0 z-20 bg-card/70 backdrop-blur-sm border-b border-border px-4 pb-3"
+        className="z-20 bg-card/70 backdrop-blur-sm border-b border-border px-4 pb-3"
         right={
           isSubscribed ? (
             <button className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-muted transition-colors">
