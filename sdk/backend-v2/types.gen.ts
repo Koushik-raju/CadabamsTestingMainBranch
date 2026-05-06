@@ -3294,15 +3294,63 @@ export type UpdateAssignmentItemDto = {
     };
 };
 
-export type WorksheetSubmissionListResponseDto = {
+export type WorksheetAnswerResponseDto = {
     /**
-     * List of worksheet submissions
+     * Unique identifier for the worksheet answer row
      */
-    items: Array<string>;
+    id: string;
     /**
-     * Total count of submissions matching the filter
+     * Parent WorksheetSubmission id
      */
-    total: number;
+    submissionId: string;
+    /**
+     * Question key from the assessment framework (e.g. "assessmentworksheet-submission_607_step_0_v2")
+     */
+    questionKey: string;
+    /**
+     * Position in the original answers array
+     */
+    order: number;
+    /**
+     * Document/file identifier when the answer references a file
+     */
+    documentId?: string;
+    /**
+     * Uploaded file name
+     */
+    fileName?: string;
+    /**
+     * File size in bytes
+     */
+    fileSize?: number;
+    /**
+     * File MIME type
+     */
+    fileType?: string;
+    /**
+     * Stable HTTPS URL of the uploaded file
+     */
+    fileUrl?: string;
+    /**
+     * AI model used for this answer (if any)
+     */
+    aiModel?: string;
+    /**
+     * Whether AI processing succeeded for this answer
+     */
+    aiSuccess?: boolean;
+    /**
+     * AI-generated reflection / summary for this answer
+     */
+    aiSummary?: string;
+    /**
+     * Extracted content captured for this answer
+     */
+    extractedContent?: string;
+    /**
+     * When the file was uploaded (ISO-8601). Null when this answer has no upload.
+     */
+    uploadDate?: string;
 };
 
 export type WorksheetSubmissionResponseDto = {
@@ -3387,9 +3435,84 @@ export type WorksheetSubmissionResponseDto = {
      */
     updatedAt: string;
     /**
-     * Associated worksheet answers
+     * Associated worksheet answers, eager-loaded from WorksheetAnswer rows
      */
-    answers?: Array<string>;
+    answers?: Array<WorksheetAnswerResponseDto>;
+};
+
+export type WorksheetSubmissionListResponseDto = {
+    /**
+     * List of worksheet submissions
+     */
+    items: Array<WorksheetSubmissionResponseDto>;
+    /**
+     * Total count of submissions matching the filter
+     */
+    total: number;
+};
+
+export type WorksheetAnswerInputDto = {
+    questionKey: string;
+    order?: number;
+    documentId?: string;
+    fileName?: string;
+    fileSize?: number;
+    fileType?: string;
+    fileUrl?: string;
+    aiModel?: string;
+    aiSuccess?: boolean;
+    aiSummary?: string;
+    extractedContent?: string;
+    uploadDate?: string;
+};
+
+export type CreateWorksheetSubmissionDto = {
+    /**
+     * Strapi / CMS worksheet documentId — primary link to CmsWorksheet
+     */
+    documentId?: string;
+    worksheetKey?: string;
+    fileName?: string;
+    fileSize?: number;
+    fileType?: string;
+    fileUrl?: string;
+    strapiComponent?: string;
+    submittedAt?: string;
+    uploadedAt?: string;
+    answers?: Array<WorksheetAnswerInputDto>;
+};
+
+export type PresignWorksheetUploadDto = {
+    fileName: string;
+    contentType?: string;
+};
+
+export type PresignWorksheetUploadResponseDto = {
+    uploadUrl: string;
+    /**
+     * Stable HTTPS URL of the object after upload (same bucket/key as presigned PUT)
+     */
+    fileUrl: string;
+    key: string;
+    contentType: string;
+    expiresInSeconds: number;
+};
+
+export type SummarizeWorksheetUploadDto = {
+    /**
+     * Public HTTPS URL returned from uploads/presign (same bucket as upload)
+     */
+    fileUrl: string;
+    fileName: string;
+    fileType?: string;
+};
+
+export type SummarizeWorksheetUploadResponseDto = {
+    /**
+     * Short supportive summary for the patient (markdown allowed)
+     */
+    summary: string;
+    aiModel: string;
 };
 
 export type UserDocumentPresignUploadDto = {
@@ -4731,6 +4854,12 @@ export type WorksheetQuestionResponseDto = {
 
 export type WorksheetResponseDto = {
     id: string;
+    /**
+     * Strapi / CMS document id (used in patient assignments and legacy URLs)
+     */
+    documentId?: {
+        [key: string]: unknown;
+    } | null;
     title: string;
     description?: {
         [key: string]: unknown;
@@ -10119,6 +10248,30 @@ export type TranscriptionControllerGetStreamingTokenResponses = {
 
 export type TranscriptionControllerGetStreamingTokenResponse = TranscriptionControllerGetStreamingTokenResponses[keyof TranscriptionControllerGetStreamingTokenResponses];
 
+export type TranscriptionControllerGetSarvamStreamingConfigData = {
+    body?: never;
+    path: {
+        /**
+         * Campus slug
+         */
+        campus: 'cadabams' | 'whitefield' | 'mysore' | 'mindtalk';
+    };
+    query: {
+        languageCode: string;
+    };
+    url: '/api/v1/{campus}/transcription/sarvam-streaming-config';
+};
+
+export type TranscriptionControllerGetSarvamStreamingConfigResponses = {
+    200: {
+        wsUrl?: string;
+        languageCode?: string;
+        model?: string;
+    };
+};
+
+export type TranscriptionControllerGetSarvamStreamingConfigResponse = TranscriptionControllerGetSarvamStreamingConfigResponses[keyof TranscriptionControllerGetSarvamStreamingConfigResponses];
+
 export type TranscriptionControllerPresignUploadData = {
     body: PresignUploadDto;
     path: {
@@ -10836,30 +10989,28 @@ export type WorksheetSubmissionsControllerListAllResponses = {
 
 export type WorksheetSubmissionsControllerListAllResponse = WorksheetSubmissionsControllerListAllResponses[keyof WorksheetSubmissionsControllerListAllResponses];
 
-export type WorksheetSubmissionsControllerGetOneData = {
+export type WorksheetSubmissionsControllerGetStatsData = {
     body?: never;
     path: {
         /**
          * Campus slug
          */
         campus: 'cadabams' | 'whitefield' | 'mysore' | 'mindtalk';
-        /**
-         * WorksheetSubmission id
-         */
-        id: string;
     };
     query?: never;
-    url: '/api/v1/{campus}/worksheet-submissions/{id}';
+    url: '/api/v1/{campus}/worksheet-submissions/admin/stats';
 };
 
-export type WorksheetSubmissionsControllerGetOneResponses = {
+export type WorksheetSubmissionsControllerGetStatsResponses = {
     /**
-     * Submission with answer rows
+     * Counts by source, top submitting leads, totals
      */
-    200: WorksheetSubmissionResponseDto;
+    200: {
+        [key: string]: unknown;
+    };
 };
 
-export type WorksheetSubmissionsControllerGetOneResponse = WorksheetSubmissionsControllerGetOneResponses[keyof WorksheetSubmissionsControllerGetOneResponses];
+export type WorksheetSubmissionsControllerGetStatsResponse = WorksheetSubmissionsControllerGetStatsResponses[keyof WorksheetSubmissionsControllerGetStatsResponses];
 
 export type WorksheetSubmissionsControllerListByLeadData = {
     body?: never;
@@ -10936,7 +11087,184 @@ export type WorksheetSubmissionsControllerListByDocumentResponses = {
 
 export type WorksheetSubmissionsControllerListByDocumentResponse = WorksheetSubmissionsControllerListByDocumentResponses[keyof WorksheetSubmissionsControllerListByDocumentResponses];
 
-export type WorksheetSubmissionsControllerGetStatsData = {
+export type WorksheetSubmissionsControllerGetOneData = {
+    body?: never;
+    path: {
+        /**
+         * Campus slug
+         */
+        campus: 'cadabams' | 'whitefield' | 'mysore' | 'mindtalk';
+        /**
+         * WorksheetSubmission id
+         */
+        id: string;
+    };
+    query?: never;
+    url: '/api/v1/{campus}/worksheet-submissions/{id}';
+};
+
+export type WorksheetSubmissionsControllerGetOneResponses = {
+    /**
+     * Submission with answer rows
+     */
+    200: WorksheetSubmissionResponseDto;
+};
+
+export type WorksheetSubmissionsControllerGetOneResponse = WorksheetSubmissionsControllerGetOneResponses[keyof WorksheetSubmissionsControllerGetOneResponses];
+
+export type PatientWorksheetsControllerListMineData = {
+    body?: never;
+    path: {
+        /**
+         * Campus slug
+         */
+        campus: 'cadabams' | 'whitefield' | 'mysore' | 'mindtalk';
+    };
+    query?: {
+        /**
+         * Filter by Strapi documentId
+         */
+        documentId?: string;
+        /**
+         * Filter by worksheetKey
+         */
+        worksheetKey?: string;
+        /**
+         * Pass "true" to only return rows with AI content on submission or answers
+         */
+        hasAiSummary?: string;
+    };
+    url: '/api/v1/{campus}/patient-worksheets/submissions';
+};
+
+export type PatientWorksheetsControllerListMineResponses = {
+    /**
+     * Submissions (newest first) with answers
+     */
+    200: Array<WorksheetSubmissionResponseDto>;
+};
+
+export type PatientWorksheetsControllerListMineResponse = PatientWorksheetsControllerListMineResponses[keyof PatientWorksheetsControllerListMineResponses];
+
+export type PatientWorksheetsControllerCreateSubmissionData = {
+    body: CreateWorksheetSubmissionDto;
+    path: {
+        /**
+         * Campus slug
+         */
+        campus: 'cadabams' | 'whitefield' | 'mysore' | 'mindtalk';
+    };
+    query?: never;
+    url: '/api/v1/{campus}/patient-worksheets/submissions';
+};
+
+export type PatientWorksheetsControllerCreateSubmissionResponses = {
+    201: WorksheetSubmissionResponseDto;
+};
+
+export type PatientWorksheetsControllerCreateSubmissionResponse = PatientWorksheetsControllerCreateSubmissionResponses[keyof PatientWorksheetsControllerCreateSubmissionResponses];
+
+export type PatientWorksheetsControllerGetSubmissionData = {
+    body?: never;
+    path: {
+        /**
+         * Campus slug
+         */
+        campus: 'cadabams' | 'whitefield' | 'mysore' | 'mindtalk';
+        id: string;
+    };
+    query?: never;
+    url: '/api/v1/{campus}/patient-worksheets/submissions/{id}';
+};
+
+export type PatientWorksheetsControllerGetSubmissionResponses = {
+    200: WorksheetSubmissionResponseDto;
+};
+
+export type PatientWorksheetsControllerGetSubmissionResponse = PatientWorksheetsControllerGetSubmissionResponses[keyof PatientWorksheetsControllerGetSubmissionResponses];
+
+export type PatientWorksheetsControllerPresignUploadData = {
+    body: PresignWorksheetUploadDto;
+    path: {
+        /**
+         * Campus slug
+         */
+        campus: 'cadabams' | 'whitefield' | 'mysore' | 'mindtalk';
+    };
+    query?: never;
+    url: '/api/v1/{campus}/patient-worksheets/uploads/presign';
+};
+
+export type PatientWorksheetsControllerPresignUploadResponses = {
+    201: PresignWorksheetUploadResponseDto;
+};
+
+export type PatientWorksheetsControllerPresignUploadResponse = PatientWorksheetsControllerPresignUploadResponses[keyof PatientWorksheetsControllerPresignUploadResponses];
+
+export type PatientWorksheetsControllerSummarizeUploadData = {
+    body: SummarizeWorksheetUploadDto;
+    path: {
+        /**
+         * Campus slug
+         */
+        campus: 'cadabams' | 'whitefield' | 'mysore' | 'mindtalk';
+    };
+    query?: never;
+    url: '/api/v1/{campus}/patient-worksheets/uploads/summarize';
+};
+
+export type PatientWorksheetsControllerSummarizeUploadResponses = {
+    200: SummarizeWorksheetUploadResponseDto;
+};
+
+export type PatientWorksheetsControllerSummarizeUploadResponse = PatientWorksheetsControllerSummarizeUploadResponses[keyof PatientWorksheetsControllerSummarizeUploadResponses];
+
+export type PatientWorksheetsControllerListAllAdminData = {
+    body?: never;
+    path: {
+        /**
+         * Campus slug
+         */
+        campus: 'cadabams' | 'whitefield' | 'mysore' | 'mindtalk';
+    };
+    query?: {
+        /**
+         * Filter by CRM lead ID
+         */
+        crmLeadId?: string;
+        /**
+         * Filter by Firebase UID (patientRef)
+         */
+        patientRef?: string;
+        /**
+         * Filter by Postgres User.id
+         */
+        userId?: string;
+        /**
+         * Filter by documentId
+         */
+        documentId?: string;
+        /**
+         * Filter submissions on or after this ISO date
+         */
+        from?: string;
+        /**
+         * Filter submissions on or before this ISO date
+         */
+        to?: string;
+        page?: number;
+        pageSize?: number;
+    };
+    url: '/api/v1/{campus}/patient-worksheets/admin/submissions';
+};
+
+export type PatientWorksheetsControllerListAllAdminResponses = {
+    200: WorksheetSubmissionListResponseDto;
+};
+
+export type PatientWorksheetsControllerListAllAdminResponse = PatientWorksheetsControllerListAllAdminResponses[keyof PatientWorksheetsControllerListAllAdminResponses];
+
+export type PatientWorksheetsControllerGetStatsAdminData = {
     body?: never;
     path: {
         /**
@@ -10945,10 +11273,10 @@ export type WorksheetSubmissionsControllerGetStatsData = {
         campus: 'cadabams' | 'whitefield' | 'mysore' | 'mindtalk';
     };
     query?: never;
-    url: '/api/v1/{campus}/worksheet-submissions/admin/stats';
+    url: '/api/v1/{campus}/patient-worksheets/admin/stats';
 };
 
-export type WorksheetSubmissionsControllerGetStatsResponses = {
+export type PatientWorksheetsControllerGetStatsAdminResponses = {
     /**
      * Counts by source, top submitting leads, totals
      */
@@ -10957,7 +11285,52 @@ export type WorksheetSubmissionsControllerGetStatsResponses = {
     };
 };
 
-export type WorksheetSubmissionsControllerGetStatsResponse = WorksheetSubmissionsControllerGetStatsResponses[keyof WorksheetSubmissionsControllerGetStatsResponses];
+export type PatientWorksheetsControllerGetStatsAdminResponse = PatientWorksheetsControllerGetStatsAdminResponses[keyof PatientWorksheetsControllerGetStatsAdminResponses];
+
+export type PatientWorksheetsAnalysisControllerPresignUploadData = {
+    body: PresignWorksheetUploadDto;
+    path?: never;
+    query?: {
+        campus?: unknown;
+    };
+    url: '/api/v1/patient-worksheets/uploads/presign';
+};
+
+export type PatientWorksheetsAnalysisControllerPresignUploadResponses = {
+    201: PresignWorksheetUploadResponseDto;
+};
+
+export type PatientWorksheetsAnalysisControllerPresignUploadResponse = PatientWorksheetsAnalysisControllerPresignUploadResponses[keyof PatientWorksheetsAnalysisControllerPresignUploadResponses];
+
+export type PatientWorksheetsAnalysisControllerSummarizeUploadData = {
+    body: SummarizeWorksheetUploadDto;
+    path?: never;
+    query?: {
+        campus?: unknown;
+    };
+    url: '/api/v1/patient-worksheets/uploads/summarize';
+};
+
+export type PatientWorksheetsAnalysisControllerSummarizeUploadResponses = {
+    200: SummarizeWorksheetUploadResponseDto;
+};
+
+export type PatientWorksheetsAnalysisControllerSummarizeUploadResponse = PatientWorksheetsAnalysisControllerSummarizeUploadResponses[keyof PatientWorksheetsAnalysisControllerSummarizeUploadResponses];
+
+export type PatientWorksheetsAnalysisControllerAnalyzeData = {
+    body?: never;
+    path: {
+        submissionId: string;
+    };
+    query?: never;
+    url: '/api/v1/patient-worksheets/analyze/{submissionId}';
+};
+
+export type PatientWorksheetsAnalysisControllerAnalyzeResponses = {
+    200: WorksheetSubmissionResponseDto;
+};
+
+export type PatientWorksheetsAnalysisControllerAnalyzeResponse = PatientWorksheetsAnalysisControllerAnalyzeResponses[keyof PatientWorksheetsAnalysisControllerAnalyzeResponses];
 
 export type UserDocumentsControllerPresignUploadData = {
     body: UserDocumentPresignUploadDto;

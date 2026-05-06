@@ -1,9 +1,47 @@
+/**
+ * FILE: components/shared/questions/answer-selectors/worksheet-submission-step.tsx
+ *
+ * PURPOSE:
+ *   Renders the "upload completed worksheet" step inside the questions runner:
+ *   optionally lets the patient download a CMS PDF template, then uploads
+ *   their completed file to S3 and surfaces a short LLM acknowledgment.
+ *
+ * LOGIC OVERVIEW:
+ *   1. If question.text is an http(s) URL we treat it as a printable template
+ *      and render a "Step 1 — Download" button. In that case file upload is
+ *      required to mark the step complete.
+ *   2. handlePick(file): rejects files larger than MAX_BYTES, then calls the
+ *      presignWorksheetUpload hook helper to obtain a signed S3 PUT URL,
+ *      uploads the binary directly via fetch PUT, then writes file metadata
+ *      back to the answer via onChange.
+ *   3. After upload it calls summarizeWorksheetUpload to fetch a short
+ *      patient-facing reflection and writes aiSummary + aiSuccess back onto
+ *      the answer. Failures still keep the upload but mark aiSuccess: false.
+ *   4. The "completed" callback fires whenever an upload exists (or always
+ *      when no template is required).
+ *
+ * KEY VARIABLES / PROPS / EXPORTS:
+ *   isWorksheetTemplateUrl(text)   — helper, true if `text` is an http(s) URL
+ *   WorksheetSubmissionStep        — the step component
+ *   props.title / props.description — header text for the step
+ *   props.templateUrl              — optional CMS PDF template URL
+ *   props.answer                   — accumulated answer record for this step
+ *   props.onChange(value)          — write back the updated answer record
+ *   props.onComplete(complete)     — signal whether the step is satisfied
+ *   MAX_BYTES                      — 15 MB upload limit
+ *
+ * DEPENDENCIES:
+ *   presignWorksheetUpload, summarizeWorksheetUpload (from @/hooks/use-worksheets)
+ *   shadcn Button, lucide-react icons
+ *
+ * LAST UPDATED: 2026-05-06 — switched upload helpers from lib/patient-worksheets-api to the SDK-backed hook.
+ */
 "use client";
 
 import { Download, FileUp, Loader2, Trash2 } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
-import { presignWorksheetUpload, summarizeWorksheetUpload } from "@/lib/patient-worksheets-api";
+import { presignWorksheetUpload, summarizeWorksheetUpload } from "@/hooks/use-worksheets";
 
 const MAX_BYTES = 15 * 1024 * 1024;
 

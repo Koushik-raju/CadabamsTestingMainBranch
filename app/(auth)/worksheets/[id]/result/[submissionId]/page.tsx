@@ -1,3 +1,40 @@
+/**
+ * FILE: app/(auth)/worksheets/[id]/result/[submissionId]/page.tsx
+ *
+ * PURPOSE:
+ *   Patient-facing "submission result" page — shows a single worksheet
+ *   submission's AI summary (if any), each answered question + answer row,
+ *   and lets the patient (re)trigger LLM analysis on demand.
+ *
+ * LOGIC OVERVIEW:
+ *   1. Reads `id` (worksheet documentId) and `submissionId` from the route.
+ *   2. useWorksheetById(worksheetId) loads the CMS worksheet template so we
+ *      can label answers by their question title.
+ *   3. useWorksheetSubmissionById(submissionId) loads the saved submission
+ *      with its embedded answers; the hook returns a WorksheetSubmissionRow
+ *      whose `answers` is correctly typed as WorksheetAnswerResponseDto[].
+ *   4. onAnalyze() calls analyzeWorksheet then mutates the SWR cache so the
+ *      AI summary card refreshes in place.
+ *   5. Answers are sorted by `order` ascending and rendered via AnswerDisplay,
+ *      which detects upload-style rows (fileUrl/fileName present) vs free-text
+ *      rows and parses JSON-shaped extractedContent for pretty display.
+ *
+ * KEY VARIABLES / PROPS / EXPORTS:
+ *   params.id           — Strapi worksheet documentId
+ *   params.submissionId — patient submission id
+ *   worksheet           — flat WorksheetItem from useWorksheetById
+ *   submission          — WorksheetSubmissionRow from useWorksheetSubmissionById
+ *   summary             — submission.aiSummary trimmed
+ *   answersSorted       — submission.answers sorted by order ascending
+ *   onAnalyze           — async handler that runs LLM analysis + revalidates
+ *
+ * DEPENDENCIES:
+ *   useWorksheetById, useWorksheetSubmissionById, analyzeWorksheet
+ *   (from @/hooks/use-worksheets); WorksheetAnswerResponseDto from @/sdk/backend-v2
+ *   shadcn Button/Card/Skeleton, react-markdown, lucide-react icons
+ *
+ * LAST UPDATED: 2026-05-06 — switched to SDK types via the worksheets hook layer.
+ */
 "use client";
 
 import { AlertCircle, ArrowLeft, Loader2, Sparkles } from "lucide-react";
@@ -15,7 +52,7 @@ import {
   useWorksheetSubmissionById,
   type WorksheetItem,
 } from "@/hooks/use-worksheets";
-import type { WorksheetAnswerRow } from "@/lib/patient-worksheets-api";
+import type { WorksheetAnswerResponseDto } from "@/sdk/backend-v2";
 
 /** Keys look like `q_<questionCuid>_step_<index>`. */
 function labelForQuestionKey(
@@ -33,7 +70,7 @@ function labelForQuestionKey(
   return "Your response";
 }
 
-function AnswerDisplay({ row }: { row: WorksheetAnswerRow }) {
+function AnswerDisplay({ row }: { row: WorksheetAnswerResponseDto }) {
   const isUpload = !!(row.fileUrl?.trim() || row.fileName?.trim());
 
   if (isUpload) {
@@ -241,7 +278,7 @@ export default function WorksheetSubmissionResultPage({
             <CardContent className="pt-4 pb-4 space-y-3">
               <h2 className="text-sm font-semibold text-foreground">Your answers</h2>
               <ul className="space-y-4">
-                {answersSorted.map((a: WorksheetAnswerRow) => (
+                {answersSorted.map((a: WorksheetAnswerResponseDto) => (
                   <li
                     key={a.id}
                     className="text-sm border-b border-border last:border-0 pb-4 last:pb-0"
