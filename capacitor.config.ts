@@ -86,7 +86,7 @@ const config: CapacitorConfig = {
       // 'native' lets the OS resize the WebView; the safe-area listener in
       // lib/capacitor/keyboard.ts updates --keyboard-height for layouts that
       // need to react explicitly.
-      resize: 'native',
+      resize: undefined,
       resizeOnFullScreen: true,
     },
   },
