@@ -26,7 +26,7 @@
  *   @/providers/app-providers
  *   globals.css
  *
- * LAST UPDATED: 2026-05-06 — replace local @font-face + Urbanist with Inter via next/font/google
+ * LAST UPDATED: 2026-05-06 — fix safe-area top div to be fixed/pinned so it doesn't scroll away
  */
 
 import { GoogleAnalytics, GoogleTagManager } from "@next/third-parties/google";
@@ -60,7 +60,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         suppressHydrationWarning
         className="font-sans pl-(--safe-area-inset-left) pr-(--safe-area-inset-right)"
       >
-        <div className="pt-(--safe-area-inset-top) top-0 sticky"></div>
+        {/* Safe-area top — fixed so it stays pinned when content scrolls beneath it */}
+        <div className="fixed top-0 inset-x-0 h-[env(safe-area-inset-top)] bg-background z-100" />
+
         <GoogleTagManager gtmId={siteConfig.gtmId} />
         <GoogleAnalytics gaId={siteConfig.gaId} />
 
