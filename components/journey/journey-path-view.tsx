@@ -829,11 +829,12 @@ export function JourneyPathView({ journey, progress, journeyId }: JourneyPathVie
         </div>
       )}
 
-      {/* "Day complete" cooldown banner — driven by server nextDayUnlocksAt.
-          Rendered inline (not sticky) so it's guaranteed visible under the
-          app bar on every scroll container. */}
+      {/* "Day complete" cooldown banner — sticky below the PageHeader so it
+          remains visible as the user scrolls through the journey path.
+          top offset = safe-area-inset-top + 56px (PageHeader height). z-10 keeps
+          it below PageHeader's z-20. */}
       {showCooldownBanner && (
-        <div className="mx-4 mt-3 rounded-2xl overflow-hidden border border-emerald-200 shadow-[var(--sh-3)]">
+        <div className="sticky top-[calc(env(safe-area-inset-top)+56px)] z-10 mx-4 mt-3 rounded-2xl overflow-hidden border border-emerald-200 shadow-(--sh-3)">
           <div className="bg-gradient-to-br from-emerald-500 to-teal-600 px-4 py-3 flex items-start gap-3">
             <div className="relative w-11 h-11 rounded-2xl bg-gradient-to-br from-emerald-400 to-teal-500 flex-shrink-0 flex items-center justify-center shadow-[var(--sh-1)]">
               <div className="absolute -top-2 -right-2 w-7 h-7 rounded-full bg-white/10" />
