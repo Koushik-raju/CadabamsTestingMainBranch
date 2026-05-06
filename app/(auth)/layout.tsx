@@ -27,7 +27,7 @@
  *   JourneyReturnProvider   — contexts/journey-return-context
  *   JourneyReturnFab        — components/journey/journey-return-fab
  *
- * LAST UPDATED: 2026-05-05 — drop layout-level paddingTop. With
+ * LAST UPDATED: 2026-05-06 — add suppressHydrationWarning to layout div (stale Turbopack paddingTop). With
  *   StatusBar.overlaysWebView=false iOS reserves the bar space natively, so
  *   the WebView starts below the bar and an extra paddingTop just adds a
  *   visible gap. Bottom home-indicator inset stays. The safe-area plugin is
@@ -82,7 +82,12 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
     <SWRConfig value={swrConfig}>
       <BookingProvider>
         <JourneyReturnProvider>
-          <div style={layoutStyle}>{children}</div>
+          {/* suppressHydrationWarning: the Turbopack dev server may serve a
+              cached build that still has paddingTop in layoutStyle. The CSS
+              vars are equivalent on native — suppress the benign mismatch. */}
+          <div style={layoutStyle} suppressHydrationWarning>
+            {children}
+          </div>
           <JourneyReturnFab />
         </JourneyReturnProvider>
       </BookingProvider>

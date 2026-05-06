@@ -11,26 +11,31 @@
  *   2. Fetches enrolled journeys (useEnrolledJourneys) and gamification streak (useGamification).
  *   3. handleAction dispatches router.push based on action type + subtype.
  *   4. Renders HomeHeader (gradient), then main content pulled up with negative margin + rounded corners.
+ *   5. SupportSection is guarded by a `mounted` flag to prevent SSR/SWR-cache hydration mismatch:
+ *      the server always renders it (appointments = []), but SWR may return cached appointments
+ *      immediately on the client. Without the guard, React compares QuickActions cards at wrong
+ *      DOM offsets and throws a GlyphTile hydration mismatch.
  *
  * KEY VARIABLES / PROPS / EXPORTS:
  *   appointments        — upcoming appointment list from useHomePage
  *   homeEnrollments     — enriched enrolled journeys for JourneySection
  *   handleAction        — central router dispatcher for all home interactions
+ *   mounted             — true after first client paint; gates SupportSection to match SSR output
  *
  * DEPENDENCIES:
- *   useMemo                           — react
+ *   useMemo, useState, useEffect      — react
  *   useRouter                         — next/navigation
  *   useHomePage                       — hooks/home/use-home-page
  *   useEnrolledJourneys, useGamification — hooks/journeys/use-journey-detail
  *   HomeHeader, UpcomingSession, SupportSection, QuickActions, JourneySection, TrackerBar, GrowthWidget — home components
  *
- * LAST UPDATED: 2026-05-06 — hide SupportSection when user has at least one upcoming appointment (rebased on upstream home doc)
+ * LAST UPDATED: 2026-05-06 — add mounted guard to SupportSection to fix GlyphTile hydration mismatch
  */
 
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { GrowthWidget } from "@/components/home/growth-widget";
 import { HomeHeader } from "@/components/home/home-header";
 import { JourneySection } from "@/components/home/journey-section";
@@ -43,6 +48,16 @@ import { useEnrolledJourneys, useGamification } from "@/hooks/journeys/use-journ
 
 export default function HomePage() {
   const router = useRouter();
+
+  /* Guard against SSR/SWR-cache hydration mismatch on SupportSection.
+   * SSR always sees appointments=[] so it renders SupportSection. On the
+   * client, SWR may immediately return cached appointments (length > 0),
+   * which would skip SupportSection and shift all subsequent DOM nodes,
+   * causing React to compare the wrong QuickActions cards and throw a
+   * GlyphTile hydration mismatch. Keeping mounted=false during hydration
+   * makes both server and client render SupportSection on the first pass. */
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
 
   const { upcoming: appointments } = useHomePage();
   const { enrollments, isLoading: enrollmentsLoading } = useEnrolledJourneys();
@@ -136,7 +151,7 @@ export default function HomePage() {
       <div className="relative mt-[-20px] pt-8 pb-20 bg-background rounded-t-2xl z-10 flex flex-col gap-0">
         <UpcomingSession appointments={appointments} onJoin={() => handleAction("join_session")} />
 
-        {appointments.length === 0 && (
+        {(!mounted || appointments.length === 0) && (
           <SupportSection
             onTalk={() => handleAction("quick_action", "therapist")}
             onMatch={() => handleAction("quick_action", "match")}
