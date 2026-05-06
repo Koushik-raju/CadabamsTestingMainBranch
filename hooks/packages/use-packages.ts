@@ -6,7 +6,11 @@ import {
   packageProductDetailsKey,
   packageProductLinesKey,
 } from "@/lib/swr-keys";
-import type { BookPackageResultDto, RazorpayPaymentEnvelopeDto } from "@/sdk/backend-v2";
+import type {
+  BookPackageResultDto,
+  CrmBookPackageDto,
+  RazorpayPaymentEnvelopeDto,
+} from "@/sdk/backend-v2";
 import {
   crmControllerBookPackage,
   crmControllerGetAllPackages,
@@ -60,8 +64,8 @@ export function usePackageProductDetails(packageId: number) {
 
 // ── Mutation helpers ────────────────────────────────────────────────────────
 
-export async function bookPackage(data: Record<string, unknown>): Promise<BookPackageResultDto> {
-  const res = await crmControllerBookPackage({ body: { data } });
+export async function bookPackage(data: CrmBookPackageDto): Promise<BookPackageResultDto> {
+  const res = await crmControllerBookPackage({ body: data });
   if (!res.data?.booking_id) throw new Error(res.data?.message ?? "No booking ID returned.");
   return res.data;
 }
