@@ -678,6 +678,27 @@ export type DoctorBasicResponseDto = {
     book_appointments: boolean;
 };
 
+export type DoctorListingTestingCampusDto = {
+    /**
+     * City label shown to patients
+     */
+    city: string;
+    /**
+     * Campus / centre id
+     */
+    campus_id: number;
+    /**
+     * Centre display name
+     */
+    name: string;
+    /**
+     * false when no sub-campus for this row; otherwise Odoo sub-campus id
+     */
+    sub_campus_id: {
+        [key: string]: unknown;
+    };
+};
+
 export type DoctorListingPageResponseDto = {
     /**
      * Total number of matching doctors
@@ -687,6 +708,22 @@ export type DoctorListingPageResponseDto = {
      * Paginated list of doctors with rich profiles
      */
     doctors: Array<DoctorListingResponseDto>;
+    /**
+     * Set on single-doctor CRM `/get/doctors/testing` responses
+     */
+    doctor_id?: number;
+    /**
+     * In-person centres from CRM (only when CRM includes `campuses`)
+     */
+    campuses?: Array<DoctorListingTestingCampusDto>;
+    /**
+     * Calendar hints from CRM: date key YYYY-MM-DD → { available }
+     */
+    availability?: {
+        [key: string]: {
+            available?: boolean;
+        };
+    };
 };
 
 export type AppointmentDashboardResponseDto = {
@@ -1014,13 +1051,43 @@ export type ProductResponseDto = {
     ] | false | null;
 };
 
-export type BookPackageDto = {
+export type CrmBookPackageDto = {
     /**
-     * Package booking data to be sent to ERP
+     * CRM lead ID
      */
-    data: {
-        [key: string]: unknown;
-    };
+    lead_id: number;
+    /**
+     * Package database ID
+     */
+    package_id: number;
+    /**
+     * Campus ID
+     */
+    campus_id: number;
+    /**
+     * Booking date (YYYY-MM-DD)
+     */
+    date: string;
+    /**
+     * Caller / guardian name
+     */
+    caller_name: string;
+    /**
+     * Patient name
+     */
+    patient_name: string;
+    /**
+     * Payment mode
+     */
+    payment_mode: 'cash' | 'online';
+    /**
+     * Whether sessions should be booked in sequence order
+     */
+    sequence_booking: boolean;
+    /**
+     * Package stage at booking time (always "booked")
+     */
+    package_stage: 'booked';
 };
 
 export type BookPackageResultDto = {
@@ -1413,7 +1480,7 @@ export type RazorpayPackagePaymentDto = {
      */
     booked_package_id: number;
     /**
-     * Campus ID
+     * Campus ID (must match the package booking; 0 is invalid for ERP)
      */
     campus_id: number;
 };
@@ -2472,6 +2539,15 @@ export type BaselineAssessmentListResponseDto = {
      * Total number of records matching the query.
      */
     total: number;
+};
+
+export type BookPackageDto = {
+    /**
+     * Package booking data to be sent to ERP
+     */
+    data: {
+        [key: string]: unknown;
+    };
 };
 
 export type EditPackageDto = {
@@ -6266,6 +6342,48 @@ export type CrmControllerListDoctorsWithSlotsResponses = {
 
 export type CrmControllerListDoctorsWithSlotsResponse = CrmControllerListDoctorsWithSlotsResponses[keyof CrmControllerListDoctorsWithSlotsResponses];
 
+export type CrmControllerGetDoctorInPersonBookingContextData = {
+    body?: never;
+    path: {
+        /**
+         * Doctor res.partner id
+         */
+        id: number;
+    };
+    query?: {
+        /**
+         * Consultation type ID (1=In-Person). Forwarded to CRM as `consultation_type_ids` on `/get/doctors/testing`. Defaults to 1.
+         */
+        consultation_type_id?: number;
+        /**
+         * Availability window start (CRM expects date/time string, e.g. YYYY-MM-DD 00:00:00)
+         */
+        start_datetime?: string;
+        /**
+         * Availability window end (e.g. YYYY-MM-DD 23:59:59)
+         */
+        stop_datetime?: string;
+        /**
+         * Restrict context to this campus when pre-selected
+         */
+        campus_id?: number;
+        /**
+         * Restrict context to this sub-campus when pre-selected
+         */
+        sub_campus_id?: number;
+    };
+    url: '/api/v1/crm/doctors/{id}/in-person-booking-context';
+};
+
+export type CrmControllerGetDoctorInPersonBookingContextResponses = {
+    /**
+     * Same envelope as list doctors with slots (total_count, doctors, plus CRM extras if any)
+     */
+    200: DoctorListingPageResponseDto;
+};
+
+export type CrmControllerGetDoctorInPersonBookingContextResponse = CrmControllerGetDoctorInPersonBookingContextResponses[keyof CrmControllerGetDoctorInPersonBookingContextResponses];
+
 export type CrmControllerGetDoctorByIdData = {
     body?: never;
     path: {
@@ -6500,7 +6618,7 @@ export type CrmControllerGetPackageProductDetailsResponses = {
 export type CrmControllerGetPackageProductDetailsResponse = CrmControllerGetPackageProductDetailsResponses[keyof CrmControllerGetPackageProductDetailsResponses];
 
 export type CrmControllerBookPackageData = {
-    body: BookPackageDto;
+    body: CrmBookPackageDto;
     path?: never;
     query?: never;
     url: '/api/v1/crm/packages/book';
