@@ -24,7 +24,7 @@
  *   useEnrolledJourneys, useGamification — hooks/journeys/use-journey-detail
  *   HomeHeader, UpcomingSession, SupportSection, QuickActions, JourneySection, TrackerBar, GrowthWidget — home components
  *
- * LAST UPDATED: 2026-05-05 — drop orange status-bar override; bar stays cream (default) on home
+ * LAST UPDATED: 2026-05-06 — hide SupportSection when user has at least one upcoming appointment (rebased on upstream home doc)
  */
 
 "use client";
@@ -136,10 +136,12 @@ export default function HomePage() {
       <div className="relative mt-[-20px] pt-8 pb-20 bg-background rounded-t-2xl z-10 flex flex-col gap-0">
         <UpcomingSession appointments={appointments} onJoin={() => handleAction("join_session")} />
 
-        <SupportSection
-          onTalk={() => handleAction("quick_action", "therapist")}
-          onMatch={() => handleAction("quick_action", "match")}
-        />
+        {appointments.length === 0 && (
+          <SupportSection
+            onTalk={() => handleAction("quick_action", "therapist")}
+            onMatch={() => handleAction("quick_action", "match")}
+          />
+        )}
 
         <TrackerBar onTrackerClick={(key) => handleAction("quick_action", key)} />
 
