@@ -26,7 +26,7 @@
  *   @/providers/app-providers
  *   globals.css
  *
- * LAST UPDATED: 2026-05-06 — Added env(safe-area-inset-*) padding to body for notch/cutout devices (viewport-fit:cover already set)
+ * LAST UPDATED: 2026-05-06 — html `light` class (theme passthrough); body safe-area padding from upstream
  */
 import type { Metadata, Viewport } from "next";
 import { Urbanist } from "next/font/google";
@@ -56,7 +56,7 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" suppressHydrationWarning className={urbanist.variable}>
+    <html lang="en" suppressHydrationWarning className={`${urbanist.variable} light`}>
       <body
         suppressHydrationWarning
         className="font-sans overflow-x-hidden pt-(--safe-area-inset-top) pl-(--safe-area-inset-left) pr-(--safe-area-inset-right)"
