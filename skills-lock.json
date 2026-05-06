@@ -19,7 +19,20 @@
     "capacitor-best-practices": {
       "source": "cap-go/capacitor-skills",
       "sourceType": "github",
-      "computedHash": "9da56403dfd57025245e260d63d5ed3dcd74982ee8858f3b2186c396c25fac3d"
+      "skillPath": "skills/capacitor-best-practices/SKILL.md",
+      "computedHash": "5070b60d829a8bfab87c5a51db0543174d1b9be4a990e305a9b56a06054770a3"
+    },
+    "capacitor-plugins": {
+      "source": "cap-go/capacitor-skills",
+      "sourceType": "github",
+      "skillPath": "skills/capacitor-plugins/SKILL.md",
+      "computedHash": "0dcc5b53a908048e8844b941f20effadb7adbe5f92fbba657df30714a519e1e2"
+    },
+    "capacitor-testing": {
+      "source": "cap-go/capgo-skills",
+      "sourceType": "github",
+      "skillPath": "skills/capacitor-testing/SKILL.md",
+      "computedHash": "d4ecb92a8a34ebc6975aca358dcbeb14363f41b9ba46e1a909bde373039e05f5"
     },
     "find-skills": {
       "source": "vercel-labs/skills",
