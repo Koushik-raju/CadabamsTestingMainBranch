@@ -17,7 +17,6 @@
  *
  * KEY VARIABLES / PROPS / EXPORTS:
  *   AuthLayout              — default export wrapping {children}
- *   layoutStyle             — inline padding for the bottom home-indicator inset only
  *
  * DEPENDENCIES:
  *   useEffect               — react
@@ -27,12 +26,7 @@
  *   JourneyReturnProvider   — contexts/journey-return-context
  *   JourneyReturnFab        — components/journey/journey-return-fab
  *
- * LAST UPDATED: 2026-05-06 — add suppressHydrationWarning to layout div (stale Turbopack paddingTop). With
- *   StatusBar.overlaysWebView=false iOS reserves the bar space natively, so
- *   the WebView starts below the bar and an extra paddingTop just adds a
- *   visible gap. Bottom home-indicator inset stays. The safe-area plugin is
- *   still initialized in case any page wants to read --safe-area-inset-top
- *   directly (e.g. for inline styles).
+ * LAST UPDATED: 2026-05-06 — replace inline layoutStyle with .auth-layout-wrapper CSS class to eliminate hydration mismatch from stale Turbopack cache.
  */
 "use client";
 
@@ -45,9 +39,6 @@ import { applySafeAreaVars, subscribeSafeAreaChanges } from "@/lib/capacitor/saf
 import { setStatusBarColor, setStatusBarLight } from "@/lib/capacitor/status-bar";
 
 const swrConfig = { revalidateOnFocus: false };
-const layoutStyle = {
-  paddingBottom: "var(--safe-area-inset-bottom)",
-};
 
 export default function AuthLayout({ children }: { children: React.ReactNode }) {
   useEffect(() => {
@@ -63,10 +54,7 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
 
     /*
      * Populate --safe-area-inset-* CSS vars from the native plugin and keep
-     * them in sync. Must run before paint to avoid a frame where layoutStyle's
-     * paddingTop reads 0px and content flashes under the notch — the await in
-     * applySafeAreaVars is unavoidable but Capacitor's plugin call is fast.
-     * The cleanup removes the orientation-change listener on unmount.
+     * them in sync. The cleanup removes the orientation-change listener on unmount.
      */
     void applySafeAreaVars();
     let cleanupListener: (() => Promise<void>) | undefined;
@@ -82,12 +70,7 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
     <SWRConfig value={swrConfig}>
       <BookingProvider>
         <JourneyReturnProvider>
-          {/* suppressHydrationWarning: the Turbopack dev server may serve a
-              cached build that still has paddingTop in layoutStyle. The CSS
-              vars are equivalent on native — suppress the benign mismatch. */}
-          <div style={layoutStyle} suppressHydrationWarning>
-            {children}
-          </div>
+          <div className="auth-layout-wrapper">{children}</div>
           <JourneyReturnFab />
         </JourneyReturnProvider>
       </BookingProvider>
