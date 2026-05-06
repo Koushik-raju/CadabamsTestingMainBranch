@@ -29,7 +29,7 @@
  *   next/navigation useRouter, usePathname
  *   shadcn Button — components/ui/button
  *
- * LAST UPDATED: 2026-04-28 — Neo design system: shadow scale, color tokens, border radius
+ * LAST UPDATED: 2026-05-06 — fix dismiss X button: onPointerDown instead of onClick to survive Radix modal touch intercept
  */
 "use client";
 
@@ -88,9 +88,16 @@ export function JourneyReturnFab() {
             ) : null}
             <p className="mt-1 text-xs font-medium text-white/90">+10 XP earned</p>
           </div>
+          {/* onPointerDown instead of onClick: when a Radix modal Sheet is open it
+              intercepts the document click event for touch pointers, which can swallow
+              the onClick before it fires. onPointerDown fires at the target phase
+              (before any document-level Radix listener) so dismiss always goes through. */}
           <button
             type="button"
-            onClick={() => clear()}
+            onPointerDown={(e) => {
+              e.stopPropagation();
+              clear();
+            }}
             aria-label="Dismiss"
             className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-white/15 text-white/90 hover:bg-white/25"
           >
