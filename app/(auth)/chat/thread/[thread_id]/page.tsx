@@ -36,7 +36,7 @@
  *   useAgentChat, mastraDataContext, ChatHeader, MessageList, ChatInput,
  *   HistoryDrawer
  *
- * LAST UPDATED: 2026-05-04 — add new-chat FAB (SquarePen, bottom-right above input)
+ * LAST UPDATED: 2026-05-06 — fix gap/keyboard layout: container is now position:fixed, syncs top+height from visualViewport
  */
 "use client";
 
@@ -94,10 +94,11 @@ export default function ChatPage() {
   );
 
   /* iOS/Capacitor: the WKWebView layout viewport does NOT shrink when the
-   * software keyboard opens (unlike Android Chrome with interactiveWidget).
-   * Syncing the container height to window.visualViewport.height keeps the
-   * flex column sized to the visible area, so the input bar stays above the
-   * keyboard instead of being obscured by it. */
+   * software keyboard opens. We position the container as fixed (escaping the
+   * auth layout's paddingBottom) and sync both top and height from
+   * visualViewport so the container exactly matches the visible area at all
+   * times — before and after the keyboard opens. offsetTop handles cases where
+   * the browser scrolls the visual viewport rather than resizing it. */
   const containerRef = useRef<HTMLDivElement>(null);
   useLayoutEffect(() => {
     const vv = window.visualViewport;
@@ -105,6 +106,7 @@ export default function ChatPage() {
 
     const sync = () => {
       if (containerRef.current) {
+        containerRef.current.style.top = `${vv.offsetTop}px`;
         containerRef.current.style.height = `${vv.height}px`;
       }
     };
@@ -119,7 +121,7 @@ export default function ChatPage() {
   }, []);
 
   return (
-    <div ref={containerRef} className="flex h-[100dvh] flex-col overflow-hidden">
+    <div ref={containerRef} className="fixed inset-x-0 top-0 flex flex-col overflow-hidden">
       <ChatHeader onHistoryClick={() => setHistoryOpen(true)} />
 
       <MessageList
