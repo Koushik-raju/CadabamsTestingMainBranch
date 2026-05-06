@@ -55,9 +55,6 @@ export default function ChatHistoryPage() {
 
   return (
     <main className="relative flex flex-col min-h-screen bg-background">
-      {/* Safe-area top */}
-      <div className="pt-[max(env(safe-area-inset-top,0px),1rem)]" />
-
       <PageHeader title="My AI Chats" fallback="/home" hardBack="/home" />
 
       {isLoading ? (
