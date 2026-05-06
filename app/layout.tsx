@@ -6,10 +6,10 @@
  *   Wraps all pages with AppProviders (SWR, theme, etc.) and CapacitorInit for mobile shell support.
  *
  * LOGIC OVERVIEW:
- *   - Load fonts (Urbanist as legacy, Inter via @font-face in globals.css)
+ *   - Load Inter via next/font/google (variable font, injects --font-inter CSS var)
  *   - Define root metadata (title, description) — manifest auto-discovered from app/manifest.ts
  *   - Configure viewport for mobile/Capacitor
- *   - Inject GTM and GA scripts at afterInteractive
+ *   - Inject GTM via GoogleTagManager and GA via GoogleAnalytics (@next/third-parties/google)
  *   - Wrap HTML with AppProviders and CapacitorInit
  *   - Use overflow-x-clip (not hidden) to avoid breaking position:sticky in WebKit/Capacitor
  *
@@ -19,26 +19,25 @@
  *   RootLayout — Default export, accepts children ReactNode
  *
  * DEPENDENCIES:
- *   next/font/google (Urbanist)
- *   next/script (GTM/GA)
+ *   next/font/google (Inter)
+ *   @next/third-parties/google (GoogleTagManager, GoogleAnalytics)
  *   @/components/common/capacitor-init
  *   @/config/site (siteConfig.name, .description, .gtmId, .gaId)
  *   @/providers/app-providers
  *   globals.css
  *
- * LAST UPDATED: 2026-05-06 — html `light` class (theme passthrough); body safe-area padding from upstream
+ * LAST UPDATED: 2026-05-06 — replace local @font-face + Urbanist with Inter via next/font/google
  */
+
+import { GoogleAnalytics, GoogleTagManager } from "@next/third-parties/google";
 import type { Metadata, Viewport } from "next";
-import { Urbanist } from "next/font/google";
-import Script from "next/script";
+import { Inter } from "next/font/google";
 import { CapacitorInit } from "@/components/common/capacitor-init";
 import { siteConfig } from "@/config/site";
 import { AppProviders } from "@/providers/app-providers";
 import "./globals.css";
 
-/* Inter is loaded via @font-face in globals.css (3 optical cuts bundled locally).
-   Urbanist is kept via next/font/google for any legacy usage. */
-const urbanist = Urbanist({ variable: "--font-urbanist", subsets: ["latin"] });
+const inter = Inter({ variable: "--font-inter", subsets: ["latin"], display: "swap" });
 
 export const metadata: Metadata = {
   title: siteConfig.name,
@@ -56,38 +55,14 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" suppressHydrationWarning className={`${urbanist.variable} light`}>
+    <html lang="en" suppressHydrationWarning className={`${inter.variable} light`}>
       <body
         suppressHydrationWarning
-        className="font-sans overflow-x-hidden  pl-(--safe-area-inset-left) pr-(--safe-area-inset-right)"
+        className="font-sans pl-(--safe-area-inset-left) pr-(--safe-area-inset-right)"
       >
         <div className="pt-(--safe-area-inset-top)"></div>
-        {/* Google Tag Manager */}
-        <Script id="gtm-script" strategy="afterInteractive">{`
-          (function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':new Date().getTime(),event:'gtm.js'});
-          var f=d.getElementsByTagName(s)[0],j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';
-          j.async=true;j.src='https://www.googletagmanager.com/gtm.js?id='+i+dl;
-          f.parentNode.insertBefore(j,f);})(window,document,'script','dataLayer','${siteConfig.gtmId}');
-        `}</Script>
-        <noscript>
-          <iframe
-            src={`https://www.googletagmanager.com/ns.html?id=${siteConfig.gtmId}`}
-            height="0"
-            width="0"
-            style={{ display: "none", visibility: "hidden" }}
-          />
-        </noscript>
-        {/* Google Analytics */}
-        <Script
-          src={`https://www.googletagmanager.com/gtag/js?id=${siteConfig.gaId}`}
-          strategy="afterInteractive"
-        />
-        <Script id="google-analytics" strategy="afterInteractive">{`
-          window.dataLayer=window.dataLayer||[];
-          function gtag(){dataLayer.push(arguments);}
-          gtag('js',new Date());
-          gtag('config','${siteConfig.gaId}',{page_title:document.title,page_location:window.location.href,send_page_view:true});
-        `}</Script>
+        <GoogleTagManager gtmId={siteConfig.gtmId} />
+        <GoogleAnalytics gaId={siteConfig.gaId} />
 
         {/*
           Use overflow-x-clip (not overflow-x-hidden) — in WebKit (iOS/Capacitor)

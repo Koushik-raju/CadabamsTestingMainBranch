@@ -55,6 +55,7 @@
     "@hookform/resolvers": "^5.2.2",
     "@mastra/ai-sdk": "^1.4.1",
     "@mastra/client-js": "^1.16.0",
+    "@next/third-parties": "^16.2.4",
     "@strapi/blocks-react-renderer": "^1.0.2",
     "ai": "^6.0.174",
     "axios": "^1.16.0",
