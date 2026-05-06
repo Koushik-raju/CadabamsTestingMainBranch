@@ -26,7 +26,7 @@
  *   @/providers/app-providers
  *   globals.css
  *
- * LAST UPDATED: 2026-05-06 — fix safe-area top div to be fixed/pinned so it doesn't scroll away
+ * LAST UPDATED: 2026-05-06 — mirror safe-area overlay pattern for bottom (pb + fixed bottom div)
  */
 
 import { GoogleAnalytics, GoogleTagManager } from "@next/third-parties/google";
@@ -58,10 +58,12 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="en" suppressHydrationWarning className={`${inter.variable} light`}>
       <body
         suppressHydrationWarning
-        className="font-sans pl-(--safe-area-inset-left) pr-(--safe-area-inset-right)"
+        className="font-sans pt-[env(safe-area-inset-top)] pb-[env(safe-area-inset-bottom)] pl-(--safe-area-inset-left) pr-(--safe-area-inset-right)"
       >
         {/* Safe-area top — fixed so it stays pinned when content scrolls beneath it */}
         <div className="fixed top-0 inset-x-0 h-[env(safe-area-inset-top)] bg-background z-100" />
+        {/* Safe-area bottom — mirrors the top pattern; blocks content bleeding into home-indicator zone */}
+        <div className="fixed bottom-0 inset-x-0 h-[env(safe-area-inset-bottom)] bg-background z-100" />
 
         <GoogleTagManager gtmId={siteConfig.gtmId} />
         <GoogleAnalytics gaId={siteConfig.gaId} />

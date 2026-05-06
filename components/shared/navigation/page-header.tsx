@@ -28,7 +28,7 @@
  *   BackButton — components/shared/navigation/back-button.tsx
  *   Sidebar    — components/shared/navigation/sidebar.tsx
  *
- * LAST UPDATED: 2026-05-04 — added hamburger menu button wired to shared Sidebar
+ * LAST UPDATED: 2026-05-06 — sticky top-0 → top-[env(safe-area-inset-top)] so header clears the fixed safe-area overlay in layout.tsx and back button stays tappable
  */
 
 "use client";
@@ -71,7 +71,7 @@ export function PageHeader({
       <div
         className={cn(
           "flex items-center gap-2 px-5 pt-2 pb-1 bg-background",
-          sticky && "sticky top-0 z-10",
+          sticky && "sticky top-[env(safe-area-inset-top)] z-10",
           className,
         )}
       >
