@@ -12,6 +12,7 @@
 - **Opening a file**: If the header comment is missing, ADD IT before doing anything else.
 - **Creating a file**: Add the header as the first thing written.
 - **Editing a file**: If you change logic or add/remove variables, UPDATE the header to reflect the change.
+- Load karpathy-guidelines at the start.
 
 ### What the header must include
 
