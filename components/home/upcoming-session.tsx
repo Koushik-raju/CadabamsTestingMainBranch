@@ -17,14 +17,15 @@
  *   onJoin       — callback when user taps the Join button
  *
  * DEPENDENCIES:
- *   Button, SlotDetailDto, lucide-react
+ *   Button, GlyphTile, SlotDetailDto, lucide-react
  *
- * LAST UPDATED: 2026-04-28 — Dark hero card style, mt-primary Join button,
- *   design-system type scale and tint colors
+ * LAST UPDATED: 2026-05-06 — Switch card to white bg-card theme, fix text colors
+ *   to use foreground/muted-foreground tokens
  */
 
 import { CalendarCheck, Video } from "lucide-react";
 import Link from "next/link";
+import { GlyphTile } from "@/components/shared/glyph-tile";
 import { Button } from "@/components/ui/button";
 import type { SlotDetailDto } from "@/hooks/appointments/use-appointments-page";
 
@@ -97,26 +98,18 @@ export function UpcomingSession({ appointments, onJoin }: Props) {
             <Link
               key={apt.id}
               href={`/consult/appointments/${apt.id}`}
-              className="flex items-center gap-3 p-4 rounded-[20px] active:scale-[0.97] transition-transform duration-[140ms]"
-              style={{
-                background: "#1C2433",
-                boxShadow: "0 8px 24px rgba(15,23,42,0.12)",
-              }}
+              className="flex items-center gap-3 p-4 rounded-[20px] bg-card border border-border shadow-sm active:scale-[0.97] transition-transform duration-[140ms]"
             >
-              {/* Green glyph tile — calendar icon */}
-              <div
-                className="w-11 h-11 rounded-[12px] flex items-center justify-center flex-shrink-0"
-                style={{ background: "#E6F4EA" }}
-              >
-                <CalendarCheck className="w-5 h-5" style={{ color: "#1F8B4C" }} />
-              </div>
+              <GlyphTile icon={CalendarCheck} tint="green" size="md" />
 
               <div className="flex-grow min-w-0">
-                <h4 className="text-[15px] font-bold text-white line-clamp-1">{doctorName}</h4>
+                <h4 className="text-[15px] font-bold text-foreground line-clamp-1">{doctorName}</h4>
                 {speciality && (
-                  <p className="text-[12px] text-white/60 line-clamp-1 mt-0.5">{speciality}</p>
+                  <p className="text-[12px] text-muted-foreground line-clamp-1 mt-0.5">
+                    {speciality}
+                  </p>
                 )}
-                <p className="text-[12px] text-white/50 mt-1">
+                <p className="text-[12px] text-muted-foreground mt-1">
                   {formatDateTime(apt.start_datetime)}
                 </p>
               </div>
