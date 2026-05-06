@@ -2,6 +2,43 @@
 
 ---
 
+# ⛔ NON-BREAKABLE RULE — NEVER USE INLINE JSX COMMENTS BEFORE THE ROOT ELEMENT
+
+**This rule is mandatory. Violating it corrupts the file.**
+
+A JSX comment placed before the opening tag inside `return()` is invalid and causes Biome to garble the entire file — breaking template literals, attribute selectors, and surrounding expressions.
+
+### Wrong — comment before the root element
+```tsx
+return (
+  {/* this is invalid JSX */}
+  <div className="...">
+```
+
+### Correct — comment above the return, or inside a fragment
+```tsx
+// plain JS comment above the return
+return (
+  <div className="...">
+```
+```tsx
+return (
+  <>
+    {/* comment inside a fragment is valid */}
+    <div className="...">
+  </>
+);
+```
+
+### When this matters
+- Any time you add an explanatory comment to a function that returns a single root element.
+- Always use a `//` comment above `return()`, never `{/* */}` as the first thing inside it.
+
+### Why
+Biome's formatter treats `{/* ... */}` before the root JSX element as a syntax error and rewrites surrounding code destructively. This happened in `journey-path-view.tsx` and corrupted template literals and querySelector selectors across the whole file.
+
+---
+
 # ⛔ NON-BREAKABLE RULE — FILE HEADER COMMENTS
 
 **This rule is mandatory. It cannot be skipped, abbreviated, or deferred.**
