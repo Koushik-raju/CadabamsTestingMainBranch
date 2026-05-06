@@ -215,7 +215,7 @@ export default function WorksheetSubmissionResultPage({
         </p>
 
         {summary ? (
-          <Card className="border-border shadow-[var(--sh-2)]">
+          <Card className="border-border shadow-(--sh-2)">
             <CardContent className="pt-5 pb-4 space-y-3">
               <div className="flex items-center justify-between gap-2 flex-wrap">
                 <AIPill />
