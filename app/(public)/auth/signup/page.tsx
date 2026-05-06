@@ -21,7 +21,7 @@
  *   CountryPicker — country-picker.tsx
  *   next/image, shadcn Skeleton, lucide-react ArrowLeft
  *
- * LAST UPDATED: 2026-05-04 — removed notification and permissions steps; MCQ steps use bottom sheet for options
+ * LAST UPDATED: 2026-05-06 — keyboard-overlap fix: visualViewport padding on step content container
  */
 
 "use client";
@@ -30,6 +30,7 @@ import { ArrowLeft } from "lucide-react";
 import Image from "next/image";
 import { Suspense } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useKeyboardPadding } from "@/hooks/use-keyboard-padding";
 import { cn } from "@/lib/utils";
 import { SignupProvider, useSignupContext } from "./context";
 import { CountryPicker } from "./country-picker";
@@ -53,6 +54,7 @@ import { StepThanksCheckIn } from "./step-thanks-check-in";
 
 function SignupLayout() {
   const { step, visibleSteps, currentIndex, isFirst, goBack } = useSignupContext();
+  const bottomPadding = useKeyboardPadding();
 
   return (
     <div className="min-h-screen flex flex-col bg-background">
@@ -109,7 +111,10 @@ function SignupLayout() {
       )}
 
       {/* ── Step content ─────────────────────────────────────────────── */}
-      <div className="flex flex-col flex-1 px-5 pb-8 overflow-y-auto">
+      <div
+        className="flex flex-col flex-1 px-5 overflow-y-auto"
+        style={{ paddingBottom: bottomPadding }}
+      >
         {step === "service-for" && <StepServiceFor />}
         {step === "patient-form" && <StepPatientForm />}
         {step === "date-of-birth" && <StepDateOfBirth />}

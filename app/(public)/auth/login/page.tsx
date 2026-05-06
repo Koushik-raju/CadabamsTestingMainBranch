@@ -38,7 +38,7 @@
  *   lucide-react           — ArrowLeft, Check, ChevronDown, Search
  *   next/image             — auth-bg.png hero image
  *
- * LAST UPDATED: 2026-05-04 — Banani-style redesign with auth-bg.png hero
+ * LAST UPDATED: 2026-05-06 — keyboard-overlap fix: scrollable body + visualViewport padding
  */
 
 "use client";
@@ -60,6 +60,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useAuth } from "@/hooks/use-auth";
 import { useAuthActions } from "@/hooks/use-auth-actions";
+import { useKeyboardPadding } from "@/hooks/use-keyboard-padding";
 
 interface Country {
   name: string;
@@ -83,6 +84,8 @@ function LoginContent() {
   const router = useRouter();
   const { login } = useAuth();
   const { sendOtp, verifyLogin, isSendingOtp, isVerifying } = useAuthActions();
+
+  const bottomPadding = useKeyboardPadding();
 
   const [step, setStep] = useState<"phone" | "otp">("phone");
   const [otp, setOtp] = useState("");
@@ -223,7 +226,10 @@ function LoginContent() {
       </div>
 
       {/* ── Page body ────────────────────────────────────────────────────── */}
-      <div className="flex-1 flex flex-col px-6 pb-8">
+      <div
+        className="flex-1 flex flex-col px-6 overflow-y-auto"
+        style={{ paddingBottom: bottomPadding }}
+      >
         {step === "phone" ? (
           <>
             <h1 className="text-[26px] font-bold text-gray-900 mt-8 mb-2">Start your journey</h1>
@@ -259,6 +265,9 @@ function LoginContent() {
                         onChange={(e) => field.onChange(e.target.value)}
                         placeholder="Mobile number"
                         className="flex-1 rounded-2xl bg-white px-4 text-[15px] text-gray-900 placeholder:text-gray-400 outline-none focus:ring-2 focus:ring-orange-300 transition"
+                        onFocus={(e) =>
+                          e.currentTarget.scrollIntoView({ behavior: "smooth", block: "center" })
+                        }
                       />
                     </div>
                     {fieldState.error && (
