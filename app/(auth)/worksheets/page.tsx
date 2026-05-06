@@ -18,11 +18,11 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useAuth } from "@/hooks/shared/auth/use-auth";
 import {
   type AssignedWorksheetItem,
-  type WorksheetItem,
   getWorksheetCategories,
   useAssignedWorksheets,
   useFilteredWorksheets,
   useWorksheets,
+  type WorksheetItem,
 } from "@/hooks/use-worksheets";
 
 export default function WorksheetsPage() {
@@ -59,8 +59,7 @@ export default function WorksheetsPage() {
   });
 
   const allWorksheets: WorksheetItem[] = useMemo(
-    () =>
-      (worksheetPages ?? []).flatMap((p: { items?: WorksheetItem[] }) => p?.items ?? []),
+    () => (worksheetPages ?? []).flatMap((p: { items?: WorksheetItem[] }) => p?.items ?? []),
     [worksheetPages],
   );
 

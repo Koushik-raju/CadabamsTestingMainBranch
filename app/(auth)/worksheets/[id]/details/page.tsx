@@ -148,9 +148,7 @@ export default function WorksheetDetailsPage({ params }: { params: Promise<{ id:
 
           {/* Description */}
           {worksheet.description && (
-            <p className="text-sm text-muted-foreground leading-relaxed">
-              {worksheet.description}
-            </p>
+            <p className="text-sm text-muted-foreground leading-relaxed">{worksheet.description}</p>
           )}
 
           {/* Stats row */}

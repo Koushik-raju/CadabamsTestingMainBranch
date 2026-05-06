@@ -2,16 +2,20 @@
  * Worksheet detail + patient submissions (backend patient-worksheets API).
  */
 import useSWR from "swr";
-import { worksheetByIdKey, worksheetSubmissionsKey, worksheetSubmissionByIdKey } from "@/lib/swr-keys";
 import {
   analyzeWorksheetSubmission,
+  type CreateWorksheetSubmissionBody,
   createWorksheetSubmission,
   getMyWorksheetSubmission,
   listMyWorksheetSubmissions,
-  type CreateWorksheetSubmissionBody,
   type WorksheetAnswerPayload,
   type WorksheetSubmissionRow,
 } from "@/lib/patient-worksheets-api";
+import {
+  worksheetByIdKey,
+  worksheetSubmissionByIdKey,
+  worksheetSubmissionsKey,
+} from "@/lib/swr-keys";
 import type { WorksheetResponseDto } from "@/sdk/backend-v2";
 import { cmsWorksheetsControllerFindOne } from "@/sdk/backend-v2";
 import { mapWorksheet, type WorksheetItem } from "./use-worksheets-page";
@@ -19,14 +23,15 @@ import { mapWorksheet, type WorksheetItem } from "./use-worksheets-page";
 export type { WorksheetItem };
 
 export function useWorksheetById(id: string | null) {
-  const { data: raw, isLoading, error } = useSWR(
-    id ? worksheetByIdKey(id) : null,
-    async (): Promise<WorksheetResponseDto | null> => {
-      const res = await cmsWorksheetsControllerFindOne({ path: { id: id! } });
-      if (res.error) throw new Error(JSON.stringify(res.error));
-      return res.data ?? null;
-    },
-  );
+  const {
+    data: raw,
+    isLoading,
+    error,
+  } = useSWR(id ? worksheetByIdKey(id) : null, async (): Promise<WorksheetResponseDto | null> => {
+    const res = await cmsWorksheetsControllerFindOne({ path: { id: id! } });
+    if (res.error) throw new Error(JSON.stringify(res.error));
+    return res.data ?? null;
+  });
 
   const worksheet: WorksheetItem | null = raw ? mapWorksheet(raw) : null;
 
@@ -71,7 +76,9 @@ export async function submitWorksheet(
         "Patient uploaded a completed worksheet file.",
         typeof rest.fileName === "string" && `File name: ${rest.fileName}`,
         typeof rest.fileType === "string" && `File type: ${rest.fileType}`,
-        typeof rest.aiSummary === "string" && rest.aiSummary.trim() && `Reflection: ${rest.aiSummary}`,
+        typeof rest.aiSummary === "string" &&
+          rest.aiSummary.trim() &&
+          `Reflection: ${rest.aiSummary}`,
       ].filter(Boolean) as string[];
       extractedContent = lines.join("\n");
     } else if (pick !== undefined && pick !== null && pick !== "") {
@@ -123,8 +130,7 @@ export async function analyzeWorksheet(submissionId: string): Promise<WorksheetS
 }
 
 export function useWorksheetSubmissionById(submissionId: string | null) {
-  return useSWR(
-    submissionId ? worksheetSubmissionByIdKey(submissionId) : null,
-    async () => getMyWorksheetSubmission(submissionId!),
+  return useSWR(submissionId ? worksheetSubmissionByIdKey(submissionId) : null, async () =>
+    getMyWorksheetSubmission(submissionId!),
   );
 }

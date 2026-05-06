@@ -109,7 +109,9 @@ export async function createWorksheetSubmission(
   return data;
 }
 
-export async function analyzeWorksheetSubmission(submissionId: string): Promise<WorksheetSubmissionRow> {
+export async function analyzeWorksheetSubmission(
+  submissionId: string,
+): Promise<WorksheetSubmissionRow> {
   const { data } = await apiClient.post<WorksheetSubmissionRow>(
     `/api/v1/patient-worksheets/analyze/${encodeURIComponent(submissionId)}`,
   );

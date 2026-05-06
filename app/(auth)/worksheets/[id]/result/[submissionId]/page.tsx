@@ -18,7 +18,10 @@ import {
 import type { WorksheetAnswerRow } from "@/lib/patient-worksheets-api";
 
 /** Keys look like `q_<questionCuid>_step_<index>`. */
-function labelForQuestionKey(questionKey: string, worksheet: WorksheetItem | null | undefined): string {
+function labelForQuestionKey(
+  questionKey: string,
+  worksheet: WorksheetItem | null | undefined,
+): string {
   const m = questionKey.match(/^q_(.+)_step_(\d+)$/);
   if (!m) return "Your response";
   const [, qid, stepStr] = m;
@@ -97,8 +100,12 @@ export default function WorksheetSubmissionResultPage({
 }) {
   const { id: worksheetId, submissionId } = use(params);
   const { data: worksheet, isLoading: wsLoading } = useWorksheetById(worksheetId);
-  const { data: submission, isLoading: subLoading, error, mutate } =
-    useWorksheetSubmissionById(submissionId);
+  const {
+    data: submission,
+    isLoading: subLoading,
+    error,
+    mutate,
+  } = useWorksheetSubmissionById(submissionId);
   const [analyzing, setAnalyzing] = useState(false);
   const [analyzeErr, setAnalyzeErr] = useState<string | null>(null);
 
@@ -166,7 +173,9 @@ export default function WorksheetSubmissionResultPage({
       />
 
       <div className="px-4 pt-2 space-y-4">
-        <p className="text-xs text-muted-foreground">Submitted {formatDate(submission.submittedAt)}</p>
+        <p className="text-xs text-muted-foreground">
+          Submitted {formatDate(submission.submittedAt)}
+        </p>
 
         {summary ? (
           <Card className="border-border shadow-[var(--sh-2)]">
@@ -233,7 +242,10 @@ export default function WorksheetSubmissionResultPage({
               <h2 className="text-sm font-semibold text-foreground">Your answers</h2>
               <ul className="space-y-4">
                 {answersSorted.map((a: WorksheetAnswerRow) => (
-                  <li key={a.id} className="text-sm border-b border-border last:border-0 pb-4 last:pb-0">
+                  <li
+                    key={a.id}
+                    className="text-sm border-b border-border last:border-0 pb-4 last:pb-0"
+                  >
                     <p className="text-sm font-medium text-foreground mb-2 leading-snug">
                       {labelForQuestionKey(a.questionKey, worksheet ?? undefined)}
                     </p>

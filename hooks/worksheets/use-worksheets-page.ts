@@ -3,10 +3,16 @@
  */
 import useSWR from "swr";
 import useSWRInfinite from "swr/infinite";
+import {
+  getAssignedBucketItems,
+  getAssignmentMetadata,
+} from "@/lib/patient-assigned-content-buckets";
 import { assignedWorksheetsKey, worksheetsKey } from "@/lib/swr-keys";
-import { getAssignedBucketItems, getAssignmentMetadata } from "@/lib/patient-assigned-content-buckets";
 import type { WorksheetResponseDto } from "@/sdk/backend-v2";
-import { cmsWorksheetsControllerFindAll, patientAssignedContentControllerListAssigned } from "@/sdk/backend-v2";
+import {
+  cmsWorksheetsControllerFindAll,
+  patientAssignedContentControllerListAssigned,
+} from "@/sdk/backend-v2";
 
 function extractString(val: unknown): string | null {
   if (val == null) return null;
@@ -94,7 +100,8 @@ export function mapWorksheet(item: WorksheetResponseDto): WorksheetItem {
   const labelStr = extractString(item.label);
   const titleStr = item.title || labelStr || "";
   const row = item as WorksheetResponseDto & { documentId?: string | null };
-  const documentId = typeof row.documentId === "string" && row.documentId.trim() ? row.documentId.trim() : null;
+  const documentId =
+    typeof row.documentId === "string" && row.documentId.trim() ? row.documentId.trim() : null;
 
   return {
     id: item.id,

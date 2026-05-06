@@ -69,7 +69,11 @@ export function WorksheetSubmissionStep({
     const contentType = file.type || "application/octet-stream";
     setUploading(true);
     try {
-      const { uploadUrl, fileUrl: publicUrl, contentType: signedType } = await presignWorksheetUpload({
+      const {
+        uploadUrl,
+        fileUrl: publicUrl,
+        contentType: signedType,
+      } = await presignWorksheetUpload({
         fileName: file.name,
         contentType,
       });
