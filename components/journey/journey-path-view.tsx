@@ -273,19 +273,9 @@ export function JourneyPathView({ journey, progress, journeyId }: JourneyPathVie
     tickJourney(enrollmentId, journeyId).catch(console.error);
 
     // XP float for tasks completed while away — check now that progress is fresh.
-    const xpCheckStr = sessionStorage.getItem(`;
-  journey - xp - check - $;
-  {
-    journeyId;
-  }
-  `);
+    const xpCheckStr = sessionStorage.getItem(`journey-xp-check-${journeyId}`);
     if (xpCheckStr) {
-      sessionStorage.removeItem(`;
-  journey - xp - check - $;
-  {
-    journeyId;
-  }
-  `);
+      sessionStorage.removeItem(`journey-xp-check-${journeyId}`);
       try {
         const prevDoneIds: string[] = JSON.parse(xpCheckStr);
         const nowDoneIds =
@@ -305,51 +295,23 @@ export function JourneyPathView({ journey, progress, journeyId }: JourneyPathVie
   // Return-verification: restore scroll and revalidate enrollment only when
   // returning from a task page (detected via sessionStorage markers).
   useEffect(() => {
-    const savedY = sessionStorage.getItem(`;
-  journey - scroll - $;
-  {
-    journeyId;
-  }
-  `);
-    const savedDoneStr = sessionStorage.getItem(`;
-  journey - done - $;
-  {
-    journeyId;
-  }
-  `);
+    const savedY = sessionStorage.getItem(`journey-scroll-${journeyId}`);
+    const savedDoneStr = sessionStorage.getItem(`journey-done-${journeyId}`);
     const returningFromTask = !!savedY || !!savedDoneStr;
     console.log("[JourneyPathView] return-verification effect", { journeyId, returningFromTask });
 
     if (savedY) {
       window.scrollTo({ top: parseInt(savedY, 10), behavior: "instant" });
-      sessionStorage.removeItem(`;
-  journey - scroll - $;
-  {
-    journeyId;
-  }
-  `);
+      sessionStorage.removeItem(`journey-scroll-${journeyId}`);
     }
 
     if (savedDoneStr) {
-      sessionStorage.removeItem(`;
-  journey - done - $;
-  {
-    journeyId;
-  }
-  `);
+      sessionStorage.removeItem(`journey-done-${journeyId}`);
       try {
         const prevDoneIds: string[] = JSON.parse(savedDoneStr);
         // XP check runs after SWR re-fetch below; capture prevDone for later
         // comparison via a local variable — progress is stale here so defer.
-        sessionStorage.setItem(
-          `;
-  journey - xp - check - $;
-  {
-    journeyId;
-  }
-  `,
-          JSON.stringify(prevDoneIds),
-        );
+        sessionStorage.setItem(`journey-xp-check-${journeyId}`, JSON.stringify(prevDoneIds));
       } catch {
         /* ignore */
       }
@@ -438,7 +400,7 @@ export function JourneyPathView({ journey, progress, journeyId }: JourneyPathVie
     let attempts = 0;
     const maxAttempts = 20;
     const intervalId = setInterval(() => {
-      const el = document.querySelector<HTMLElement>(`[(data-node-id = "${scrollTargetTaskId}")]`);
+      const el = document.querySelector<HTMLElement>(`[data-node-id="${scrollTargetTaskId}"]`);
       if (el) {
         clearInterval(intervalId);
         hasAutoScrolledRef.current = true;
@@ -454,7 +416,7 @@ export function JourneyPathView({ journey, progress, journeyId }: JourneyPathVie
 
   function scrollToCurrentNode() {
     if (!scrollTargetTaskId) return;
-    const el = document.querySelector<HTMLElement>(`[(data-node-id = "${scrollTargetTaskId}")]`);
+    const el = document.querySelector<HTMLElement>(`[data-node-id="${scrollTargetTaskId}"]`);
     if (el) {
       el.scrollIntoView({ behavior: "smooth", block: "center" });
       el.classList.add("scale-110");

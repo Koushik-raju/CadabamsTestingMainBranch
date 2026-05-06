@@ -29,7 +29,7 @@
  *   Sheet, Button, Avatar, Separator — shadcn/ui primitives
  *   GlyphTile      — project canonical icon-tile component
  *
- * LAST UPDATED: 2026-05-06 — Replaced raw HTML elements with shadcn primitives
+ * LAST UPDATED: 2026-05-06 — SheetHeader/Footer padding accounts for safe-area insets so content clears the fixed overlays
  */
 
 "use client";
@@ -85,7 +85,7 @@ export function Sidebar({ open, onClose }: SidebarProps) {
         <SheetTitle className="sr-only">Navigation menu</SheetTitle>
 
         {/* ── Header: avatar + name + close button ── */}
-        <SheetHeader className="flex-row items-center justify-between px-5 pb-6 pt-6">
+        <SheetHeader className="flex-row items-center justify-between px-5 pb-6 pt-[calc(env(safe-area-inset-top)+24px)]">
           <div className="flex items-center gap-3">
             <Avatar size="lg" className="border-2 border-[#F97316]/30">
               {profileImage && profileImage !== "/profile.png" ? (
@@ -154,7 +154,7 @@ export function Sidebar({ open, onClose }: SidebarProps) {
         </nav>
 
         {/* ── Footer branding ── */}
-        <SheetFooter className="px-5 pb-10">
+        <SheetFooter className="px-5 pb-[calc(env(safe-area-inset-bottom)+40px)]">
           <p className="text-center text-[11px] font-medium text-muted-foreground">
             Cadabam&apos;s Mental Health
           </p>
