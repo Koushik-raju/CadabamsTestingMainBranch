@@ -55,7 +55,7 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" suppressHydrationWarning className={`${inter.variable} light`}>
+    <html lang="en" suppressHydrationWarning className={inter.variable}>
       <body
         suppressHydrationWarning
         className="font-sans pt-[env(safe-area-inset-top)] pb-[env(safe-area-inset-bottom)] pl-(--safe-area-inset-left) pr-(--safe-area-inset-right)"

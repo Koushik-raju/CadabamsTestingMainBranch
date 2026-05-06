@@ -8,7 +8,7 @@
  * LOGIC OVERVIEW:
  *   Provider order (outermost → innermost):
  *     SWRProvider          — global SWR config (revalidateOnFocus: false)
- *     ThemeProvider        — passthrough (light-only; html `light` class in root layout)
+ *     ThemeProvider        — light/dark theme token injection
  *     DeviceProvider       — Capacitor device/platform detection
  *     PostHogProvider      — initialises PostHog analytics; must wrap AuthProvider
  *                            so posthog.init() runs before identify() is called
@@ -30,12 +30,12 @@
 
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-import { MastraDataContextProvider } from "@/contexts/mastra-data-context";
-import { AuthProvider } from "./auth-provider";
-import { DeviceProvider } from "./device-provider";
-import { PostHogProvider } from "./posthog-provider";
 import { SWRProvider } from "./swr-provider";
 import { ThemeProvider } from "./theme-provider";
+import { DeviceProvider } from "./device-provider";
+import { PostHogProvider } from "./posthog-provider";
+import { AuthProvider } from "./auth-provider";
+import { MastraDataContextProvider } from "@/contexts/mastra-data-context";
 
 export function AppProviders({ children }: { children: React.ReactNode }) {
   return (
@@ -46,7 +46,9 @@ export function AppProviders({ children }: { children: React.ReactNode }) {
               before AuthProvider calls usePostHogIdentify → posthog.identify() */}
           <PostHogProvider>
             <AuthProvider>
-              <MastraDataContextProvider>{children}</MastraDataContextProvider>
+              <MastraDataContextProvider>
+                {children}
+              </MastraDataContextProvider>
               <ToastContainer
                 position="top-right"
                 autoClose={3000}
