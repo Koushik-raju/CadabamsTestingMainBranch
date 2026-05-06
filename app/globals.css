@@ -623,6 +623,7 @@
   padding-bottom: max(var(--safe-area-inset-bottom), 1rem);
 }
 .auth-layout-wrapper {
+  padding-top: var(--safe-area-inset-top);
   padding-bottom: var(--safe-area-inset-bottom);
 }
 .pl-safe {

@@ -26,7 +26,7 @@
  *   JourneyReturnProvider   — contexts/journey-return-context
  *   JourneyReturnFab        — components/journey/journey-return-fab
  *
- * LAST UPDATED: 2026-05-06 — replace inline layoutStyle with .auth-layout-wrapper CSS class to eliminate hydration mismatch from stale Turbopack cache.
+ * LAST UPDATED: 2026-05-06 — add padding-top to .auth-layout-wrapper; suppressHydrationWarning on wrapper div for safe-area CSS var mismatch.
  */
 "use client";
 
@@ -70,7 +70,10 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
     <SWRConfig value={swrConfig}>
       <BookingProvider>
         <JourneyReturnProvider>
-          <div className="auth-layout-wrapper">{children}</div>
+          {/* suppressHydrationWarning: safe-area CSS vars are 0px on SSR, populated client-side by the native plugin */}
+          <div className="auth-layout-wrapper" suppressHydrationWarning>
+            {children}
+          </div>
           <JourneyReturnFab />
         </JourneyReturnProvider>
       </BookingProvider>
