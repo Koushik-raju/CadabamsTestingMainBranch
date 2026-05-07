@@ -24,7 +24,6 @@
  */
 "use client";
 
-import { useEffect } from "react";
 import { SWRConfig } from "swr";
 import { JourneyReturnFab } from "@/components/journey/journey-return-fab";
 import { BookingProvider } from "@/contexts/booking-context";
