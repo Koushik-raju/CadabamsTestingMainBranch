@@ -10,14 +10,17 @@
  *   Auto-verify is wired in context (useEffect on otp.length === 4).
  *   Manual "Verify" button calls context.handleSignup(otp).
  *   Resend button (visible after 30 s timer expires) calls context.handleResendOtp().
+ *   Web OTP API: attempts to read the SMS code silently on mount (Android Chrome /
+ *   iOS 18+ Safari). AbortController is cleaned up on unmount.
  *
  * DEPENDENCIES: useSignupContext, OTPInput component, coralGrad from ./types
  *
- * LAST UPDATED: 2026-05-04 — initial extraction
+ * LAST UPDATED: 2026-05-07 — Web OTP API + autoFocusFirst
  */
 
 "use client";
 
+import { useEffect, useRef } from "react";
 import { OTPInput } from "@/components/common/otp-input";
 import { useSignupContext } from "./context";
 import { coralGrad } from "./types";
@@ -34,6 +37,33 @@ export function StepSignupOtp() {
     handleResendOtp,
   } = useSignupContext();
 
+  const abortRef = useRef<AbortController | null>(null);
+
+  /*
+   * Web OTP API — silently reads the SMS code on Android Chrome and iOS 18+ Safari.
+   * The SMS body must include "@<origin> #<code>" for the browser to extract it.
+   * Falls through silently on unsupported browsers or when the user dismisses.
+   */
+  useEffect(() => {
+    if (!("OTPCredential" in window)) return;
+
+    abortRef.current = new AbortController();
+    const signal = abortRef.current.signal;
+
+    navigator.credentials
+      .get({ otp: { transport: ["sms"] }, signal } as CredentialRequestOptions)
+      .then((credential) => {
+        if (credential && "code" in credential) {
+          setOtp((credential as { code: string }).code);
+        }
+      })
+      .catch(() => {});
+
+    return () => {
+      abortRef.current?.abort();
+    };
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
   return (
     <div className="flex flex-col flex-1">
       <div className="pt-2 mb-8">
@@ -46,7 +76,7 @@ export function StepSignupOtp() {
         </p>
       </div>
 
-      <OTPInput value={otp} onChange={setOtp} />
+      <OTPInput value={otp} onChange={setOtp} autoFocusFirst />
 
       <button
         type="button"

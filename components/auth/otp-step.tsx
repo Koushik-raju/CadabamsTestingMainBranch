@@ -76,7 +76,7 @@ export function OtpStep({
       .get({ otp: { transport: ["sms"] }, signal } as CredentialRequestOptions)
       .then((credential) => {
         if (credential && "code" in credential) {
-          onChange((credential as OTPCredential).code);
+          onChange((credential as { code: string }).code);
         }
       })
       .catch(() => {

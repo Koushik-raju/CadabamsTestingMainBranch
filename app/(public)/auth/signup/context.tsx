@@ -29,7 +29,7 @@
  *   baselineAssessmentMeControllerCreate
  *   country-codes-list, react-toastify, next/navigation
  *
- * LAST UPDATED: 2026-05-04 — removed permissions/notification steps and all permission handlers
+ * LAST UPDATED: 2026-05-07 — locale-based country auto-detection
  */
 
 "use client";
@@ -211,11 +211,18 @@ export function SignupProvider({ children }: { children: ReactNode }) {
     });
   }, []);
 
+  /*
+   * Auto-detect country from browser locale on first mount.
+   * navigator.language returns a BCP-47 tag like "en-IN" or "hi-IN".
+   * The region sub-tag (after the last "-") maps directly to ISO-3166 country codes.
+   * Falls back to India ("IN") if the locale has no region or isn't in the list.
+   */
   useEffect(() => {
-    if (!country) {
-      const india = countries.find((c) => c.countryCode === "IN");
-      if (india) setCountry(india);
-    }
+    if (country || countries.length === 0) return;
+    const parts = navigator.language.split("-");
+    const regionCode = parts.length > 1 ? parts[parts.length - 1].toUpperCase() : "IN";
+    const detected = countries.find((c) => c.countryCode === regionCode);
+    setCountry(detected ?? countries.find((c) => c.countryCode === "IN") ?? countries[0]);
   }, [countries, country]);
 
   const suggested = useMemo(

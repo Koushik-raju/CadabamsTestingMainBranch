@@ -21,14 +21,14 @@
  *   CountryPicker — country-picker.tsx
  *   next/image, shadcn Skeleton, lucide-react ArrowLeft
  *
- * LAST UPDATED: 2026-05-06 — keyboard-overlap fix: visualViewport padding on step content container
+ * LAST UPDATED: 2026-05-07 — visualViewport scroll-into-view listener added to SignupLayout
  */
 
 "use client";
 
 import { ArrowLeft } from "lucide-react";
 import Image from "next/image";
-import { Suspense } from "react";
+import { Suspense, useEffect } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useKeyboardPadding } from "@/hooks/use-keyboard-padding";
 import { cn } from "@/lib/utils";
@@ -55,6 +55,24 @@ import { StepThanksCheckIn } from "./step-thanks-check-in";
 function SignupLayout() {
   const { step, visibleSteps, currentIndex, isFirst, goBack } = useSignupContext();
   const bottomPadding = useKeyboardPadding();
+
+  /*
+   * Scroll focused input into view whenever the soft keyboard opens/resizes.
+   * visualViewport "resize" fires as the keyboard appears — we then scroll the
+   * active element to centre it above the keyboard edge.
+   */
+  useEffect(() => {
+    const vv = window.visualViewport;
+    if (!vv) return;
+    const scrollFocused = () => {
+      const el = document.activeElement as HTMLElement | null;
+      if (el && (el.tagName === "INPUT" || el.tagName === "TEXTAREA")) {
+        el.scrollIntoView({ behavior: "smooth", block: "center" });
+      }
+    };
+    vv.addEventListener("resize", scrollFocused);
+    return () => vv.removeEventListener("resize", scrollFocused);
+  }, []);
 
   return (
     <div className="min-h-screen flex flex-col bg-background">

@@ -17,7 +17,7 @@
  *   shadcn/ui: none (bare inputs for Banani style)
  *   lucide-react: ChevronDown
  *
- * LAST UPDATED: 2026-05-06 — scrollIntoView on all inputs to keep them above keyboard
+ * LAST UPDATED: 2026-05-07 — 10-digit phone enforcement; autoFocus first name; autofill attrs; digit-strip on phone
  */
 
 "use client";
@@ -38,7 +38,7 @@ const schema = z.object({
     .string()
     .refine((v) => !v || /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v), "Invalid email address")
     .optional(),
-  phone: z.string().min(6, "Enter a valid phone number"),
+  phone: z.string().regex(/^\d{10}$/, "Enter a valid 10-digit mobile number"),
 });
 type FormValues = z.infer<typeof schema>;
 
@@ -92,11 +92,9 @@ export function StepSignupForm() {
             <input
               placeholder="First name *"
               autoComplete="given-name"
+              autoFocus
               {...register("firstName")}
               className={`w-full ${inputCls}`}
-              onFocus={(e) =>
-                e.currentTarget.scrollIntoView({ behavior: "smooth", block: "center" })
-              }
             />
             {errors.firstName && (
               <p className="text-xs text-red-500 ml-1">{errors.firstName.message}</p>
@@ -108,9 +106,6 @@ export function StepSignupForm() {
               autoComplete="family-name"
               {...register("lastName")}
               className={`w-full ${inputCls}`}
-              onFocus={(e) =>
-                e.currentTarget.scrollIntoView({ behavior: "smooth", block: "center" })
-              }
             />
           </div>
         </div>
@@ -123,7 +118,6 @@ export function StepSignupForm() {
             autoComplete="email"
             {...register("email")}
             className={`w-full ${inputCls}`}
-            onFocus={(e) => e.currentTarget.scrollIntoView({ behavior: "smooth", block: "center" })}
           />
           {errors.email && <p className="text-xs text-red-500 ml-1">{errors.email.message}</p>}
         </div>
@@ -146,17 +140,23 @@ export function StepSignupForm() {
                   <span>+{country?.callingCode ?? "91"}</span>
                   <ChevronDown className="size-3.5 text-gray-400" />
                 </button>
+                {/*
+                 * name="tel" + autocomplete="tel-national" enables browser/password-manager
+                 * autofill. Digits-only enforced at maxLength=10 + strip on change.
+                 */}
                 <input
                   type="tel"
                   inputMode="numeric"
-                  autoComplete="tel"
+                  name="tel"
+                  autoComplete="tel-national"
+                  maxLength={10}
                   value={field.value}
-                  onChange={(e) => field.onChange(e.target.value)}
-                  placeholder="Mobile number"
+                  onChange={(e) => {
+                    const digitsOnly = e.target.value.replace(/\D/g, "").slice(0, 10);
+                    field.onChange(digitsOnly);
+                  }}
+                  placeholder="10-digit mobile number"
                   className={`flex-1 ${inputCls}`}
-                  onFocus={(e) =>
-                    e.currentTarget.scrollIntoView({ behavior: "smooth", block: "center" })
-                  }
                 />
               </div>
               {fieldState.error && (
