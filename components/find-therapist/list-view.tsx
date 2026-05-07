@@ -25,15 +25,14 @@
  *   DOCTORS            — static doctor data
  *   PageHeader         — shared navigation header with hamburger
  *
- * LAST UPDATED: 2026-05-06 — replace custom BackButton header with PageHeader
+ * LAST UPDATED: 2026-05-07 — search into PageHeader built-in search row; "Not sure" banner into subHeader to eliminate navbar overlap
  */
 "use client";
 
-import { ArrowRight, ChevronDown, Search } from "lucide-react";
+import { ArrowRight, ChevronDown } from "lucide-react";
 import { useMemo, useState } from "react";
 import { DoctorCard } from "@/components/find-therapist/doctor-card";
 import { PageHeader } from "@/components/shared/navigation/page-header";
-import { Input } from "@/components/ui/input";
 import { DOCTORS } from "@/data/doctors";
 import { PROFESSION_OPTIONS, useFindTherapist } from "./context";
 import { ExperiencingSheet, LangSheet, LocationSheet, ModeSheet } from "./filter-sheets";
@@ -52,7 +51,6 @@ export function ListView() {
   } = useFindTherapist();
 
   const [search, setSearch] = useState("");
-  const [showSearch, setShowSearch] = useState(false);
   const [showMode, setShowMode] = useState(false);
   const [showLang, setShowLang] = useState(false);
   const [showExperiencing, setShowExperiencing] = useState(false);
@@ -164,45 +162,30 @@ export function ListView() {
       <PageHeader
         title="Find your therapist"
         fallback="/home"
-        right={
-          <button
-            onClick={() => setShowSearch((v) => !v)}
-            className="p-2 rounded-full hover:bg-black/5 transition-colors"
-            aria-label="Toggle search"
-          >
-            <Search className="w-5 h-5 text-foreground" />
-          </button>
+        searchValue={search}
+        searchPlaceholder="Search by name…"
+        onSearchChange={setSearch}
+        onSearchClear={() => setSearch("")}
+        subHeader={
+          <div className="px-5 pb-3">
+            <div className="bg-orange-500 rounded-2xl p-4 flex items-center justify-between gap-3">
+              <p className="text-white font-semibold text-sm leading-snug flex-1">
+                Not sure who to choose?
+              </p>
+              <button
+                onClick={startWizard}
+                className="flex items-center gap-1.5 bg-white text-orange-500 text-sm font-semibold px-3 py-2 rounded-full shrink-0"
+              >
+                Find my match
+                <ArrowRight className="w-4 h-4" />
+              </button>
+            </div>
+          </div>
         }
       />
 
-      {/* Search input */}
-      {showSearch && (
-        <div className="px-5 pb-3">
-          <Input
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            placeholder="Search by name…"
-            className="bg-card"
-          />
-        </div>
-      )}
-
       {/* Scrollable content */}
       <div className="px-5 pb-24 space-y-5 flex-1 mt-4">
-        {/* Orange banner */}
-        <div className="bg-orange-500 rounded-2xl p-4 flex items-center justify-between gap-3">
-          <p className="text-white font-semibold text-sm leading-snug flex-1">
-            Not sure who to choose?
-          </p>
-          <button
-            onClick={startWizard}
-            className="flex items-center gap-1.5 bg-white text-orange-500 text-sm font-semibold px-3 py-2 rounded-full shrink-0"
-          >
-            Find my match
-            <ArrowRight className="w-4 h-4" />
-          </button>
-        </div>
-
         {/* Specialist type pills — tap to filter by profession without a bottom sheet */}
         <div className="flex gap-2 overflow-x-auto no-scrollbar -mx-5 px-5">
           <button

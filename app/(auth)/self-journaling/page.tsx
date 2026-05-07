@@ -26,7 +26,7 @@
  *   DateEntriesCard               — components/journal/date-entries-card.tsx
  *   buildWeekBaseDays, toLocalDateStr — lib/journal-utils.ts
  *
- * LAST UPDATED: 2026-04-30 — restore Guided Reflection by filtering on parent status === PUBLISHED
+ * LAST UPDATED: 2026-05-07 — move Free Flow hero card into PageHeader subHeader to keep it sticky and remove overlap
  */
 "use client";
 
@@ -289,33 +289,33 @@ export default function JournalHomePage() {
         title="Journal"
         subtitle="Your safe space for thoughts and feelings."
         hardBack="/home"
+        subHeader={
+          <div className="px-4 pt-1 pb-3">
+            <button
+              onClick={() => router.push("/self-journaling/new")}
+              className="w-full bg-primary text-primary-foreground rounded-4xl overflow-hidden text-left shadow-[var(--sh-glow-orange)] hover:shadow-[var(--sh-3)] transition-all duration-300 hover:-translate-y-1 active:scale-[0.98]"
+            >
+              <div className="p-5 flex items-center justify-between min-h-[100px] relative overflow-hidden">
+                <div className="z-10">
+                  <h3 className="text-lg font-bold mb-1">Free Flow</h3>
+                  <p className="text-sm text-white/80 max-w-[200px] leading-tight">
+                    Write whatever is on your mind. No prompts, just you.
+                  </p>
+                </div>
+                <div className="w-12 h-12 bg-white rounded-full flex items-center justify-center flex-shrink-0 z-10 shadow-[var(--sh-2)]">
+                  <Pencil className="w-5 h-5 text-primary" />
+                </div>
+                <Pencil
+                  className="absolute right-[-20px] bottom-[-20px] text-white/5 rotate-12 pointer-events-none"
+                  size={120}
+                />
+              </div>
+            </button>
+          </div>
+        }
       />
 
       <div className="flex flex-col gap-6 mt-4">
-        {/* ── Free Flow hero ── */}
-        <div className="px-4">
-          <button
-            onClick={() => router.push("/self-journaling/new")}
-            className="w-full bg-primary text-primary-foreground rounded-4xl overflow-hidden text-left shadow-[var(--sh-glow-orange)] hover:shadow-[var(--sh-3)] transition-all duration-300 hover:-translate-y-1 active:scale-[0.98]"
-          >
-            <div className="p-5 flex items-center justify-between min-h-[100px] relative overflow-hidden">
-              <div className="z-10">
-                <h3 className="text-lg font-bold mb-1">Free Flow</h3>
-                <p className="text-sm text-white/80 max-w-[200px] leading-tight">
-                  Write whatever is on your mind. No prompts, just you.
-                </p>
-              </div>
-              <div className="w-12 h-12 bg-white rounded-full flex items-center justify-center flex-shrink-0 z-10 shadow-[var(--sh-2)]">
-                <Pencil className="w-5 h-5 text-primary" />
-              </div>
-              <Pencil
-                className="absolute right-[-20px] bottom-[-20px] text-white/5 rotate-12 pointer-events-none"
-                size={120}
-              />
-            </div>
-          </button>
-        </div>
-
         {/* ── Continue Journey ── */}
         {(subscriptionsLoading || subscriptions.length > 0) && (
           <section>

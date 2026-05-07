@@ -41,7 +41,7 @@
  *   globalMutate (swr) — revalidates enrollment key on return
  *   journeyEnrollmentKey — lib/swr-keys
  *
- * LAST UPDATED: 2026-05-06 — StatsBar sticky offset updated to calc(env(safe-area-inset-top)+64px) to clear PageHeader on notch devices and when subtitle is present
+ * LAST UPDATED: 2026-05-07 — export StatsBar + JourneyCooldownBanner so details page can pass them as PageHeader subHeader; remove hardcoded sticky offsets from JourneyPathView
  */
 "use client";
 
@@ -113,7 +113,7 @@ function mapServerKind(
   }
 }
 
-function formatCountdown(ms: number): string {
+export function formatCountdown(ms: number): string {
   const total = Math.max(0, Math.ceil(ms / 1000));
   const mm = Math.floor(total / 60)
     .toString()
@@ -126,13 +126,12 @@ function formatCountdown(ms: number): string {
 // Stats bar
 // ---------------------------------------------------------------------------
 
-// top offset = safe-area inset + 64px header height (tallest variant: subtitle + pb-3 override)
-function StatsBar({ progress }: { progress: JourneyProgress }) {
+export function StatsBar({ progress }: { progress: JourneyProgress }) {
   const pct = progress.progress ?? 0;
   const streak = progress.gamification?.streak ?? 0;
   const xp = progress.gamification?.xp ?? 0;
   return (
-    <div className="sticky top-[calc(env(safe-area-inset-top)+64px)] z-30 flex items-center justify-between px-5 py-2.5 bg-card/80 backdrop-blur-sm border-b border-border">
+    <div className="flex items-center justify-between px-5 py-2.5 bg-card/80 backdrop-blur-sm border-b border-border">
       <div className="flex items-center gap-1.5">
         <Flame className="w-4 h-4 text-orange-500" />
         <span className="text-sm font-extrabold text-foreground">{streak}</span>
@@ -170,6 +169,84 @@ function StatsBar({ progress }: { progress: JourneyProgress }) {
           </svg>
         </div>
         <span className="text-[10px] text-muted-foreground">{pct}%</span>
+      </div>
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Cooldown banner (extracted from JourneyPathView so it can live in PageHeader subHeader)
+// ---------------------------------------------------------------------------
+
+// Owns the 1-second countdown tick and fires tickJourney when the countdown
+// reaches zero. Rendered by the details page as a PageHeader subHeader child
+// so PageHeader's ResizeObserver handles the sticky offset automatically.
+export function JourneyCooldownBanner({
+  progress,
+  journeyId,
+}: {
+  progress: JourneyProgress | null;
+  journeyId: string;
+}) {
+  const enrollmentId = progress?.id ?? null;
+  const nextUnlockMs = progress?.nextDayUnlocksAt
+    ? new Date(progress.nextDayUnlocksAt).getTime()
+    : 0;
+  const [now, setNow] = useState(() => Date.now());
+  const lastCountdownTickRef = useRef<number>(0);
+
+  const cooldownRemainingMs = nextUnlockMs > 0 ? Math.max(0, nextUnlockMs - now) : 0;
+  const isActive = !!progress && !progress.isCompleted && nextUnlockMs > now;
+
+  useEffect(() => {
+    if (!isActive) return;
+    const id = setInterval(() => setNow(Date.now()), 1000);
+    return () => clearInterval(id);
+  }, [isActive]);
+
+  useEffect(() => {
+    if (!enrollmentId) return;
+    if (nextUnlockMs === 0) return;
+    if (cooldownRemainingMs > 0) return;
+    if (lastCountdownTickRef.current === nextUnlockMs) return;
+    lastCountdownTickRef.current = nextUnlockMs;
+    tickJourney(enrollmentId, journeyId).catch(console.error);
+  }, [cooldownRemainingMs, nextUnlockMs, enrollmentId, journeyId]);
+
+  if (!isActive) return null;
+
+  const currentDay = progress?.currentDay ?? 1;
+  const currentDayTasks = progress?.tasks?.filter((t) => t.dayNumber === currentDay) ?? [];
+  const todayTotal = currentDayTasks.length;
+  const todayDone = currentDayTasks.filter((t) => t.state === "completed").length;
+
+  return (
+    <div className="mx-4 mt-2 mb-1 rounded-2xl overflow-hidden border border-emerald-200 shadow-(--sh-3)">
+      <div className="bg-gradient-to-br from-emerald-500 to-teal-600 px-4 py-3 flex items-start gap-3">
+        <div className="relative w-11 h-11 rounded-2xl bg-gradient-to-br from-emerald-400 to-teal-500 flex-shrink-0 flex items-center justify-center shadow-[var(--sh-1)]">
+          <div className="absolute -top-2 -right-2 w-7 h-7 rounded-full bg-white/10" />
+          <Clock size={20} strokeWidth={2} className="text-white" />
+        </div>
+        <div className="flex-1 min-w-0">
+          <p className="text-sm font-bold text-white">Day complete</p>
+          <p className="text-xs text-white/80 mt-0.5 leading-snug">
+            Great work — take a break. Next day unlocks soon.
+          </p>
+        </div>
+        <div className="text-right flex-shrink-0">
+          <p className="text-xl font-extrabold text-white leading-none tabular-nums">
+            {formatCountdown(cooldownRemainingMs)}
+          </p>
+          <p className="text-[10px] text-white/70 uppercase tracking-wider mt-0.5">remaining</p>
+        </div>
+      </div>
+      <div className="bg-card px-4 py-2.5 flex items-center justify-between">
+        <p className="text-xs text-muted-foreground">
+          Day {currentDay} done · Day {currentDay + 1} unlocks next
+        </p>
+        <span className="text-xs font-bold text-emerald-600">
+          {todayDone}/{todayTotal} tasks
+        </span>
       </div>
     </div>
   );
@@ -238,8 +315,6 @@ export function JourneyPathView({ journey, progress, journeyId }: JourneyPathVie
 
   // Track previous todayDone to detect day completion in-session
   const prevTodayDoneRef = useRef<number>(-1);
-  // Prevent the countdown-zero tick from firing more than once per unlock timestamp
-  const lastCountdownTickRef = useRef<number>(0);
 
   const xpTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -324,46 +399,13 @@ export function JourneyPathView({ journey, progress, journeyId }: JourneyPathVie
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [journeyId]);
 
-  // Countdown banner driven by server-provided nextDayUnlocksAt.
-  const nextUnlockMs = progress?.nextDayUnlocksAt
-    ? new Date(progress.nextDayUnlocksAt).getTime()
-    : 0;
-  const [now, setNow] = useState(() => Date.now());
-  const cooldownRemainingMs = nextUnlockMs > 0 ? Math.max(0, nextUnlockMs - now) : 0;
-  const showCooldownBanner = isSubscribed && !progress?.isCompleted && nextUnlockMs > now;
-  console.log("[JourneyPathView] cooldown", {
-    nextDayUnlocksAt: progress?.nextDayUnlocksAt,
-    nextUnlockMs,
-    now,
-    cooldownRemainingMs,
-    isSubscribed,
-    isJourneyCompleted: progress?.isCompleted,
-    showCooldownBanner,
-  });
-
-  useEffect(() => {
-    if (!showCooldownBanner) return;
-    const id = setInterval(() => setNow(Date.now()), 1000);
-    return () => clearInterval(id);
-  }, [showCooldownBanner]);
-
-  // When the countdown reaches zero, re-tick so the server flips the state.
-  // lastCountdownTickRef prevents re-firing for the same nextDayUnlocksAt timestamp
-  // when progress updates (new object reference from replaceCache).
-  useEffect(() => {
-    console.log("[JourneyPathView] countdown-zero effect", {
-      enrollmentId,
-      nextUnlockMs,
-      cooldownRemainingMs,
-      lastTick: lastCountdownTickRef.current,
-    });
-    if (!enrollmentId) return;
-    if (nextUnlockMs === 0) return;
-    if (cooldownRemainingMs > 0) return;
-    if (lastCountdownTickRef.current === nextUnlockMs) return;
-    lastCountdownTickRef.current = nextUnlockMs;
-    tickJourney(enrollmentId, journeyId).catch(console.error);
-  }, [cooldownRemainingMs, nextUnlockMs, enrollmentId, journeyId]);
+  // showCooldownBanner is a snapshot check (no ticker — JourneyCooldownBanner owns the tick).
+  // Becomes false naturally when JourneyCooldownBanner fires tickJourney and SWR revalidates.
+  const showCooldownBanner =
+    isSubscribed &&
+    !progress?.isCompleted &&
+    !!progress?.nextDayUnlocksAt &&
+    new Date(progress.nextDayUnlocksAt).getTime() > Date.now();
 
   // Day-summary auto-open: detect when todayDone flips to equal todayTotal in-session.
   useEffect(() => {
@@ -799,9 +841,6 @@ export function JourneyPathView({ journey, progress, journeyId }: JourneyPathVie
 
   return (
     <>
-      {/* Stats */}
-      {isSubscribed && progress && <StatsBar progress={progress} />}
-
       {/* Paid free-preview banner */}
       {isPaidFreePreview && (
         <div className="mx-4 mt-3 rounded-2xl overflow-hidden border border-violet-200">
@@ -825,43 +864,6 @@ export function JourneyPathView({ journey, progress, journeyId }: JourneyPathVie
             >
               View Plans →
             </button>
-          </div>
-        </div>
-      )}
-
-      {/* "Day complete" cooldown banner — sticky below the StatsBar so it
-          remains visible as the user scrolls through the journey path.
-          top offset = safe-area-inset-top + 64px (tallest PageHeader with premium
-          subtitle) + 52px (StatsBar height: py-2.5×2 + w-8 h-8 content) = 116px.
-          StatsBar always renders alongside this banner (both require isSubscribed).
-          z-20 sits above scroll content but below StatsBar's z-30. */}
-      {showCooldownBanner && (
-        <div className="sticky top-[calc(env(safe-area-inset-top)+116px)] z-20 mx-4 mt-3 rounded-2xl overflow-hidden border border-emerald-200 shadow-(--sh-3)">
-          <div className="bg-gradient-to-br from-emerald-500 to-teal-600 px-4 py-3 flex items-start gap-3">
-            <div className="relative w-11 h-11 rounded-2xl bg-gradient-to-br from-emerald-400 to-teal-500 flex-shrink-0 flex items-center justify-center shadow-[var(--sh-1)]">
-              <div className="absolute -top-2 -right-2 w-7 h-7 rounded-full bg-white/10" />
-              <Clock size={20} strokeWidth={2} className="text-white" />
-            </div>
-            <div className="flex-1 min-w-0">
-              <p className="text-sm font-bold text-white">Day complete</p>
-              <p className="text-xs text-white/80 mt-0.5 leading-snug">
-                Great work — take a break. Next day unlocks soon.
-              </p>
-            </div>
-            <div className="text-right flex-shrink-0">
-              <p className="text-xl font-extrabold text-white leading-none tabular-nums">
-                {formatCountdown(cooldownRemainingMs)}
-              </p>
-              <p className="text-[10px] text-white/70 uppercase tracking-wider mt-0.5">remaining</p>
-            </div>
-          </div>
-          <div className="bg-card px-4 py-2.5 flex items-center justify-between">
-            <p className="text-xs text-muted-foreground">
-              Day {progress?.currentDay} done · Day {(progress?.currentDay ?? 1) + 1} unlocks next
-            </p>
-            <span className="text-xs font-bold text-emerald-600">
-              {todayDone}/{todayTotal} tasks
-            </span>
           </div>
         </div>
       )}

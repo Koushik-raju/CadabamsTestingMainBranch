@@ -31,11 +31,10 @@
  *   JourneyDiscoveryCard    — components/journey/journey-discovery-card.tsx
  *   CategoryChips           — components/journey/category-chips.tsx
  *
- * LAST UPDATED: 2026-04-23 — migrated custom header div to PageHeader
+ * LAST UPDATED: 2026-05-07 — move search bar into PageHeader built-in search row to eliminate navbar overlap
  */
 "use client";
 
-import { Search } from "lucide-react";
 import { useSearchParams } from "next/navigation";
 import { Suspense, useMemo, useState } from "react";
 import { CategoryChips } from "@/components/journey/category-chips";
@@ -46,7 +45,6 @@ import {
 import { JourneyDiscoveryCard } from "@/components/journey/journey-discovery-card";
 import { RecommendationBanner } from "@/components/journey/recommendation-banner";
 import { PageHeader } from "@/components/shared/navigation/page-header";
-import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useEnrolledJourneys } from "@/hooks/journeys/use-journey-detail";
 import { useJourneys } from "@/hooks/journeys/use-journeys-page";
@@ -163,21 +161,16 @@ function JourneysInner() {
 
   return (
     <div className="flex flex-col bg-background">
-      <PageHeader title="Journeys" fallback="/" />
+      <PageHeader
+        title="Journeys"
+        fallback="/"
+        searchValue={search}
+        searchPlaceholder="Search journeys..."
+        onSearchChange={setSearch}
+        onSearchClear={() => setSearch("")}
+      />
 
       <main className="flex-1 pb-24">
-        <div className="px-4 mb-4">
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-            <Input
-              placeholder="Search journeys..."
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              className="pl-9 rounded-xl"
-            />
-          </div>
-        </div>
-
         {recommendedCategory && recommendedCount > 0 && (
           <div className="px-4 mb-3">
             <RecommendationBanner
