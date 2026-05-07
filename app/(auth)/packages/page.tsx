@@ -215,7 +215,7 @@ function PackagesInner() {
   const quickPicks = filtered.slice(1, 11);
 
   return (
-    <div className="min-h-screen bg-background pb-24">
+    <div className="bg-background pb-24">
       <PageHeader title="Explore Packages" fallback="/" />
 
       {/* Search */}

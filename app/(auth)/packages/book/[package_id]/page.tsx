@@ -184,7 +184,7 @@ function BookPackageContent({ packageId }: { packageId: string }) {
   }
 
   return (
-    <div className="min-h-screen bg-background pb-24">
+    <div className="bg-background pb-24">
       <PageHeader
         title="Book Package"
         subtitle="Review and confirm your selection"

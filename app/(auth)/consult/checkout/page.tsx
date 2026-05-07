@@ -197,7 +197,7 @@ function CheckoutContent() {
   }
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="bg-background">
       <PageHeader title="Confirm & Pay" fallback="/consult/find-therapist" />
 
       <div className="px-4 py-5 pb-32 max-w-2xl mx-auto space-y-4">
@@ -368,7 +368,7 @@ export default function CheckoutPage() {
   return (
     <Suspense
       fallback={
-        <div className="min-h-screen flex items-center justify-center bg-background">
+        <div className="flex items-center justify-center bg-background">
           <Loader2 className="h-8 w-8 animate-spin text-primary" />
         </div>
       }

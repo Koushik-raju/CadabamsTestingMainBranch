@@ -104,7 +104,7 @@ function GrowthPageInner() {
   };
 
   return (
-    <div className="min-h-screen bg-background pb-24">
+    <div className="bg-background pb-24">
       <PageHeader title="Growth" subtitle="Your reflection timeline" fallback="/home" />
 
       <div className="bg-card border-b border-border">

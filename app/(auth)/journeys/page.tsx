@@ -162,7 +162,7 @@ function JourneysInner() {
   }, [journeys, recommendedCategory]);
 
   return (
-    <div className="flex flex-col min-h-screen bg-background">
+    <div className="flex flex-col bg-background">
       <PageHeader title="Journeys" fallback="/" />
 
       <main className="flex-1 pb-24">

@@ -74,7 +74,7 @@ export default function MoodTrackerReportPage() {
   const maxBucket = report ? Math.max(1, ...Object.values(report.scoreBuckets ?? {})) : 1;
 
   return (
-    <div className="min-h-screen bg-gray-50/50 pb-24">
+    <div className="bg-gray-50/50 pb-24">
       <PageHeader title="Mood Report" fallback="/mood-tracker" />
 
       <div className="px-4 flex flex-col gap-4">

@@ -114,7 +114,7 @@ export default function DocumentsPage() {
   const userError = !leadId && !isLoading ? "User information not found" : null;
 
   return (
-    <main className="min-h-screen bg-background pb-24" role="main" aria-label="My documents">
+    <main className="bg-background pb-24" role="main" aria-label="My documents">
       <PageHeader
         title="My Documents"
         fallback="/"

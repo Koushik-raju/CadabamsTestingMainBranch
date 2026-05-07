@@ -68,7 +68,7 @@ function BookPackageContent() {
   };
 
   return (
-    <div className="min-h-screen bg-background pb-28">
+    <div className="bg-background pb-28">
       <PageHeader
         title="Browse Packages"
         subtitle="Comprehensive care plans tailored for you"
@@ -151,7 +151,7 @@ export default function BookPackagePage() {
   return (
     <Suspense
       fallback={
-        <div className="flex items-center justify-center min-h-screen">
+        <div className="flex items-center justify-center">
           <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin" />
         </div>
       }

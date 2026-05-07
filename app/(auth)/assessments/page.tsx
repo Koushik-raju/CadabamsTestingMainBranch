@@ -166,7 +166,7 @@ export default function AssessmentsPage() {
     <Tabs
       value={activeTab}
       onValueChange={(v) => setActiveTab(v as "browse" | "assessments")}
-      className="flex flex-col min-h-screen bg-background"
+      className="flex flex-col bg-background"
     >
       {/* Header */}
       <header>
