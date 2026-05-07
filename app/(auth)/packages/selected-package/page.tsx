@@ -170,7 +170,11 @@ function SelectedPackageContent() {
         date: new Date().toISOString().split("T")[0],
       });
 
-      const payData = await initiatePackagePayment({ leadBookedPackageId: booking_id, leadId });
+      const payData = await initiatePackagePayment({
+        leadBookedPackageId: booking_id,
+        leadId,
+        campusId: 1,
+      });
       await refetchPackages();
       await refetchPackages();
       window.location.href = payData.result.short_url;

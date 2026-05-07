@@ -16,6 +16,7 @@
  *   cancelAppointment    — async action that calls the cancel SDK function.
  *                          Caller is responsible for calling mutate() to
  *                          invalidate caches.
+ *   startConsultAppointmentPayment — Razorpay link for a booked slot (list + detail).
  *
  * KEY VARIABLES / PROPS / EXPORTS:
  *   ONE_YEAR_AGO        — module-level date string; fixed so SWR key doesn't
@@ -25,15 +26,12 @@
  *
  * DEPENDENCIES:
  *   SWR (useSWR, useSWRConfig)
- *   crmControllerFetchAppointmentDetails, crmControllerCancelAppointment
+ *   crmControllerFetchAppointmentDetails, crmControllerCancelAppointment,
+ *   crmControllerRazorpayPayment (via startConsultAppointmentPayment)
  *   appointmentsKey — from @/lib/swr-keys
  *   useAuth — for leadId
  *
- * LAST UPDATED: 2026-05-05 — Converted from useState+useEffect to SWR.
- *   Removed manual fetch callback; SWR now handles caching, deduplication,
- *   and conditional fetching. Key stays stable so it won't thrash cache.
- *   cancelAppointment now uses useSWRConfig internally to access global
- *   mutate function for cache invalidation.
+ * LAST UPDATED: 2026-05-07 — Restored startConsultAppointmentPayment for consult pay flows.
  */
 "use client";
 
@@ -44,10 +42,39 @@ import { appointmentsKey } from "@/lib/swr-keys";
 import {
   crmControllerCancelAppointment,
   crmControllerFetchAppointmentDetails,
+  crmControllerRazorpayPayment,
   type SlotDetailDto,
 } from "@/sdk/backend-v2";
 
 export type { SlotDetailDto };
+
+/** CRM `booked` = hold pending online payment — Razorpay via backend / CRM. */
+export async function startConsultAppointmentPayment(
+  apt: SlotDetailDto,
+  auth: { leadId: number; uid: string },
+): Promise<string> {
+  if (!auth.leadId) throw new Error("Missing account information. Please sign in again.");
+  if (!auth.uid) throw new Error("Missing session. Please sign in again.");
+
+  const isVirtual = !!apt.virtual_consultation_url;
+  const campusId = isVirtual ? 1 : Number(apt.campus_id) || 1;
+
+  const payRes = await crmControllerRazorpayPayment({
+    body: {
+      slot_id: apt.id,
+      campus_id: campusId,
+      lead_id: auth.leadId,
+      uid: auth.uid,
+    },
+  });
+
+  if (payRes.error) throw new Error("Payment could not be started. Please try again.");
+
+  const shortUrl = payRes.data?.result?.short_url;
+  if (!shortUrl) throw new Error("No payment link received. Please try again.");
+
+  return shortUrl;
+}
 
 // Fixed at module level so SWR key never changes between renders.
 // Changing the key on each render would cause SWR to think the resource changed

@@ -164,6 +164,7 @@ function BookPackageContent({ packageId }: { packageId: string }) {
       const payData = await initiatePackagePayment({
         leadBookedPackageId: booking_id,
         leadId: Number(user.lead_id),
+        campusId: 1,
       });
       await refetchPackages();
       window.location.href = payData.result.short_url;

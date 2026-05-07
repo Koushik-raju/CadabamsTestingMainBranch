@@ -75,13 +75,44 @@ export async function initiatePackagePayment(opts: {
   leadId: number;
   campusId?: number;
 }): Promise<RazorpayPaymentEnvelopeDto> {
+  // Odoo rejects campus_id 0 (see payments.dto / ERP); must match the campus used when booking.
+  const campusId = opts.campusId ?? 1;
   const res = await crmControllerRazorpayPackagePayment({
     body: {
       booked_package_id: opts.leadBookedPackageId,
       lead_id: opts.leadId,
-      campus_id: opts.campusId ?? 0,
+      campus_id: campusId,
     },
   });
+
+  if (process.env.NODE_ENV === "development") {
+    console.group("[Razorpay package payment] POST /api/v1/crm/payments/razorpay-package");
+    console.log("request body:", {
+      booked_package_id: opts.leadBookedPackageId,
+      lead_id: opts.leadId,
+      campus_id: campusId,
+    });
+    const ax = res as {
+      status?: number;
+      statusText?: string;
+      data?: RazorpayPaymentEnvelopeDto;
+      error?: unknown;
+    };
+    console.log("httpStatus:", ax.status, ax.statusText ?? "");
+    if (ax.data !== undefined) {
+      console.log("response.data (envelope from backend / CRM):", ax.data);
+      const result = ax.data.result as Record<string, unknown> | undefined;
+      if (result && typeof result === "object") {
+        console.log("result.short_url:", result.short_url);
+        console.log("result.id (payment link id, if any):", result.id);
+      }
+    }
+    if (ax.error !== undefined) {
+      console.warn("client error object:", ax.error);
+    }
+    console.groupEnd();
+  }
+
   if (!res.data) throw new Error("Payment initiation failed.");
   return res.data;
 }
