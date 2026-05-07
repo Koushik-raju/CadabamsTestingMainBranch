@@ -21,14 +21,14 @@
  *   JourneyPathView — components/journey/journey-path-view
  *   PageHeader — shared navigation header
  *
- * LAST UPDATED: 2026-05-07 — StatsBar and CooldownBanner rendered as PageHeader children so they stick inside the header with no offset math
+ * LAST UPDATED: 2026-05-06 — remove sticky top-0 from PageHeader className (overrode safe-area fix)
  */
 "use client";
 
 import { Crown, MoreVertical, Sparkles } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { Suspense, use, useState } from "react";
-import { CooldownBanner, JourneyPathView, StatsBar } from "@/components/journey/journey-path-view";
+import { JourneyPathView } from "@/components/journey/journey-path-view";
 import { PageHeader } from "@/components/shared/navigation/page-header";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -132,10 +132,7 @@ function DetailsContent({ params }: PageProps) {
             </button>
           ) : undefined
         }
-      >
-        {progress && <StatsBar progress={progress} />}
-        {progress && <CooldownBanner progress={progress} journeyId={id} />}
-      </PageHeader>
+      />
 
       <JourneyPathView journey={journey} progress={progress} journeyId={id} />
 
