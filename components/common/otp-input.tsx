@@ -10,12 +10,14 @@
  *   automatically moves focus to the next field if a digit is entered. Supports pasting a complete
  *   OTP code, arrow key navigation, and backspace deletion. The component maintains a refs array
  *   to manage focus between fields.
+ *   When autoFocusFirst is true, focuses the first box on mount so the keyboard opens immediately.
  *
  * KEY VARIABLES / PROPS / EXPORTS:
  *   value             — String of digits entered; controlled by onChange callback
  *   onChange          — Callback fired with the complete OTP string when user types or pastes
  *   length            — Number of OTP fields (default 4)
  *   label             — Label text displayed above the inputs (default "Enter OTP")
+ *   autoFocusFirst    — If true, focuses the first input on mount (default false)
  *   refs              — useRef array tracking each input element for focus management
  *   OTPInput          — Main export; controlled component for OTP entry
  *
@@ -23,7 +25,7 @@
  *   React hooks: useEffect, useRef
  *   shadcn/ui primitives: Input, Label
  *
- * LAST UPDATED: 2026-04-28 — Neo design system: file header added
+ * LAST UPDATED: 2026-05-07 — added autoFocusFirst prop
  */
 
 "use client";
@@ -37,14 +39,29 @@ interface OTPInputProps {
   onChange: (val: string) => void;
   length?: number;
   label?: string;
+  autoFocusFirst?: boolean;
 }
 
-export function OTPInput({ value = "", onChange, length = 4, label = "Enter OTP" }: OTPInputProps) {
+export function OTPInput({
+  value = "",
+  onChange,
+  length = 4,
+  label = "Enter OTP",
+  autoFocusFirst = false,
+}: OTPInputProps) {
   const refs = useRef<(HTMLInputElement | null)[]>([]);
 
   useEffect(() => {
     refs.current = refs.current.slice(0, length);
   }, [length]);
+
+  /* Focus the first box on mount when autoFocusFirst is set (e.g., after step transition). */
+  useEffect(() => {
+    if (autoFocusFirst) {
+      const t = setTimeout(() => refs.current[0]?.focus(), 50);
+      return () => clearTimeout(t);
+    }
+  }, [autoFocusFirst]);
 
   const handleInput = (e: React.ChangeEvent<HTMLInputElement>, idx: number) => {
     const raw = e.target.value.replace(/\D/g, "");
