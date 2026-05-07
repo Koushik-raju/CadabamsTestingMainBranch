@@ -56,10 +56,11 @@ const config: CapacitorConfig = {
   appendUserAgent: 'MindTalkApp',
 
   server: {
-    url: 'https://www.dev-x3.cadabams.com',
+    // url: 'https://www.dev-x3.cadabams.com',
+    url: 'http://localhost:3001',
     cleartext: false,
     androidScheme: 'https',
-    allowNavigation: ['dev-x3.cadabams.com', '*.cadabams.com'],
+    allowNavigation: ['dev-x3.cadabams.com', '*.cadabams.com', 'localhost'],
   },
 
   ios: {

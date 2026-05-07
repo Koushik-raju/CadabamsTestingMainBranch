@@ -41,39 +41,12 @@ import { setStatusBarColor, setStatusBarLight } from "@/lib/capacitor/status-bar
 const swrConfig = { revalidateOnFocus: false };
 
 export default function AuthLayout({ children }: { children: React.ReactNode }) {
-  useEffect(() => {
-    /*
-     * Default status bar appearance for all authenticated pages.
-     * setStatusBarColor: on Android, sets the native bar background to cream.
-     * On iOS (overlaysWebView: true), the WebView extends behind the bar —
-     * the page's cream background shows through naturally.
-     * setStatusBarLight: ensures clock/battery icons are dark (readable on cream bg).
-     */
-    setStatusBarColor("#faf7f4");
-    setStatusBarLight();
-
-    /*
-     * Populate --safe-area-inset-* CSS vars from the native plugin and keep
-     * them in sync. The cleanup removes the orientation-change listener on unmount.
-     */
-    void applySafeAreaVars();
-    let cleanupListener: (() => Promise<void>) | undefined;
-    void subscribeSafeAreaChanges().then((fn) => {
-      cleanupListener = fn;
-    });
-    return () => {
-      void cleanupListener?.();
-    };
-  }, []);
-
   return (
     <SWRConfig value={swrConfig}>
       <BookingProvider>
         <JourneyReturnProvider>
           {/* suppressHydrationWarning: safe-area CSS vars are 0px on SSR, populated client-side by the native plugin */}
-          <div className="auth-layout-wrapper" suppressHydrationWarning>
-            {children}
-          </div>
+          <div suppressHydrationWarning>{children}</div>
           <JourneyReturnFab />
         </JourneyReturnProvider>
       </BookingProvider>

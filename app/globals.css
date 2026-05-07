@@ -616,22 +616,14 @@
 }
 
 /* Safe area utility classes */
-.pt-safe {
-  padding-top: var(--safe-area-inset-top);
-}
-.pb-safe {
-  padding-bottom: max(var(--safe-area-inset-bottom), 1rem);
-}
-.auth-layout-wrapper {
+
+.safe-layout-wrapper {
   padding-top: var(--safe-area-inset-top);
   padding-bottom: var(--safe-area-inset-bottom);
-}
-.pl-safe {
+  padding-right: var(--safe-area-inset-right);
   padding-left: var(--safe-area-inset-left);
 }
-.pr-safe {
-  padding-right: var(--safe-area-inset-right);
-}
+
 
 /* Hide bottom navigation when the software keyboard is open */
 .keyboard-open .bottom-nav {

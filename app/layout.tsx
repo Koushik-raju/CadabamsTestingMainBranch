@@ -59,29 +59,7 @@ export const viewport: Viewport = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en" suppressHydrationWarning className={inter.variable}>
-      <body
-        suppressHydrationWarning
-        className="font-sans pl-(--safe-area-inset-left) pr-(--safe-area-inset-right)"
-      >
-        {/*
-          Safe-area top/bottom overlays — height matches --safe-area-inset-* so
-          they cover exactly the zone .auth-layout-wrapper pads. We use the CSS
-          var (not env()) because on Capacitor iOS with StatusBar.overlaysWebView
-          env(safe-area-inset-top) reports 0; capacitor-plugin-safe-area writes
-          the real notch value into --safe-area-inset-top.
-        */}
-        {/*
-          The top overlay's bg is driven by --safe-area-top-bg so individual
-          pages can opt out of the cream paint and let a full-bleed hero
-          (e.g. the home gradient) extend behind the translucent iOS status bar.
-          Default = --background (cream). Set to "transparent" on full-bleed pages.
-        */}
-        <div
-          className="fixed top-0 inset-x-0 h-[var(--safe-area-inset-top)] z-100"
-          style={{ background: "var(--safe-area-top-bg, var(--background))" }}
-        />
-        <div className="fixed bottom-0 inset-x-0 h-[var(--safe-area-inset-bottom)] bg-background z-100" />
-
+      <body suppressHydrationWarning className="font-sans safe-layout-wrapper">
         <GoogleTagManager gtmId={siteConfig.gtmId} />
         <GoogleAnalytics gaId={siteConfig.gaId} />
 
