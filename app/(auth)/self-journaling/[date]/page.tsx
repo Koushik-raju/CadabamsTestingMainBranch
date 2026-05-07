@@ -93,9 +93,7 @@ export default function JournalDatePage() {
         <div className="flex-1">
           <div className="flex items-center gap-1.5">
             <Calendar className="w-4 h-4 text-muted-foreground" />
-            <h1 className="text-base font-semibold text-foreground">
-              {formattedDate}
-            </h1>
+            <h1 className="text-base font-semibold text-foreground">{formattedDate}</h1>
           </div>
         </div>
       </div>
