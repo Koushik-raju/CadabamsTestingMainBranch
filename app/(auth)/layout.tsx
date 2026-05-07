@@ -9,24 +9,18 @@
  * LOGIC OVERVIEW:
  *   1. Wraps children in SWRConfig (no focus revalidation, Capacitor shell quirk).
  *   2. Stacks BookingProvider, JourneyReturnProvider, and mounts <JourneyReturnFab />.
- *   3. useEffect on mount sets default status bar color (#faf7f4 cream), light icons,
- *      and initializes capacitor-plugin-safe-area so --safe-area-inset-* CSS
- *      vars hold the real iOS notch/home-indicator pixel values (env() reads
- *      0px when StatusBar.overlaysWebView is true).
- *   4. FAB hides on /journeys/* routes.
+ *   3. FAB hides on /journeys/* routes.
  *
  * KEY VARIABLES / PROPS / EXPORTS:
  *   AuthLayout              — default export wrapping {children}
  *
  * DEPENDENCIES:
- *   useEffect               — react
  *   SWRConfig               — swr
- *   setStatusBarColor, setStatusBarLight — lib/capacitor/status-bar
  *   BookingProvider         — contexts/booking-context
  *   JourneyReturnProvider   — contexts/journey-return-context
  *   JourneyReturnFab        — components/journey/journey-return-fab
  *
- * LAST UPDATED: 2026-05-06 — add padding-top to .auth-layout-wrapper; suppressHydrationWarning on wrapper div for safe-area CSS var mismatch.
+ * LAST UPDATED: 2026-05-07 — removed safe-area plugin imports; pure CSS env() approach
  */
 "use client";
 
@@ -35,8 +29,6 @@ import { SWRConfig } from "swr";
 import { JourneyReturnFab } from "@/components/journey/journey-return-fab";
 import { BookingProvider } from "@/contexts/booking-context";
 import { JourneyReturnProvider } from "@/contexts/journey-return-context";
-import { applySafeAreaVars, subscribeSafeAreaChanges } from "@/lib/capacitor/safe-area";
-import { setStatusBarColor, setStatusBarLight } from "@/lib/capacitor/status-bar";
 
 const swrConfig = { revalidateOnFocus: false };
 

@@ -5,7 +5,6 @@ import { useEffect } from "react";
 import { setupDeepLinks } from "@/lib/capacitor/deep-links";
 import { setupKeyboardListeners } from "@/lib/capacitor/keyboard";
 import { isNative } from "@/lib/capacitor/platform";
-import { applySafeAreaVars } from "@/lib/capacitor/safe-area";
 import { setStatusBarLight } from "@/lib/capacitor/status-bar";
 import { preventTextZoom } from "@/lib/capacitor/text-zoom";
 
@@ -32,12 +31,11 @@ export function CapacitorInit() {
        * parallel fan-out shares a single dynamic import resolution.
        */
       const [keyboard, deepLinks] = await Promise.all([
-        applySafeAreaVars(),
         setStatusBarLight(),
         preventTextZoom(),
         setupKeyboardListeners(),
         setupDeepLinks(router),
-      ]).then(([, , , kb, dl]) => [kb, dl] as const);
+      ]).then(([, , kb, dl]) => [kb, dl] as const);
 
       cleanupKeyboard = keyboard;
       cleanupDeepLinks = deepLinks;

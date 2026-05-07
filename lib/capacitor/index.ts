@@ -7,6 +7,5 @@ export * from "./deep-links";
 export * from "./keyboard";
 export * from "./platform";
 export * from "./razorpay";
-export * from "./safe-area";
 export * from "./status-bar";
 export * from "./text-zoom";

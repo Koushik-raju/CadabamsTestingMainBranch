@@ -21,19 +21,17 @@
  * DEPENDENCIES:
  *   next/font/google (Inter)
  *   @next/third-parties/google (GoogleTagManager, GoogleAnalytics)
- *   @/components/common/android-safe-area-bars
  *   @/components/common/capacitor-init
  *   @/config/site (siteConfig.name, .description, .gtmId, .gaId)
  *   @/providers/app-providers
  *   globals.css
  *
- * LAST UPDATED: 2026-05-07 — safe area bars extracted to AndroidSafeAreaBars; only rendered on Android
+ * LAST UPDATED: 2026-05-07 — pure CSS safe area: removed AndroidSafeAreaBars and capacitor-plugin-safe-area; env() handles insets natively
  */
 
 import { GoogleAnalytics, GoogleTagManager } from "@next/third-parties/google";
 import type { Metadata, Viewport } from "next";
 import { Inter } from "next/font/google";
-import { AndroidSafeAreaBars } from "@/components/common/android-safe-area-bars";
 import { CapacitorInit } from "@/components/common/capacitor-init";
 import { siteConfig } from "@/config/site";
 import { AppProviders } from "@/providers/app-providers";
@@ -61,11 +59,9 @@ export const viewport: Viewport = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en" suppressHydrationWarning className={inter.variable}>
-      <body suppressHydrationWarning className="font-sans">
+      <body suppressHydrationWarning className="font-sans ">
         <GoogleTagManager gtmId={siteConfig.gtmId} />
         <GoogleAnalytics gaId={siteConfig.gaId} />
-
-        <AndroidSafeAreaBars />
 
         {/*
           Use overflow-x-clip (not overflow-x-hidden) — in WebKit (iOS/Capacitor)
