@@ -38,7 +38,7 @@ export function AndroidSafeAreaBars() {
 
   return (
     <>
-      <div className="fixed top-0 inset-x-0 h-[var(--safe-area-inset-top)] bg-background z-100" />
+      {/* <div className="fixed top-0 inset-x-0 h-[var(--safe-area-inset-top)] bg-background z-100" /> */}
       <div className="fixed bottom-0 inset-x-0 h-[var(--safe-area-inset-bottom)] bg-background z-100" />
     </>
   );
