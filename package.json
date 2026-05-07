@@ -123,6 +123,11 @@
   },
   "pnpm": {
     "onlyBuiltDependencies": [
+      "@firebase/util",
+      "core-js",
+      "esbuild",
+      "msw",
+      "protobufjs",
       "sharp"
     ]
   }
