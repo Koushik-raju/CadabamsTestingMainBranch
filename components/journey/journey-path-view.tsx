@@ -829,12 +829,14 @@ export function JourneyPathView({ journey, progress, journeyId }: JourneyPathVie
         </div>
       )}
 
-      {/* "Day complete" cooldown banner — sticky below the PageHeader so it
+      {/* "Day complete" cooldown banner — sticky below the StatsBar so it
           remains visible as the user scrolls through the journey path.
-          top offset = safe-area-inset-top + 56px (PageHeader height). z-10 keeps
-          it below PageHeader's z-20. */}
+          top offset = safe-area-inset-top + 64px (tallest PageHeader with premium
+          subtitle) + 52px (StatsBar height: py-2.5×2 + w-8 h-8 content) = 116px.
+          StatsBar always renders alongside this banner (both require isSubscribed).
+          z-20 sits above scroll content but below StatsBar's z-30. */}
       {showCooldownBanner && (
-        <div className="sticky top-[calc(env(safe-area-inset-top)+56px)] z-10 mx-4 mt-3 rounded-2xl overflow-hidden border border-emerald-200 shadow-(--sh-3)">
+        <div className="sticky top-[calc(env(safe-area-inset-top)+116px)] z-20 mx-4 mt-3 rounded-2xl overflow-hidden border border-emerald-200 shadow-(--sh-3)">
           <div className="bg-gradient-to-br from-emerald-500 to-teal-600 px-4 py-3 flex items-start gap-3">
             <div className="relative w-11 h-11 rounded-2xl bg-gradient-to-br from-emerald-400 to-teal-500 flex-shrink-0 flex items-center justify-center shadow-[var(--sh-1)]">
               <div className="absolute -top-2 -right-2 w-7 h-7 rounded-full bg-white/10" />
