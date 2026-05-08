@@ -187,7 +187,7 @@ function CheckoutContent() {
         const linkRes = await bookAndPay({
           slotId,
           campusId: resolvedCampusId,
-          subCampusId: isVirtual ? undefined : (subCampusId ?? undefined),
+          subCampusId: subCampusId ?? undefined,
           consultationTypeId,
           leadId,
           uid,
