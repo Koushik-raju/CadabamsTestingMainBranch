@@ -31,7 +31,7 @@
  *   odooTuple                                — from @/lib/odoo (safe many2one tuple access)
  *   BookedPackageLineDto                     — from @/sdk/backend-v2
  *
- * LAST UPDATED: 2026-05-08 — Migrated from Razorpay payment-link redirect to Standard Checkout
+ * LAST UPDATED: 2026-05-08 — Branches Pay Now on NEXT_PUBLIC_PAYMENT_MODE (link redirect vs. in-app)
  */
 "use client";
 
@@ -60,11 +60,17 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useCampuses } from "@/hooks/shared/campuses/use-campuses";
 import { useAuth } from "@/hooks/use-auth";
-import { initiatePackageOrder, useManagedPackages } from "@/hooks/use-packages";
+import {
+  initiatePackageOrder,
+  initiatePackagePayment,
+  useManagedPackages,
+} from "@/hooks/use-packages";
 import { openRazorpayNative } from "@/lib/capacitor/razorpay";
 import { odooTuple } from "@/lib/odoo";
 import { getPackagePalette } from "@/lib/package-colors";
+import { isLinkMode } from "@/lib/payments/payment-mode";
 import type { BookedPackageLineDto } from "@/sdk/backend-v2";
 
 function getStageMeta(stage: string): { label: string; Icon: React.ElementType } {
@@ -126,6 +132,7 @@ export default function PackageDetailPage({ params }: { params: Promise<{ id: st
   const { user } = useAuth();
 
   const { packages, isLoading, mutate: refetchPackages } = useManagedPackages();
+  const { defaultCampusId } = useCampuses();
   const [payLoading, setPayLoading] = useState(false);
   const [payError, setPayError] = useState<string | null>(null);
 
@@ -141,6 +148,28 @@ export default function PackageDetailPage({ params }: { params: Promise<{ id: st
     setPayLoading(true);
     setPayError(null);
     try {
+      // Link mode: hosted Razorpay Payment Link → redirect to short_url.
+      if (isLinkMode()) {
+        if (!defaultCampusId) {
+          setPayError("Loading campus details. Please try again in a moment.");
+          setPayLoading(false);
+          return;
+        }
+        const envelope = await initiatePackagePayment({
+          leadBookedPackageId: Number(pkg.booked_package_id),
+          leadId: Number(user.lead_id),
+          campusId: defaultCampusId,
+        });
+        const url = envelope.result?.short_url;
+        if (!url) {
+          setPayError("No payment link returned. Please try again.");
+          setPayLoading(false);
+          return;
+        }
+        window.location.href = url;
+        return;
+      }
+
       const order = await initiatePackageOrder({
         leadBookedPackageId: Number(pkg.booked_package_id),
         leadId: Number(user.lead_id),

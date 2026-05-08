@@ -9,7 +9,9 @@
  * LOGIC OVERVIEW:
  *   1. Reads package from sessionStorage on mount; redirects to /packages/book-package if absent.
  *   2. Optionally fetches a journey description from the JOURNEY_BASE_URL if journeyId is set.
- *   3. On confirm: calls bookPackage then initiatePackagePayment, then redirects to short_url.
+ *   3. On confirm: calls bookPackage, then branches on NEXT_PUBLIC_PAYMENT_MODE —
+ *      link mode redirects to a hosted short_url, inapp mode opens Razorpay
+ *      Standard Checkout via openRazorpayNative.
  *
  * KEY VARIABLES / PROPS / EXPORTS:
  *   pkg          — PackageResponseDto from sessionStorage
@@ -21,7 +23,7 @@
  *   useAuth — user identity for lead_id and caller_name
  *   PageHeader — shared navigation header
  *
- * LAST UPDATED: 2026-05-05 — Added cache invalidation after bookPackage — Neo design system: shadow scale, color tokens, border radius
+ * LAST UPDATED: 2026-05-08 — Branches on NEXT_PUBLIC_PAYMENT_MODE: link redirect vs. Standard Checkout
  */
 "use client";
 
@@ -34,11 +36,14 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import {
   bookPackage,
+  initiatePackageOrder,
   initiatePackagePayment,
   useManagedPackages,
 } from "@/hooks/packages/use-packages";
 import { useAuth } from "@/hooks/shared/auth/use-auth";
 import { useCampuses } from "@/hooks/shared/campuses/use-campuses";
+import { openRazorpayNative } from "@/lib/capacitor/razorpay";
+import { isLinkMode } from "@/lib/payments/payment-mode";
 import type { PackageResponseDto } from "@/sdk/backend-v2";
 
 const JOURNEY_BASE_URL = "https://mindtalkbuddy.com/api/mindful-journeys";
@@ -158,6 +163,7 @@ function SelectedPackageContent() {
       setError("Loading campus details. Please try again in a moment.");
       return;
     }
+    const rzpKey = process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID;
     setIsLoading(true);
     setError(null);
     try {
@@ -176,14 +182,53 @@ function SelectedPackageContent() {
         date: new Date().toISOString().split("T")[0],
       });
 
-      const payData = await initiatePackagePayment({
+      // Link mode: fetch a hosted Payment Link and redirect.
+      if (isLinkMode()) {
+        const payData = await initiatePackagePayment({
+          leadBookedPackageId: booking_id,
+          leadId,
+          campusId: defaultCampusId,
+        });
+        await refetchPackages();
+        if (!payData.result?.short_url) {
+          setError("No payment link returned. Please try again.");
+          setIsLoading(false);
+          return;
+        }
+        window.location.href = payData.result.short_url;
+        return;
+      }
+
+      // In-app mode: create an Order and open Standard Checkout.
+      if (!rzpKey) {
+        setError("Payment is not configured. Please contact support.");
+        setIsLoading(false);
+        return;
+      }
+      const order = await initiatePackageOrder({
         leadBookedPackageId: booking_id,
         leadId,
-        campusId: defaultCampusId,
       });
+      const result = await openRazorpayNative({
+        key: rzpKey,
+        amount: order.amount,
+        currency: order.currency,
+        orderId: order.id,
+        name: pkg.package_name,
+        description: `Package #${pkg.id}`,
+        prefill: {
+          name: patientName,
+          email: user.email ? String(user.email) : undefined,
+          contact: user.phone_number ? String(user.phone_number) : undefined,
+        },
+      });
+      if (!result.success) {
+        setError(result.error ?? "Payment was not completed.");
+        setIsLoading(false);
+        return;
+      }
       await refetchPackages();
-      await refetchPackages();
-      window.location.href = payData.result.short_url;
+      router.replace("/packages");
     } catch (err: unknown) {
       setError((err as { message?: string })?.message ?? "Failed to process payment");
     } finally {

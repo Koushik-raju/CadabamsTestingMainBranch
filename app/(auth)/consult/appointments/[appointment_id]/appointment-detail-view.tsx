@@ -44,10 +44,12 @@ import type { SlotDetailDto } from "@/hooks/appointments/use-appointments-page";
 import {
   cancelAppointment,
   startConsultAppointmentPayment,
+  startConsultAppointmentPaymentLink,
   useAppointmentById,
 } from "@/hooks/appointments/use-appointments-page";
 import { useAuth } from "@/hooks/shared/auth/use-auth";
 import { openRazorpayNative } from "@/lib/capacitor/razorpay";
+import { isLinkMode } from "@/lib/payments/payment-mode";
 import { cn } from "@/lib/utils";
 
 function getDoctorName(doctor: SlotDetailDto["doctor"]): string {
@@ -150,15 +152,35 @@ function DetailContent() {
 
   const handlePayToConfirm = async () => {
     if (!apt || paying) return;
-    const rzpKey = process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID;
-    if (!rzpKey) {
-      setPayError("Payment is not configured. Please contact support.");
-      return;
-    }
     setPayError(null);
     setPaying(true);
     try {
       const leadId = user?.lead_id ? Number(user.lead_id) : 0;
+
+      // Link mode: hosted Payment Link → redirect.
+      if (isLinkMode()) {
+        const uid = user?.sub ? String(user.sub) : "";
+        if (!uid) {
+          setPayError("Missing session. Please sign in again.");
+          setPaying(false);
+          return;
+        }
+        const link = await startConsultAppointmentPaymentLink(apt, { leadId, uid });
+        if (!link.short_url) {
+          setPayError("No payment link returned. Please try again.");
+          setPaying(false);
+          return;
+        }
+        window.location.href = link.short_url;
+        return;
+      }
+
+      const rzpKey = process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID;
+      if (!rzpKey) {
+        setPayError("Payment is not configured. Please contact support.");
+        setPaying(false);
+        return;
+      }
       const order = await startConsultAppointmentPayment(apt, { leadId });
 
       /*

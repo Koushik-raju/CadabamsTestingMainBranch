@@ -30,9 +30,13 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import type { SlotDetailDto } from "@/hooks/appointments/use-appointments-page";
-import { startConsultAppointmentPayment } from "@/hooks/appointments/use-appointments-page";
+import {
+  startConsultAppointmentPayment,
+  startConsultAppointmentPaymentLink,
+} from "@/hooks/appointments/use-appointments-page";
 import { useAuth } from "@/hooks/shared/auth/use-auth";
 import { openRazorpayNative } from "@/lib/capacitor/razorpay";
+import { isLinkMode } from "@/lib/payments/payment-mode";
 
 interface AppointmentCardProps {
   appointment: SlotDetailDto;
@@ -117,14 +121,34 @@ export function AppointmentCard({ appointment, isPast }: AppointmentCardProps) {
     e.preventDefault();
     e.stopPropagation();
     if (paying) return;
-    const rzpKey = process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID;
-    if (!rzpKey) {
-      toast.error("Payment is not configured.");
-      return;
-    }
     setPaying(true);
     try {
       const leadId = user?.lead_id ? Number(user.lead_id) : 0;
+
+      // Link mode: backend mints a hosted Payment Link, we redirect to it.
+      if (isLinkMode()) {
+        const uid = user?.sub ? String(user.sub) : "";
+        if (!uid) {
+          toast.error("Missing session. Please sign in again.");
+          setPaying(false);
+          return;
+        }
+        const link = await startConsultAppointmentPaymentLink(appointment, { leadId, uid });
+        if (!link.short_url) {
+          toast.error("No payment link returned.");
+          setPaying(false);
+          return;
+        }
+        window.location.href = link.short_url;
+        return;
+      }
+
+      const rzpKey = process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID;
+      if (!rzpKey) {
+        toast.error("Payment is not configured.");
+        setPaying(false);
+        return;
+      }
       const order = await startConsultAppointmentPayment(appointment, { leadId });
 
       /*

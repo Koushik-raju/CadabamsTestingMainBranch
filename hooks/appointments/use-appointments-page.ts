@@ -19,6 +19,11 @@
  *   startConsultAppointmentPayment — creates a Razorpay Order for an already-
  *                          booked slot. Returns RazorpayOrderResponseDto so the
  *                          caller can open Razorpay Standard Checkout in-page.
+ *   startConsultAppointmentPaymentLink — creates a Razorpay hosted Payment
+ *                          Link for an already-booked slot. Returns
+ *                          RazorpayPaymentResponseDto so the caller can
+ *                          redirect the browser to result.short_url. Used
+ *                          when NEXT_PUBLIC_PAYMENT_MODE=link.
  *
  * KEY VARIABLES / PROPS / EXPORTS:
  *   ONE_YEAR_AGO        — module-level date string; fixed so SWR key doesn't
@@ -33,7 +38,7 @@
  *   appointmentsKey — from @/lib/swr-keys
  *   useAuth — for leadId
  *
- * LAST UPDATED: 2026-05-08 — Migrated startConsultAppointmentPayment from payment-link to Razorpay Order
+ * LAST UPDATED: 2026-05-08 — Added startConsultAppointmentPaymentLink for link-mode toggle
  */
 "use client";
 
@@ -41,15 +46,16 @@ import { useCallback } from "react";
 import useSWR, { useSWRConfig } from "swr";
 import { useAuth } from "@/hooks/shared/auth/use-auth";
 import { appointmentsKey } from "@/lib/swr-keys";
-import type { RazorpayOrderResponseDto } from "@/sdk/backend-v2";
+import type { RazorpayOrderResponseDto, RazorpayPaymentResponseDto } from "@/sdk/backend-v2";
 import {
   crmControllerCancelAppointment,
   crmControllerFetchAppointmentDetails,
   crmControllerRazorpayOrder,
+  crmControllerRazorpayPayment,
   type SlotDetailDto,
 } from "@/sdk/backend-v2";
 
-export type { RazorpayOrderResponseDto, SlotDetailDto };
+export type { RazorpayOrderResponseDto, RazorpayPaymentResponseDto, SlotDetailDto };
 
 /*
  * Creates a Razorpay Order for an already-booked slot (CRM `booked` =
@@ -77,6 +83,39 @@ export async function startConsultAppointmentPayment(
   if (!order) throw new Error("No order received. Please try again.");
 
   return order;
+}
+
+/*
+ * Link-mode counterpart of startConsultAppointmentPayment. Calls the legacy
+ * /crm/payments/razorpay endpoint which returns a hosted Razorpay Payment
+ * Link. The caller should redirect window.location to result.short_url.
+ *
+ * Why a separate helper: the Order endpoint only needs (slot_id, lead_id),
+ * while the Payment Link endpoint also needs campus_id (sourced from the
+ * appointment) and uid (the device/firebase session id from useAuth().user).
+ */
+export async function startConsultAppointmentPaymentLink(
+  apt: SlotDetailDto,
+  auth: { leadId: number; uid: string },
+): Promise<RazorpayPaymentResponseDto> {
+  if (!auth.leadId) throw new Error("Missing account information. Please sign in again.");
+  if (!auth.uid) throw new Error("Missing session id. Please sign in again.");
+
+  const payRes = await crmControllerRazorpayPayment({
+    body: {
+      slot_id: apt.id,
+      campus_id: apt.campus_id,
+      lead_id: auth.leadId,
+      uid: auth.uid,
+    },
+  });
+
+  if (payRes.error) throw new Error("Payment could not be started. Please try again.");
+
+  const result = payRes.data?.result;
+  if (!result) throw new Error("No payment link received. Please try again.");
+
+  return result;
 }
 
 // Fixed at module level so SWR key never changes between renders.

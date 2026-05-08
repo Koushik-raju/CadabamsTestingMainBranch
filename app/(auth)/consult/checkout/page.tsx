@@ -30,7 +30,7 @@
  *   useBooking — BookingContext hook for slot/doctor/campus IDs
  *   PageHeader — shared navigation header
  *
- * LAST UPDATED: 2026-05-08 — Migrated from Razorpay payment-link redirect to Razorpay Order + Standard Checkout
+ * LAST UPDATED: 2026-05-08 — Branches on NEXT_PUBLIC_PAYMENT_MODE: link redirect vs. Standard Checkout
  */
 "use client";
 
@@ -55,10 +55,11 @@ import { Separator } from "@/components/ui/separator";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useBooking } from "@/contexts/booking-context";
-import { bookAndCreateOrder } from "@/hooks/consult/use-checkout";
+import { bookAndCreateOrder, bookAndPay } from "@/hooks/consult/use-checkout";
 import { useAuth } from "@/hooks/shared/auth/use-auth";
 import { useCampuses } from "@/hooks/shared/campuses/use-campuses";
 import { openRazorpayNative } from "@/lib/capacitor/razorpay";
+import { isLinkMode } from "@/lib/payments/payment-mode";
 import type { CrmControllerGetDoctorByIdResponse, RelationshipResponseDto } from "@/sdk/backend-v2";
 import {
   crmControllerGetDoctorById,
@@ -169,6 +170,40 @@ function CheckoutContent() {
       const leadId = user?.lead_id ? Number(user.lead_id) : 0;
       const callerName = user?.name ?? "";
 
+      /*
+       * Link mode (NEXT_PUBLIC_PAYMENT_MODE=link): book the slot and create
+       * a hosted Razorpay Payment Link, then redirect the browser to the
+       * link's short_url. The Razorpay-hosted page handles success/failure
+       * and Razorpay's webhook tells the backend the outcome — we never
+       * come back to this checkout page on success.
+       */
+      if (isLinkMode()) {
+        const uid = user?.sub ? String(user.sub) : "";
+        if (!uid) {
+          setError("Missing session. Please sign in again.");
+          setProcessing(false);
+          return;
+        }
+        const linkRes = await bookAndPay({
+          slotId,
+          campusId: resolvedCampusId,
+          subCampusId: isVirtual ? undefined : (subCampusId ?? undefined),
+          consultationTypeId,
+          leadId,
+          uid,
+          callerName,
+          patientName,
+        });
+        if (!linkRes.short_url) {
+          setError("No payment link returned. Please try again.");
+          setProcessing(false);
+          return;
+        }
+        window.location.href = linkRes.short_url;
+        return;
+      }
+
+      // In-app mode: create a Razorpay Order and open Standard Checkout.
       const order = await bookAndCreateOrder({
         slotId,
         campusId: resolvedCampusId,

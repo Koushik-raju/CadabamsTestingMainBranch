@@ -29,7 +29,7 @@
  *   useAuth — user identity
  *   PageHeader — shared navigation header
  *
- * LAST UPDATED: 2026-05-08 — Migrated from Razorpay payment-link redirect to Razorpay Order + Standard Checkout
+ * LAST UPDATED: 2026-05-08 — Branches on NEXT_PUBLIC_PAYMENT_MODE (link redirect vs. Standard Checkout)
  */
 "use client";
 
@@ -43,8 +43,14 @@ import { Separator } from "@/components/ui/separator";
 import { useJourneyDetail } from "@/hooks/journeys/use-journey-detail";
 import { useCampuses } from "@/hooks/shared/campuses/use-campuses";
 import { useAuth } from "@/hooks/use-auth";
-import { bookPackage, initiatePackageOrder, useManagedPackages } from "@/hooks/use-packages";
+import {
+  bookPackage,
+  initiatePackageOrder,
+  initiatePackagePayment,
+  useManagedPackages,
+} from "@/hooks/use-packages";
 import { openRazorpayNative } from "@/lib/capacitor/razorpay";
+import { isLinkMode } from "@/lib/payments/payment-mode";
 import type { PackageResponseDto } from "@/sdk/backend-v2";
 import { extractJourneyDescription } from "@/types/journey";
 
@@ -110,6 +116,22 @@ function BookPackageContent({ packageId }: { packageId: string }) {
         payment_mode: "online",
         date: new Date().toISOString().split("T")[0],
       });
+
+      // Link mode: create a hosted Payment Link and redirect.
+      if (isLinkMode()) {
+        const envelope = await initiatePackagePayment({
+          leadBookedPackageId: booking_id,
+          leadId: Number(user.lead_id),
+          campusId: defaultCampusId,
+        });
+        const url = envelope.result?.short_url;
+        if (!url) {
+          setError("No payment link returned. Please try again.");
+          return;
+        }
+        window.location.href = url;
+        return;
+      }
 
       const order = await initiatePackageOrder({
         leadBookedPackageId: booking_id,
