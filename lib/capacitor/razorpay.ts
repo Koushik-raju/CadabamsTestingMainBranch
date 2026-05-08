@@ -1,9 +1,29 @@
 /**
- * Razorpay payment integration.
- * On native: uses @capacitor-community/razorpay (dynamic import via eval to avoid TS module error).
- * On web: loads the Razorpay checkout script dynamically.
+ * FILE: lib/capacitor/razorpay.ts
+ *
+ * PURPOSE:
+ *   Razorpay payment integration via the web Standard Checkout script.
+ *   Loads checkout.razorpay.com/v1/checkout.js on demand and opens the
+ *   hosted payment modal. Works on both web and Capacitor WebView — no
+ *   native plugin required.
+ *
+ * LOGIC OVERVIEW:
+ *   1. loadRazorpayScript — injects the Razorpay script tag once and waits
+ *      for it to resolve before any checkout attempt.
+ *   2. openRazorpay (exported as openRazorpayNative for call-site compat) —
+ *      calls loadRazorpayScript, builds the options object, opens the modal,
+ *      and resolves the returned Promise on handler / ondismiss / payment.failed.
+ *
+ * KEY VARIABLES / PROPS / EXPORTS:
+ *   RazorpayOptions   — input shape callers pass (key, amount, orderId, …)
+ *   RazorpayResult    — { success, paymentId?, orderId?, error? }
+ *   openRazorpayNative — entry point used by all callers
+ *
+ * DEPENDENCIES:
+ *   window.Razorpay — injected by checkout.razorpay.com/v1/checkout.js
+ *
+ * LAST UPDATED: 2026-05-08 — removed @capacitor-community/razorpay native path; web-only
  */
-import { isNative } from "./platform";
 
 export interface RazorpayOptions {
   key: string;
@@ -26,9 +46,6 @@ export interface RazorpayResult {
   error?: string;
 }
 
-/**
- * Loads the Razorpay web checkout script if not already loaded.
- */
 async function loadRazorpayScript(): Promise<void> {
   if (typeof window === "undefined") return;
   if (window.Razorpay) return;
@@ -42,57 +59,7 @@ async function loadRazorpayScript(): Promise<void> {
   });
 }
 
-/**
- * Opens Razorpay checkout (native or web).
- */
 export async function openRazorpayNative(options: RazorpayOptions): Promise<RazorpayResult> {
-  const native = await isNative();
-  if (native) {
-    return openRazorpayCapacitor(options);
-  }
-  return openRazorpayWeb(options);
-}
-
-async function openRazorpayCapacitor(options: RazorpayOptions): Promise<RazorpayResult> {
-  try {
-    // @capacitor-community/razorpay is a native-only optional dependency.
-    // Use Function constructor to avoid static analysis errors for unresolved module.
-    // eslint-disable-next-line @typescript-eslint/no-implied-eval
-    const mod = (await new Function('return import("@capacitor-community/razorpay")')()) as {
-      RazorpayCheckout: {
-        open: (opts: Record<string, unknown>) => Promise<Record<string, string>>;
-      };
-    };
-
-    const result = await mod.RazorpayCheckout.open({
-      key: options.key,
-      amount: options.amount,
-      currency: options.currency,
-      order_id: options.orderId,
-      name: options.name,
-      description: options.description ?? "",
-      prefill: {
-        name: options.prefill?.name ?? "",
-        email: options.prefill?.email ?? "",
-        contact: options.prefill?.contact ?? "",
-      },
-    });
-
-    return {
-      success: true,
-      paymentId: result["razorpay_payment_id"],
-      orderId: result["razorpay_order_id"],
-    };
-  } catch (e) {
-    const errorMsg = e instanceof Error ? e.message : String(e);
-    if (errorMsg.toLowerCase().includes("cancel")) {
-      return { success: false, error: "Payment cancelled by user" };
-    }
-    return { success: false, error: errorMsg };
-  }
-}
-
-async function openRazorpayWeb(options: RazorpayOptions): Promise<RazorpayResult> {
   try {
     await loadRazorpayScript();
 
