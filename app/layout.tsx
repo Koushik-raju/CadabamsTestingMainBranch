@@ -59,10 +59,9 @@ export const viewport: Viewport = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en" suppressHydrationWarning className={inter.variable}>
-      <body suppressHydrationWarning className="font-sans">
+      <body suppressHydrationWarning className="font-sans  pt-[var(--safe-area-inset-top)]">
         <GoogleTagManager gtmId={siteConfig.gtmId} />
         <GoogleAnalytics gaId={siteConfig.gaId} />
-        <div className="fixed top-0 inset-x-0 h-[var(--safe-area-inset-top)] mb-[var(--safe-area-inset-top)] bg-background z-100" />
 
         {/*
           Use overflow-x-clip (not overflow-x-hidden) — in WebKit (iOS/Capacitor)
