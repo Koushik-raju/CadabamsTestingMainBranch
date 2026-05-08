@@ -8,7 +8,8 @@
  * LOGIC OVERVIEW:
  *   1. Reads packageId from URL param and validates against sessionStorage package.
  *   2. If mismatch, redirects to /packages/book-package.
- *   3. Optionally fetches journey description.
+ *   3. If the package has a journey_document_id, fetches the journey via SDK
+ *      (cmsJourneysControllerGetById) for the overview description.
  *   4. On confirm: calls bookPackage then initiatePackagePayment, then redirects to short_url.
  *
  * KEY VARIABLES / PROPS / EXPORTS:
@@ -18,25 +19,27 @@
  *
  * DEPENDENCIES:
  *   bookPackage, initiatePackagePayment — from @/hooks/use-packages
+ *   useJourneyDetail — SWR wrapper around cmsJourneysControllerGetById
+ *   extractJourneyDescription — flattens Strapi rich-text to plain string
  *   useAuth — user identity
  *   PageHeader — shared navigation header
  *
- * LAST UPDATED: 2026-05-05 — Added cache invalidation after bookPackage mutation
+ * LAST UPDATED: 2026-05-08 — Replaced external Strapi fetch with SDK useJourneyDetail
  */
 "use client";
 
 import { BookOpen, CreditCard, IndianRupee, Loader2, Package, Shield } from "lucide-react";
 import { useParams, useRouter } from "next/navigation";
-import { Suspense, useEffect, useMemo, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import { PageHeader } from "@/components/shared/navigation/page-header";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
+import { useJourneyDetail } from "@/hooks/journeys/use-journey-detail";
 import { useAuth } from "@/hooks/use-auth";
 import { bookPackage, initiatePackagePayment, useManagedPackages } from "@/hooks/use-packages";
 import type { PackageResponseDto } from "@/sdk/backend-v2";
-
-const JOURNEY_BASE_URL = "https://mindtalkbuddy.com/api/mindful-journeys";
+import { extractJourneyDescription } from "@/types/journey";
 
 function getPackageFromSession(): PackageResponseDto | null {
   if (typeof sessionStorage === "undefined") return null;
@@ -48,60 +51,12 @@ function getPackageFromSession(): PackageResponseDto | null {
   }
 }
 
-interface JourneyData {
-  attributes?: {
-    description?: unknown;
-    summary?: unknown;
-    shortDescription?: unknown;
-    overview?: unknown;
-  };
-  description?: unknown;
-  summary?: unknown;
-  shortDescription?: unknown;
-  overview?: unknown;
-}
-
-function flattenText(val: unknown, depth = 0): string {
-  if (depth > 5 || !val) return "";
-  if (typeof val === "string") return val;
-  if (typeof val === "number") return String(val);
-  if (Array.isArray(val))
-    return val
-      .map((v) => flattenText(v, depth + 1))
-      .filter(Boolean)
-      .join("\n")
-      .trim();
-  if (typeof val === "object") {
-    const obj = val as Record<string, unknown>;
-    if (obj.type === "text" && obj.text) return String(obj.text);
-    if (obj.children) return flattenText(obj.children, depth + 1);
-    return Object.values(obj)
-      .map((v) => flattenText(v, depth + 1))
-      .filter(Boolean)
-      .join("\n")
-      .trim();
-  }
-  return "";
-}
-
-function extractDescription(data: JourneyData | null): string {
-  if (!data) return "";
-  const src = data.attributes ?? data;
-  for (const key of ["description", "summary", "shortDescription", "overview"] as const) {
-    const text = flattenText((src as Record<string, unknown>)[key]);
-    if (text) return text;
-  }
-  return "";
-}
-
 function BookPackageContent({ packageId }: { packageId: string }) {
   const router = useRouter();
   const { user } = useAuth();
 
   const [pkg, setPkg] = useState<PackageResponseDto | null>(null);
   const [isLoading, setIsLoading] = useState(false);
-  const [journeyData, setJourneyData] = useState<JourneyData | null>(null);
-  const [journeyLoading, setJourneyLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -114,35 +69,12 @@ function BookPackageContent({ packageId }: { packageId: string }) {
   }, [packageId, router]);
 
   const journeyId =
-    ((pkg as Record<string, unknown> | null)?.journey_document_id as string | null) ??
-    ((pkg as Record<string, unknown> | null)?.journey_id
-      ? String((pkg as Record<string, unknown>).journey_id)
-      : null);
+    ((pkg as Record<string, unknown> | null)?.journey_document_id as string | null) ?? null;
 
-  useEffect(() => {
-    if (!journeyId) return;
-    let cancelled = false;
-    (async () => {
-      setJourneyLoading(true);
-      try {
-        const res = await fetch(`${JOURNEY_BASE_URL}/${encodeURIComponent(journeyId)}`);
-        if (!res.ok) throw new Error(`HTTP ${res.status}`);
-        const json = (await res.json()) as { data?: JourneyData };
-        if (!cancelled) setJourneyData(json.data ?? null);
-      } catch {
-        if (!cancelled) setJourneyData(null);
-      } finally {
-        if (!cancelled) setJourneyLoading(false);
-      }
-    })();
-    return () => {
-      cancelled = true;
-    };
-  }, [journeyId]);
+  const { journey, isLoading: journeyLoading } = useJourneyDetail(journeyId);
+  const description = extractJourneyDescription(journey?.description);
 
   const { mutate: refetchPackages } = useManagedPackages();
-
-  const description = useMemo(() => extractDescription(journeyData), [journeyData]);
 
   const handleCheckout = async () => {
     if (!pkg || !user?.lead_id) return;
