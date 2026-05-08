@@ -8,10 +8,13 @@
  * LOGIC OVERVIEW:
  *   1. Reads doctorId from URL params; fetches doctor details, available slots,
  *      slot price, and campuses in parallel.
- *   2. Date strip lets the user pick a date; slots are filtered by that date.
- *   3. CampusSheet opens when user taps a slot and chooses in-person.
- *   4. On slot + campus confirm: saves to BookingContext and navigates to checkout.
- *   5. isReschedule mode reads appointmentId from search params and calls
+ *   2. Online mode: date strip + all slots shown immediately.
+ *   3. In-person mode: campus/location picker shown first; after selection, slots
+ *      are filtered to only that campus and the date strip reflects filtered availability.
+ *   4. If the selected campus has sub-locations, CampusSheet opens (sub-campus step only)
+ *      after the user picks a slot.
+ *   5. On slot + campus confirm: saves to BookingContext and navigates to checkout.
+ *   6. isReschedule mode reads appointmentId from search params and calls
  *      crmControllerRescheduleAppointment instead of navigating to checkout.
  *
  * KEY VARIABLES / PROPS / EXPORTS:
@@ -25,7 +28,7 @@
  *   useBooking — BookingContext for saving selection before checkout
  *   PageHeader — shared navigation header
  *
- * LAST UPDATED: 2026-05-08 — Resolve merge conflict: replace slotRelationNumericId with useCampuses/defaultCampusId; use SDK-driven campus throughout
+ * LAST UPDATED: 2026-05-08 — Ask for location before showing in-person slots; filter slot grid + DateStrip by selected campus
  */
 "use client";
 
@@ -134,6 +137,8 @@ function BookingContent() {
   }, []);
 
   const [isOnline, setIsOnline] = useState(initMode !== "offline");
+  // Campus chosen upfront when in-person mode is selected, before slots are shown.
+  const [selectedInPersonCampusId, setSelectedInPersonCampusId] = useState<number | null>(null);
   const [datePage, setDatePage] = useState(0);
   const [selectedDate, setSelectedDate] = useState<Date>(dates[0]);
   const [slots, setSlots] = useState<SlotResponseDto[]>([]);
@@ -229,17 +234,28 @@ function BookingContent() {
   }, [newSlotId]);
 
   // ── open sheet when slot is picked (in-person only) ─────────────────────────
+  // If campus was chosen upfront, only open the sheet for sub-campus selection (if the
+  // campus has sub-locations). Otherwise fall back to the full campus picker sheet.
   useEffect(() => {
     if (newSlotId !== null && !isOnline) {
-      setSheetStep("campus");
-      setPendingCampusId(null);
-      setSheetOpen(true);
+      if (selectedInPersonCampusId) {
+        const hasSubs = getSubCampusOptions(selectedInPersonCampusId).length > 0;
+        if (hasSubs) {
+          setSheetStep("sub-campus");
+          setSheetOpen(true);
+        }
+      } else {
+        setSheetStep("campus");
+        setPendingCampusId(null);
+        setSheetOpen(true);
+      }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [newSlotId]);
 
   const handleSessionToggle = (online: boolean) => {
     setIsOnline(online);
+    setSelectedInPersonCampusId(null);
     setConfirmedCampusId(null);
     setConfirmedSubId(null);
     fetchSlots(online ? 2 : 1);
@@ -308,10 +324,25 @@ function BookingContent() {
     return map;
   }, [slots]);
 
+  // When in-person mode with a campus chosen, filter the slot map to only slots at that campus.
+  // slot.campus_id is a [id, name] tuple — position 0 is the numeric campus ID.
+  const displaySlotsByDate = useMemo(() => {
+    if (isOnline || !selectedInPersonCampusId) return slotsByDate;
+    const map: Record<string, SlotResponseDto[]> = {};
+    for (const [key, dateSlots] of Object.entries(slotsByDate)) {
+      const filtered = dateSlots.filter((s) => {
+        const tuple = s.campus_id as unknown[] | null;
+        return Number(tuple?.[0]) === selectedInPersonCampusId;
+      });
+      if (filtered.length > 0) map[key] = filtered;
+    }
+    return map;
+  }, [slotsByDate, isOnline, selectedInPersonCampusId]);
+
   const maxPage = Math.ceil(dates.length / 10) - 1;
 
   const selectedKey = toDateKey(selectedDate);
-  const daySlots = slotsByDate[selectedKey] ?? [];
+  const daySlots = displaySlotsByDate[selectedKey] ?? [];
   const morningSlots = daySlots.filter((s) => new Date(s.start_datetime).getHours() < 12);
   const afternoonSlots = daySlots.filter((s) => {
     const h = new Date(s.start_datetime).getHours();
@@ -333,13 +364,6 @@ function BookingContent() {
     .slice(0, 2)
     .join("")
     .toUpperCase();
-
-  const confirmedCampusName =
-    confirmedCampusId !== null
-      ? availableCampuses.find((c) => c.id === confirmedCampusId)?.display_name ||
-        availableCampuses.find((c) => c.id === confirmedCampusId)?.name ||
-        null
-      : null;
 
   const confirmedSubName = useMemo(() => {
     if (confirmedSubId === null || confirmedCampusId === null) return null;
@@ -528,81 +552,157 @@ function BookingContent() {
           </div>
         </div>
 
-        {/* ── Date strip ── */}
-        <DateStrip
-          dates={dates}
-          slotsByDate={slotsByDate}
-          selectedDate={selectedDate}
-          datePage={datePage}
-          maxPage={maxPage}
-          loadingSlots={loadingSlots}
-          onDateSelect={handleDateSelect}
-          onPageChange={setDatePage}
-        />
+        {/* ── In-person: location picker (shown before slots when no campus chosen) ── */}
+        {!isOnline && selectedInPersonCampusId === null && (
+          <div>
+            <h2 className="font-semibold text-foreground mb-3">Select a location</h2>
+            {loadingMeta ? (
+              <div className="flex justify-center py-6">
+                <Loader2 className="h-5 w-5 animate-spin text-primary" />
+              </div>
+            ) : availableCampuses.length === 0 ? (
+              <p className="text-sm text-muted-foreground text-center py-6">
+                No locations available for this doctor.
+              </p>
+            ) : (
+              <div className="grid gap-2">
+                {availableCampuses.map((campus) => (
+                  <button
+                    key={campus.id}
+                    type="button"
+                    onClick={() => {
+                      setSelectedInPersonCampusId(campus.id);
+                      setConfirmedCampusId(campus.id);
+                    }}
+                    className="w-full flex items-center gap-3 p-4 rounded-2xl border border-border bg-background text-left hover:border-primary/50 hover:bg-primary/5 transition-colors"
+                  >
+                    <div className="h-10 w-10 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
+                      <Building2 className="h-5 w-5 text-primary" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="font-semibold text-sm text-foreground">
+                        {campus.display_name || campus.name}
+                      </p>
+                      {(campus.area as Array<unknown> | undefined)?.some(Array.isArray) ? (
+                        <p className="text-xs text-muted-foreground mt-0.5">
+                          {(campus.area as Array<unknown>)
+                            .filter(Array.isArray)
+                            .map((entry) => String((entry as [unknown, unknown])[1]))
+                            .join(", ")}
+                        </p>
+                      ) : null}
+                    </div>
+                    <MapPin className="h-4 w-4 text-muted-foreground shrink-0" />
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
 
-        {/* ── Slots ── */}
-        <div>
-          <h2 className="font-semibold text-foreground mb-4">Available slots for {slotHeading}</h2>
-
-          {loadingSlots ? (
-            <div className="flex justify-center py-10">
-              <Loader2 className="h-6 w-6 animate-spin text-primary" />
-            </div>
-          ) : daySlots.length === 0 ? (
-            <p className="text-sm text-muted-foreground py-6 text-center">
-              No slots available for this date
-            </p>
-          ) : (
-            <>
-              <SlotSection
-                title="Morning"
-                slots={morningSlots}
-                selectedId={newSlotId}
-                onSelect={setNewSlotId}
-              />
-              <SlotSection
-                title="Afternoon"
-                slots={afternoonSlots}
-                selectedId={newSlotId}
-                onSelect={setNewSlotId}
-              />
-              <SlotSection
-                title="Evening"
-                slots={eveningSlots}
-                selectedId={newSlotId}
-                onSelect={setNewSlotId}
-              />
-            </>
-          )}
-
-          {error && (
-            <div className="flex items-center gap-2 text-destructive text-sm mt-3">
-              <AlertCircle className="h-4 w-4 shrink-0" />
-              {error}
-            </div>
-          )}
-        </div>
-
-        {/* ── Campus summary (shown after campus confirmed) ── */}
-        {confirmedCampusId !== null && (
-          <div className="mt-6 rounded-2xl border border-border bg-muted/30 p-4 flex items-center gap-3">
+        {/* ── In-person: selected location badge + Change button ── */}
+        {!isOnline && selectedInPersonCampusId !== null && (
+          <div className="flex items-center gap-3 p-3 rounded-2xl border border-border bg-muted/30">
             <div className="h-9 w-9 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
-              <Building2 className="h-4 w-4 text-primary" />
+              <MapPin className="h-4 w-4 text-primary" />
             </div>
             <div className="flex-1 min-w-0">
-              <p className="text-xs text-muted-foreground mb-0.5">Selected campus</p>
+              <p className="text-xs text-muted-foreground mb-0.5">Selected location</p>
               <p className="text-sm font-semibold text-foreground truncate">
-                {confirmedCampusName}
+                {availableCampuses.find((c) => c.id === selectedInPersonCampusId)?.display_name ||
+                  availableCampuses.find((c) => c.id === selectedInPersonCampusId)?.name}
               </p>
-              {confirmedSubName && (
-                <p className="text-xs text-muted-foreground truncate">{confirmedSubName}</p>
-              )}
             </div>
             <button
               type="button"
               onClick={() => {
-                setSheetStep("campus");
-                setPendingCampusId(null);
+                setSelectedInPersonCampusId(null);
+                setConfirmedCampusId(null);
+                setConfirmedSubId(null);
+                setNewSlotId(null);
+              }}
+              className="text-xs font-medium text-primary shrink-0 hover:underline"
+            >
+              Change
+            </button>
+          </div>
+        )}
+
+        {/* ── Date strip (online always; in-person only after campus chosen) ── */}
+        {(isOnline || selectedInPersonCampusId !== null) && (
+          <DateStrip
+            dates={dates}
+            slotsByDate={displaySlotsByDate}
+            selectedDate={selectedDate}
+            datePage={datePage}
+            maxPage={maxPage}
+            loadingSlots={loadingSlots}
+            onDateSelect={handleDateSelect}
+            onPageChange={setDatePage}
+          />
+        )}
+
+        {/* ── Slots (online always; in-person only after campus chosen) ── */}
+        {(isOnline || selectedInPersonCampusId !== null) && (
+          <div>
+            <h2 className="font-semibold text-foreground mb-4">
+              Available slots for {slotHeading}
+            </h2>
+
+            {loadingSlots ? (
+              <div className="flex justify-center py-10">
+                <Loader2 className="h-6 w-6 animate-spin text-primary" />
+              </div>
+            ) : daySlots.length === 0 ? (
+              <p className="text-sm text-muted-foreground py-6 text-center">
+                No slots available for this date
+              </p>
+            ) : (
+              <>
+                <SlotSection
+                  title="Morning"
+                  slots={morningSlots}
+                  selectedId={newSlotId}
+                  onSelect={setNewSlotId}
+                />
+                <SlotSection
+                  title="Afternoon"
+                  slots={afternoonSlots}
+                  selectedId={newSlotId}
+                  onSelect={setNewSlotId}
+                />
+                <SlotSection
+                  title="Evening"
+                  slots={eveningSlots}
+                  selectedId={newSlotId}
+                  onSelect={setNewSlotId}
+                />
+              </>
+            )}
+
+            {error && (
+              <div className="flex items-center gap-2 text-destructive text-sm mt-3">
+                <AlertCircle className="h-4 w-4 shrink-0" />
+                {error}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* ── Sub-campus confirmation (shown after sub-location is picked via sheet) ── */}
+        {confirmedSubId !== null && confirmedSubName && (
+          <div className="rounded-2xl border border-border bg-muted/30 p-3 flex items-center gap-3">
+            <div className="h-8 w-8 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
+              <Building2 className="h-4 w-4 text-primary" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-xs text-muted-foreground mb-0.5">Sub-location</p>
+              <p className="text-sm font-semibold text-foreground truncate">{confirmedSubName}</p>
+            </div>
+            <button
+              type="button"
+              onClick={() => {
+                setSheetStep("sub-campus");
                 setSheetOpen(true);
               }}
               className="text-xs font-medium text-primary shrink-0 hover:underline"
