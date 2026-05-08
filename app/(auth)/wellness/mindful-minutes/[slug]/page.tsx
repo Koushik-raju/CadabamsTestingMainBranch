@@ -26,18 +26,17 @@
  *   useMindfulMinuteDetail(slug) — SWR hook for single collection
  *   FullscreenAudioPlayer        — fullscreen player overlay component
  *
- * LAST UPDATED: 2026-05-06 — remove sticky top-0 from PageHeader className (overrode safe-area fix)
+ * LAST UPDATED: 2026-05-08 — replaced custom right-slot search bar with PageHeader built-in search props
  */
 
 "use client";
 
-import { ChevronDown, ChevronUp, Play, Search } from "lucide-react";
+import { ChevronDown, ChevronUp, Play } from "lucide-react";
 import Link from "next/link";
 import { useParams, useSearchParams } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { PageHeader } from "@/components/shared/navigation/page-header";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
   EqualizerBars,
@@ -194,18 +193,10 @@ export default function MindfulMinuteDetailPage() {
         subtitle={`${filteredAudios.length} sessions available`}
         fallback="/wellness/mindful-minutes"
         className="z-10 bg-background border-b border-border px-4 py-3"
-        right={
-          <div className="relative">
-            <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
-            <Input
-              placeholder="Search…"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="h-8 pl-8 rounded-full border-border bg-muted text-sm w-28 md:w-40"
-              aria-label="Search audio"
-            />
-          </div>
-        }
+        searchValue={searchQuery}
+        searchPlaceholder="Search…"
+        onSearchChange={setSearchQuery}
+        onSearchClear={() => setSearchQuery("")}
       />
 
       {/* Journey continuation banner — explicit mark-complete for audio task */}

@@ -21,18 +21,17 @@
  * DEPENDENCIES:
  *   useMindfulMinutes() — SWR hook for all collections (SDK-backed, returns pre-signed S3 URLs)
  *
- * LAST UPDATED: 2026-04-28 — Neo design system: shadow scale, color tokens, border radius
+ * LAST UPDATED: 2026-05-08 — replaced custom right-slot search bar with PageHeader built-in search props
  */
 
 "use client";
 
-import { ChevronRight, RefreshCw, Search } from "lucide-react";
+import { ChevronRight, RefreshCw } from "lucide-react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
 import { PageHeader } from "@/components/shared/navigation/page-header";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { CategoryFilter } from "@/components/wellness/category-filter";
 import { useMindfulMinutes } from "@/hooks/wellness/use-mindful-minutes";
@@ -80,19 +79,11 @@ export default function MindfulMinutesPage() {
         }
         fallback="/home"
         hardBack="/home"
-        className="sticky top-0 z-10 bg-background border-b border-border px-4 py-3"
-        right={
-          <div className="relative">
-            <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
-            <Input
-              placeholder="Search…"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="h-8 pl-8 rounded-full border-border bg-muted text-sm w-28 md:w-40"
-              aria-label="Search mindful minutes"
-            />
-          </div>
-        }
+        className="z-10 bg-background border-b border-border px-4 "
+        searchValue={searchQuery}
+        searchPlaceholder="Search…"
+        onSearchChange={setSearchQuery}
+        onSearchClear={() => setSearchQuery("")}
       />
 
       <main className="flex-1 px-4 py-4 space-y-6 max-w-2xl mx-auto w-full pb-20">
