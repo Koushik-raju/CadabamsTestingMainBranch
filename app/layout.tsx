@@ -59,7 +59,7 @@ export const viewport: Viewport = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en" suppressHydrationWarning className={inter.variable}>
-      <body suppressHydrationWarning className="font-sans ">
+      <body suppressHydrationWarning className="font-sans">
         <GoogleTagManager gtmId={siteConfig.gtmId} />
         <GoogleAnalytics gaId={siteConfig.gaId} />
 
@@ -72,7 +72,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <main>
           <AppProviders>
             <CapacitorInit />
-            <div className="overflow-x-clip bg-background">{children}</div>
+            <div className="overflow-x-clip bg-background min-h-screen">{children}</div>
           </AppProviders>
         </main>
       </body>
