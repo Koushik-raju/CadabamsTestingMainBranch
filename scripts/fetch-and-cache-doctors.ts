@@ -7,7 +7,7 @@
  *   `data/doctors.ts` as a statically cached array.
  *
  * LOGIC OVERVIEW:
- *   1. Read connection vars (`ERP_BASE_URL`, `CRM_BEARER_TOKEN`; legacy `ERP_BEARER_TOKEN`) from env.
+ *   1. Read ERP connection vars (`ERP_BASE_URL`, `ERP_BEARER_TOKEN`) from env.
  *   2. For each specialty id in SPECIALTY (1, 2, and OTHERS 3–10) call
  *      GET `<ERP_BASE_URL>/get/doctors/testing?speciality_id=<id>` with a
  *      Bearer Authorization header.
@@ -18,7 +18,7 @@
  *
  * KEY VARIABLES / PROPS / EXPORTS:
  *   BASE_URL       — ERP base URL from `ERP_BASE_URL`.
- *   BEARER_TOKEN   — Bearer from `CRM_BEARER_TOKEN` (falls back to `ERP_BEARER_TOKEN` with a warning).
+ *   BEARER_TOKEN   — Bearer credential from `ERP_BEARER_TOKEN`.
  *   SPECIALTY      — enum-like map of specialty ids to iterate over.
  *   fetchDoctors() — GETs doctors for one `speciality_id`.
  *   main()         — orchestrates fetch, dedupe, and file write.
@@ -35,24 +35,15 @@ import { writeFileSync } from "fs";
 import { resolve } from "path";
 
 const BASE_URL = process.env.ERP_BASE_URL;
-/** CRM Odoo bearer for `/get/doctors/testing`. Prefer `CRM_BEARER_TOKEN`; `ERP_BEARER_TOKEN` is legacy. */
-const BEARER_TOKEN =
-  process.env.CRM_BEARER_TOKEN?.trim() || process.env.ERP_BEARER_TOKEN?.trim();
+const BEARER_TOKEN = process.env.ERP_BEARER_TOKEN;
 
 if (!BASE_URL) {
   console.error("Missing ERP_BASE_URL env var");
   process.exit(1);
 }
 if (!BEARER_TOKEN) {
-  console.error(
-    "Missing bearer token: set CRM_BEARER_TOKEN (or legacy ERP_BEARER_TOKEN) in .env",
-  );
+  console.error("Missing ERP_BEARER_TOKEN env var");
   process.exit(1);
-}
-if (process.env.ERP_BEARER_TOKEN?.trim() && !process.env.CRM_BEARER_TOKEN?.trim()) {
-  console.warn(
-    "scripts/fetch-and-cache-doctors: ERP_BEARER_TOKEN is deprecated — rename to CRM_BEARER_TOKEN in .env",
-  );
 }
 
 const SPECIALTY = {
