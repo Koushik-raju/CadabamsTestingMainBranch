@@ -21,18 +21,14 @@
  *   JourneyPathView — components/journey/journey-path-view
  *   PageHeader — shared navigation header
  *
- * LAST UPDATED: 2026-05-07 — StatsBar + JourneyCooldownBanner moved into PageHeader subHeader; removes hardcoded sticky offsets
+ * LAST UPDATED: 2026-05-08 — Removed JourneyCooldownBanner from subHeader; next day now unlocks immediately (no cooldown)
  */
 "use client";
 
 import { Crown, MoreVertical, Sparkles } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { Suspense, use, useState } from "react";
-import {
-  JourneyCooldownBanner,
-  JourneyPathView,
-  StatsBar,
-} from "@/components/journey/journey-path-view";
+import { JourneyPathView, StatsBar } from "@/components/journey/journey-path-view";
 import { PageHeader } from "@/components/shared/navigation/page-header";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -136,15 +132,9 @@ function DetailsContent({ params }: PageProps) {
             </button>
           ) : undefined
         }
-        subHeader={
-          isSubscribed && progress ? (
-            <>
-              <StatsBar progress={progress} />
-              <JourneyCooldownBanner progress={progress} journeyId={id} />
-            </>
-          ) : undefined
-        }
-      />
+      >
+        {isSubscribed && progress ? <StatsBar progress={progress} /> : undefined}
+      </PageHeader>
 
       <JourneyPathView journey={journey} progress={progress} journeyId={id} />
 
