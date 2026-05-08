@@ -678,27 +678,6 @@ export type DoctorBasicResponseDto = {
     book_appointments: boolean;
 };
 
-export type DoctorListingTestingCampusDto = {
-    /**
-     * City label shown to patients
-     */
-    city: string;
-    /**
-     * Campus / centre id
-     */
-    campus_id: number;
-    /**
-     * Centre display name
-     */
-    name: string;
-    /**
-     * false when no sub-campus for this row; otherwise Odoo sub-campus id
-     */
-    sub_campus_id: {
-        [key: string]: unknown;
-    };
-};
-
 export type DoctorListingPageResponseDto = {
     /**
      * Total number of matching doctors
@@ -712,10 +691,6 @@ export type DoctorListingPageResponseDto = {
      * Set on single-doctor CRM `/get/doctors/testing` responses
      */
     doctor_id?: number;
-    /**
-     * In-person centres from CRM (only when CRM includes `campuses`)
-     */
-    campuses?: Array<DoctorListingTestingCampusDto>;
     /**
      * Calendar hints from CRM: date key YYYY-MM-DD → { available }
      */
@@ -1209,6 +1184,10 @@ export type CampusMasterResponseDto = {
      * Whether patients can be created at this campus
      */
     create_patient: boolean;
+    /**
+     * True for the canonical default campus — used by the frontend when no campus is otherwise selected (e.g. virtual consultations, package bookings). Resolved from CAMPUS_ID_MAP.cadabams.
+     */
+    is_default: boolean;
 };
 
 export type SlotResponseDto = {
@@ -1483,6 +1462,70 @@ export type RazorpayPackagePaymentDto = {
      * Campus ID (must match the package booking; 0 is invalid for ERP)
      */
     campus_id: number;
+};
+
+export type RazorpayOrderDto = {
+    /**
+     * CRM lead ID
+     */
+    lead_id: number;
+    /**
+     * Slot booking database ID
+     */
+    slot_id: number;
+    /**
+     * Order expiry — Unix time in SECONDS (not ms). e.g. now + 86400 for 24h
+     */
+    expiry_date: number;
+};
+
+export type RazorpayOrderResponseDto = {
+    /**
+     * Razorpay order ID — pass as `order_id` to Razorpay Standard Checkout
+     */
+    id: string;
+    /**
+     * Amount in paise (smallest currency unit)
+     */
+    amount: number;
+    /**
+     * Currency code
+     */
+    currency: string;
+    /**
+     * Order lifecycle status from Razorpay
+     */
+    status: string;
+};
+
+export type RazorpayOrderEnvelopeDto = {
+    /**
+     * JSON-RPC version
+     */
+    jsonrpc: string;
+    /**
+     * JSON-RPC request id (always null)
+     */
+    id: number | null;
+    /**
+     * Razorpay order payload
+     */
+    result: RazorpayOrderResponseDto;
+};
+
+export type RazorpayPackageOrderDto = {
+    /**
+     * CRM lead ID
+     */
+    lead_id: number;
+    /**
+     * Booked package database ID
+     */
+    booked_package_id: number;
+    /**
+     * Order expiry — Unix time in SECONDS (not ms). e.g. now + 86400 for 24h
+     */
+    expiry_date: number;
 };
 
 export type EnableNotificationsDto = {
@@ -6342,48 +6385,6 @@ export type CrmControllerListDoctorsWithSlotsResponses = {
 
 export type CrmControllerListDoctorsWithSlotsResponse = CrmControllerListDoctorsWithSlotsResponses[keyof CrmControllerListDoctorsWithSlotsResponses];
 
-export type CrmControllerGetDoctorInPersonBookingContextData = {
-    body?: never;
-    path: {
-        /**
-         * Doctor res.partner id
-         */
-        id: number;
-    };
-    query?: {
-        /**
-         * Consultation type ID (1=In-Person). Forwarded to CRM as `consultation_type_ids` on `/get/doctors/testing`. Defaults to 1.
-         */
-        consultation_type_id?: number;
-        /**
-         * Availability window start (CRM expects date/time string, e.g. YYYY-MM-DD 00:00:00)
-         */
-        start_datetime?: string;
-        /**
-         * Availability window end (e.g. YYYY-MM-DD 23:59:59)
-         */
-        stop_datetime?: string;
-        /**
-         * Restrict context to this campus when pre-selected
-         */
-        campus_id?: number;
-        /**
-         * Restrict context to this sub-campus when pre-selected
-         */
-        sub_campus_id?: number;
-    };
-    url: '/api/v1/crm/doctors/{id}/in-person-booking-context';
-};
-
-export type CrmControllerGetDoctorInPersonBookingContextResponses = {
-    /**
-     * Same envelope as list doctors with slots (total_count, doctors, plus CRM extras if any)
-     */
-    200: DoctorListingPageResponseDto;
-};
-
-export type CrmControllerGetDoctorInPersonBookingContextResponse = CrmControllerGetDoctorInPersonBookingContextResponses[keyof CrmControllerGetDoctorInPersonBookingContextResponses];
-
 export type CrmControllerGetDoctorByIdData = {
     body?: never;
     path: {
@@ -6618,6 +6619,9 @@ export type CrmControllerGetPackageProductDetailsResponses = {
 export type CrmControllerGetPackageProductDetailsResponse = CrmControllerGetPackageProductDetailsResponses[keyof CrmControllerGetPackageProductDetailsResponses];
 
 export type CrmControllerBookPackageData = {
+    /**
+     * Flat `CrmBookPackageDto`, or `{ "data": CrmBookPackageDto }` — both are accepted.
+     */
     body: CrmBookPackageDto;
     path?: never;
     query?: never;
@@ -6814,6 +6818,38 @@ export type CrmControllerRazorpayPackagePaymentResponses = {
 };
 
 export type CrmControllerRazorpayPackagePaymentResponse = CrmControllerRazorpayPackagePaymentResponses[keyof CrmControllerRazorpayPackagePaymentResponses];
+
+export type CrmControllerRazorpayOrderData = {
+    body: RazorpayOrderDto;
+    path?: never;
+    query?: never;
+    url: '/api/v1/crm/payments/razorpay-order';
+};
+
+export type CrmControllerRazorpayOrderResponses = {
+    /**
+     * Razorpay order created
+     */
+    200: RazorpayOrderEnvelopeDto;
+};
+
+export type CrmControllerRazorpayOrderResponse = CrmControllerRazorpayOrderResponses[keyof CrmControllerRazorpayOrderResponses];
+
+export type CrmControllerRazorpayPackageOrderData = {
+    body: RazorpayPackageOrderDto;
+    path?: never;
+    query?: never;
+    url: '/api/v1/crm/payments/razorpay-package-order';
+};
+
+export type CrmControllerRazorpayPackageOrderResponses = {
+    /**
+     * Razorpay package order created
+     */
+    200: RazorpayOrderEnvelopeDto;
+};
+
+export type CrmControllerRazorpayPackageOrderResponse = CrmControllerRazorpayPackageOrderResponses[keyof CrmControllerRazorpayPackageOrderResponses];
 
 export type CrmControllerEnableNotificationsData = {
     body: EnableNotificationsDto;

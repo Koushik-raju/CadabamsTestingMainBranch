@@ -9,8 +9,11 @@
  *   1. Reads slotId, doctorId, and booking params from BookingContext.
  *   2. Fetches doctor details and slot price in parallel on mount.
  *   3. Opens a bottom sheet to select who the appointment is for (self or a relation).
- *   4. On confirm, calls crmControllerBookAppointment then crmControllerRazorpayPayment.
- *   5. Redirects to Razorpay short_url on success.
+ *   4. On confirm: bookAndCreateOrder books the appointment and creates a
+ *      Razorpay Order via /crm/payments/razorpay-order.
+ *   5. Opens Razorpay Standard Checkout in-page (web modal or Capacitor sheet).
+ *      On success, navigates to /appointments. Server-side payment confirmation
+ *      runs via the Razorpay → backend webhook.
  *
  * KEY VARIABLES / PROPS / EXPORTS:
  *   doctor           — fetched CrmControllerGetDoctorByIdResponse
@@ -20,12 +23,14 @@
  *
  * DEPENDENCIES:
  *   crmControllerGetDoctorById, crmControllerGetSlotPrice,
- *   crmControllerBookAppointment, crmControllerRazorpayPayment,
  *   crmControllerGetRelationships — SDK calls
+ *   bookAndCreateOrder — @/hooks/consult/use-checkout (wraps
+ *     crmControllerBookAppointment + crmControllerRazorpayOrder)
+ *   openRazorpayNative — @/lib/capacitor/razorpay (web + native checkout)
  *   useBooking — BookingContext hook for slot/doctor/campus IDs
  *   PageHeader — shared navigation header
  *
- * LAST UPDATED: 2026-04-28 — Neo design system: shadow scale, color tokens, border radius
+ * LAST UPDATED: 2026-05-08 — Migrated from Razorpay payment-link redirect to Razorpay Order + Standard Checkout
  */
 "use client";
 
@@ -50,14 +55,15 @@ import { Separator } from "@/components/ui/separator";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useBooking } from "@/contexts/booking-context";
+import { bookAndCreateOrder } from "@/hooks/consult/use-checkout";
 import { useAuth } from "@/hooks/shared/auth/use-auth";
+import { useCampuses } from "@/hooks/shared/campuses/use-campuses";
+import { openRazorpayNative } from "@/lib/capacitor/razorpay";
 import type { CrmControllerGetDoctorByIdResponse, RelationshipResponseDto } from "@/sdk/backend-v2";
 import {
-  crmControllerBookAppointment,
   crmControllerGetDoctorById,
   crmControllerGetRelationships,
   crmControllerGetSlotPrice,
-  crmControllerRazorpayPayment,
 } from "@/sdk/backend-v2";
 
 function _displayName(doctor: CrmControllerGetDoctorByIdResponse | null): string {
@@ -142,44 +148,65 @@ function CheckoutContent() {
     proceedWithBooking(patientNameInput.trim(), selectedRelation);
   };
 
-  const proceedWithBooking = async (patientName: string, relation: RelationshipResponseDto) => {
+  const { defaultCampusId } = useCampuses();
+
+  const proceedWithBooking = async (patientName: string, _relation: RelationshipResponseDto) => {
     if (!slotId) return;
+    const rzpKey = process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID;
+    if (!rzpKey) {
+      setError("Payment is not configured. Please contact support.");
+      return;
+    }
+    if (!defaultCampusId) {
+      setError("Loading campus details. Please try again in a moment.");
+      return;
+    }
     setSheetOpen(false);
     setProcessing(true);
     setError(null);
     try {
-      const resolvedCampusId = campusId ?? 1;
+      const isVirtual = consultationTypeId === 2;
+      const resolvedCampusId = isVirtual ? defaultCampusId : (campusId ?? defaultCampusId);
       const leadId = user?.lead_id ? Number(user.lead_id) : 0;
-      const uid = user?.sub ?? "";
       const callerName = user?.name ?? "";
 
-      await crmControllerBookAppointment({
-        body: {
-          slot_id: slotId,
-          lead_id: leadId,
-          campus_id: resolvedCampusId,
-          sub_campus_id: subCampusId ?? undefined,
-          consultation_type_id: consultationTypeId,
-          caller_name: callerName,
-          patient_name: patientName,
-          appointment_type: "individual_appointment",
-          payment_mode: "online",
+      const order = await bookAndCreateOrder({
+        slotId,
+        campusId: resolvedCampusId,
+        subCampusId: isVirtual ? undefined : (subCampusId ?? undefined),
+        consultationTypeId,
+        leadId,
+        callerName,
+        patientName,
+      });
+
+      /*
+       * Standard Checkout opens an in-page modal (web) or native sheet
+       * (Capacitor). Server-side payment confirmation is handled by the
+       * Razorpay → backend webhook; the new /razorpay/order/callback path
+       * is not yet exposed via the SDK, so we don't call it here.
+       */
+      const result = await openRazorpayNative({
+        key: rzpKey,
+        amount: order.amount,
+        currency: order.currency,
+        orderId: order.id,
+        name: "Cadabam's Consultation",
+        description: `Appointment with ${doctor?.name ?? "doctor"}`,
+        prefill: {
+          name: callerName,
+          email: user?.email ? String(user.email) : undefined,
+          contact: user?.phone_number ? String(user.phone_number) : undefined,
         },
       });
 
-      const payRes = await crmControllerRazorpayPayment({
-        body: {
-          slot_id: slotId,
-          campus_id: resolvedCampusId,
-          lead_id: leadId,
-          uid,
-        },
-      });
+      if (!result.success) {
+        setError(result.error ?? "Payment was not completed.");
+        setProcessing(false);
+        return;
+      }
 
-      if (!payRes.data?.result.short_url)
-        throw new Error("Payment initiation failed — no payment link received.");
-
-      window.location.href = payRes.data?.result.short_url;
+      router.replace("/appointments");
     } catch (err) {
       console.error(err);
       setError(err instanceof Error ? err.message : "Payment initiation failed. Please try again.");

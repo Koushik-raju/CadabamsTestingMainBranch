@@ -32,6 +32,7 @@ import { Button } from "@/components/ui/button";
 import type { SlotDetailDto } from "@/hooks/appointments/use-appointments-page";
 import { startConsultAppointmentPayment } from "@/hooks/appointments/use-appointments-page";
 import { useAuth } from "@/hooks/shared/auth/use-auth";
+import { openRazorpayNative } from "@/lib/capacitor/razorpay";
 
 interface AppointmentCardProps {
   appointment: SlotDetailDto;
@@ -116,12 +117,43 @@ export function AppointmentCard({ appointment, isPast }: AppointmentCardProps) {
     e.preventDefault();
     e.stopPropagation();
     if (paying) return;
+    const rzpKey = process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID;
+    if (!rzpKey) {
+      toast.error("Payment is not configured.");
+      return;
+    }
     setPaying(true);
     try {
       const leadId = user?.lead_id ? Number(user.lead_id) : 0;
-      const uid = user?.sub ?? "";
-      const url = await startConsultAppointmentPayment(appointment, { leadId, uid });
-      window.location.href = url;
+      const order = await startConsultAppointmentPayment(appointment, { leadId });
+
+      /*
+       * Standard Checkout opens an in-page modal (web) or native sheet
+       * (Capacitor). Server-side confirmation runs via the Razorpay →
+       * backend webhook; we just navigate to the appointment detail
+       * after the modal closes successfully.
+       */
+      const result = await openRazorpayNative({
+        key: rzpKey,
+        amount: order.amount,
+        currency: order.currency,
+        orderId: order.id,
+        name: "Cadabam's Consultation",
+        description: `Appointment with ${doctorName}`,
+        prefill: {
+          name: user?.name ? String(user.name) : undefined,
+          email: user?.email ? String(user.email) : undefined,
+          contact: user?.phone_number ? String(user.phone_number) : undefined,
+        },
+      });
+
+      if (!result.success) {
+        toast.error(result.error ?? "Payment was not completed.");
+        setPaying(false);
+        return;
+      }
+
+      router.push(`/consult/appointments/${appointment.id}`);
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Payment could not be started.");
       setPaying(false);

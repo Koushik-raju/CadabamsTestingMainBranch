@@ -38,6 +38,7 @@ import {
   useManagedPackages,
 } from "@/hooks/packages/use-packages";
 import { useAuth } from "@/hooks/shared/auth/use-auth";
+import { useCampuses } from "@/hooks/shared/campuses/use-campuses";
 import type { PackageResponseDto } from "@/sdk/backend-v2";
 
 const JOURNEY_BASE_URL = "https://mindtalkbuddy.com/api/mindful-journeys";
@@ -147,11 +148,16 @@ function SelectedPackageContent() {
   }, [journeyId]);
 
   const { mutate: refetchPackages } = useManagedPackages();
+  const { defaultCampusId } = useCampuses();
 
   const description = useMemo(() => extractDescription(journeyData), [journeyData]);
 
   const handleCheckout = async () => {
     if (!pkg || !user?.lead_id) return;
+    if (!defaultCampusId) {
+      setError("Loading campus details. Please try again in a moment.");
+      return;
+    }
     setIsLoading(true);
     setError(null);
     try {
@@ -163,7 +169,7 @@ function SelectedPackageContent() {
         caller_name: patientName,
         patient_name: patientName,
         lead_id: leadId,
-        campus_id: 1,
+        campus_id: defaultCampusId,
         sequence_booking: false,
         package_stage: "booked",
         payment_mode: "online",
@@ -173,7 +179,7 @@ function SelectedPackageContent() {
       const payData = await initiatePackagePayment({
         leadBookedPackageId: booking_id,
         leadId,
-        campusId: 1,
+        campusId: defaultCampusId,
       });
       await refetchPackages();
       await refetchPackages();

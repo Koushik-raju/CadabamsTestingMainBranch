@@ -25,7 +25,7 @@
  *   useBooking — BookingContext for saving selection before checkout
  *   PageHeader — shared navigation header
  *
- * LAST UPDATED: 2026-05-06 — Add practice location chips to doctor card; locations sourced from static DOCTORS array (API DTO lacks area field)
+ * LAST UPDATED: 2026-05-08 — Resolve merge conflict: replace slotRelationNumericId with useCampuses/defaultCampusId; use SDK-driven campus throughout
  */
 "use client";
 
@@ -51,7 +51,7 @@ import { Button } from "@/components/ui/button";
 import { useBooking } from "@/contexts/booking-context";
 import { DOCTORS } from "@/data/doctors";
 import { useAuth } from "@/hooks/shared/auth/use-auth";
-import { slotRelationNumericId } from "@/lib/crm-slot-relations";
+import { useCampuses } from "@/hooks/shared/campuses/use-campuses";
 import { cn } from "@/lib/utils";
 import type { DoctorBasicResponseDto, SlotResponseDto } from "@/sdk/backend-v2";
 import {
@@ -99,6 +99,7 @@ function BookingContent() {
   const { doctor_id } = useParams<{ doctor_id: string }>();
   const searchParams = useSearchParams();
   const { user } = useAuth();
+  const { defaultCampusId } = useCampuses();
 
   const isReschedule = searchParams.get("reschedule") === "true";
   const existingSlotId = isReschedule ? Number(searchParams.get("appointment_id")) : null;
@@ -376,24 +377,21 @@ function BookingContent() {
         setError("Please select a campus to continue.");
         return;
       }
+      const resolvedCampusId = confirmedCampusId ?? defaultCampusId;
+      if (!resolvedCampusId) {
+        setError("Loading campus details. Please try again in a moment.");
+        return;
+      }
       setConfirming(true);
       setError(null);
       try {
-        const resSlot = slots.find((s) => s.id === newSlotId);
-        const campusForReschedule = isOnline
-          ? slotRelationNumericId(resSlot?.campus_id)
-          : confirmedCampusId;
-        const subForReschedule = isOnline
-          ? slotRelationNumericId(resSlot?.sub_campus_id)
-          : confirmedSubId;
-
         await crmControllerRescheduleAppointment({
           body: {
             slot_id: existingSlotId, // existing slot being replaced
             appointment_id: newSlotId, // new slot selected by user
             lead_id: leadId,
-            campus_id: campusForReschedule ?? 1,
-            sub_campus_id: subForReschedule ?? undefined,
+            campus_id: resolvedCampusId,
+            sub_campus_id: confirmedSubId ?? undefined,
             consultation_type_id: isOnline ? 2 : 1,
             caller_name: user?.name ?? "",
             patient_name: user?.name ?? "",
@@ -411,14 +409,12 @@ function BookingContent() {
     }
 
     const slot = slots.find((s) => s.id === newSlotId);
-    const campusFromSlot = slotRelationNumericId(slot?.campus_id);
-    const subFromSlot = slotRelationNumericId(slot?.sub_campus_id);
 
     setBooking({
       slotId: newSlotId,
       doctorId: Number(doctor_id),
-      campusId: isOnline ? (campusFromSlot ?? confirmedCampusId) : confirmedCampusId,
-      subCampusId: isOnline ? subFromSlot : confirmedSubId,
+      campusId: confirmedCampusId,
+      subCampusId: confirmedSubId,
       consultationTypeId: isOnline ? 2 : 1,
       startDatetime: slot?.start_datetime ?? null,
     });

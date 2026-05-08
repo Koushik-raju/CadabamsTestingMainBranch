@@ -16,7 +16,9 @@
  *   cancelAppointment    — async action that calls the cancel SDK function.
  *                          Caller is responsible for calling mutate() to
  *                          invalidate caches.
- *   startConsultAppointmentPayment — Razorpay link for a booked slot (list + detail).
+ *   startConsultAppointmentPayment — creates a Razorpay Order for an already-
+ *                          booked slot. Returns RazorpayOrderResponseDto so the
+ *                          caller can open Razorpay Standard Checkout in-page.
  *
  * KEY VARIABLES / PROPS / EXPORTS:
  *   ONE_YEAR_AGO        — module-level date string; fixed so SWR key doesn't
@@ -27,11 +29,11 @@
  * DEPENDENCIES:
  *   SWR (useSWR, useSWRConfig)
  *   crmControllerFetchAppointmentDetails, crmControllerCancelAppointment,
- *   crmControllerRazorpayPayment (via startConsultAppointmentPayment)
+ *   crmControllerRazorpayOrder (via startConsultAppointmentPayment)
  *   appointmentsKey — from @/lib/swr-keys
  *   useAuth — for leadId
  *
- * LAST UPDATED: 2026-05-07 — Restored startConsultAppointmentPayment for consult pay flows.
+ * LAST UPDATED: 2026-05-08 — Migrated startConsultAppointmentPayment from payment-link to Razorpay Order
  */
 "use client";
 
@@ -39,41 +41,42 @@ import { useCallback } from "react";
 import useSWR, { useSWRConfig } from "swr";
 import { useAuth } from "@/hooks/shared/auth/use-auth";
 import { appointmentsKey } from "@/lib/swr-keys";
+import type { RazorpayOrderResponseDto } from "@/sdk/backend-v2";
 import {
   crmControllerCancelAppointment,
   crmControllerFetchAppointmentDetails,
-  crmControllerRazorpayPayment,
+  crmControllerRazorpayOrder,
   type SlotDetailDto,
 } from "@/sdk/backend-v2";
 
-export type { SlotDetailDto };
+export type { RazorpayOrderResponseDto, SlotDetailDto };
 
-/** CRM `booked` = hold pending online payment — Razorpay via backend / CRM. */
+/*
+ * Creates a Razorpay Order for an already-booked slot (CRM `booked` =
+ * hold pending online payment). The caller passes the returned
+ * RazorpayOrderResponseDto into Razorpay Standard Checkout. expiry_date
+ * is Unix SECONDS, not ms.
+ */
 export async function startConsultAppointmentPayment(
   apt: SlotDetailDto,
-  auth: { leadId: number; uid: string },
-): Promise<string> {
+  auth: { leadId: number },
+): Promise<RazorpayOrderResponseDto> {
   if (!auth.leadId) throw new Error("Missing account information. Please sign in again.");
-  if (!auth.uid) throw new Error("Missing session. Please sign in again.");
 
-  const isVirtual = !!apt.virtual_consultation_url;
-  const campusId = isVirtual ? 1 : Number(apt.campus_id) || 1;
-
-  const payRes = await crmControllerRazorpayPayment({
+  const orderRes = await crmControllerRazorpayOrder({
     body: {
       slot_id: apt.id,
-      campus_id: campusId,
       lead_id: auth.leadId,
-      uid: auth.uid,
+      expiry_date: Math.floor(Date.now() / 1000) + 86400,
     },
   });
 
-  if (payRes.error) throw new Error("Payment could not be started. Please try again.");
+  if (orderRes.error) throw new Error("Payment could not be started. Please try again.");
 
-  const shortUrl = payRes.data?.result?.short_url;
-  if (!shortUrl) throw new Error("No payment link received. Please try again.");
+  const order = orderRes.data?.result;
+  if (!order) throw new Error("No order received. Please try again.");
 
-  return shortUrl;
+  return order;
 }
 
 // Fixed at module level so SWR key never changes between renders.

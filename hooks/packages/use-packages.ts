@@ -9,6 +9,7 @@ import {
 import type {
   BookPackageResultDto,
   CrmBookPackageDto,
+  RazorpayOrderResponseDto,
   RazorpayPaymentEnvelopeDto,
 } from "@/sdk/backend-v2";
 import {
@@ -17,6 +18,7 @@ import {
   crmControllerGetPackageProductDetails,
   crmControllerGetPackageProductLines,
   crmControllerGetUserPackages,
+  crmControllerRazorpayPackageOrder,
   crmControllerRazorpayPackagePayment,
 } from "@/sdk/backend-v2";
 
@@ -73,15 +75,14 @@ export async function bookPackage(data: CrmBookPackageDto): Promise<BookPackageR
 export async function initiatePackagePayment(opts: {
   leadBookedPackageId: number;
   leadId: number;
-  campusId?: number;
+  campusId: number;
 }): Promise<RazorpayPaymentEnvelopeDto> {
   // Odoo rejects campus_id 0 (see payments.dto / ERP); must match the campus used when booking.
-  const campusId = opts.campusId ?? 1;
   const res = await crmControllerRazorpayPackagePayment({
     body: {
       booked_package_id: opts.leadBookedPackageId,
       lead_id: opts.leadId,
-      campus_id: campusId,
+      campus_id: opts.campusId,
     },
   });
 
@@ -90,7 +91,7 @@ export async function initiatePackagePayment(opts: {
     console.log("request body:", {
       booked_package_id: opts.leadBookedPackageId,
       lead_id: opts.leadId,
-      campus_id: campusId,
+      campus_id: opts.campusId,
     });
     const ax = res as {
       status?: number;
@@ -115,4 +116,29 @@ export async function initiatePackagePayment(opts: {
 
   if (!res.data) throw new Error("Payment initiation failed.");
   return res.data;
+}
+
+/*
+ * Creates a Razorpay Order for a booked package via the new
+ * /crm/payments/razorpay-package-order endpoint. Returned `id` is the
+ * Razorpay order_id (order_xxx) — feed it into Standard Checkout.
+ *
+ * expiry_date is Unix time in SECONDS, not ms (passing ms produces a
+ * timestamp ~50,000 years in the future).
+ */
+export async function initiatePackageOrder(opts: {
+  leadBookedPackageId: number;
+  leadId: number;
+  expirySeconds?: number;
+}): Promise<RazorpayOrderResponseDto> {
+  const expiryDate = opts.expirySeconds ?? Math.floor(Date.now() / 1000) + 86400;
+  const res = await crmControllerRazorpayPackageOrder({
+    body: {
+      booked_package_id: opts.leadBookedPackageId,
+      lead_id: opts.leadId,
+      expiry_date: expiryDate,
+    },
+  });
+  if (!res.data?.result) throw new Error("Order creation failed.");
+  return res.data.result;
 }

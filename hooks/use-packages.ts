@@ -1,5 +1,6 @@
 export {
   bookPackage,
+  initiatePackageOrder,
   initiatePackagePayment,
   useAvailablePackages,
   useManagedPackages,

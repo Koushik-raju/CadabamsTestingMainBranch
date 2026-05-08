@@ -5,7 +5,7 @@
  *   Client UI for a single consult appointment (doctor, time, status, pay-to-confirm,
  *   join / reschedule / cancel). Lives beside page.tsx for a stable Turbopack chunk id.
  *
- * LAST UPDATED: 2026-05-07 — Restored pay row + status after upstream revert
+ * LAST UPDATED: 2026-05-08 — Pay-to-confirm now opens Razorpay Standard Checkout in-page (no redirect)
  */
 "use client";
 
@@ -47,6 +47,7 @@ import {
   useAppointmentById,
 } from "@/hooks/appointments/use-appointments-page";
 import { useAuth } from "@/hooks/shared/auth/use-auth";
+import { openRazorpayNative } from "@/lib/capacitor/razorpay";
 import { cn } from "@/lib/utils";
 
 function getDoctorName(doctor: SlotDetailDto["doctor"]): string {
@@ -149,13 +150,44 @@ function DetailContent() {
 
   const handlePayToConfirm = async () => {
     if (!apt || paying) return;
+    const rzpKey = process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID;
+    if (!rzpKey) {
+      setPayError("Payment is not configured. Please contact support.");
+      return;
+    }
     setPayError(null);
     setPaying(true);
     try {
       const leadId = user?.lead_id ? Number(user.lead_id) : 0;
-      const uid = user?.sub ?? "";
-      const url = await startConsultAppointmentPayment(apt, { leadId, uid });
-      window.location.href = url;
+      const order = await startConsultAppointmentPayment(apt, { leadId });
+
+      /*
+       * Standard Checkout opens an in-page modal (web) or native sheet
+       * (Capacitor). Server-side payment confirmation is handled by the
+       * Razorpay → backend webhook; the new /razorpay/order/callback path
+       * is not yet exposed via the SDK, so we don't call it here.
+       */
+      const result = await openRazorpayNative({
+        key: rzpKey,
+        amount: order.amount,
+        currency: order.currency,
+        orderId: order.id,
+        name: "Cadabam's Consultation",
+        description: `Appointment with ${getDoctorName(apt.doctor)}`,
+        prefill: {
+          name: user?.name ? String(user.name) : undefined,
+          email: user?.email ? String(user.email) : undefined,
+          contact: user?.phone_number ? String(user.phone_number) : undefined,
+        },
+      });
+
+      if (!result.success) {
+        setPayError(result.error ?? "Payment was not completed.");
+        setPaying(false);
+        return;
+      }
+
+      await refetch();
     } catch (e) {
       setPayError(e instanceof Error ? e.message : "Something went wrong.");
       setPaying(false);

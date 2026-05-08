@@ -10,7 +10,11 @@
  *   2. If mismatch, redirects to /packages/book-package.
  *   3. If the package has a journey_document_id, fetches the journey via SDK
  *      (cmsJourneysControllerGetById) for the overview description.
- *   4. On confirm: calls bookPackage then initiatePackagePayment, then redirects to short_url.
+ *   4. On confirm: calls bookPackage, then initiatePackageOrder to create a
+ *      Razorpay Order, then opens Razorpay Standard Checkout in-page via
+ *      openRazorpayNative (web SDK or Capacitor plugin).
+ *   5. On success: refetches packages and routes to /packages. Server-side
+ *      payment confirmation is handled by Razorpay → backend webhook.
  *
  * KEY VARIABLES / PROPS / EXPORTS:
  *   pkg          — PackageResponseDto from sessionStorage
@@ -18,13 +22,14 @@
  *   isLoading    — payment processing state
  *
  * DEPENDENCIES:
- *   bookPackage, initiatePackagePayment — from @/hooks/use-packages
+ *   bookPackage, initiatePackageOrder — from @/hooks/use-packages
+ *   openRazorpayNative — @/lib/capacitor/razorpay (web + native checkout)
  *   useJourneyDetail — SWR wrapper around cmsJourneysControllerGetById
  *   extractJourneyDescription — flattens Strapi rich-text to plain string
  *   useAuth — user identity
  *   PageHeader — shared navigation header
  *
- * LAST UPDATED: 2026-05-08 — Replaced external Strapi fetch with SDK useJourneyDetail
+ * LAST UPDATED: 2026-05-08 — Migrated from Razorpay payment-link redirect to Razorpay Order + Standard Checkout
  */
 "use client";
 
@@ -36,8 +41,10 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { useJourneyDetail } from "@/hooks/journeys/use-journey-detail";
+import { useCampuses } from "@/hooks/shared/campuses/use-campuses";
 import { useAuth } from "@/hooks/use-auth";
-import { bookPackage, initiatePackagePayment, useManagedPackages } from "@/hooks/use-packages";
+import { bookPackage, initiatePackageOrder, useManagedPackages } from "@/hooks/use-packages";
+import { openRazorpayNative } from "@/lib/capacitor/razorpay";
 import type { PackageResponseDto } from "@/sdk/backend-v2";
 import { extractJourneyDescription } from "@/types/journey";
 
@@ -75,9 +82,19 @@ function BookPackageContent({ packageId }: { packageId: string }) {
   const description = extractJourneyDescription(journey?.description);
 
   const { mutate: refetchPackages } = useManagedPackages();
+  const { defaultCampusId } = useCampuses();
 
   const handleCheckout = async () => {
     if (!pkg || !user?.lead_id) return;
+    const rzpKey = process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID;
+    if (!rzpKey) {
+      setError("Payment is not configured. Please contact support.");
+      return;
+    }
+    if (!defaultCampusId) {
+      setError("Loading campus details. Please try again in a moment.");
+      return;
+    }
     setIsLoading(true);
     setError(null);
     try {
@@ -87,19 +104,45 @@ function BookPackageContent({ packageId }: { packageId: string }) {
         caller_name: patientName,
         patient_name: patientName,
         lead_id: Number(user.lead_id),
-        campus_id: 1,
+        campus_id: defaultCampusId,
         sequence_booking: false,
         package_stage: "booked",
         payment_mode: "online",
         date: new Date().toISOString().split("T")[0],
       });
-      const payData = await initiatePackagePayment({
+
+      const order = await initiatePackageOrder({
         leadBookedPackageId: booking_id,
         leadId: Number(user.lead_id),
-        campusId: 1,
       });
+
+      /*
+       * Standard Checkout opens an in-page modal (web) or native sheet
+       * (Capacitor). Server-side payment confirmation is handled by the
+       * Razorpay → backend webhook; the new /razorpay/order/callback path
+       * is not yet exposed via the SDK, so we don't call it here.
+       */
+      const result = await openRazorpayNative({
+        key: rzpKey,
+        amount: order.amount,
+        currency: order.currency,
+        orderId: order.id,
+        name: pkg.package_name,
+        description: `Package #${pkg.id}`,
+        prefill: {
+          name: patientName,
+          email: user.email ? String(user.email) : undefined,
+          contact: user.phone_number ? String(user.phone_number) : undefined,
+        },
+      });
+
+      if (!result.success) {
+        setError(result.error ?? "Payment was not completed.");
+        return;
+      }
+
       await refetchPackages();
-      window.location.href = payData.result.short_url;
+      router.replace("/packages");
     } catch (err: unknown) {
       setError((err as { message?: string })?.message ?? "Failed to process payment");
     } finally {
