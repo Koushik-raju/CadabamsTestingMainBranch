@@ -157,7 +157,8 @@ function CheckoutContent() {
       setError("Payment is not configured. Please contact support.");
       return;
     }
-    if (!defaultCampusId) {
+    const resolvedCampusId = campusId ?? defaultCampusId;
+    if (!resolvedCampusId) {
       setError("Loading campus details. Please try again in a moment.");
       return;
     }
@@ -165,15 +166,13 @@ function CheckoutContent() {
     setProcessing(true);
     setError(null);
     try {
-      const isVirtual = consultationTypeId === 2;
-      const resolvedCampusId = isVirtual ? defaultCampusId : (campusId ?? defaultCampusId);
       const leadId = user?.lead_id ? Number(user.lead_id) : 0;
       const callerName = user?.name ?? "";
 
       const order = await bookAndCreateOrder({
         slotId,
         campusId: resolvedCampusId,
-        subCampusId: isVirtual ? undefined : (subCampusId ?? undefined),
+        subCampusId: subCampusId ?? undefined,
         consultationTypeId,
         leadId,
         callerName,

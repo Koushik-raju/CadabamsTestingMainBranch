@@ -55,6 +55,7 @@ import { useBooking } from "@/contexts/booking-context";
 import { DOCTORS } from "@/data/doctors";
 import { useAuth } from "@/hooks/shared/auth/use-auth";
 import { useCampuses } from "@/hooks/shared/campuses/use-campuses";
+import { slotRelationNumericId } from "@/lib/crm-slot-relations";
 import { cn } from "@/lib/utils";
 import type { DoctorBasicResponseDto, SlotResponseDto } from "@/sdk/backend-v2";
 import {
@@ -401,7 +402,11 @@ function BookingContent() {
         setError("Please select a campus to continue.");
         return;
       }
-      const resolvedCampusId = confirmedCampusId ?? defaultCampusId;
+      const resSlot = slots.find((s) => s.id === newSlotId);
+      const campusFromSlot = slotRelationNumericId(resSlot?.campus_id);
+      const subFromSlot = slotRelationNumericId(resSlot?.sub_campus_id);
+      const resolvedCampusId =
+        (isOnline ? (campusFromSlot ?? confirmedCampusId) : confirmedCampusId) ?? defaultCampusId;
       if (!resolvedCampusId) {
         setError("Loading campus details. Please try again in a moment.");
         return;
@@ -415,7 +420,7 @@ function BookingContent() {
             appointment_id: newSlotId, // new slot selected by user
             lead_id: leadId,
             campus_id: resolvedCampusId,
-            sub_campus_id: confirmedSubId ?? undefined,
+            sub_campus_id: (isOnline ? subFromSlot : confirmedSubId) ?? undefined,
             consultation_type_id: isOnline ? 2 : 1,
             caller_name: user?.name ?? "",
             patient_name: user?.name ?? "",
@@ -433,12 +438,14 @@ function BookingContent() {
     }
 
     const slot = slots.find((s) => s.id === newSlotId);
+    const campusFromSlot = slotRelationNumericId(slot?.campus_id);
+    const subFromSlot = slotRelationNumericId(slot?.sub_campus_id);
 
     setBooking({
       slotId: newSlotId,
       doctorId: Number(doctor_id),
-      campusId: confirmedCampusId,
-      subCampusId: confirmedSubId,
+      campusId: isOnline ? (campusFromSlot ?? confirmedCampusId) : confirmedCampusId,
+      subCampusId: isOnline ? subFromSlot : confirmedSubId,
       consultationTypeId: isOnline ? 2 : 1,
       startDatetime: slot?.start_datetime ?? null,
     });
