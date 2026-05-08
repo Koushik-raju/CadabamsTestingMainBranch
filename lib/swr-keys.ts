@@ -56,8 +56,13 @@ export function assessmentByIdKey(id: number | string): string {
   return `/assessments/${id}`;
 }
 
+/** Raw GET /api/v1/{campus}/patient/assigned-content — shared by assessments + journeys. */
+export function patientAssignedContentKey(leadId: number | string): string {
+  return `/patient-assigned-content/${leadId}`;
+}
+
 export function assignedAssessmentsKey(leadId: number | string): string {
-  return `/assigned-assessments/${leadId}`;
+  return patientAssignedContentKey(leadId);
 }
 
 export function assessmentSubmissionsKey(

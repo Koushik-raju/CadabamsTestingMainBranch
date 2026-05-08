@@ -35,26 +35,24 @@
  *
  * DEPENDENCIES:
  *   cmsAssessmentsControllerFindAll                  — SDK: fetch published assessments
- *   patientAssignedContentControllerListAssigned     — SDK: fetch lead's assigned content row
+ *   usePatientAssignedContent                          — shared SWR for assigned-content row
  *
- * LAST UPDATED: 2026-04-28 — switch My Assessments tab from completions
- *   (patientsControllerGetAssessments) to doctor-assigned assessments
- *   (patient/assigned-content) so the data matches the reference frontned tab.
+ * LAST UPDATED: 2026-05-06 — share assigned-content SWR via usePatientAssignedContent
+ *   (single fetch for assessments + journeys lists).
  */
 
+import { useMemo } from "react";
 import useSWR from "swr";
 import useSWRInfinite from "swr/infinite";
 import { ASSESSMENT_CATEGORIES } from "@/components/assessment/assessment-category";
+import { usePatientAssignedContent } from "@/hooks/shared/use-patient-assigned-content";
 import {
   getAssignedBucketItems,
   getAssignmentMetadata,
 } from "@/lib/patient-assigned-content-buckets";
-import { assessmentsKey, assignedAssessmentsKey } from "@/lib/swr-keys";
+import { assessmentsKey } from "@/lib/swr-keys";
 import type { AssessmentPaginationDto, AssessmentResponseDto } from "@/sdk/backend-v2";
-import {
-  cmsAssessmentsControllerFindAll,
-  patientAssignedContentControllerListAssigned,
-} from "@/sdk/backend-v2";
+import { cmsAssessmentsControllerFindAll } from "@/sdk/backend-v2";
 
 // ---------------------------------------------------------------------------
 // Internal helpers — extract plain values from Strapi v5 JSON-like objects
@@ -348,13 +346,6 @@ export interface AssignedAssessmentItem {
   image: string | null;
 }
 
-type AssignedContentResponse = {
-  crmLeadId?: number | string;
-  campus?: string | null;
-  items?: unknown[];
-  buckets?: Record<string, unknown[]>;
-};
-
 function mapAssignedAssessment(raw: unknown): AssignedAssessmentItem | null {
   if (!raw || typeof raw !== "object") return null;
   const obj = raw as Record<string, unknown>;
@@ -396,30 +387,22 @@ function mapAssignedAssessment(raw: unknown): AssignedAssessmentItem | null {
 }
 
 export function useAssignedAssessments(leadId: string | null) {
-  return useSWR<AssignedAssessmentItem[]>(
-    leadId ? assignedAssessmentsKey(leadId) : null,
-    async () => {
-      const res = await patientAssignedContentControllerListAssigned({
-        path: { campus: "cadabams" },
-      });
-      if (res.error) throw new Error(JSON.stringify(res.error));
-      const data = res.data as AssignedContentResponse | undefined;
-      const list = getAssignedBucketItems(data, "assessments");
-      const seen = new Set<string>();
-      const mapped: AssignedAssessmentItem[] = [];
-      for (const it of list) {
-        const m = mapAssignedAssessment(it);
-        if (!m) continue;
-        if (seen.has(m.documentId)) continue;
-        seen.add(m.documentId);
-        mapped.push(m);
-      }
-      return mapped;
-    },
-    {
-      revalidateOnFocus: false,
-      revalidateOnReconnect: false,
-      dedupingInterval: 60_000,
-    },
-  );
+  const { data, error, isLoading, isValidating, mutate } = usePatientAssignedContent(leadId);
+
+  const mapped = useMemo(() => {
+    if (!data) return [];
+    const list = getAssignedBucketItems(data, "assessments");
+    const seen = new Set<string>();
+    const out: AssignedAssessmentItem[] = [];
+    for (const it of list) {
+      const m = mapAssignedAssessment(it);
+      if (!m) continue;
+      if (seen.has(m.documentId)) continue;
+      seen.add(m.documentId);
+      out.push(m);
+    }
+    return out;
+  }, [data]);
+
+  return { data: mapped, error, isLoading, isValidating, mutate };
 }

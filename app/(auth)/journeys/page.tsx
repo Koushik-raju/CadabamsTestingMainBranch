@@ -7,36 +7,39 @@
  *   and a 2-col discovery grid.
  *
  * LOGIC OVERVIEW:
- *   1. Fetch all published journeys (useJourneys) and user enrollments (useEnrolledJourneys).
- *   2. Build journeyMap (id → JourneyItem) to cross-reference null name/icon in enrollments.
+ *   1. Fetch published journeys (useJourneys), enrollments (useEnrolledJourneys),
+ *      and doctor-assigned journeys (useAssignedJourneys — same assigned-content API as assessments).
+ *   2. Build journeyMap (id → JourneyItem) to cross-reference name/icon for enrollments + assigned rows.
  *   3. enrichedEnrollments merges enrollment data with CMS name/icon/isPremium/totalDays.
- *   4. enrolledIds Set filters enrolled journeys out of the discovery list.
+ *   4. carouselJourneyIds = enrolled + assigned documentIds — filters discovery grid duplicates.
  *   5. Discovery list is filtered by search + category, then sorted premium-first.
- *   6. featuredSlides: enrolled → "In Progress" badge + Day X/Y + "Continue →";
- *      otherwise top 5 trending with "Trending" + "Start Now →".
- *   7. quickPicks skips the 5 items already in the trending carousel to avoid
- *      duplicates; when enrolled journeys feed the carousel it uses items 0–9.
+ *   6. featuredSlides: in-progress enrollments first, then assigned-but-not-enrolled journeys
+ *      ("Assigned" badge + Start now); if neither, top 5 trending.
+ *   7. quickPicks offset matches whether the hero carousel shows "your" content vs trending.
  *
  * KEY VARIABLES / PROPS / EXPORTS:
  *   enrichedEnrollments — JourneyProgress[] merged with CMS data for display
  *   enrolledIds         — Set<string> of journeyIds already enrolled
+ *   assignedJourneys    — doctor-assigned rows from buckets.journeys (CMS documentId)
+ *   carouselJourneyIds  — enrolled ∪ assigned — hides those from discovery grid
  *   sortedFiltered      — discovery list after filter + premium-first sort
- *   featuredSlides      — FeaturedSlide[] fed into FeaturedJourneyCarousel
- *   quickPicks          — items shown in the 2-col grid, offset to skip carousel items
+ *   featuredSlides      — enrollments + assigned-only slides, else trending
+ *   quickPicks          — items shown in the 2-col grid, offset to skip carousel overlap
  *
  * DEPENDENCIES:
  *   useJourneys()           — hooks/journeys/use-journeys-page.ts
  *   useEnrolledJourneys()   — hooks/journeys/use-journey-detail.ts
+ *   useAssignedJourneys()   — hooks/journeys/use-assigned-journeys.ts
  *   FeaturedJourneyCarousel — components/journey/featured-journey-carousel.tsx
  *   JourneyDiscoveryCard    — components/journey/journey-discovery-card.tsx
  *   CategoryChips           — components/journey/category-chips.tsx
  *
- * LAST UPDATED: 2026-05-07 — move search bar into PageHeader built-in search row to eliminate navbar overlap
+ * LAST UPDATED: 2026-05-07 — PageHeader search row; merge doctor-assigned journeys into Your Journeys carousel
  */
 "use client";
 
 import { useSearchParams } from "next/navigation";
-import { Suspense, useMemo, useState } from "react";
+import { Suspense, useCallback, useMemo, useState } from "react";
 import { CategoryChips } from "@/components/journey/category-chips";
 import {
   FeaturedJourneyCarousel,
@@ -46,6 +49,7 @@ import { JourneyDiscoveryCard } from "@/components/journey/journey-discovery-car
 import { RecommendationBanner } from "@/components/journey/recommendation-banner";
 import { PageHeader } from "@/components/shared/navigation/page-header";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useAssignedJourneys } from "@/hooks/journeys/use-assigned-journeys";
 import { useEnrolledJourneys } from "@/hooks/journeys/use-journey-detail";
 import { useJourneys } from "@/hooks/journeys/use-journeys-page";
 import { useAuth } from "@/hooks/shared/auth/use-auth";
@@ -68,13 +72,35 @@ function JourneysInner() {
 
   const { journeys, isLoading: loadingJourneys } = useJourneys();
   const { enrollments, isLoading: loadingEnrolled } = useEnrolledJourneys();
+
+  const getUserLeadId = useCallback(() => {
+    if (!user) return null;
+    const candidate = (user as Record<string, unknown>).lead_id as string | number | undefined;
+    return candidate != null ? String(candidate) : null;
+  }, [user]);
+  const leadId = getUserLeadId();
+
+  const { data: assignedJourneys = [], isLoading: loadingAssignedJourneys } =
+    useAssignedJourneys(leadId);
+
   const recommendedCategory = useLatestAssessmentCategory(mobile ?? null);
 
-  const isLoading = loadingJourneys || loadingEnrolled;
+  const isLoading = loadingJourneys || loadingEnrolled || (!!leadId && loadingAssignedJourneys);
 
   const journeyMap = useMemo(() => new Map(journeys.map((j) => [j.id, j])), [journeys]);
 
   const enrolledIds = useMemo(() => new Set(enrollments.map((e) => e.journeyId)), [enrollments]);
+
+  const assignedJourneyIds = useMemo(
+    () => new Set((assignedJourneys ?? []).map((a) => a.documentId)),
+    [assignedJourneys],
+  );
+
+  const carouselJourneyIds = useMemo(() => {
+    const s = new Set(enrolledIds);
+    for (const id of assignedJourneyIds) s.add(id);
+    return s;
+  }, [enrolledIds, assignedJourneyIds]);
 
   const enrichedEnrollments = useMemo(
     () =>
@@ -102,7 +128,7 @@ function JourneysInner() {
 
   const sortedFiltered = useMemo(() => {
     const filtered = journeys.filter((j) => {
-      if (enrolledIds.has(j.id)) return false;
+      if (carouselJourneyIds.has(j.id)) return false;
 
       const name = extractJourneyName(j.name).toLowerCase();
       const desc = extractJourneyDescription(j.description).toLowerCase();
@@ -121,11 +147,11 @@ function JourneysInner() {
       if (a.isPremium === b.isPremium) return 0;
       return a.isPremium ? -1 : 1;
     });
-  }, [journeys, enrolledIds, search, activeCategory]);
+  }, [journeys, carouselJourneyIds, search, activeCategory]);
 
-  const featuredSlides: FeaturedSlide[] = useMemo(() => {
-    if (enrichedEnrollments.length > 0) {
-      return enrichedEnrollments.map((e) => ({
+  const enrollmentFeaturedSlides: FeaturedSlide[] = useMemo(
+    () =>
+      enrichedEnrollments.map((e) => ({
         key: e.enrollmentId,
         id: e.journeyId,
         name: e.name,
@@ -135,8 +161,42 @@ function JourneysInner() {
         badgeLabel: "In Progress",
         ctaLabel: "Continue →",
         progress: { currentDay: e.currentDay, totalDays: e.totalDays },
-      }));
-    }
+      })),
+    [enrichedEnrollments],
+  );
+
+  const assignedFeaturedSlides: FeaturedSlide[] = useMemo(() => {
+    return (assignedJourneys ?? [])
+      .filter((a) => !enrolledIds.has(a.documentId))
+      .map((a) => {
+        const cms = journeyMap.get(a.documentId);
+        const name = cms ? extractJourneyName(cms.name) : a.title;
+        let description = cms ? extractJourneyDescription(cms.description) : "";
+        if (
+          !description &&
+          a.description &&
+          typeof a.description === "string" &&
+          !a.description.includes("[object Object]")
+        ) {
+          description = a.description;
+        }
+        const totalDays = cms?.steps?.length ?? 0;
+        return {
+          key: `assigned-${a.documentId}`,
+          id: a.documentId,
+          name,
+          description: description || undefined,
+          imageUrl: fixImageUrl(cms?.icon),
+          dayCount: totalDays > 0 ? totalDays : 30,
+          badgeLabel: "Assigned",
+          ctaLabel: "Start now →",
+        };
+      });
+  }, [assignedJourneys, enrolledIds, journeyMap]);
+
+  const featuredSlides: FeaturedSlide[] = useMemo(() => {
+    const yours = [...enrollmentFeaturedSlides, ...assignedFeaturedSlides];
+    if (yours.length > 0) return yours;
     return sortedFiltered.slice(0, 5).map((j) => ({
       key: j.id,
       id: j.id,
@@ -145,10 +205,13 @@ function JourneysInner() {
       imageUrl: fixImageUrl(j.icon),
       dayCount: j.steps?.length ?? 30,
     }));
-  }, [enrichedEnrollments, sortedFiltered]);
+  }, [enrollmentFeaturedSlides, assignedFeaturedSlides, sortedFiltered]);
 
-  const hasEnrolled = enrichedEnrollments.length > 0;
-  const quickPicks = hasEnrolled ? sortedFiltered.slice(0, 10) : sortedFiltered.slice(5, 15);
+  const hasYourJourneysHero =
+    enrollmentFeaturedSlides.length > 0 || assignedFeaturedSlides.length > 0;
+  const quickPicks = hasYourJourneysHero
+    ? sortedFiltered.slice(0, 10)
+    : sortedFiltered.slice(5, 15);
 
   const recommendedCount = useMemo(() => {
     if (!recommendedCategory) return 0;
@@ -184,7 +247,7 @@ function JourneysInner() {
         <div className="px-4 mb-5">
           <section className="mb-6">
             <h2 className="text-base font-bold text-foreground mb-3">
-              {hasEnrolled ? "Your Journeys" : "Featured Journey"}
+              {hasYourJourneysHero ? "Your Journeys" : "Featured Journey"}
             </h2>
             {isLoading ? (
               <Skeleton className="w-full h-[220px] rounded-2xl" />

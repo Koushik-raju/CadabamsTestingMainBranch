@@ -1,33 +1,24 @@
 /**
- * Patient assigned-content API returns `{ items, buckets }` where each bucket
- * is an array of assignment rows. Older code expected `items[0].assignments`.
+ * Patient assigned-content API (`GET …/patient/assigned-content`) returns
+ * `AssignmentListView` from the Nest backend: `{ campus, crmLeadId, items, buckets }`.
+ * `buckets` is always present — same rows as `items`, grouped by bucket key
+ * (see `LeadAssignmentsService.listForLead` + `groupIntoBuckets`).
  */
 
-export type AssignedContentBucketKey = "assessments" | "worksheets";
+export type AssignedContentBucketKey =
+  | "assessments"
+  | "worksheets"
+  | "journeys"
+  | "audio"
+  | "video"
+  | "wellness";
 
 export function getAssignedBucketItems(data: unknown, bucket: AssignedContentBucketKey): unknown[] {
   if (!data || typeof data !== "object") return [];
-  const root = data as Record<string, unknown>;
-
-  const buckets = root.buckets;
-  if (buckets && typeof buckets === "object") {
-    const list = (buckets as Record<string, unknown>)[bucket];
-    if (Array.isArray(list)) return list;
-  }
-
-  const items = root.items;
-  if (Array.isArray(items) && items.length > 0) {
-    const row = items[0];
-    if (row && typeof row === "object") {
-      const assignments = (row as Record<string, unknown>).assignments;
-      if (assignments && typeof assignments === "object") {
-        const list = (assignments as Record<string, unknown>)[bucket];
-        if (Array.isArray(list)) return list;
-      }
-    }
-  }
-
-  return [];
+  const buckets = (data as Record<string, unknown>).buckets;
+  if (!buckets || typeof buckets !== "object") return [];
+  const list = (buckets as Record<string, unknown>)[bucket];
+  return Array.isArray(list) ? list : [];
 }
 
 export function getAssignmentMetadata(
