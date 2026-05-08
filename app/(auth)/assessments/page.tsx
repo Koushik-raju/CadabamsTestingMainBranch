@@ -171,7 +171,7 @@ export default function AssessmentsPage() {
       {/* Header */}
       <header>
         <PageHeader title="Assessments" hardBack="/home" />
-        <div className="px-4 pb-3">
+        <div className="px-4">
           <TabsList className="grid w-full grid-cols-2">
             <TabsTrigger value="browse">Explore</TabsTrigger>
             <TabsTrigger value="assessments" className="relative">
@@ -189,11 +189,11 @@ export default function AssessmentsPage() {
         </div>
       </header>
 
-      <main className="flex-1 px-4 pb-24">
+      <main className="flex-1 px-4 pb-4">
         {/* ── Browse tab ──────────────────────────────────────────────────── */}
         <TabsContent value="browse" className="mt-0 space-y-3">
           {/* Search bar */}
-          <div className="flex gap-2 mt-4 items-stretch">
+          <div className="flex gap-2  items-stretch">
             <div className="flex-1 flex items-center gap-2 bg-card rounded-2xl px-4 h-12 shadow-[var(--sh-2)] border border-input">
               <Search className="w-4 h-4 text-muted-foreground flex-shrink-0" />
               <Input
