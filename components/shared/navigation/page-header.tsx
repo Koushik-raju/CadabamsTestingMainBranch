@@ -150,7 +150,7 @@ export function PageHeader({
           normal block flow inside it — no per-row offset math needed. */}
       <div
         ref={headerRef}
-        className={cn("bg-background", sticky && "sticky top-[env(safe-area-inset-top)] z-10")}
+        className={cn("bg-background", sticky && "sticky top-[env(safe-area-inset-top)] z-[100]")}
       >
         <div className={cn("flex items-center gap-2 px-5 pt-2 pb-1", className)}>
           <BackButton fallback={fallback} hardBack={hardBack} onClick={onBack} />
@@ -198,7 +198,7 @@ export function PageHeader({
           header-stack height, so there is no gap and no overlap regardless of
           which optional rows (search / sub-header) are rendered. */}
       <div
-        className={cn(sticky && "sticky z-9 bg-background")}
+        className={cn(sticky && "sticky z-[100] bg-background")}
         style={sticky ? { top: `calc(env(safe-area-inset-top) + ${headerHeight}px)` } : undefined}
       >
         {children}
