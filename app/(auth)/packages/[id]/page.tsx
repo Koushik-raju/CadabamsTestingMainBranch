@@ -12,7 +12,9 @@
  *   - Campus name extracted from many2one campus_id tuple.
  *   - Session lines (BookedPackageLineDto[]) show product name, speciality,
  *     status badge, and sequence number.
- *   - handlePayNow() calls initiatePackagePayment() and redirects to the payment URL.
+ *   - handlePayNow() calls initiatePackageOrder() to create a Razorpay Order, then
+ *     opens Standard Checkout in-page via openRazorpayNative(). On success, refetches
+ *     packages and navigates to /packages. Server-side confirmation via webhook.
  *   - Gradient hero header color is derived from getPackagePalette(booked_package_id).
  *
  * KEY VARIABLES / PROPS / EXPORTS:
@@ -23,12 +25,13 @@
  *   PackageDetailPage — default exported page
  *
  * DEPENDENCIES:
- *   useManagedPackages, initiatePackagePayment  — from @/hooks/use-packages
- *   useAuth                                     — from @/hooks/use-auth
- *   odooTuple                                   — from @/lib/odoo (safe many2one tuple access)
- *   BookedPackageLineDto                        — from @/sdk/backend-v2
+ *   useManagedPackages, initiatePackageOrder — from @/hooks/use-packages
+ *   useAuth                                  — from @/hooks/use-auth
+ *   openRazorpayNative                       — from @/lib/capacitor/razorpay
+ *   odooTuple                                — from @/lib/odoo (safe many2one tuple access)
+ *   BookedPackageLineDto                     — from @/sdk/backend-v2
  *
- * LAST UPDATED: 2026-05-05 — Added cache invalidation after initiatePackagePayment
+ * LAST UPDATED: 2026-05-08 — Migrated from Razorpay payment-link redirect to Standard Checkout
  */
 "use client";
 
@@ -58,7 +61,8 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useAuth } from "@/hooks/use-auth";
-import { initiatePackagePayment, useManagedPackages } from "@/hooks/use-packages";
+import { initiatePackageOrder, useManagedPackages } from "@/hooks/use-packages";
+import { openRazorpayNative } from "@/lib/capacitor/razorpay";
 import { odooTuple } from "@/lib/odoo";
 import { getPackagePalette } from "@/lib/package-colors";
 import type { BookedPackageLineDto } from "@/sdk/backend-v2";
@@ -129,16 +133,41 @@ export default function PackageDetailPage({ params }: { params: Promise<{ id: st
 
   const handlePayNow = async () => {
     if (!pkg || !user?.lead_id) return;
+    const rzpKey = process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID;
+    if (!rzpKey) {
+      setPayError("Payment is not configured. Please contact support.");
+      return;
+    }
     setPayLoading(true);
     setPayError(null);
     try {
-      const payData = await initiatePackagePayment({
+      const order = await initiatePackageOrder({
         leadBookedPackageId: Number(pkg.booked_package_id),
         leadId: Number(user.lead_id),
-        campusId: Number(odooTuple(pkg.campus_id, 0) ?? 0),
       });
+
+      const result = await openRazorpayNative({
+        key: rzpKey,
+        amount: order.amount,
+        currency: order.currency,
+        orderId: order.id,
+        name: "Cadabam's Package",
+        description: String(odooTuple(pkg.package_id, 1) ?? "Package"),
+        prefill: {
+          name: String(user.name ?? ""),
+          email: user.email ? String(user.email) : undefined,
+          contact: user.phone_number ? String(user.phone_number) : undefined,
+        },
+      });
+
+      if (!result.success) {
+        setPayError(result.error ?? "Payment was not completed.");
+        setPayLoading(false);
+        return;
+      }
+
       await refetchPackages();
-      window.location.href = payData.result.short_url;
+      router.replace("/packages");
     } catch (err: unknown) {
       setPayError((err as { message?: string })?.message ?? "Failed to process payment");
       setPayLoading(false);
@@ -385,9 +414,7 @@ export default function PackageDetailPage({ params }: { params: Promise<{ id: st
             ) : (
               <CreditCard className="h-5 w-5" />
             )}
-            {payLoading
-              ? "Redirecting to Razorpay…"
-              : `Pay ₹${pkg.package_cost.toLocaleString("en-IN")}`}
+            {payLoading ? "Opening Razorpay…" : `Pay ₹${pkg.package_cost.toLocaleString("en-IN")}`}
           </Button>
         )}
 
