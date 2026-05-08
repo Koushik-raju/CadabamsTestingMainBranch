@@ -51,6 +51,7 @@ import { Button } from "@/components/ui/button";
 import { useBooking } from "@/contexts/booking-context";
 import { DOCTORS } from "@/data/doctors";
 import { useAuth } from "@/hooks/shared/auth/use-auth";
+import { slotRelationNumericId } from "@/lib/crm-slot-relations";
 import { cn } from "@/lib/utils";
 import type { DoctorBasicResponseDto, SlotResponseDto } from "@/sdk/backend-v2";
 import {
@@ -378,13 +379,21 @@ function BookingContent() {
       setConfirming(true);
       setError(null);
       try {
+        const resSlot = slots.find((s) => s.id === newSlotId);
+        const campusForReschedule = isOnline
+          ? slotRelationNumericId(resSlot?.campus_id)
+          : confirmedCampusId;
+        const subForReschedule = isOnline
+          ? slotRelationNumericId(resSlot?.sub_campus_id)
+          : confirmedSubId;
+
         await crmControllerRescheduleAppointment({
           body: {
             slot_id: existingSlotId, // existing slot being replaced
             appointment_id: newSlotId, // new slot selected by user
             lead_id: leadId,
-            campus_id: confirmedCampusId ?? 1,
-            sub_campus_id: confirmedSubId ?? undefined,
+            campus_id: campusForReschedule ?? 1,
+            sub_campus_id: subForReschedule ?? undefined,
             consultation_type_id: isOnline ? 2 : 1,
             caller_name: user?.name ?? "",
             patient_name: user?.name ?? "",
@@ -402,11 +411,14 @@ function BookingContent() {
     }
 
     const slot = slots.find((s) => s.id === newSlotId);
+    const campusFromSlot = slotRelationNumericId(slot?.campus_id);
+    const subFromSlot = slotRelationNumericId(slot?.sub_campus_id);
+
     setBooking({
       slotId: newSlotId,
       doctorId: Number(doctor_id),
-      campusId: confirmedCampusId,
-      subCampusId: isOnline ? null : confirmedSubId,
+      campusId: isOnline ? (campusFromSlot ?? confirmedCampusId) : confirmedCampusId,
+      subCampusId: isOnline ? subFromSlot : confirmedSubId,
       consultationTypeId: isOnline ? 2 : 1,
       startDatetime: slot?.start_datetime ?? null,
     });

@@ -12,7 +12,9 @@
  *   - Disable source maps in production for faster builds and reduced bundle size
  *   - Disable X-Powered-By header for security
  *   - Inject security headers (X-Frame-Options, X-Content-Type-Options, Permissions-Policy, etc.)
- *   - Inject long-lived cache headers for immutable static assets
+ *   - Inject long-lived cache headers for immutable static assets (production only;
+ *     applying immutable cache to /_next/static in dev breaks HMR and causes stale
+ *     chunk / "module factory is not available" runtime errors)
  *   - Wrap export with next/bundle-analyzer (enabled via ANALYZE=true env var)
  *
  * KEY VARIABLES / PROPS / EXPORTS:
@@ -24,10 +26,11 @@
  *   next
  *   @next/bundle-analyzer (devDependency)
  *
- * LAST UPDATED: 2026-05-05 — Phase 2: added bundle analyzer wrapper for performance optimization
+ * LAST UPDATED: 2026-05-08 — skip immutable /_next/static cache in dev (avoids stale chunk HMR errors)
  */
-import type { NextConfig } from "next";
+
 import bundleAnalyzer from "@next/bundle-analyzer";
+import type { NextConfig } from "next";
 
 const withBundleAnalyzer = bundleAnalyzer({
   enabled: process.env.ANALYZE === "true",
@@ -67,7 +70,7 @@ const nextConfig: NextConfig = {
   productionBrowserSourceMaps: false,
   poweredByHeader: false,
   async headers() {
-    return [
+    const security = [
       {
         source: "/(.*)",
         headers: [
@@ -77,11 +80,17 @@ const nextConfig: NextConfig = {
           { key: "Permissions-Policy", value: "camera=(), microphone=(), geolocation=()" },
         ],
       },
+    ];
+
+    if (process.env.NODE_ENV !== "production") {
+      return security;
+    }
+
+    return [
+      ...security,
       {
         source: "/_next/static/(.*)",
-        headers: [
-          { key: "Cache-Control", value: "public, max-age=31536000, immutable" },
-        ],
+        headers: [{ key: "Cache-Control", value: "public, max-age=31536000, immutable" }],
       },
     ];
   },

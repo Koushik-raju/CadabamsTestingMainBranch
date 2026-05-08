@@ -2,35 +2,18 @@
  * FILE: providers/theme-provider.tsx
  *
  * PURPOSE:
- *   Thin wrapper around next-themes ThemeProvider. Locks the app to light mode
- *   so next-themes does not attempt to switch themes at runtime.
- *
- * LOGIC OVERVIEW:
- *   Renders NextThemesProvider with attribute="class", defaultTheme="light", and
- *   enableSystem=false. The class attribute strategy means next-themes sets a
- *   class on <html> to communicate the active theme to Tailwind.
- *   NOTE: next-themes v0.4.x injects an inline <script> for FOUC prevention;
- *   React 18+ emits a "script tag while rendering" warning for this — it is
- *   benign. The suppressHydrationWarning on <html>/<body> in app/layout.tsx
- *   handles the hydration side.
+ *   Passthrough wrapper for the provider tree. The app is light-only; we do not
+ *   use `next-themes` because its ThemeProvider injects a `<script>` during
+ *   render for FOUC prevention, which React 19 surfaces as a console error.
  *
  * KEY VARIABLES / PROPS / EXPORTS:
- *   ThemeProvider — re-exported wrapper consumed by app/layout.tsx
+ *   ThemeProvider — consumed by app-providers.tsx
  *
- * DEPENDENCIES:
- *   next-themes — ThemeProvider
- *
- * LAST UPDATED: 2026-05-06 — added file header
+ * LAST UPDATED: 2026-05-06 — remove next-themes (React 19 script-in-tree warning)
  */
 
-'use client';
+import type { ReactNode } from "react";
 
-import { ThemeProvider as NextThemesProvider } from 'next-themes';
-
-export function ThemeProvider({ children }: { children: React.ReactNode }) {
-  return (
-    <NextThemesProvider attribute="class" defaultTheme="light" enableSystem={false}>
-      {children}
-    </NextThemesProvider>
-  );
+export function ThemeProvider({ children }: { children: ReactNode }) {
+  return children;
 }

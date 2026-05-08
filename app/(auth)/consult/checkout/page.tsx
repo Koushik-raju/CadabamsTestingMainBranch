@@ -148,8 +148,7 @@ function CheckoutContent() {
     setProcessing(true);
     setError(null);
     try {
-      const isVirtual = consultationTypeId === 2;
-      const resolvedCampusId = isVirtual ? 1 : (campusId ?? 1);
+      const resolvedCampusId = campusId ?? 1;
       const leadId = user?.lead_id ? Number(user.lead_id) : 0;
       const uid = user?.sub ?? "";
       const callerName = user?.name ?? "";
@@ -159,7 +158,7 @@ function CheckoutContent() {
           slot_id: slotId,
           lead_id: leadId,
           campus_id: resolvedCampusId,
-          sub_campus_id: isVirtual ? undefined : (subCampusId ?? undefined),
+          sub_campus_id: subCampusId ?? undefined,
           consultation_type_id: consultationTypeId,
           caller_name: callerName,
           patient_name: patientName,
