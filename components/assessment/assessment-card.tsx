@@ -21,8 +21,8 @@
  *   getCategoryInfo — maps assessment type to icon, bgColor, textColor
  *   lucide-react, Card, CardContent, Link
  *
- * LAST UPDATED: 2026-04-28 — Neo design system: white bg-card cards with gradient icon tiles,
- *   token-based colors, shadow scale; removed pastel card backgrounds
+ * LAST UPDATED: 2026-05-11 — AssessmentGridCard: worksheet browse footer shows Open only;
+ *   hide 0 min / 0 questions on assessment browse tiles.
  */
 
 "use client";
@@ -93,8 +93,18 @@ export function AssessmentGridCard<T extends BrowseCardItem = AssessmentItem>({
   const { bg, fg } = TINTS[tint];
   const hintCategory = extractHintCategory(assessment.hint);
   const minutes = assessment.landingTitle?.minutes;
-  const questionCount = assessment.landingTitle?.numberOfQuestion || assessment.Questions?.length;
+  const questionCountRaw =
+    assessment.landingTitle?.numberOfQuestion ?? assessment.Questions?.length;
+  const questionCountNum =
+    questionCountRaw != null && questionCountRaw !== ""
+      ? Number(questionCountRaw)
+      : NaN;
+  const showQuestionMeta = Number.isFinite(questionCountNum) && questionCountNum > 0;
+  const minutesNum = minutes != null && minutes !== "" ? Number(minutes) : NaN;
+  const showMinutesMeta = Number.isFinite(minutesNum) && minutesNum > 0;
   const description = assessment.description || assessment.landingTitle?.landingDescription;
+  /** Worksheet browse passes `browseFooterLink`; hide 0 min / 0 questions noise and keep only Open. */
+  const worksheetBrowse = Boolean(browseFooterLink);
 
   return (
     <div
@@ -129,25 +139,27 @@ export function AssessmentGridCard<T extends BrowseCardItem = AssessmentItem>({
         </p>
       )}
 
-      {/* Footer */}
-      <div className="flex items-center gap-3 mt-3 pt-3 border-t border-border">
-        {minutes != null && (
+      {/* Footer — worksheet browse: Open only; assessments: hide zero question/min counts */}
+      <div
+        className={`flex items-center gap-3 mt-3 pt-3 border-t border-border ${worksheetBrowse ? "justify-end" : ""}`}
+      >
+        {!worksheetBrowse && showMinutesMeta && (
           <span className="flex items-center gap-1 text-[11px] font-medium text-muted-foreground">
             <Clock3 className="w-3 h-3" />
-            {minutes} min
+            {minutesNum} min
           </span>
         )}
-        {questionCount && (
+        {!worksheetBrowse && showQuestionMeta && (
           <span className="flex items-center gap-1 text-[11px] font-medium text-muted-foreground">
             <HelpCircle className="w-3 h-3" />
-            {questionCount} questions
+            {questionCountNum} questions
           </span>
         )}
         <Link
           href={browseFooterLink?.href ?? `/assessments/${assessment.id}/reports`}
           onClick={(e) => e.stopPropagation()}
           aria-label={browseFooterLink?.label ?? "View previous reports"}
-          className="ml-auto flex items-center gap-1 text-[11px] font-semibold rounded-full px-2 py-1 transition-colors"
+          className={`flex items-center gap-1 text-[11px] font-semibold rounded-full px-2 py-1 transition-colors ${worksheetBrowse ? "" : "ml-auto"}`}
           style={{ background: bg, color: fg }}
         >
           <FileText className="w-3 h-3" />
