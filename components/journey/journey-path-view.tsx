@@ -2,9 +2,9 @@
  * FILE: components/journey/journey-path-view.tsx
  *
  * PURPOSE:
- *   Renders the enrolled-journey path view. All unlock / cooldown / streak logic
- *   is server-owned — this component reads per-task `state` and the
- *   enrollment's `nextDayUnlocksAt` directly and renders accordingly.
+ *   Renders the enrolled-journey path view. All unlock / streak logic is
+ *   server-owned — this component reads per-task `state` and renders
+ *   accordingly. Day advancement is immediate; there is no cooldown.
  *
  * LOGIC OVERVIEW:
  *   1. Flattens CMS steps into nodes, keyed by composite "stepId-taskId" for React.
@@ -12,18 +12,15 @@
  *      from enrollment.tasks by plain taskId — maps it to NodeVariant.
  *   3. Navigates using task.destinationPath (plus a redirectTo back to details).
  *      If destinationPath is missing, shows a toast ("This task isn't available yet").
- *   4. On mount (when subscribed) fires tickJourney() — the server idempotently
- *      advances the day if the cooldown has elapsed.
- *   5. If nextDayUnlocksAt is in the future, shows a sticky countdown banner and
- *      re-ticks when it hits zero.
- *   6. markNodeDone and action-sheet onMarkDone send the plain taskId.
- *   7. onOpen only navigates — does NOT call updateNodeProgress.
- *   8. On return from a task page: restores scroll position, revalidates enrollment,
+ *   4. On mount (when subscribed) fires tickJourney() to refresh server state.
+ *   5. markNodeDone and action-sheet onMarkDone send the plain taskId.
+ *   6. onOpen only navigates — does NOT call updateNodeProgress.
+ *   7. On return from a task page: restores scroll position, revalidates enrollment,
  *      and triggers XP animation if new tasks were completed.
- *   9. Auto-scrolls to the current day's first active/available node on mount.
- *  10. Day-summary sheet auto-opens when todayDone flips to equal todayTotal in-session.
- *  11. Unsubscribed users see a preview sheet instead of the action sheet.
- *  12. Session gate: paid-free-preview users tapping book tasks are redirected to /packages.
+ *   8. Auto-scrolls to the current day's first active/available node on mount.
+ *   9. Day-summary sheet auto-opens when todayDone flips to equal todayTotal in-session.
+ *  10. Unsubscribed users see a preview sheet instead of the action sheet.
+ *  11. Session gate: paid-free-preview users tapping book tasks are redirected to /packages.
  *
  * KEY VARIABLES / PROPS / EXPORTS:
  *   journey              — CMS JourneyItem (content structure)
@@ -41,7 +38,7 @@
  *   globalMutate (swr) — revalidates enrollment key on return
  *   journeyEnrollmentKey — lib/swr-keys
  *
- * LAST UPDATED: 2026-05-07 — export StatsBar + JourneyCooldownBanner so details page can pass them as PageHeader subHeader; remove hardcoded sticky offsets from JourneyPathView
+ * LAST UPDATED: 2026-05-11 — removed JourneyCooldownBanner / formatCountdown / nextDayUnlocksAt remnants; cooldown feature is gone end-to-end
  */
 "use client";
 
@@ -113,15 +110,6 @@ function mapServerKind(
   }
 }
 
-export function formatCountdown(ms: number): string {
-  const total = Math.max(0, Math.ceil(ms / 1000));
-  const mm = Math.floor(total / 60)
-    .toString()
-    .padStart(2, "0");
-  const ss = (total % 60).toString().padStart(2, "0");
-  return `${mm}:${ss}`;
-}
-
 // ---------------------------------------------------------------------------
 // Stats bar
 // ---------------------------------------------------------------------------
@@ -175,84 +163,6 @@ export function StatsBar({ progress }: { progress: JourneyProgress }) {
 }
 
 // ---------------------------------------------------------------------------
-// Cooldown banner (extracted from JourneyPathView so it can live in PageHeader subHeader)
-// ---------------------------------------------------------------------------
-
-// Owns the 1-second countdown tick and fires tickJourney when the countdown
-// reaches zero. Rendered by the details page as a PageHeader subHeader child
-// so PageHeader's ResizeObserver handles the sticky offset automatically.
-export function JourneyCooldownBanner({
-  progress,
-  journeyId,
-}: {
-  progress: JourneyProgress | null;
-  journeyId: string;
-}) {
-  const enrollmentId = progress?.id ?? null;
-  const nextUnlockMs = progress?.nextDayUnlocksAt
-    ? new Date(progress.nextDayUnlocksAt).getTime()
-    : 0;
-  const [now, setNow] = useState(() => Date.now());
-  const lastCountdownTickRef = useRef<number>(0);
-
-  const cooldownRemainingMs = nextUnlockMs > 0 ? Math.max(0, nextUnlockMs - now) : 0;
-  const isActive = !!progress && !progress.isCompleted && nextUnlockMs > now;
-
-  useEffect(() => {
-    if (!isActive) return;
-    const id = setInterval(() => setNow(Date.now()), 1000);
-    return () => clearInterval(id);
-  }, [isActive]);
-
-  useEffect(() => {
-    if (!enrollmentId) return;
-    if (nextUnlockMs === 0) return;
-    if (cooldownRemainingMs > 0) return;
-    if (lastCountdownTickRef.current === nextUnlockMs) return;
-    lastCountdownTickRef.current = nextUnlockMs;
-    tickJourney(enrollmentId, journeyId).catch(console.error);
-  }, [cooldownRemainingMs, nextUnlockMs, enrollmentId, journeyId]);
-
-  if (!isActive) return null;
-
-  const currentDay = progress?.currentDay ?? 1;
-  const currentDayTasks = progress?.tasks?.filter((t) => t.dayNumber === currentDay) ?? [];
-  const todayTotal = currentDayTasks.length;
-  const todayDone = currentDayTasks.filter((t) => t.state === "completed").length;
-
-  return (
-    <div className="mx-4 mt-2 mb-1 rounded-2xl overflow-hidden border border-emerald-200 shadow-(--sh-3)">
-      <div className="bg-gradient-to-br from-emerald-500 to-teal-600 px-4 py-3 flex items-start gap-3">
-        <div className="relative w-11 h-11 rounded-2xl bg-gradient-to-br from-emerald-400 to-teal-500 flex-shrink-0 flex items-center justify-center shadow-[var(--sh-1)]">
-          <div className="absolute -top-2 -right-2 w-7 h-7 rounded-full bg-white/10" />
-          <Clock size={20} strokeWidth={2} className="text-white" />
-        </div>
-        <div className="flex-1 min-w-0">
-          <p className="text-sm font-bold text-white">Day complete</p>
-          <p className="text-xs text-white/80 mt-0.5 leading-snug">
-            Great work — take a break. Next day unlocks soon.
-          </p>
-        </div>
-        <div className="text-right flex-shrink-0">
-          <p className="text-xl font-extrabold text-white leading-none tabular-nums">
-            {formatCountdown(cooldownRemainingMs)}
-          </p>
-          <p className="text-[10px] text-white/70 uppercase tracking-wider mt-0.5">remaining</p>
-        </div>
-      </div>
-      <div className="bg-card px-4 py-2.5 flex items-center justify-between">
-        <p className="text-xs text-muted-foreground">
-          Day {currentDay} done · Day {currentDay + 1} unlocks next
-        </p>
-        <span className="text-xs font-bold text-emerald-600">
-          {todayDone}/{todayTotal} tasks
-        </span>
-      </div>
-    </div>
-  );
-}
-
-// ---------------------------------------------------------------------------
 // Props
 // ---------------------------------------------------------------------------
 
@@ -267,12 +177,6 @@ interface JourneyPathViewProps {
 // ---------------------------------------------------------------------------
 
 export function JourneyPathView({ journey, progress, journeyId }: JourneyPathViewProps) {
-  console.log("[JourneyPathView] render", {
-    journeyId,
-    hasProgress: !!progress,
-    progressId: progress?.id,
-    nextDayUnlocksAt: progress?.nextDayUnlocksAt,
-  });
   const router = useRouter();
   // useSearchParams required to satisfy Next.js hook rules; kept for potential future use.
   useSearchParams();
@@ -342,7 +246,6 @@ export function JourneyPathView({ journey, progress, journeyId }: JourneyPathVie
   progressRef.current = progress;
   const enrollmentId = progress?.id ?? null;
   useEffect(() => {
-    console.log("[JourneyPathView] tick-effect run", { enrollmentId, ticked: tickedRef.current });
     if (!enrollmentId || tickedRef.current) return;
     tickedRef.current = true;
     tickJourney(enrollmentId, journeyId).catch(console.error);
@@ -398,14 +301,6 @@ export function JourneyPathView({ journey, progress, journeyId }: JourneyPathVie
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [journeyId]);
-
-  // showCooldownBanner is a snapshot check (no ticker — JourneyCooldownBanner owns the tick).
-  // Becomes false naturally when JourneyCooldownBanner fires tickJourney and SWR revalidates.
-  const showCooldownBanner =
-    isSubscribed &&
-    !progress?.isCompleted &&
-    !!progress?.nextDayUnlocksAt &&
-    new Date(progress.nextDayUnlocksAt).getTime() > Date.now();
 
   // Day-summary auto-open: detect when todayDone flips to equal todayTotal in-session.
   useEffect(() => {
@@ -869,7 +764,7 @@ export function JourneyPathView({ journey, progress, journeyId }: JourneyPathVie
       )}
 
       {/* Today banner (default state) */}
-      {isSubscribed && activeStep && !allComplete && !showCooldownBanner && (
+      {isSubscribed && activeStep && !allComplete && (
         <div
           className="mx-4 mt-3 mb-0 rounded-2xl px-4 py-3 flex items-center gap-3"
           style={{

@@ -110,7 +110,7 @@ export function JourneyDaySummarySheet({
 
   async function handleContinue() {
     // Persist day completion so the server sets JourneyDayProgress.completed
-    // and (for non-terminal days) seeds nextDayUnlocksAt. The call is
+    // and advances currentDay (for non-terminal days). The call is
     // idempotent server-side — safe to retry.
     //
     // Surface failures via a toast: previously the catch silently
