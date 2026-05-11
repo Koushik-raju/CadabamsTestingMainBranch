@@ -1,5 +1,6 @@
-import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
+import { NextResponse } from "next/server";
+import { sanitizeReturnTo } from "./lib/return-to";
 
 // Routes accessible without a session. Everything else requires auth.
 const PUBLIC_ROUTES = [
@@ -14,8 +15,25 @@ const PUBLIC_ROUTES = [
   "/onboarding",
 ];
 
+function isPublicConsultPath(pathname: string): boolean {
+  if (pathname === "/consult/find-therapist" || pathname.startsWith("/consult/find-therapist/")) {
+    return true;
+  }
+  if (pathname.startsWith("/consult/booking/")) {
+    return true;
+  }
+  return false;
+}
+
 function isPublicRoute(pathname: string): boolean {
+  if (isPublicConsultPath(pathname)) return true;
   return PUBLIC_ROUTES.some((r) => pathname === r || pathname.startsWith(r + "/"));
+}
+
+function devLog(...args: unknown[]) {
+  if (process.env.NODE_ENV === "development") {
+    console.log(...args);
+  }
 }
 
 export function proxy(request: NextRequest) {
@@ -25,32 +43,36 @@ export function proxy(request: NextRequest) {
   const refreshToken = request.cookies.get("refresh_token")?.value;
   const isLoggedIn = !!accessToken || !!refreshToken;
 
-  console.log(`[middleware] ──────────────────────────────`);
-  console.log(`[middleware] path         : ${pathname}`);
-  console.log(`[middleware] access_token : ${accessToken ? accessToken.slice(0, 40) + "…" : "MISSING"}`);
-  console.log(`[middleware] refresh_token: ${refreshToken ? refreshToken.slice(0, 40) + "…" : "MISSING"}`);
-  console.log(`[middleware] isLoggedIn   : ${isLoggedIn} | isPublic: ${isPublicRoute(pathname)}`);
-  console.log(`[middleware] all cookies  : ${request.cookies.getAll().map((c) => c.name).join(", ") || "(none)"}`);
+  devLog(`[middleware] path         : ${pathname}`);
+  devLog(`[middleware] isLoggedIn   : ${isLoggedIn} | isPublic: ${isPublicRoute(pathname)}`);
 
-  // Logged-in users are redirected away from login/signup
   if (isLoggedIn) {
-    if (pathname === "/login" || pathname === "/signup" || pathname === "/auth/login" || pathname === "/auth/signup") {
-      console.log(`[middleware] → redirect to /home (already authenticated)`);
-      return NextResponse.redirect(new URL("/home", request.url));
+    if (
+      pathname === "/login" ||
+      pathname === "/signup" ||
+      pathname === "/auth/login" ||
+      pathname === "/auth/signup"
+    ) {
+      const returnTo =
+        sanitizeReturnTo(request.nextUrl.searchParams.get("returnTo")) ??
+        sanitizeReturnTo(request.nextUrl.searchParams.get("from"));
+      const dest = returnTo ?? "/home";
+      devLog(`[middleware] → redirect (authed) to ${dest}`);
+      return NextResponse.redirect(new URL(dest, request.url));
     }
-    console.log(`[middleware] → next() (authenticated)`);
+    devLog(`[middleware] → next() (authenticated)`);
     return NextResponse.next();
   }
 
-  // Unauthenticated users can only access public routes
   if (!isPublicRoute(pathname)) {
-    console.log(`[middleware] → redirect to /login`);
+    devLog(`[middleware] → redirect to /auth/login`);
     const url = new URL("/auth/login", request.url);
-    url.searchParams.set("from", pathname);
+    const pathWithQuery = pathname + (request.nextUrl.search || "");
+    url.searchParams.set("returnTo", pathWithQuery);
     return NextResponse.redirect(url);
   }
 
-  console.log(`[middleware] → next() (public route)`);
+  devLog(`[middleware] → next() (public route)`);
   return NextResponse.next();
 }
 

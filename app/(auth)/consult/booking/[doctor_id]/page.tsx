@@ -55,6 +55,8 @@ import { useBooking } from "@/contexts/booking-context";
 import { DOCTORS } from "@/data/doctors";
 import { useAuth } from "@/hooks/shared/auth/use-auth";
 import { useCampuses } from "@/hooks/shared/campuses/use-campuses";
+import { saveConsultBookingResume } from "@/lib/consult-booking-resume";
+import { getAccessToken, getRefreshToken } from "@/lib/cookies";
 import { slotRelationNumericId } from "@/lib/crm-slot-relations";
 import { cn } from "@/lib/utils";
 import type { DoctorBasicResponseDto, SlotResponseDto } from "@/sdk/backend-v2";
@@ -441,13 +443,41 @@ function BookingContent() {
     const campusFromSlot = slotRelationNumericId(slot?.campus_id);
     const subFromSlot = slotRelationNumericId(slot?.sub_campus_id);
 
+    const resolvedCampusId = isOnline ? (campusFromSlot ?? confirmedCampusId) : confirmedCampusId;
+    const resolvedSubId = isOnline ? subFromSlot : confirmedSubId;
+    const consultationTypeId = (isOnline ? 2 : 1) as 1 | 2 | 3;
+
+    const fromPackageRaw = searchParams.get("fromPackage");
+    const bookedPackageId =
+      fromPackageRaw && Number.isFinite(Number(fromPackageRaw)) ? Number(fromPackageRaw) : null;
+    const specialityId = slotRelationNumericId(slot?.speciality_id) ?? null;
+
+    const access = await getAccessToken();
+    const refresh = await getRefreshToken();
+    if (!access && !refresh) {
+      saveConsultBookingResume({
+        slotId: newSlotId,
+        doctorId: Number(doctor_id),
+        campusId: resolvedCampusId,
+        subCampusId: resolvedSubId,
+        consultationTypeId,
+        startDatetime: slot?.start_datetime ?? null,
+        bookedPackageId,
+        specialityId,
+      });
+      router.push(`/auth/login?returnTo=${encodeURIComponent("/consult/checkout")}`);
+      return;
+    }
+
     setBooking({
       slotId: newSlotId,
       doctorId: Number(doctor_id),
-      campusId: isOnline ? (campusFromSlot ?? confirmedCampusId) : confirmedCampusId,
-      subCampusId: isOnline ? subFromSlot : confirmedSubId,
-      consultationTypeId: isOnline ? 2 : 1,
+      campusId: resolvedCampusId,
+      subCampusId: resolvedSubId,
+      consultationTypeId,
       startDatetime: slot?.start_datetime ?? null,
+      bookedPackageId,
+      specialityId,
     });
     router.push("/consult/checkout");
   };

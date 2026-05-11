@@ -79,6 +79,10 @@ export function attachRefreshInterceptor(axiosInstance: AxiosInstance) {
       /* Skip retry if: already retried, or the failing request IS the refresh
          endpoint (a 401 on refresh means the refresh token is expired/invalid). */
       if (error.response?.status === 401 && !original._retry && !isRefreshUrl(original.url)) {
+        const hadAuth = !!(original.headers as { Authorization?: string })?.Authorization;
+        if (!hadAuth) {
+          return Promise.reject(error);
+        }
         original._retry = true;
 
         try {

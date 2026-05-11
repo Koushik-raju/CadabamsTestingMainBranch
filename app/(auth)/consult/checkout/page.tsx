@@ -59,6 +59,7 @@ import { bookAndCreateOrder, bookAndPay } from "@/hooks/consult/use-checkout";
 import { useAuth } from "@/hooks/shared/auth/use-auth";
 import { useCampuses } from "@/hooks/shared/campuses/use-campuses";
 import { openRazorpayNative } from "@/lib/capacitor/razorpay";
+import { clearConsultBookingResume, readConsultBookingResume } from "@/lib/consult-booking-resume";
 import { isLinkMode } from "@/lib/payments/payment-mode";
 import type { CrmControllerGetDoctorByIdResponse, RelationshipResponseDto } from "@/sdk/backend-v2";
 import {
@@ -81,7 +82,7 @@ function isSelf(relation: RelationshipResponseDto): boolean {
 function CheckoutContent() {
   const router = useRouter();
   const { user } = useAuth();
-  const { slotId, doctorId, campusId, subCampusId, consultationTypeId, startDatetime } =
+  const { slotId, doctorId, campusId, subCampusId, consultationTypeId, startDatetime, setBooking } =
     useBooking();
 
   const [doctor, setDoctor] = useState<CrmControllerGetDoctorByIdResponse | null>(null);
@@ -102,10 +103,38 @@ function CheckoutContent() {
   const isOnline = consultationTypeId === 2;
 
   useEffect(() => {
-    if (!slotId || !doctorId) {
-      router.replace("/find-therapist");
+    if (slotId && doctorId) return;
+
+    const resumed = readConsultBookingResume();
+    if (resumed?.slotId && resumed?.doctorId) {
+      setBooking({
+        slotId: resumed.slotId,
+        doctorId: resumed.doctorId,
+        campusId: resumed.campusId,
+        subCampusId: resumed.subCampusId,
+        consultationTypeId: resumed.consultationTypeId,
+        startDatetime: resumed.startDatetime,
+        bookedPackageId: resumed.bookedPackageId,
+        specialityId: resumed.specialityId,
+      });
+      // Do not clear sessionStorage here: React Strict Mode remounts with empty
+      // context before state commits; clearing early makes the second pass
+      // think there is no resume and sends users to find-therapist.
       return;
     }
+
+    router.replace("/consult/find-therapist");
+  }, [slotId, doctorId, setBooking, router]);
+
+  useEffect(() => {
+    if (!slotId || !doctorId) return;
+    clearConsultBookingResume();
+  }, [slotId, doctorId]);
+
+  useEffect(() => {
+    if (!slotId || !doctorId) return;
+
+    setLoading(true);
     Promise.all([
       crmControllerGetDoctorById({ path: { id: doctorId } }),
       crmControllerGetSlotPrice({ path: { id: slotId } }),
@@ -116,7 +145,7 @@ function CheckoutContent() {
       })
       .catch(console.error)
       .finally(() => setLoading(false));
-  }, [slotId, doctorId, router]);
+  }, [slotId, doctorId]);
 
   const openRelationSheet = () => {
     setSheetStep("relation");

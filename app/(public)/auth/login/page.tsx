@@ -45,7 +45,7 @@
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import countryCodes from "country-codes-list";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "react-toastify";
@@ -60,6 +60,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useAuth } from "@/hooks/use-auth";
 import { useAuthActions } from "@/hooks/use-auth-actions";
 import { useKeyboardPadding } from "@/hooks/use-keyboard-padding";
+import { sanitizeReturnTo } from "@/lib/return-to";
 
 /*
  * Exactly 10 digits — no more, no less. Non-digit characters are stripped at
@@ -72,6 +73,7 @@ type PhoneForm = z.infer<typeof phoneSchema>;
 
 function LoginContent() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { login } = useAuth();
   const { sendOtp, verifyLogin, isSendingOtp, isVerifying } = useAuthActions();
 
@@ -84,6 +86,12 @@ function LoginContent() {
   const [pickerOpen, setPickerOpen] = useState(false);
   const [redirectModal, setRedirectModal] = useState(false);
   const verifyingRef = useRef(false);
+
+  const safeReturnTo = useMemo(
+    () =>
+      sanitizeReturnTo(searchParams.get("returnTo")) ?? sanitizeReturnTo(searchParams.get("from")),
+    [searchParams],
+  );
 
   const countries = useMemo<Country[]>(() => {
     const list = countryCodes.customList(
@@ -168,7 +176,11 @@ function LoginContent() {
         await verifyLogin(getValues("phone"), code);
         toast.success("Welcome back!");
         login().catch(() => {});
-        router.replace("/home");
+        const next =
+          sanitizeReturnTo(searchParams.get("returnTo")) ??
+          sanitizeReturnTo(searchParams.get("from")) ??
+          "/home";
+        router.replace(next);
       } catch (err: unknown) {
         const e = err as { status?: number };
         if (e.status === 401) {
@@ -187,7 +199,7 @@ function LoginContent() {
         verifyingRef.current = false;
       }
     },
-    [verifyLogin, getValues, login, router],
+    [verifyLogin, getValues, login, router, searchParams],
   );
 
   /* Auto-verify when all 4 digits are entered. */
@@ -210,7 +222,11 @@ function LoginContent() {
             isSendingOtp={isSendingOtp}
             onOpenPicker={() => setPickerOpen(true)}
             onSubmit={handleSubmit(onSendOtp)}
-            onSignUp={() => router.push("/auth/signup")}
+            onSignUp={() => {
+              const q = new URLSearchParams();
+              if (safeReturnTo) q.set("returnTo", safeReturnTo);
+              router.push(q.toString() ? `/auth/signup?${q.toString()}` : "/auth/signup");
+            }}
           />
         ) : (
           <OtpStep
@@ -242,7 +258,12 @@ function LoginContent() {
       <AccountNotFoundModal
         open={redirectModal}
         onOpenChange={setRedirectModal}
-        onSignUp={() => router.push(`/auth/signup?mobile=${getValues("phone")}`)}
+        onSignUp={() => {
+          const q = new URLSearchParams();
+          q.set("mobile", getValues("phone"));
+          if (safeReturnTo) q.set("returnTo", safeReturnTo);
+          router.push(`/auth/signup?${q.toString()}`);
+        }}
       />
     </div>
   );

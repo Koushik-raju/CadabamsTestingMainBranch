@@ -49,6 +49,7 @@ import {
 import { toast } from "react-toastify";
 import { useAuth } from "@/hooks/use-auth";
 import { useAuthActions } from "@/hooks/use-auth-actions";
+import { sanitizeReturnTo } from "@/lib/return-to";
 import type { CreateBaselineAssessmentDto } from "@/sdk/backend-v2";
 import { baselineAssessmentMeControllerCreate, crmControllerCreateLead } from "@/sdk/backend-v2";
 import { ALL_STEPS, type Country, type OnboardingData, type Step } from "./types";
@@ -334,7 +335,11 @@ export function SignupProvider({ children }: { children: ReactNode }) {
 
         localStorage.removeItem("onboarding_data");
         login().catch(() => {});
-        router.replace("/home");
+        const next =
+          sanitizeReturnTo(searchParams.get("returnTo")) ??
+          sanitizeReturnTo(searchParams.get("from")) ??
+          "/home";
+        router.replace(next);
       } catch (err: unknown) {
         const e = err as { status?: number; error?: string };
         if (e.error?.includes("already exists")) {
@@ -348,7 +353,7 @@ export function SignupProvider({ children }: { children: ReactNode }) {
         verifyingRef.current = false;
       }
     },
-    [verifySignup, submittedForm, country, login, router],
+    [verifySignup, submittedForm, country, login, router, searchParams],
   );
 
   /* Auto-verify when all 4 OTP digits are entered. */

@@ -56,6 +56,7 @@ import {
 import { Switch } from "@/components/ui/switch";
 
 import { useAuth } from "@/hooks/use-auth";
+import { sanitizeReturnTo } from "@/lib/return-to";
 import { cn } from "@/lib/utils";
 import { crmControllerCreateLead, crmControllerGetRelationships } from "@/sdk/backend-v2";
 
@@ -118,7 +119,9 @@ function OnboardingContent() {
   const searchParams = useSearchParams();
   const { user } = useAuth();
 
-  const returnUrl = searchParams.get("returnUrl") ?? "";
+  const returnToParam =
+    sanitizeReturnTo(searchParams.get("returnTo")) ??
+    sanitizeReturnTo(searchParams.get("returnUrl"));
 
   const [step, setStep] = useState<Step>("service-for");
   const [loading, setLoading] = useState(false);
@@ -181,7 +184,7 @@ function OnboardingContent() {
     } finally {
       setLoading(false);
     }
-    router.replace(returnUrl ? decodeURIComponent(returnUrl) : "/home");
+    router.replace(returnToParam ?? "/home");
   };
 
   return (
