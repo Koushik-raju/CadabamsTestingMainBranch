@@ -11,8 +11,8 @@
  *   2. On every change to sub: if sub is present, uses it directly as the
  *      PostHog distinct ID and calls posthog.identify() with name, email,
  *      phone_number, role, crmLeadId, dob, gender, and sub as traits.
- *   3. If sub is absent (user logged out or session not yet restored),
- *      the effect is a no-op — avoids identifying anonymous sessions.
+ *   3. If sub or the PostHog API key is absent, the effect is a no-op — avoids
+ *      identifying anonymous sessions or calling an uninitialised client.
  *   4. No posthog.reset() is called here; logout is handled by the auth flow
  *      where the caller should invoke posthog.reset() if needed.
  *
@@ -24,7 +24,7 @@
  *   posthog-js    — posthog.identify()
  *   @/types       — User interface
  *
- * LAST UPDATED: 2026-04-27 — use user.sub as distinctId; expand identify traits
+ * LAST UPDATED: 2026-09-17 — skip identification when analytics is not configured
  */
 
 import posthog from "posthog-js";
@@ -36,7 +36,7 @@ export function usePostHogIdentify(user: User | null | undefined) {
     /* Guard: only identify when a real sub (JWT subject) is available. Without
        sub we cannot attach a stable distinct ID and would pollute the anonymous
        session instead of the real user profile. */
-    if (!user?.sub) return;
+    if (!process.env.NEXT_PUBLIC_POSTHOG_API_KEY || !user?.sub) return;
 
     posthog.identify(user.sub, {
       name: user.name ?? null,
