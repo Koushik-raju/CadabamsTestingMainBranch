@@ -8,9 +8,8 @@
  *
  * LOGIC OVERVIEW:
  *   Types mirror the backend DTOs in src/modules/growth/dto/*. Calls are
- *   hand-rolled against /api/v1/me/growth/{week,day}. When the backend-v2
- *   SDK is regenerated these can be swapped for the generated functions
- *   without touching consumers (hook shape is the contract).
+ *   hand-rolled against /api/v1/me/growth/{week,day}. Day responses normalize
+ *   nullable activity collections to empty arrays before reaching consumers.
  *
  * KEY VARIABLES / PROPS / EXPORTS:
  *   useGrowthWeek(date)  — Mon→Sun flags for the week containing `date`
@@ -20,7 +19,7 @@
  * DEPENDENCIES:
  *   apiClient (api/backend-v2), SWR, swr-keys
  *
- * LAST UPDATED: 2026-04-23 — initial scaffold
+ * LAST UPDATED: 2026-09-17 — normalize nullable activity collections from day responses
  */
 import useSWR from "swr";
 import { apiClient } from "@/api/backend-v2";
@@ -196,7 +195,16 @@ async function fetchDay(date: string): Promise<GrowthDay> {
   const { data } = await apiClient.get<GrowthDay>("/api/v1/me/growth/day", {
     params: { date, tz: browserTz() },
   });
-  return data;
+  return {
+    ...data,
+    journeys: data.journeys ?? [],
+    journals: data.journals ?? [],
+    assessments: data.assessments ?? [],
+    chatSummaries: data.chatSummaries ?? [],
+    moods: data.moods ?? [],
+    stress: data.stress ?? [],
+    sleep: data.sleep ?? [],
+  };
 }
 
 export function useGrowthWeek(date: string) {
