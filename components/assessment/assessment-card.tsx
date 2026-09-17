@@ -21,8 +21,7 @@
  *   getCategoryInfo — maps assessment type to icon, bgColor, textColor
  *   lucide-react, Card, CardContent, Link
  *
- * LAST UPDATED: 2026-05-11 — AssessmentGridCard: worksheet browse footer shows Open only;
- *   hide 0 min / 0 questions on assessment browse tiles.
+ * LAST UPDATED: 2026-09-17 — Keep numeric assessment minutes type-safe when rendering metadata.
  */
 
 "use client";
@@ -96,11 +95,9 @@ export function AssessmentGridCard<T extends BrowseCardItem = AssessmentItem>({
   const questionCountRaw =
     assessment.landingTitle?.numberOfQuestion ?? assessment.Questions?.length;
   const questionCountNum =
-    questionCountRaw != null && questionCountRaw !== ""
-      ? Number(questionCountRaw)
-      : NaN;
+    questionCountRaw != null && questionCountRaw !== "" ? Number(questionCountRaw) : NaN;
   const showQuestionMeta = Number.isFinite(questionCountNum) && questionCountNum > 0;
-  const minutesNum = minutes != null && minutes !== "" ? Number(minutes) : NaN;
+  const minutesNum = minutes ?? NaN;
   const showMinutesMeta = Number.isFinite(minutesNum) && minutesNum > 0;
   const description = assessment.description || assessment.landingTitle?.landingDescription;
   /** Worksheet browse passes `browseFooterLink`; hide 0 min / 0 questions noise and keep only Open. */
