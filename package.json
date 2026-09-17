@@ -2,6 +2,7 @@
   "name": "cadabams-consult-frontend",
   "version": "0.1.0",
   "private": true,
+  "packageManager": "pnpm@11.15.1",
   "scripts": {
     "dev": "next dev",
     "build": "next build",
@@ -119,15 +120,5 @@
     "tailwindcss": "^4",
     "tsx": "^4.21.0",
     "typescript": "^6"
-  },
-  "pnpm": {
-    "onlyBuiltDependencies": [
-      "@firebase/util",
-      "core-js",
-      "esbuild",
-      "msw",
-      "protobufjs",
-      "sharp"
-    ]
   }
 }
